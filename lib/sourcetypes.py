@@ -25,14 +25,15 @@ import walker
 I = ' ' * 4
 
 
-def import_item(name):
-    """ import_item(name) -> import an item from a module by dotted name
+def import_name(name):
+    """ import_name(name) -> import and return a module by name in dotted form
 
+        Copied from the Python lib docs.
     """
-    names = name.split('.')
-    modname, itemname = names[0:-1], names[-1]
-    mod = import_name(str.join('.', modname))
-    return getattr(mod, itemname)
+    mod = __import__(name)
+    for comp in name.split('.')[1:]:
+        mod = getattr(mod, comp)
+    return mod
 
 
 def set_config(names, includeDefault=True):
