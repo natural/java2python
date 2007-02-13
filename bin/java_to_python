@@ -5,11 +5,11 @@ import os.path
 import sys
 
 
-from lib.lexer import Lexer
-from lib.parser import Parser
-from lib.walker import Walker
+from java2python.lib.lexer import Lexer
+from java2python.lib.parser import Parser
+from java2python.lib.walker import Walker
+from java2python.lib.sourcetypes import Module, set_config
 
-from lib.sourcetypes import Module, set_config
 
 try:
     import psyco

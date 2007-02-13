@@ -18,9 +18,6 @@ done:
 from cStringIO import StringIO
 import re
 
-import defaultconfig
-import walker
-
 
 I = ' ' * 4
 
@@ -38,7 +35,7 @@ def import_name(name):
 
 def set_config(names, includeDefault=True):
     if includeDefault:
-        names.insert(0, 'lib.defaultconfig')
+        names.insert(0, 'java2python.lib.defaultconfig')
     Source.config = Config(*names)
 
 
