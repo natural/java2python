@@ -1,31 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-todo:
-       add project override, file override options
-done:
-       fix empty type declarations
-       fix while, for statements
-       add decorator for overloaded methods
-       fix compound expressions
-       add property get/set on duplicate method names
-       reorder class statements to place inner classes first       
-       fix missing self references (in expressions w/o all values defined)
-       add property for some modifiers (e.g., syncronized)
-       for classes without bases, add object as base
-       for classes that implement something, add something as base
+""" java2python.lib.sourcetypes -> heirarchy of classes for building source.
+
+
 """
 from cStringIO import StringIO
 import re
 
 
-I = ' ' * 4
-
-
 def import_name(name):
     """ import_name(name) -> import and return a module by name in dotted form
 
-        Copied from the Python lib docs.
+    Copied from the Python lib docs.
+
+    @param name module or package name in dotted form
+    @return module object
     """
     mod = __import__(name)
     for comp in name.split('.')[1:]:
@@ -34,56 +23,54 @@ def import_name(name):
 
 
 def set_config(names, includeDefault=True):
+    """ build and set a Config object on the Source class
+
+    @param names sequence of module names
+    @keyparam includeDefault=True flag to include default configuration module
+    @return None
+    """
     if includeDefault:
         names.insert(0, 'java2python.lib.defaultconfig')
     Source.config = Config(*names)
 
 
 class Config:
+    """ Config -> wraps multiple configuration modules
+
+
+    """
     def __init__(self, *names):
         self.configs = [import_name(name) for name in names]
+
+    def all(self, name, missing=None):
+        """ value of name in each config module
+
+        @param name module attribute as string
+        @keyparam missing=None default for missing attributes
+        @return list of values
+        """
+        return [getattr(config, name, missing) for config in self.configs]
         
-    def get(self, name, default=None):
-        for config in self.configs:
+    def last(self, name, default=None):
+        """ 
+
+        """
+        for config in reversed(self.configs):
             if hasattr(config, name):
                 return getattr(config, name)
         return default
 
-    def all(self, name, missing=None):
-        return [getattr(config, name, missing) for config in self.configs]
+    def combined(self, name):
+        combined = {}
+        for mapping in reversed(self.all(name, {})):
+            combined.update(mapping)
+        return combined
+
+
+I = ' ' * 4
 
 
 class Source:
-    typeTypeMap = {
-        'String':'str',
-        'int':'int',
-        'double':'float',
-        'Vector':'list',
-        'boolean':'bool',
-    }
-
-    typeValueMap = {
-        'String':'""',
-        'int':'0',
-        'double':'0.0',
-        'Vector':'[]',
-        'boolean':'False',
-        'str':'""',
-    }
-
-    renameMap = {
-        'this':'self',
-        'null':'None',
-        'false':'False',
-        'true':'True',
-        'equals':'__eq__',
-    }
-
-    modifierDecoratorMap = {
-        'synchronized':'@synchronized(mlock)'
-    }
-
-
     emptyAssign = ('%s', '<empty>')
     missingValue = ('%s', '<missing>')
     unknownExpression = ('%s', '<unknown>')
@@ -102,8 +89,9 @@ class Source:
         out = StringIO()
         self.writeTo(out, 0)
         source = out.getvalue()
-        #for sub in astextra.globalSubs:
-        #    source = re.sub(sub[0], sub[1], source)
+        for subs in self.config.all('outputSubs', []):
+            for sub in subs:
+                source = re.sub(sub[0], sub[1], source)
         return source
     
     def addComment(self, text):
@@ -172,7 +160,7 @@ class Source:
         self.addSource(f)
         return s, f
     
-    def newMethod(self, name=''):
+    def newMethod(self, name=None):
         m = Method(parent=self, name=name)
         self.addSource(m)
         return m
@@ -201,8 +189,9 @@ class Source:
             return (self.formatExpression(s[0]), self.formatExpression(s[1]))
 
     def reName(self, value):
+        mapping = self.config.combined('renameAnyMap')
         try:
-            return self.renameMap[value]
+            return mapping[value]
         except (KeyError, ):
             return value
 
@@ -350,7 +339,7 @@ class Method(Source):
 
     def addModifier(self, mod):
         try:
-            mod = self.modifierDecoratorMap[mod]
+            mod = self.config.combined("modifierDecoratorMap")[mod]
         except (KeyError, ):
             Source.addModifier(self, mod)
         else:
@@ -373,6 +362,13 @@ class Method(Source):
             params = str.join(', ', [p[1] for p in parameters])
             decl = '%sdef %s(%s):' % (I * indent, name, params)
         return decl
+
+    def reName(self, value):
+        mapping = self.config.combined('renameMethodMap')
+        try:
+            return mapping[value]
+        except (KeyError, ):
+            return value
 
     def writeTo(self, output, indent):
         offset = I * indent

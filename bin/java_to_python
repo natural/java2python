@@ -50,7 +50,7 @@ def transform(options):
     else:
         output = open(fileout, 'w')
 
-    set_config(options.configs)
+    set_config(options.configs, options.includedefaults)
     M = Module(filein, fileout)
     W.walk(ast, M)    
     print >> output, M 
@@ -69,7 +69,9 @@ def cli_options(argv):
                       help='use CONFIG (multiple allowed)',
                       metavar='CONFIG', default=[],
                       action='append')
-    
+    parser.add_option('-n', '--nodefaults', dest='includedefaults',
+                      help='ignore default configuration',
+                      default=True, action='store_false')
     options, args = parser.parse_args(argv)
     return options, args
 

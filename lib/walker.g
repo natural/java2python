@@ -65,7 +65,7 @@ returns [spec]
         {
         value = t0.getFirstChild().getText()
         try:
-            spec = block.typeTypeMap[value]
+            spec = block.config.combined("typeTypeMap")[value]
         except (KeyError, ):
             spec = value
         }
@@ -219,7 +219,7 @@ variable_def [block]
         {
         block.addVariable(dec[1])
         if val == block.emptyAssign:
-            val = ("%s", block.typeValueMap.get(typ, "%s()" % typ))
+            val = ("%s", block.config.combined("typeValueMap").get(typ, "%s()" % typ))
         block.addSource( ("%s = %s", (dec, val)) )
         }
     ;
@@ -732,12 +732,13 @@ returns [value = block.missingValue]
             )
         )
         {
+        alltypes = block.config.combined("typeValueMap")
         if arrdecl:
             value = ("[%s() for __idx0 in range(%s)]", (("%s", typ), ("%s", arrdecl)))
         elif exp:
             value = ("%s(%s)", (("%s", typ), ("%s", exp)))
-        elif typ in block.typeValueMap:
-            value = ("%s", block.typeValueMap[typ])
+        elif typ in alltypes:
+            value = ("%s", alltypes[typ])
         else:
             value = ("%s()", typ)
         }

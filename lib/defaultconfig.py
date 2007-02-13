@@ -33,7 +33,7 @@ defaults = {
 
 
 
-globalSubs = [
+outputSubs = [
     (r'(\.self\.)', '.'),
     (r'String\.valueOf\((.*?)\)', r'str(\1)'),
     (r'System\.out\.println\((.*?)\)', r'print \1'),
@@ -43,3 +43,40 @@ globalSubs = [
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     ]
+
+
+typeTypeMap = {
+    'String':'str',
+    'int':'int',
+    'double':'float',
+    'Vector':'list',
+    'boolean':'bool',
+}
+
+
+typeValueMap = {
+    'String':'""',
+    'int':'0',
+    'double':'0.0',
+    'Vector':'[]',
+    'boolean':'False',
+    'str':'""',
+}
+
+
+renameMethodMap = {
+    'equals':'__eq__'
+}
+
+
+renameAnyMap = {
+    'this':'self',
+    'null':'None',
+    'false':'False',
+    'true':'True',
+}
+
+
+modifierDecoratorMap = {
+    'synchronized':'@synchronized(mlock)'
+}
