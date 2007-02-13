@@ -30,14 +30,16 @@ walk [source]
 package_def [block]
 returns [defn]
     :   #(PACKAGE_DEF defn = identifier[block])
-        {block.addSource(("### package %s", defn))}
+        {// block.addSource(("### package %s", defn))
+        }
     ;
 
 
 import_def [block]
 returns [defn]
     :   #(IMPORT defn = identifier_star[block])
-        {block.addSource(("### import %s", defn))}
+        {// block.addSource(("### import %s", defn))
+        }
     ;
 
 
@@ -100,8 +102,11 @@ returns [typ]
 
 
 modifiers [block, mod=None]
-    :   #(MODIFIERS
-            (mod = modifier[block])*) {block.addModifier(mod)}
+    :   #(MODIFIERS (mod = modifier[block])*)
+        {
+        if mod:
+            block.addModifier(mod)
+        }
     ;
 
 

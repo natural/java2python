@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.lib.sourcetypes -> heirarchy of classes for building source.
+""" java2python.lib.sourcetypes -> classes for building python source code.
+
+When used by java2python.lib.walker, the Module class below is updated
+as the java AST is walked.  Refer to the java2python script for usage.
 
 
+TODO:
+    replace 'if False:pass' statements with equivelents.
+    add substitution for 'foo == None'
 """
 from cStringIO import StringIO
 import re
@@ -49,11 +55,14 @@ class Config:
         @keyparam missing=None default for missing attributes
         @return list of values
         """
-        return [getattr(config, name, missing) for config in self.configs]
+        return (getattr(config, name, missing) for config in self.configs)
         
     def last(self, name, default=None):
-        """ 
+        """ value from final config module to define name
 
+        @param name module attribute as string
+        @keyparam default=None value returned if all modules lack name
+        @return value from config module
         """
         for config in reversed(self.configs):
             if hasattr(config, name):
@@ -61,16 +70,27 @@ class Config:
         return default
 
     def combined(self, name):
+        """ combined mapping of named dictionaries from all config modules
+
+        @param dictionary attribute as string
+        @return dictionary updated with each named dictionary
+        """
         combined = {}
-        for mapping in reversed(self.all(name, {})):
+        for mapping in self.all(name, {}):
             combined.update(mapping)
         return combined
 
 
-I = ' ' * 4
-
-
 class Source:
+    """ Source -> base class for source code types.
+
+    Instances have methods to create new child instances, e.g., newClass
+    to create a new class.
+
+    This class contains some attributes only used by subclasses; their
+    creation in this base type is strictly from laziness.
+
+    """
     emptyAssign = ('%s', '<empty>')
     missingValue = ('%s', '<missing>')
     unknownExpression = ('%s', '<unknown>')
@@ -79,6 +99,7 @@ class Source:
     def __init__(self, parent=None, name=None):
         self.parent = parent
         self.name = name
+        self.bases = []
         self.modifiers = set()
         self.preable = []
         self.lines = []        
@@ -86,6 +107,9 @@ class Source:
         self.variables = set()
         
     def __str__(self):
+        """ str(obj) -> source code defined in obj
+
+        """
         out = StringIO()
         self.writeTo(out, 0)
         source = out.getvalue()
@@ -94,40 +118,73 @@ class Source:
                 source = re.sub(sub[0], sub[1], source)
         return source
     
-    def addComment(self, text):
-        self.addSource('## %s' % text)
+    def addComment(self, text, prefix='##'):
+        """ add a comment to this source block
 
-    def addModifier(self, mod):
-        if mod:
-            self.modifiers.add(mod)
+        @param text value of comment
+        @keyparam prefix='##' value of comment prefix
+        @return None
+        """
+        prefix = self.config.last('commentPrefix', prefix)
+        self.addSource('%s %s' % (prefix, text))
 
-    def addNewLine(self):
-        self.addSource('')
+    def addModifier(self, name):
+        """ add a modifer to this source block
+
+        @param name value of modifier, as a string
+        @return None
+        """
+        self.modifiers.add(name)
 
     def addSource(self, value):
+        """ add source code to the end of this block
+
+        @param value string, instance of Source (or subclass), or two-tuple
+        @return None
+        """
         self.lines.append(value)
 
     def addVariable(self, name, force=False):
+        """ add variable name to set for tracking
+
+        Variables are only added to Class instances unless the force
+        parameter True.
+        
+        @param name variable as string
+        @keyparam force=False, if True, always add to set
+        @return None
+        """
         if force or (name and self.isClass):
             self.variables.add(name)
 
     @property
-    def allDecls(self):
-        for parent in self.allParents:
-            for v in parent.variables:
-                yield v
-
-    @property
     def allParents(self):
+        """ generator to provide each ancestor of this instance
+
+        @return yields individual ancestors of this instance one at a time
+        """
         previous = self.parent
         while previous:
             yield previous
             previous = previous.parent
 
     @property
-    def blockMethods(self):
-        return [m for m in self.lines if getattr(m, 'isMethod', False)]
+    def allVars(self):
+        """ provides all variables in this instance and its ancestors
 
+        @return yields variable names from this instance and all ancestors
+        """
+        for parent in self.allParents:
+            for v in parent.variables:
+                yield v
+
+    @property
+    def blockMethods(self):
+        return (m for m in self.lines if getattr(m, 'isMethod', False))
+
+    def insertSource(self, index, value):
+        self.lines.insert(index, value)
+        
     @property
     def isClass(self):
         return self.__class__ is Class
@@ -137,12 +194,10 @@ class Source:
         return self.__class__ is Method
 
     def fixDecl(self, *args):
-        decls = list(self.allDecls)
         fixed = list(args)
         for i, arg in enumerate(args):
-            if arg in decls:
+            if arg in self.allVars:
                 fixed[i] = "self.%s" % (arg, )
-        assert len(fixed) == len(args)
         if len(fixed) == 1:
             return fixed[0]
         else:
@@ -188,7 +243,7 @@ class Source:
         if isinstance(s[0], tuple) and isinstance(s[1], tuple):
             return (self.formatExpression(s[0]), self.formatExpression(s[1]))
 
-    def reName(self, value):
+    def alternateName(self, value):
         mapping = self.config.combined('renameAnyMap')
         try:
             return mapping[value]
@@ -199,7 +254,7 @@ class Source:
         self.name = name
         
     def writeTo(self, output, indent):
-        offset = I * indent
+        offset = self.I * indent
         for line in self.lines:
             if isinstance(line, tuple):
                 line = self.formatExpression(line)
@@ -207,6 +262,9 @@ class Source:
                 line.writeTo(output, indent)
             except (AttributeError, ):
                 output.write('%s%s\n' % (offset, line))
+    @property
+    def I(self):
+        return ' ' * self.config.last('indent', 4)
 
 
 class Module(Source):
@@ -214,30 +272,20 @@ class Module(Source):
         Source.__init__(self, parent=None, name=None)
         self.infile = infile
         self.outfile = outfile
-        self.addHeading()
 
-    def addHeading(self):
-        self.addSource('#!/usr/bin/env python')
-        self.addSource('# -*- coding: utf-8 -*-')
-        self.addNewLine()
-        self.addComment('')
-        self.addComment('Source file: "%s"' % (self.infile, ))
-        self.addComment('Target file: "%s"' % (self.outfile, ))
-        self.addComment('')        
-        self.addComment('Original file copyright original author(s).')
-        self.addComment('This file copyright Troy Melhase <troy@gci.net>.')        
-        self.addComment('')        
-        self.addNewLine()
-        #for line in astextra.headings.get(self.infile, ()):
-        #    self.addSource(line)
-        self.addNewLine()
+    def writeTo(self, output, indent):
+        for preables in self.config.all('modulePreable', []):
+            for line in preables:
+                try:
+                    line = line(self)
+                except (TypeError, ):
+                    pass
+                output.write('%s\n' % (line, ))
+        output.write('\n')
+        Source.writeTo(self, output, indent)
 
 
 class Class(Source):
-    def __init__(self, parent, name):
-        Source.__init__(self, parent=parent, name=name)
-        self.bases = []
-
     def addBaseClass(self, clause):
         if clause and (clause not in self.bases):
             ## in case java ever grows MI... (giggle)
@@ -252,24 +300,24 @@ class Class(Source):
         c = Class(parent=self, name=None)
         ## move inner classes to the top; allows for referencing
         ## later in this class definition.
-        self.lines.insert(0, c)
+        if self.config.last('bubbleInnerClasses'):
+            self.insertSource(0, c)
+        else:
+            self.addSource(c)
         return c
-        
 
     def scanPropMethods(self):
-        lines = self.lines
-        methods = self.blockMethods
-        mapping = [(m.name, len(m.parameters)) for m in methods]
+        mapping = [(m.name, len(m.parameters)) for m in self.blockMethods]
         propmap = {}
 
-        for meth in methods:
+        for meth in self.blockMethods:
             name = meth.name
             if (name, 1) in mapping and (name, 2) in mapping:
                 argc = len(meth.parameters)
                 methmap = propmap.setdefault(name, {1:None, 2:None})
                 methmap[argc] = meth
                 meth.name = ('get_%s' if argc==1 else 'set_%s') % name
-
+        lines = self.lines
         for name, meths in propmap.items():
             lines.remove(meths[1])
             lines.remove(meths[2])
@@ -285,22 +333,15 @@ class Class(Source):
             lines.append(format % (name, meths[1].name, meths[2].name))
             
     def scanOverloadMethods(self):
-        methods = self.blockMethods
         overloads = {}
 
-        for method in methods:
+        for method in self.blockMethods:
             name = method.name
             overloads[name] = 1 + overloads.setdefault(name, 0)
 
-        for name, count in overloads.items():
-            if count == 1:
-                del(overloads[name])
-
-        for name, count in overloads.items():
-            renames = [m for m in methods if m.name == name]
-            #renames.sort(key=lambda m:len(m.parameters))
+        for name in [n for n, c in overloads.items() if c>1]:
+            renames = [m for m in self.blockMethods if m.name == name]
             first, remainder = renames[0], renames[1:]
-
             first.preable.append('@overloaded')
             firstname = first.name
 
@@ -309,25 +350,26 @@ class Class(Source):
                 method.preable.append('@%s.register(%s)' % (firstname, params))
                 method.name = '%s_%s' % (method.name, index)
 
-        def sorter(x, y):
-            try:
-                if x.isMethod and y.isMethod:
-                    return cmp(x.name, y.name)
-            except:
-                pass
-            return 0
-
-        if 0: # make a project option
-            self.lines.sort(sorter)
-
     def writeTo(self, output, indent):
-        self.scanPropMethods()
-        self.scanOverloadMethods()
+        config = self.config
+        if config.last('scanPropMethods'):
+            self.scanPropMethods()
+        if config.last('scanOverloadMethods'):
+            self.scanOverloadMethods()
+        if config.last('sortClassMethods'):
+            def methodsorter(x, y):
+                if getattr(x, 'isMethod', False) and \
+                       getattr(y, 'isMethod', False):
+                    return cmp(x.name, y.name)
+                return 0
+            self.lines.sort(methodsorter)
+            
         name = self.name
-        offset = I * (indent+1)
-        output.write('%s%s\n' % (I * indent, self.formatDecl()))
-        output.write('%s""" generated source for %s\n\n' % (offset, name))
-        output.write('%s"""\n' % (offset, ))
+        offset = self.I * (indent+1)
+        output.write('%s%s\n' % (self.I * indent, self.formatDecl()))
+        if config.last('writeClassDocString'):
+            output.write('%s""" generated source for %s\n\n' % (offset, name))
+            output.write('%s"""\n' % (offset, ))
         Source.writeTo(self, output, indent+1)
         output.write('\n')
 
@@ -347,23 +389,23 @@ class Method(Source):
                 self.preable.append(mod)
 
     def addParameter(self, typ, name):
-        name = self.reName(name)
+        name = self.alternateName(name)
         self.parameters.append((typ, name))
 
     def formatDecl(self, indent):
-        name = self.reName(self.name)
+        name = self.alternateName(self.name)
         parameters = self.parameters
         if len(parameters) > 5:
             first, others = parameters[0], parameters[1:]            
-            prefix = '%sdef %s(%s, ' % (I * indent, name, first[1], )
+            prefix = '%sdef %s(%s, ' % (self.I * indent, name, first[1], )
             offset = '\n' + (' ' * len(prefix))
             decl = '%s%s):' % (prefix, str.join(', '+offset, [o[1] for o in others]))
         else:
             params = str.join(', ', [p[1] for p in parameters])
-            decl = '%sdef %s(%s):' % (I * indent, name, params)
+            decl = '%sdef %s(%s):' % (self.I * indent, name, params)
         return decl
 
-    def reName(self, value):
+    def alternateName(self, value):
         mapping = self.config.combined('renameMethodMap')
         try:
             return mapping[value]
@@ -371,10 +413,10 @@ class Method(Source):
             return value
 
     def writeTo(self, output, indent):
-        offset = I * indent
+        offset = self.I * indent
         output.write('\n')
-        #if self.modifiers and astextra.defaults['writemods']:
-        #    output.write('%s## modifiers: %s\n' % (offset, str.join(',', self.modifiers)))
+        if self.config.last('writeModifiersComments'):
+            output.write('%s## modifiers: %s\n' % (offset, str.join(',', self.modifiers)))
         for obj in self.preable:
             output.write('%s%s\n' % (offset, obj))
         output.write('%s\n' % (self.formatDecl(indent), ))
@@ -410,14 +452,14 @@ class Statement(Source):
         if self.isBadLabel or self.isNoOp:
             return
 
-        offset = I * indent
+        offset = self.I * indent
         output.write('%s%s' % (offset, name))
         if self.expr is not None:
             expr = self.formatExpression(self.expr)
             output.write(' %s' % (expr, ))
-        #if self.isBlock:
-        #    output.write(':')
-        output.write(':\n')
+        if self.isBlock:
+            output.write(':')
+        output.write('\n')
         if (not lines) and name not in ('break', 'continue', ):
             self.addSource('pass')
         Source.writeTo(self, output, indent+1)
