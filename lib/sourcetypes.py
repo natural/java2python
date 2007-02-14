@@ -102,6 +102,7 @@ class Source:
         self.bases = []
         self.modifiers = set()
         self.preamble = []
+        self.epilogue = []
         self.lines = []        
         self.type = None
         self.variables = set()
@@ -341,6 +342,11 @@ class Source:
         self.name = name
 
     def fixSwitch(self, block):
+        """ fixes the first clause in an generated switch statement
+
+        @param block Statement instance and child of this block
+        @return None
+        """
         lines = self.lines
         if (not block in lines) or (block.name != 'if'):
             return
@@ -380,15 +386,28 @@ class Module(Source):
         @param indent indentation level of this block
         @return None
         """
-        for preambles in self.config.all('modulePreamble', []):
-            for line in preambles:
+        self.writeExtraLines('modulePreamble', output)
+        output.write('\n')
+        Source.writeTo(self, output, indent)
+        self.writeExtraLines('moduleEpilogue', output)
+        
+    def writeExtraLines(self, name, output):
+        """ writes an sequence of lines given a config attribute name
+
+        Lines may be callable.  Refer to the defaultconfig module for
+        details.
+        
+        @param name configuration module attribute
+        @param output writable file-like object
+        @return None
+        """
+        for lines in self.config.all(name, []):
+            for line in lines:
                 try:
                     line = line(self)
                 except (TypeError, ):
                     pass
                 output.write('%s\n' % (line, ))
-        output.write('\n')
-        Source.writeTo(self, output, indent)
 
 
 class Class(Source):

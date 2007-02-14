@@ -41,6 +41,13 @@ classesInheritObject = True
 ## in method declarations.  set to 0 to disable.
 minIndentParams = 5
 
+## Note about modulePreamble and moduleEpilogue:
+##
+## Items in both of these lists may be strings or callables.  If
+## they're callables, they should take a single argument.  The Module
+## object will be passed as this single argument in the case of
+## callables.
+
 ## lines written at the beginning of each generated module.  this value
 ## is cumulative, so when user-defined configuration modules specify
 ## this value, those lines are written after these.
@@ -48,6 +55,12 @@ modulePreamble = [
     '#!/usr/bin/env python',
     '# -*- coding: utf-8 -*-',
     '',
+    ]
+
+## lines written at the end of each generated module.  this value is
+## cumulative, so user-defined configuration modules may specify
+## additional values.
+moduleEpilogue = [
     ]
 
 ## regular expression substitutions performed on source after
