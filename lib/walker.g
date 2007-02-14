@@ -422,7 +422,9 @@ statement [block]
         #("switch" switch_expr = expression[block, False]
                    (c:case_group[block, switch_expr])*
         )
-
+        {
+        block.fixSwitch(switch_block)
+        }
 
     |   {
         raise_stat = block.newStatement("raise")

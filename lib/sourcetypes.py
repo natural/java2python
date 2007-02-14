@@ -340,6 +340,19 @@ class Source:
         """
         self.name = name
 
+    def fixSwitch(self, block):
+        lines = self.lines
+        if (not block in lines) or (block.name != 'if'):
+            return
+        i = lines.index(block)
+        if (len(lines) > i):
+            first_else = lines[i+1]
+            if first_else.name != 'elif':
+                return
+            lines.remove(first_else)
+            block.expr = first_else.expr
+            block.lines = first_else.lines
+        
     def I(self, indent):
         """ calculated indentation string
 
@@ -606,6 +619,7 @@ class Method(Source):
             self.addSource('pass')
         Source.writeTo(self, output, indent+1)
 
+    
 
 class Statement(Source):
     """ Statement -> specialized block type
