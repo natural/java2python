@@ -4,7 +4,7 @@ import compiler
 import optparse
 import os.path
 import sys
-
+from time import time
 
 from java2python.lib.lexer import Lexer
 from java2python.lib.parser import Parser
@@ -25,15 +25,19 @@ def transform(options):
     L = Lexer(*lexer_args)
     P = Parser(L)
     W = Walker()
-    
+
+    comp_start = start = time()
     try:
         P.compilationUnit()
     except (Exception, ), exc:
        print '*** exception while parsing:'
        print exc
        return 1
+    comp_finish = time()
 
+    ast_start = time()
     ast = P.getAST()
+    ast_finish = time()
     if not ast:
        print '*** error: no AST generated.'
        return 2
@@ -51,11 +55,13 @@ def transform(options):
     else:
         output = open(fileout, 'w')
 
+    walk_start = time()
     set_config(options.configs, options.includedefaults)
     M = Module(filein, fileout)
     W.walk(ast, M)
     source = str(M)
-    print >> output, source
+    print >> output, source    
+    walk_finish = time()
 
     if options.syntaxcheck:
         try:
@@ -65,6 +71,13 @@ def transform(options):
         else:
             msg = '## INFO:  generated source has valid syntax.'
         print >> sys.stderr, msg
+
+    finish = time()
+    if options.timerun:
+        print >> sys.stderr, "## INFO: parser comp unit time: %.4f" % (comp_finish - comp_start)
+        print >> sys.stderr, "## INFO: ast get time: %.4f" % (ast_finish - ast_start)
+        print >> sys.stderr, "## INFO: walk and generate time: %.4f" % (walk_finish - walk_start)
+        print >> sys.stderr, "## INFO: total time: %.4f" % (finish - start)
     return 0
 
 
@@ -86,6 +99,9 @@ def cli_options(argv):
     parser.add_option('-s', '--syntaxcheck', dest='syntaxcheck',
                       help='Check source syntax after generation',
                       default=False, action='store_true')
+    parser.add_option('-t', '--time', dest='timerun',
+                      help='Write processing time to stderr',
+                      default=False, action='store_true')    
     options, args = parser.parse_args(argv)
     return options, args
 
