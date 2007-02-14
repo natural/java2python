@@ -75,7 +75,7 @@ returns [spec]
 
 
 type_spec_array [block]
-    :   #(ARRAY_DECLARATOR type_spec_array[block])
+    :   #(ad0:ARRAY_DECLARATOR type_spec_array[block])
     |   spec = type[block]
     ;
 
@@ -89,15 +89,15 @@ returns [typ]
 
 builtin_type [block]
 returns [typ]
-    :   "void"    {typ = "None"  }
-    |   "boolean" {typ = "bool"  }
-    |   "byte"    {typ = "str"   }
-    |   "char"    {typ = "str"   }
-    |   "short"   {typ = "int"   }
-    |   "int"     {typ = "int"   }
-    |   "float"   {typ = "float" }
-    |   "long"    {typ = "long"  }
-    |   "double"  {typ = "float" }
+    :   "void"    {typ = "None"   }
+    |   "boolean" {typ = "bool"   }
+    |   "byte"    {typ = "str"    }
+    |   "char"    {typ = "str"    }
+    |   "short"   {typ = "int"    }
+    |   "int"     {typ = "int"    }
+    |   "float"   {typ = "float"  }
+    |   "long"    {typ = "long"   }
+    |   "double"  {typ = "float"  }
     ;
 
 
@@ -186,7 +186,10 @@ method_decl [block]
             modifiers[meth]
             typ = type_spec[meth]
             method_head[meth]
-        ) {meth.type = typ}
+        ) 
+        {
+        meth.type = typ
+        }
     ;
 
 
@@ -231,7 +234,7 @@ variable_def [block]
 
 
 parameter_def [meth, add=True]
-    :   #(PARAMETER_DEF
+    :   #(pd0:PARAMETER_DEF
             modifiers[meth]
             ptype = type_spec[meth]
             ident = identifier[meth]
@@ -321,9 +324,10 @@ returns [ident]
 
 
 statement_list [block]
-    :   #(SLIST (statement[block])*)
+    :   #(SLIST (s1:statement[block])*)
     ;
 
+// MARKER
 
 statement [block]
     :   typ = type_def[block]
@@ -429,6 +433,7 @@ statement [block]
         }
 
     |   try_block[block]
+    |   ctor_call[block]
     |   statement_list[block]
     |   EMPTY_STAT
     ;
@@ -637,39 +642,60 @@ primary_expr [block]
 returns [exp = block.missingValue]
     :   i0:IDENT {exp = ("%s", i0.getText())}
 
-    |   {x = ""}
+    |   {
+        dotexpr = this0 = class0 = class1 = class2 = id0 = id1 = ar0 = typ = None
+        index = None
+        }
         #(DOT
-            (x=expr[block]
-                (a:IDENT
+            (dotexpr=expr[block]
+                (id0:IDENT
                     | index = array_index[block]
-                    | "this"
-                    | a0:"class"
-                    | #("new" k:IDENT el0=expr_list[block] )
+                    | this0:"this"
+                    | class0:"class"
+                    | #("new" id1:IDENT el0=expr_list[block] )
                     | "super"
                 )
-                | #(ARRAY_DECLARATOR type_spec_array[block])
-                | t = builtin_type[block]("class")?
+                | #(ar0:ARRAY_DECLARATOR type_spec_array[block])
+                  (class1:"class")?
+                | typ = builtin_type[block](class2:"class")?
             )
         )
         {
-        if a:
-            exp = ("%s.%s", (x, ("%s", a.getText())))
+        if id0:
+            exp = ("%s.%s", (dotexpr, ("%s", id0.getText())))
+        elif ar0:
+            exp = ("%s", "[]")
+            if class1:
+                exp = ("%s.__class__", exp)
+        elif typ:
+            exp = ("%s", typ)
+        elif id1:
+            el0 = el0 or ""
+            exp = ("%s(%s)", (("%s", id1.getText()), ("%s", el0)))
         }
 
-    |   index = array_index[block] {exp = index}
-
-    |   #(METHOD_CALL pex = primary_expr[block] el44=expr_list[block])
+    |   index = array_index[block] 
         {
-        if el44:
-            exp = ("%s(%s)", (pex, el44))
+        exp = index
+        }
+
+    |   #(METHOD_CALL pex = primary_expr[block] exl = expr_list[block])
+        {
+        if exl:
+            exp = ("%s(%s)", (pex, exl))
         else:
             exp = ("%s()", pex)
        }
 
-    |   call = ctor_call[block] {exp = ("%s", call)}
+    |   ctor_call[block]
 
-    |   #(TYPECAST type_cast = type_spec[block] cast_exp = expr[block])
-        {exp = ("%s", cast_exp)}
+    |   #(TYPECAST 
+            type_cast = type_spec[block]
+            cast_exp = expr[block]
+        )
+        {
+        exp = ("%s", cast_exp)
+        }
 
     |   other_exp = new_expression[block] {exp = ("%s", other_exp)}
     |   con = constant[block] {exp = ("%s", con)}
@@ -684,10 +710,11 @@ returns [exp = block.missingValue]
 
 
 ctor_call [block]
-returns [seq=()]
-    :   #(cn:CTOR_CALL seq=expr_list[block] )
+    :   #(cn:CTOR_CALL seq=expr_list[block, False] )
         {
-        print "#@#@@@", cn
+        name = block.parent.name
+        call = ("super(%s, self).__init__(%s)", (("%s", name), ("%s", seq)))
+        block.addSource(call)
         }
 
     |   #(SUPER_CTOR_CALL

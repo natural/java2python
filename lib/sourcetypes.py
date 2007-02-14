@@ -231,11 +231,12 @@ class Source:
         @varparam args names to fix
         @return fixed name or names
         """
-        fixed = list(args)
-        allvars = list(self.allVars)
-        for i, arg in enumerate(args):
-            if arg in allvars:
-                fixed[i] = 'self.%s' % (arg, )
+        fixed = list(args)        
+        if self.isMethod:
+            allvars = list(self.allVars)
+            for i, arg in enumerate(args):
+                if arg in allvars:
+                    fixed[i] = 'self.%s' % (arg, )
         if len(fixed) == 1:
             return fixed[0]
         else:
