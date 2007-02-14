@@ -390,9 +390,11 @@ class Module(Source):
         output.write('\n')
         Source.writeTo(self, output, indent)
         self.writeExtraLines('moduleEpilogue', output)
-        
+        if self.config.last('writeMainMethodScript'):
+            self.writeMainBlock(output)
+            
     def writeExtraLines(self, name, output):
-        """ writes an sequence of lines given a config attribute name
+        """ writes a sequence of lines given a config attribute name
 
         Lines may be callable.  Refer to the defaultconfig module for
         details.
@@ -409,7 +411,29 @@ class Module(Source):
                     pass
                 output.write('%s\n' % (line, ))
 
+    def writeMainBlock(self, output):
+        """ writes a block to call the module as a script
 
+        @param output writable file-like object
+        @return None
+        """
+        try:
+            cls = [c for c in self.lines if getattr(c, 'isClass', None)][0]
+            methods = [m for m in cls.lines if getattr(m, 'isMethod', None)]
+            main = [m for m in methods if m.name == 'main'][0]
+        except (Exception, ):
+            pass
+        else:
+            mods = main.modifiers
+            typ = main.type
+            if ('public' in mods) and ('static' in mods) and (typ == 'void'):
+                name = cls.name
+                offset = self.I(1)
+                output.write("if __name__ == '__main__':\n")
+                output.write("%simport sys\n" % offset)
+                output.write("%s%s.main(sys.argv)\n" % (offset, name))
+
+    
 class Class(Source):
     """ Class -> specialized block type
 
@@ -550,9 +574,12 @@ class Method(Source):
     """ Method -> specialized block type
 
     """
+    instanceFirstParam = ('object', 'self')
+    classFirstParam = ('type', 'cls')
+    
     def __init__(self, parent, name):
         Source.__init__(self, parent=parent, name=name)
-        self.parameters = [('object', 'self'), ]
+        self.parameters = [self.instanceFirstParam, ]
 
     def addModifier(self, name):
         """ adds named modifier to method
@@ -570,6 +597,9 @@ class Method(Source):
         else:
             if deco not in self.preamble:
                 self.preamble.append(deco)
+                if (deco == '@classmethod') and (self.parameters) \
+                       and (self.parameters[0] == self.instanceFirstParam):
+                    self.parameters[0] = self.classFirstParam
         Source.addModifier(self, name)
         
     def addParameter(self, typ, name):

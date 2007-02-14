@@ -33,6 +33,11 @@ writeClassDocString = True
 ## if True, a default docstring is generated for method statements.
 writeMethodDocString = False
 
+## if True, and if input source contains a "public static void main"
+## method, a block is written to the end of the file to call the class
+## method with sys.argv.
+writeMainMethodScript = True
+
 ## if True, classes without base classes will instead inherit from
 ## object.
 classesInheritObject = True
@@ -119,5 +124,6 @@ renameAnyMap = {
 ## corresponding statements from this mapping.  this value can be
 ## replaced and/or augmented via user-defined configuration modules.
 modifierDecoratorMap = {
-    'synchronized':'## original method synchronized'
+    'synchronized':'## original method synchronized',
+    'static':'@classmethod',
 }
