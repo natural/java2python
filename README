@@ -1,0 +1,43 @@
+About
+-----
+This package provides tools to (imperfectly) translate java source
+code to python source code.
+
+
+Build
+-----
+To build the code, install Python_ 2.5 or newer, and install PyAntlr_.
+Then run "make" in the top of the package.
+
+.. _Python: http://www.python.org/
+.. _PyAntlr: http://www.antlr.org/
+
+
+Install
+-------
+
+To install the package and the scripts into your system, then as the super user, run:
+
+    $ python setup.py install
+
+The setup script will install the java2python package in
+$PYTHONHOME/site-packages, and install the scripts into a bin
+directory.
+
+
+Use
+---
+To use the "java_to_python" script, either make and install the
+package (as per above), or adjust PYTHONPATH (and possibly PATH) to
+include the source directories.  Then run the script like so:
+
+    $ java_to_python -i input_file.java -o output_file.py
+
+The script has configuration options that you can view:
+
+    $ java_to_python -h
+
+
+Feedback
+--------
+Drop me a note if you're so inclined:  troy@gci.net.

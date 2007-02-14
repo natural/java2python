@@ -1,9 +1,60 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+## number of spaces to indent each block
 indent = 4
 
+## prefix for comments
+commentPrefix = '##'
 
+## move inner class definitions to the top of their outer class.
+## allows the outer class to reference the inner class definition
+## later in its definition.
+bubbleInnerClasses = True
+
+## if True, classes are scanned for methods that look like accessors.
+## Matching methods are renamed and declared as properties.
+fixPropMethods = True
+
+## if True, classes are scanned for duplicate method names.  Matching
+## methods are augmented with the '@overloaded' decorator.
+fixOverloadMethods = True
+
+## if True, class methods are sorted by name before output.
+sortClassMethods = False
+
+## if True, method modifiers are written as comments prior to method
+## declarations.
+writeModifiersComments = False
+
+## if True, a default docstring is generated for class statements.
+writeClassDocString = True
+
+## if True, a default docstring is generated for method statements.
+writeMethodDocString = False
+
+## if True, classes without base classes will instead inherit from
+## object.
+classesInheritObject = True
+
+## minimum parameter count to trigger indentation of parameter names
+## in method declarations.  set to 0 to disable.
+minIndentParams = 5
+
+## lines written at the beginning of each generated module.  this value
+## is cumulative, so when user-defined configuration modules specify
+## this value, those lines are written after these.
+modulePreamble = [
+    '#!/usr/bin/env python',
+    '# -*- coding: utf-8 -*-',
+    '',
+    ]
+
+## regular expression substitutions performed on source after
+## generation but before final output.  this value is cumulative, so
+## user-defined configuration modules can add augment these with their
+## own.  each value in this list is a two-tuple of (pattern, repl).
+## see the 're' module docs, specifically the re.sub function.
 outputSubs = [
     (r'(\.self\.)', '.'),
     (r'String\.valueOf\((.*?)\)', r'str(\1)'),
@@ -14,7 +65,8 @@ outputSubs = [
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     ]
 
-
+## mapping of java type names to python type names.  user-defined
+## configuration modules can replace and/or augment this mapping.
 typeTypeMap = {
     'String':'str',
     'int':'int',
@@ -23,7 +75,8 @@ typeTypeMap = {
     'boolean':'bool',
 }
 
-
+## mapping of java type values to python type values.  user-defined
+## configuration modules can replace and/or augment this mapping.
 typeValueMap = {
     'String':'""',
     'int':'0',
@@ -33,12 +86,14 @@ typeValueMap = {
     'str':'""',
 }
 
-
+## method name mapping.  user-defined configuration modules can
+## replace and/or augment this with their own.
 renameMethodMap = {
     'equals':'__eq__'
 }
 
-
+## generic name mapping.  user-defined configuration modules can
+## replace and/or augment this with their own.
 renameAnyMap = {
     'this':'self',
     'null':'None',
@@ -46,24 +101,10 @@ renameAnyMap = {
     'true':'True',
 }
 
-
+## method type modifier mapping.  when input methods have modifiers
+## with matching names, those names are replaced with their
+## corresponding statements from this mapping.  this value can be
+## replaced and/or augmented via user-defined configuration modules.
 modifierDecoratorMap = {
     'synchronized':'## original method synchronized'
 }
-
-
-modulePreable = [
-    '#!/usr/bin/env python',
-    '# -*- coding: utf-8 -*-',
-    '',
-    ]
-
-
-bubbleInnerClasses = True
-scanPropMethods = True
-scanOverloadMethods = True
-sortClassMethods = False
-writeModifiersComments = False
-writeClassDocString = True
-
-commentPrefix = '##'
