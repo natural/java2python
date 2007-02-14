@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import compiler
 import optparse
 import os.path
 import sys
@@ -52,8 +53,18 @@ def transform(options):
 
     set_config(options.configs, options.includedefaults)
     M = Module(filein, fileout)
-    W.walk(ast, M)    
-    print >> output, M 
+    W.walk(ast, M)
+    source = str(M)
+    print >> output, source
+
+    if options.syntaxcheck:
+        try:
+            compiler.parse(source)
+        except (SyntaxError, ):
+            msg = '## ERR:  invalid syntax in generated source.'
+        else:
+            msg = '## INFO:  generated source has valid syntax.'
+        print >> sys.stderr, msg
     return 0
 
 
@@ -72,6 +83,9 @@ def cli_options(argv):
     parser.add_option('-n', '--nodefaults', dest='includedefaults',
                       help='ignore default configuration',
                       default=True, action='store_false')
+    parser.add_option('-s', '--syntaxcheck', dest='syntaxcheck',
+                      help='Check source syntax after generation',
+                      default=False, action='store_true')
     options, args = parser.parse_args(argv)
     return options, args
 
