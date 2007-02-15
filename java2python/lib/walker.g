@@ -544,7 +544,7 @@ returns [exp = block.unknownExpression]
         {exp = ("%s /= %s", (left, right))}
 
     |   #(MOD_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s %= %s", (left, right))}
+        {exp = ("%s %%= %s", (left, right))}
 
     |   #(SR_ASSIGN left=expr[block] right=expr[block])
         {exp = ("%s >>= %s", (left, right))}
@@ -623,7 +623,7 @@ returns [exp = block.unknownExpression]
         {exp = ("%s / %s", (left, right))}
 
     |   #(MOD left=expr[block] right=expr[block])
-        {exp = ("%s % %s", (left, right))}
+        {exp = ("%s %% %s", (left, right))}
 
     |   #(STAR left=expr[block] right=expr[block])
         {exp = ("%s * %s", (left, right))}
