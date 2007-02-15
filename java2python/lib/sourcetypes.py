@@ -5,10 +5,6 @@
 When used by java2python.lib.walker, the Module class below is updated
 as the java AST is walked.  Refer to the java2python script for usage.
 
-
-TODO:
-    replace 'if False:pass' statements with equivalents.
-    add substitution for 'foo == None'
 """
 from cStringIO import StringIO
 import re
@@ -56,7 +52,7 @@ class Config:
         @return list of values
         """
         return (getattr(config, name, missing) for config in self.configs)
-        
+
     def last(self, name, default=None):
         """ value from final config module to define name
 
@@ -95,7 +91,9 @@ class Source:
     missingValue = ('%s', '<missing>')
     unknownExpression = ('%s', '<unknown>')
     config = Config()
-    
+    staticmethodLiteral = '@staticmethod'
+    classmethodLiteral = '@classmethod'
+
     def __init__(self, parent=None, name=None):
         self.parent = parent
         self.name = name
@@ -103,10 +101,10 @@ class Source:
         self.modifiers = set()
         self.preamble = []
         self.epilogue = []
-        self.lines = []        
+        self.lines = []
         self.type = None
         self.variables = set()
-        
+
     def __str__(self):
         """ str(obj) -> source code defined in obj
 
@@ -134,7 +132,7 @@ class Source:
                 line.writeTo(output, indent)
             except (AttributeError, ):
                 output.write('%s%s\n' % (offset, line))
-    
+
     def addComment(self, text, prefix='##'):
         """ add a comment to this source block
 
@@ -166,7 +164,7 @@ class Source:
 
         Variables are only added to Class instances unless the force
         parameter True.
-        
+
         @param name variable as string
         @keyparam force=False, if True, always add to set
         @return None
@@ -191,9 +189,19 @@ class Source:
 
         @return yields variable names from this instance and all ancestors
         """
-        for parent in self.allParents:
-            for v in parent.variables:
+        for obj in [self, ] + list(self.allParents):
+            for v in obj.variables:
                 yield v
+            for v in obj.extraVars:
+                yield v
+
+    @property
+    def extraVars(self):
+        """ extra variable names; subclasses can and should reimplement
+
+        @return sequence of variable names
+        """
+        return []
 
     @property
     def blockMethods(self):
@@ -211,7 +219,7 @@ class Source:
         @return None
         """
         self.lines.insert(index, value)
-        
+
     @property
     def isClass(self):
         """ True if this instance is a Class
@@ -226,18 +234,39 @@ class Source:
         """
         return isinstance(self, Method)
 
+    @property
+    def declFormat(self):
+        """ string format for variable names in this block
+
+        """
+        for parent in [self, ] + list(self.allParents):
+            if parent.isMethod:
+                preamble = parent.preamble
+                if self.classmethodLiteral in preamble:
+                    return 'cls.%s'
+                elif self.staticmethodLiteral in preamble:
+                    return '%s'
+                else:
+                    return 'self.%s'
+        return '%s ## ERROR'
+
     def fixDecl(self, *args):
         """ fixes variable names that are class members
 
         @varparam args names to fix
         @return fixed name or names
         """
-        fixed = list(args)        
-        if self.isMethod:
-            allvars = list(self.allVars)
+        fixed = list(args)
+        allvars = list(self.allVars)
+        mapping = self.config.combined('variableNameMapping')
+        format = self.declFormat
+        if not self.isClass:
             for i, arg in enumerate(args):
                 if arg in allvars:
-                    fixed[i] = 'self.%s' % (arg, )
+                    arg = mapping.get(arg, arg)
+                    fixed[i] = format % (arg, )
+                else:
+                    fixed[i] = mapping.get(arg, arg)
         if len(fixed) == 1:
             return fixed[0]
         else:
@@ -263,7 +292,7 @@ class Source:
         self.addSource(s)
         self.addSource(f)
         return s, f
-    
+
     def newMethod(self, name=None):
         """ creates a new Method object as a child of this block
 
@@ -277,13 +306,13 @@ class Source:
     def newSwitch(self):
         """ creates a new 'if' Statement as a child of this block
 
-        @return Statement instance 
+        @return Statement instance
         """
         s = Statement(self, 'if')
         s.expr = 'False'
         self.addSource(s)
         return s
-    
+
     def newStatement(self, name):
         """ creates a new Statement as a child of this block
 
@@ -304,7 +333,7 @@ class Source:
         @return interpolated, fixed expression as string
         """
         fixdecl = self.fixDecl
-        
+
         if isinstance(expr, basestring):
             return fixdecl(expr)
 
@@ -321,13 +350,13 @@ class Source:
         else:
             raise NotImplementedError('Unhandled expression type.')
 
-    def alternateName(self, name):
+    def alternateName(self, name, key='renameAnyMap'):
         """ returns an alternate for given name
 
         @param name any string
         @return alternate for name if found; if not found, returns name
         """
-        mapping = self.config.combined('renameAnyMap')
+        mapping = self.config.combined(key)
         try:
             return mapping[name]
         except (KeyError, ):
@@ -352,13 +381,22 @@ class Source:
             return
         i = lines.index(block)
         if (len(lines) > i):
-            first_else = lines[i+1]
-            if first_else.name != 'elif':
-                return
-            lines.remove(first_else)
-            block.expr = first_else.expr
-            block.lines = first_else.lines
-        
+            next = lines[i+1]
+            if next.name == 'elif':
+                lines.remove(next)
+                block.expr = next.expr
+                block.lines = next.lines
+
+    def trimLines(self):
+        """ removes empty lines from the end of this block
+
+        @return None
+        """
+        lines = self.lines
+        if lines:
+            while not lines[-1]:
+                lines.pop()
+
     def I(self, indent):
         """ calculated indentation string
 
@@ -392,13 +430,13 @@ class Module(Source):
         self.writeExtraLines('moduleEpilogue', output)
         if self.config.last('writeMainMethodScript'):
             self.writeMainBlock(output)
-            
+
     def writeExtraLines(self, name, output):
         """ writes a sequence of lines given a config attribute name
 
         Lines may be callable.  Refer to the defaultconfig module for
         details.
-        
+
         @param name configuration module attribute
         @param output writable file-like object
         @return None
@@ -433,15 +471,31 @@ class Module(Source):
                 output.write("%simport sys\n" % offset)
                 output.write("%s%s.main(sys.argv)\n" % (offset, name))
 
-    
+
 class Class(Source):
     """ Class -> specialized block type
 
     """
-    def addBaseClass(self, clause):
-        if clause and (clause not in self.bases):
-            ## in case java ever grows MI... (giggle)
-            self.bases.append(clause) 
+    @property
+    def extraVars(self):
+        """ extra variable names from base classes (defined externally)
+
+        @return sequence of variable names
+        """
+        extras = []
+        comb = self.config.combined
+        for base in self.bases:
+            extras.extend(comb('baseClassMembers').get(base, []))
+        return extras
+
+    def addBaseClass(self, name):
+        """ add a base class by name
+
+        @param name base class name as string
+        @return None
+        """
+        if name and (name not in self.bases):
+            self.bases.append(name)
 
     def formatDecl(self):
         """ generates a class statement accounting for base types
@@ -499,15 +553,13 @@ class Class(Source):
         for name, meths in propmap.items():
             lines.remove(meths[1])
             lines.remove(meths[2])
-        if lines:
-            while not lines[-1]:
-                lines.pop()
-        format = '%s = property(%s, %s)'                
+        self.trimLines()
+        format = '%s = property(%s, %s)'
         for name, meths in propmap.items():
             lines.append(meths[1])
-            lines.append(meths[2])            
+            lines.append(meths[2])
             lines.append(format % (name, meths[1].name, meths[2].name))
-           
+
     def fixOverloadMethods(self):
         """ adds the overloaded decorator to methods with the same name
 
@@ -518,7 +570,7 @@ class Class(Source):
 
             @F.register(bool)
             def F_0(...)
-            
+
         @return None
         """
         overloads = {}
@@ -559,7 +611,6 @@ class Class(Source):
                     return cmp(x.name, y.name)
                 return 0
             self.lines.sort(methodsorter)
-
         name = self.name
         offset = self.I(indent+1)
         output.write('%s%s\n' % (self.I(indent), self.formatDecl()))
@@ -567,7 +618,6 @@ class Class(Source):
             output.write('%s""" generated source for %s\n\n' % (offset, name))
             output.write('%s"""\n' % (offset, ))
         Source.writeTo(self, output, indent+1)
-        output.write('\n')
 
 
 class Method(Source):
@@ -576,7 +626,7 @@ class Method(Source):
     """
     instanceFirstParam = ('object', 'self')
     classFirstParam = ('type', 'cls')
-    
+
     def __init__(self, parent, name):
         Source.__init__(self, parent=parent, name=name)
         self.parameters = [self.instanceFirstParam, ]
@@ -597,11 +647,11 @@ class Method(Source):
         else:
             if deco not in self.preamble:
                 self.preamble.append(deco)
-                if (deco == '@classmethod') and (self.parameters) \
+                if (deco == self.classmethodLiteral) and (self.parameters) \
                        and (self.parameters[0] == self.instanceFirstParam):
                     self.parameters[0] = self.classFirstParam
         Source.addModifier(self, name)
-        
+
     def addParameter(self, typ, name):
         """ adds named parameter to method
 
@@ -615,14 +665,14 @@ class Method(Source):
     def formatDecl(self, indent):
         """ generates a class statement accounting for base types
 
-        @param indent indentation level of this block        
+        @param indent indentation level of this block
         @return class declaration as string
         """
         name = self.alternateName(self.name)
         parameters = self.parameters
         minparam = self.config.last('minIndentParams', 0)
         if minparam and len(parameters) > minparam:
-            first, others = parameters[0], parameters[1:]            
+            first, others = parameters[0], parameters[1:]
             prefix = '%sdef %s(%s, ' % (self.I(indent), name, first[1], )
             offset = '\n' + (' ' * len(prefix))
             decl = '%s%s):' % (prefix, str.join(', '+offset, [o[1] for o in others]))
@@ -641,7 +691,7 @@ class Method(Source):
         try:
             return mapping[name]
         except (KeyError, ):
-            return name
+            return Source.alternateName(self, name)
 
     def writeTo(self, output, indent):
         """ writes the string representation of this block
@@ -666,9 +716,16 @@ class Method(Source):
             output.write('%s"""\n' % (docoffset, ))
         if (not self.lines) and (not writedoc):
             self.addSource('pass')
+        self.trimLines()
         Source.writeTo(self, output, indent+1)
+        try:
+            next = self.parent.lines[1+self.parent.lines.index(self)]
+            addline = not next.isMethod
+        except (IndexError, AttributeError, ):
+            addline = True
+        if addline:
+            output.write('\n')
 
-    
 
 class Statement(Source):
     """ Statement -> specialized block type
@@ -693,7 +750,7 @@ class Statement(Source):
     @property
     def isNoOp(self):
         """ True if instance does nothing
-        
+
         """
         return self.name in ('else', 'finally') and (not self.lines)
 
@@ -723,7 +780,7 @@ class Statement(Source):
         name = self.name
         parents = self.allParents
         lines = self.lines
-        
+
         if self.isBadLabel or self.isNoOp:
             return
 

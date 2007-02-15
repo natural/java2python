@@ -81,6 +81,8 @@ outputSubs = [
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
+    (r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+    (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     ]
 
 ## mapping of java type names to python type names.  user-defined
@@ -107,7 +109,8 @@ typeValueMap = {
 ## method name mapping.  user-defined configuration modules can
 ## replace and/or augment this with their own.
 renameMethodMap = {
-    'equals':'__eq__'
+    'equals':'__eq__',
+    'is':'is_',
 }
 
 ## generic name mapping.  user-defined configuration modules can
@@ -117,6 +120,8 @@ renameAnyMap = {
     'null':'None',
     'false':'False',
     'true':'True',
+    'is':'is_',
+    'str':'strval',
 }
 
 ## method type modifier mapping.  when input methods have modifiers
@@ -124,6 +129,33 @@ renameAnyMap = {
 ## corresponding statements from this mapping.  this value can be
 ## replaced and/or augmented via user-defined configuration modules.
 modifierDecoratorMap = {
-    'synchronized':'## original method synchronized',
+    'synchronized':'@synchronized(mlock)',
     'static':'@classmethod',
 }
+
+
+baseClassMembers = {
+    'Thread':['MAX_PRIORITY', 'MIN_PRIORITY', 'NORM_PRIORITY',
+              'activeCount', 'checkAccess', 'countStackFrames',
+              'currentThread', 'destroy', 'dumpStack',
+              'enumerate', 'getContextClassLoader', 'getName',
+              'getPriority', 'getThreadGroup', 'holdsLock',
+              'interrupt', 'interrupted', 'isAlive',
+              'isDaemon', 'isInterrupted', 'join',
+              'resume', 'run', 'setContextClassLoader',
+              'setDaemon', 'setName', 'setPriority',
+              'sleep', 'start', 'stop', 'suspend', 'toString', 'yield',
+              ],
+}
+
+
+variableNameMapping = {
+    'str':'strval',
+    'is':'is_',
+    }
+
+
+exceptionTypeMapping = {
+    'NoSuchFieldError':'AttributeError',
+    'NoSuchMethodException':'AttributeError',
+    }

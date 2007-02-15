@@ -65,7 +65,15 @@ type_spec [block]
 returns [spec]
     :   #(t0:TYPE type_spec_array[block])
         {
-        value = t0.getFirstChild().getText()
+        first = t0.getFirstChild()
+        value = first.getText()
+        if value == ".":
+            seq = []
+            next = first.getFirstChild()
+            while next:
+                seq.append(next.getText())
+                next = next.getNextSibling()
+            value = str.join(".", seq)
         try:
             spec = block.config.combined("typeTypeMap")[value]
         except (KeyError, ):
@@ -237,17 +245,19 @@ variable_def [block]
     ;
 
 
-parameter_def [meth, add=True]
+parameter_def [meth, exc=False]
     :   #(pd0:PARAMETER_DEF
             modifiers[meth]
             ptype = type_spec[meth]
             ident = identifier[meth]
         )
         {
-        if add:
-            meth.addParameter(ptype, ident)
-        else:
+        if exc:
+            ptype = meth.alternateName(ptype, "exceptionTypeMapping")
             meth.setExpression(("(%s, ), %s", (("%s", ptype), ("%s", ident))))
+        else:
+            meth.addParameter(ptype, ident)
+
         }
     ;
 
@@ -482,7 +492,7 @@ try_block [block]
 
 handler [block]
     :   #("catch"
-            parameter_def[block, False]
+            parameter_def[block, True]
             statement_list[block]
         )
     ;
@@ -574,7 +584,12 @@ returns [exp = block.unknownExpression]
         {exp = ("%s != %s", (left, right))}
 
     |   #(EQUAL left=expr[block] right=expr[block])
-        {exp = ("%s == %s", (left, right))}
+        {
+        if right in ("None", (("%s", "None"))):
+            exp = ("%s is %s", (left, right))
+        else:
+            exp = ("%s == %s", (left, right))
+        }
 
     |   #(LT left=expr[block] right=expr[block])
         {exp = ("%s < %s", (left, right))}

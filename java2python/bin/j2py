@@ -42,13 +42,13 @@ def transform(options):
        print '*** error: no AST generated.'
        return 2
 
-    filein = fileout = filedefault = '-'    
+    filein = fileout = filedefault = '-'
     if options.inputfile:
         filein = os.path.basename(options.inputfile)
     if options.outputfile:
         fileout = os.path.basename(options.outputfile)
     elif fileout != filedefault:
-        fileout = '%s.py' % (os.path.splitext(filein)[0])        
+        fileout = '%s.py' % (os.path.splitext(filein)[0])
 
     if fileout == filedefault:
         output = sys.stdout
@@ -60,16 +60,16 @@ def transform(options):
     M = Module(filein, fileout)
     W.walk(ast, M)
     source = str(M)
-    print >> output, source    
+    print >> output, source
     walk_finish = time()
 
     if options.syntaxcheck:
         try:
             compiler.parse(source)
-        except (SyntaxError, ):
-            msg = '## ERR:  invalid syntax in generated source.'
+        except (SyntaxError, ), ex:
+            msg = "## ERR:  %s" % (ex, )
         else:
-            msg = '## INFO:  generated source has valid syntax.'
+            msg = '## INFO: generated source has valid syntax.'
         print >> sys.stderr, msg
 
     finish = time()
@@ -101,7 +101,7 @@ def cli_options(argv):
                       default=False, action='store_true')
     parser.add_option('-t', '--time', dest='timerun',
                       help='Write processing time to stderr',
-                      default=False, action='store_true')    
+                      default=False, action='store_true')
     options, args = parser.parse_args(argv)
     return options, args
 
@@ -109,4 +109,3 @@ if __name__ == '__main__':
     options, args = cli_options(sys.argv)
     ret = transform(options)
     sys.exit(ret)
-
