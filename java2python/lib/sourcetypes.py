@@ -676,7 +676,7 @@ class Method(Source):
             first, others = parameters[0], parameters[1:]
             prefix = '%sdef %s(%s, ' % (self.I(indent), name, first[1], )
             offset = '\n' + (' ' * len(prefix))
-            decl = '%s%s):' % (prefix, str.join(', '+offset, [o[1] for o in others]))
+            decl = '%s%s):' % (prefix, str.join(','+offset, [o[1] for o in others]))
         else:
             params = str.join(', ', [p[1] for p in parameters])
             decl = '%sdef %s(%s):' % (self.I(indent), name, params)

@@ -364,7 +364,6 @@ statement [block]
 
 
     |   {
-        block.addSource("")
         block.addComment("for-while")
         for_init, for_stat = block.newFor()
         }
