@@ -526,7 +526,7 @@ returns [exp]
 expr [block]
 returns [exp = block.unknownExpression]
     :   #(QUESTION a0=expr[block] b0=expr[block] c0=expr[block])
-        {exp = ("%s %s ", (("%s", b0), ("%s %s", (("if %s", a0), ("else %s", c0)))))}
+        {exp = ("%s %s", (("%s", b0), ("%s %s", (("if %s", a0), ("else %s", c0)))))}
 
     |   #(ASSIGN left=expr[block] right=expr[block])
         {exp = ("%s = %s", (left, right))}
@@ -588,7 +588,7 @@ returns [exp = block.unknownExpression]
         if right in ("None", (("%s", "None"))):
             exp = ("%s is %s", (left, right))
         else:
-            exp = ("%s == %s", (left, right))
+            exp = ("(%s == %s)", (left, right))
         }
 
     |   #(LT left=expr[block] right=expr[block])

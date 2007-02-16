@@ -93,6 +93,7 @@ typeTypeMap = {
     'double':'float',
     'Vector':'list',
     'boolean':'bool',
+    'char':'str',
 }
 
 ## mapping of java type values to python type values.  user-defined
@@ -159,3 +160,12 @@ exceptionTypeMapping = {
     'NoSuchFieldError':'AttributeError',
     'NoSuchMethodException':'AttributeError',
     }
+
+
+## define this name in your configuration modules to sort decorators
+## before they're output.  example follows.
+methodPreambleSorter = None
+
+## use a block like this to sort decorators by name.
+## def methodPreambleSorter(a, b):
+##     return cmp(a, b)

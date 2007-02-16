@@ -660,6 +660,7 @@ class Method(Source):
         @return None
         """
         name = self.alternateName(name)
+        typ = Source.alternateName(self, typ, 'typeTypeMap')
         self.parameters.append((typ, name))
 
     def formatDecl(self, indent):
@@ -704,6 +705,10 @@ class Method(Source):
         output.write('\n')
         if self.config.last('writeModifiersComments'):
             output.write('%s## modifiers: %s\n' % (offset, str.join(',', self.modifiers)))
+
+        sorter = self.config.last('methodPreambleSorter')
+        if sorter:
+            self.preamble.sort(sorter)
         for obj in self.preamble:
             output.write('%s%s\n' % (offset, obj))
         output.write('%s\n' % (self.formatDecl(indent), ))
