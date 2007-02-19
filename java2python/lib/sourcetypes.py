@@ -93,6 +93,7 @@ class Source:
     config = Config()
     staticmethodLiteral = '@staticmethod'
     classmethodLiteral = '@classmethod'
+    anonymousClassCount = 0
 
     def __init__(self, parent=None, name=None):
         self.parent = parent

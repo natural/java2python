@@ -780,15 +780,22 @@ returns [value = block.missingValue]
     exp = ()
     arrexp = None
     arrdecl = None
+    klass = block.newClass()
     }
     :   #("new"
-            typ = type[block] 
+            typ = type[block]
             (arrdecl = new_array_declarator[block]
                 ( arrexp = array_initializer[block])?
-                | exp = expr_list[block] (obj_block[block])?
+                | exp = expr_list[block] (obj_block[klass])?
             )
         )
         {
+        if len(klass.lines):
+            block.anonymousClassCount += 1
+            klass.addBaseClass(typ)
+            klass.setName("%s%s" % (typ, block.anonymousClassCount))
+        else:
+            block.lines.remove(klass)
         alltypes = block.config.combined("typeValueMap")
         if arrdecl:
             value = ("[%s() for __idx0 in range(%s)]", (("%s", typ), ("%s", arrdecl)))
