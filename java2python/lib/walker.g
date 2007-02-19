@@ -366,6 +366,7 @@ statement [block]
     |   {
         block.addComment("for-while")
         for_init, for_stat = block.newFor()
+        for_iter = None
         }
         #("for"
             #(FOR_INIT
@@ -376,7 +377,8 @@ statement [block]
         )
         {
         for_stat.setExpression(("%s", for_cond))
-        for_stat.addSource(("%s", for_iter))
+        if for_iter:
+            for_stat.addSource(("%s", for_iter))
         }
 
 
