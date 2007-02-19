@@ -580,7 +580,12 @@ returns [exp = block.unknownExpression]
         {exp = ("%s & %s", (left, right))}
 
     |   #(NOT_EQUAL left=expr[block] right=expr[block])
-        {exp = ("%s != %s", (left, right))}
+        {
+        if right in ("None", (("%s", "None"))):
+            exp = ("%s is not %s", (left, right))
+        else:
+            exp = ("(%s != %s)", (left, right))
+        }
 
     |   #(EQUAL left=expr[block] right=expr[block])
         {
