@@ -82,7 +82,7 @@ def transform(options):
 
 
 def cli_options(argv):
-    parser = optparse.OptionParser(version='%prog 0.1')
+    parser = optparse.OptionParser(version='%prog 0.2')
     parser.add_option('-i', '--input', dest='inputfile',
                       help='read INPUTFILE',
                       metavar='INPUTFILE', default=None)

@@ -26,7 +26,7 @@ doclines = __doc__.split('\n')
 
 setup(
     name = 'java2python',
-    version = '0.1',
+    version = '0.2',
     description = doclines[0],
     author = 'Troy Melhase',
     author_email = 'troy@gci.net',
