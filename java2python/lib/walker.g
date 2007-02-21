@@ -604,7 +604,7 @@ returns [exp = block.unknownExpression]
         {exp = ("%s > %s", (left, right))}
 
     |   #(LE left=expr[block] right=expr[block])
-        {exp = ("%s <= %s", (left, bright))}
+        {exp = ("%s <= %s", (left, right))}
 
     |   #(GE left=expr[block] right=expr[block])
         {exp = ("%s >= %s", (left, right))}
