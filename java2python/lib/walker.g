@@ -747,10 +747,16 @@ ctor_call [block]
         }
 
     |   #(SUPER_CTOR_CALL
-            (el0=expr_list[block]
+            (seq=expr_list[block]
                 | p=primary_expr[block] el2=expr_list[block]
             )
-            {raise NotImplementedError("SUPER_CTOR_CALL")}
+            {
+            if seq is None:
+                seq = ""
+            name = block.parent.name
+            call = ("super(%s, self).__init__(%s)", (("%s", name), ("%s", seq)))
+            block.addSource(call)
+            }
         )
     ;
 

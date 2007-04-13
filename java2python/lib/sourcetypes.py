@@ -496,6 +496,7 @@ class Class(Source):
         @return None
         """
         if name and (name not in self.bases):
+            name = self.formatExpression(name)
             self.bases.append(name)
 
     def formatDecl(self):
