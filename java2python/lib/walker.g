@@ -1,8 +1,8 @@
 /*
 Current:
 
-    This file is part of IbPy.  Redistributed under terms of original
-    license below.  Modifications Copyright (C) Troy Melhase
+    This file is part of java2python.  Redistributed under terms of
+    original license below.  Modifications Copyright (C) Troy Melhase
     <troy@gci.net>.
 
 Original:
@@ -444,7 +444,7 @@ statement [block]
     |   {
         raise_stat = block.newStatement("raise")
         }
-        #("throw" raise_exp = expression[block])
+        #("throw" raise_exp = expression[block, False])
         {
         raise_stat.setExpression(raise_exp)
         }
@@ -462,7 +462,7 @@ case_group [block, switch_expr]
         right = block.missingValue
         }
         #(CASE_GROUP
-            (#("case" 
+            (#("case"
                right = expression[other, False]) | "default")+
                statement_list[other]
         )
@@ -479,13 +479,15 @@ case_group [block, switch_expr]
 try_block [block]
     {
     try_stat = block.newStatement("try")
-    except_stat = block.newStatement("except")
+
     finally_stat = block.newStatement("finally")
     }
 
     :   #("try"
             statement_list[try_stat]
-            (handler[except_stat])*
+            ({except_stat = block.newStatement("except")}
+             handler[except_stat]
+            )*
             (#("finally" statement_list[finally_stat]))?
         )
     ;

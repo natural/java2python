@@ -349,7 +349,7 @@ class Source:
         elif isinstance(first, tuple) and isinstance(second, tuple):
             return (format(first), format(second))
         else:
-            raise NotImplementedError('Unhandled expression type.')
+            raise NotImplementedError('Unhandled expression type:  %s' % expr)
 
     def alternateName(self, name, key='renameAnyMap'):
         """ returns an alternate for given name
@@ -753,6 +753,7 @@ class Statement(Source):
             parent_names = [p.name for p in self.allParents]
             if 'while' not in parent_names and 'for' not in parent_names:
                 return True
+
     @property
     def isNoOp(self):
         """ True if instance does nothing
@@ -798,6 +799,6 @@ class Statement(Source):
         if self.needsBlockIndicator:
             output.write(':')
         output.write('\n')
-        if (not lines) and name not in ('break', 'continue', ):
+        if (not lines) and name not in ('break', 'continue', 'raise'):
             self.addSource('pass')
         Source.writeTo(self, output, indent+1)
