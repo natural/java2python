@@ -393,8 +393,16 @@ statement [block]
         }
 
 
-    |   #("do" statement[block] do_exp = expression[block])
-        {raise NotImplementedError("do statement")}
+    |   {
+        while_stat = block.newStatement("while")
+        while_stat.setExpression("True")
+        }
+        #("do" statement[while_stat] do_exp = expression[block, False])
+        {
+            if_stat = while_stat.newStatement("if")
+            if_stat.setExpression(("not %s", do_exp))
+            if_stat.newStatement("break")
+        }
 
 
     |   {
