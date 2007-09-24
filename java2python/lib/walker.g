@@ -475,19 +475,35 @@ statement [block]
 case_group [block, switch_expr]
     :   {
         other = block.newStatement("elif")
-        right = block.missingValue
+        right = None
         }
         #(CASE_GROUP
             (#("case"
-               right = expression[other, False]) | "default")+
+               newright = expression[other, False]
+               {
+        if not right:
+            right = ("%s", newright)
+        else:
+            right = ("%s, %s", (right, newright))
+               }
+              ) | "default" { right = block.emptyAssign } )+
                statement_list[other]
         )
         {
-        if right is block.missingValue:
+        if right is block.emptyAssign:
             other.setName("else")
             other.setExpression(None)
+        elif right[0] == "%s":
+            other.setExpression(("%s == %s", (switch_expr, right)))
         else:
-            other.setExpression(("%s == %s", (switch_expr, ("%s", right))))
+            other.setExpression(("%s in (%s)", (switch_expr, right)))
+
+        /* if only one break statement in the elif block, delete it, then
+           a pass statement will be generated */
+        if len(other.lines) == 1 and \
+            hasattr(other.lines[0], "name") and \
+            other.lines[0].name == "break":
+            del other.lines[0]
         }
     ;
 
