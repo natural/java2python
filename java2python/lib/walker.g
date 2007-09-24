@@ -284,13 +284,20 @@ returns [init = block.emptyAssign]
 initializer [block]
 returns [init]
     :   init = expression[block, False]
-    |   init = array_initializer[block]
+    |   init = array_initializer[block] { init = ("[%s]", init) }
     ;
 
 
 array_initializer [block]
-returns [init]
-    :  #(ARRAY_INIT (init = initializer[block])*)
+returns [ret = None]
+    :  #(ARRAY_INIT
+         (init = initializer[block]
+          {
+        if ret:
+            ret = ("%s, %s", (ret, init))
+        else:
+            ret = ("%s", init)
+          } )*)
     ;
 
 
