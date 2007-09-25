@@ -105,13 +105,21 @@ typeValueMap = {
     'Vector':'[]',
     'boolean':'False',
     'str':'""',
+    '[':'None',
 }
 
 ## method name mapping.  user-defined configuration modules can
 ## replace and/or augment this with their own.
 renameMethodMap = {
     'equals':'__eq__',
+    'and':'and_',
+    'del':'del_',
+    'elif':'elif_',
+    'in':'in_',
     'is':'is_',
+    'not':'not_',
+    'or':'or_',
+    'print':'print_',
 }
 
 ## generic name mapping.  user-defined configuration modules can
@@ -121,7 +129,14 @@ renameAnyMap = {
     'null':'None',
     'false':'False',
     'true':'True',
+    'and':'and_',
+    'del':'del_',
+    'elif':'elif_',
+    'in':'in_',
     'is':'is_',
+    'not':'not_',
+    'or':'or_',
+    'print':'print_',
     'str':'strval',
 }
 
@@ -152,7 +167,14 @@ baseClassMembers = {
 
 variableNameMapping = {
     'str':'strval',
+    'and':'and_',
+    'del':'del_',
+    'elif':'elif_',
+    'in':'in_',
     'is':'is_',
+    'not':'not_',
+    'or':'or_',
+    'print':'print_',
     }
 
 

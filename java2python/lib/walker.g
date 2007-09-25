@@ -810,7 +810,7 @@ returns [value]
     :   i0:NUM_INT        {value = i0.getText()}
     |   c0:CHAR_LITERAL   {value = c0.getText()}
     |   s0:STRING_LITERAL {value = s0.getText()}
-    |   f0:NUM_FLOAT      {value = f0.getText()}
+    |   f0:NUM_FLOAT      {value = f0.getText().rstrip("fF")}
     |   d0:NUM_DOUBLE     {value = d0.getText()}
     |   l0:NUM_LONG       {value = l0.getText()}
     ;
