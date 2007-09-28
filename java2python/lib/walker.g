@@ -244,7 +244,7 @@ variable_def [block, append = True]
         )
         {
         if val == block.emptyAssign:
-            val = ("%s", block.config.combined("typeValueMap").get(typ, "%s()" % typ))
+            val = ("%s", block.config.combined("typeValueMap").get(typ, "None"))
         var.setName(dec[1])
         var.setExpression(val)
         if append or var.isStatic:
