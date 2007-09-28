@@ -154,7 +154,7 @@ returns [clause = None]
 interface_block [block]
     :   #(OBJBLOCK
             (method_decl[block]
-                | variable_def[block]
+                | variable_def[block, False]
                 | typ = type_def[block]
             )*
         )
@@ -165,12 +165,13 @@ obj_block [block]
     :   #(OBJBLOCK
             (ctor_def[block]
                 | method_def[block]
-                | variable_def[block]
+                | variable_def[block, False]
                 | typ = type_def[block]
                 | #(STATIC_INIT statement_list[block])
                 | #(INSTANCE_INIT statement_list[block])
             )*
         )
+        { block.declVars() }
     ;
 
 
@@ -179,6 +180,9 @@ ctor_def [block]
         meth = block.newMethod()
         }
         #(CTOR_DEF
+        {
+        meth.addSource("self.__init_vars__()")
+        }
             modifiers[meth]
             method_head[meth, "__init__"]
             (statement_list[meth])?
@@ -206,7 +210,6 @@ method_head [meth, name=None]
     :   ident = identifier[meth]
         {
         meth.setName(name if name else ident)
-        meth.parent.addVariable(meth.name)
         }
         #(PARAMETERS (parameter_def[meth])*)
         (throws_clause[meth])?
@@ -229,18 +232,23 @@ method_def [block]
     ;
 
 
-variable_def [block]
-    :   #(VARIABLE_DEF
-            modifiers[block]
-            typ = type_spec[block]
-            dec = var_decl[block]
-            val = var_init[block]
+variable_def [block, append = True]
+    :   {
+        var = block.newVariable()
+        }
+        #(VARIABLE_DEF
+            modifiers[var]
+            typ = type_spec[var]
+            dec = var_decl[var]
+            val = var_init[var]
         )
         {
-        block.addVariable(dec[1])
         if val == block.emptyAssign:
             val = ("%s", block.config.combined("typeValueMap").get(typ, "%s()" % typ))
-        block.addSource( ("%s = %s", (dec, val)) )
+        var.setName(dec[1])
+        var.setExpression(val)
+        if append or var.isStatic:
+            block.addSource( ("%s = %s", (dec, val)) )
         }
     ;
 
@@ -463,13 +471,14 @@ statement [block]
 
 
     |   {
-        switch_block = block.newSwitch()
+        while_block, switch_block = block.newSwitch()
         }
         #("switch" switch_expr = expression[block, False]
-                   (c:case_group[block, switch_expr])*
+                   (c:case_group[while_block, switch_expr])*
         )
         {
-        block.fixSwitch(switch_block)
+        while_block.newStatement("break")
+        block.fixSwitch(while_block, switch_block)
         }
 
     |   {
@@ -489,7 +498,7 @@ statement [block]
 
 case_group [block, switch_expr]
     :   {
-        other = block.newStatement("elif")
+        other = block.newStatement("if")
         right = None
         }
         #(CASE_GROUP
@@ -506,19 +515,11 @@ case_group [block, switch_expr]
         )
         {
         if right is block.emptyAssign:
-            other.setName("else")
-            other.setExpression(None)
+            other.setExpression("True")
         elif right[0] == "%s":
             other.setExpression(("%s == %s", (switch_expr, right)))
         else:
             other.setExpression(("%s in (%s)", (switch_expr, right)))
-
-        /* if only one break statement in the elif block, delete it, then
-           a pass statement will be generated */
-        if len(other.lines) == 1 and \
-            hasattr(other.lines[0], "name") and \
-            other.lines[0].name == "break":
-            del other.lines[0]
         }
     ;
 

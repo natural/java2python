@@ -104,7 +104,8 @@ class Source:
         self.epilogue = []
         self.lines = []
         self.type = None
-        self.variables = set()
+        self.variables = list()
+        self.methods = list()
 
         self.postIncDecInExprFixed = False
         self.postIncDecVars = []
@@ -166,17 +167,22 @@ class Source:
 
     def addSourceBefore(self, value, stat=None):
         """ add source code to the end of this block, before the last line
+        or the specified statement
 
         @param value string, instance of Source (or subclass), or two-tuple
+        @param stat Statement, insert source before this statement
         @return None
         """
         if len(self.lines) > 0:
-            idx = -2 if stat == None else self.lines.index(stat)
+            if isinstance(stat, int):
+                idx = stat
+            else:
+                idx = -2 if stat == None else self.lines.index(stat)
             self.lines.insert(idx, value)
         else:
             self.lines.append(value)
 
-    def addVariable(self, name, force=False):
+    def addVariable(self, var, force=False):
         """ add variable name to set for tracking
 
         Variables are only added to Class instances unless the force
@@ -186,8 +192,11 @@ class Source:
         @keyparam force=False, if True, always add to set
         @return None
         """
-        if force or (name and self.isClass):
-            self.variables.add(name)
+        if force or (var.name and self.isClass):
+            self.variables.append(var)
+
+    def addMethod(self, meth):
+        self.methods.append(meth)
 
     @property
     def allParents(self):
@@ -208,9 +217,38 @@ class Source:
         """
         for obj in [self, ] + list(self.allParents):
             for v in obj.variables:
-                yield v
+                yield v.name
+            for v in obj.methods:
+                yield v.name
             for v in obj.extraVars:
                 yield v
+
+    @property
+    def allMembers(self):
+        """ all member variables in this class
+
+        @return yields all member names from this class
+        """
+        for obj in [self, ] + list(self.allParents):
+            if isinstance(obj, Class):
+                for v in obj.variables:
+                    yield v.name
+                for v in obj.methods:
+                    yield v.name
+                for v in obj.extraVars:
+                    yield v
+
+    @property
+    def staticMembers(self):
+        """ all static member variable in this class
+
+        @return yields static member names from this class
+        """
+        for obj in [self, ] + list(self.allParents):
+            if isinstance(obj, Class):
+                for v in obj.variables:
+                    if v.isStatic:
+                        yield v.name
 
     @property
     def extraVars(self):
@@ -267,6 +305,15 @@ class Source:
                     return 'self.%s'
         return '%s ## ERROR'
 
+    @property
+    def className(self):
+        if isinstance(self, Class):
+            return self.name
+        elif self.parent is not None:
+            return self.parent.className
+        else:
+            return 'ERROR'
+
     def fixDecl(self, *args):
         """ fixes variable names that are class members
 
@@ -274,12 +321,16 @@ class Source:
         @return fixed name or names
         """
         fixed = list(args)
-        allvars = list(self.allVars)
+        allvars = list(self.allMembers)
+        staticvars = list(self.staticMembers)
         mapping = self.config.combined('variableNameMapping')
         format = self.declFormat
         if not self.isClass:
             for i, arg in enumerate(args):
-                if arg in allvars:
+                if arg in staticvars:
+                    arg = mapping.get(arg, arg)
+                    fixed[i] = "%s.%s" % (self.className, arg)
+                elif arg in allvars:
                     arg = mapping.get(arg, arg)
                     fixed[i] = format % (arg, )
                 else:
@@ -317,6 +368,7 @@ class Source:
         @return Method instance
         """
         m = Method(parent=self, name=name)
+        self.addMethod(m)
         self.addSource(m)
         return m
 
@@ -325,10 +377,13 @@ class Source:
 
         @return Statement instance
         """
-        s = Statement(self, 'if')
+        while_stat = Statement(self, 'while')
+        while_stat.setExpression('True')
+        self.addSource(while_stat)
+        s = Statement(while_stat, 'if')
         s.expr = 'False'
-        self.addSource(s)
-        return s
+        while_stat.addSource(s)
+        return while_stat, s
 
     def newStatement(self, name):
         """ creates a new Statement as a child of this block
@@ -342,14 +397,20 @@ class Source:
 
     def newStatementBefore(self, name, stat=None):
         """ creates a new Statement as a child of this block before the last
+        or the specified statement.
 
         @param name name of statement
-        @param stat add statement before stat
+        @param stat add statement before this one
         @return Statement instance
         """
         s = Statement(parent=self, name=name)
         self.addSourceBefore(s, stat)
         return s
+
+    def newVariable(self, name=None):
+        var = Variable(self)
+        self.addVariable(var, True)
+        return var
 
     def formatExpression(self, expr):
         """ format an expression set by the tree walker
@@ -398,13 +459,13 @@ class Source:
         """
         self.name = name
 
-    def fixSwitch(self, block):
+    def fixSwitch(self, while_block, block):
         """ fixes the first clause in an generated switch statement
 
         @param block Statement instance and child of this block
         @return None
         """
-        lines = self.lines
+        lines = while_block.lines
         if (not block in lines) or (block.name != 'if'):
             return
         i = lines.index(block)
@@ -666,6 +727,20 @@ class Class(Source):
                 method.preamble.append('@%s.register(%s)' % (firstname, params))
                 method.name = '%s_%s' % (method.name, index)
 
+    def declVars(self):
+        """Declare class member vars in init method
+
+        """
+        meth = None
+        if "__init__" in list(self.allMembers):
+            meth = self.newMethod("__init_vars__")
+        elif len(self.variables) > 0:
+            meth = self.newMethod("__init__")
+        if meth:
+            for v in self.variables:
+                if not v.isStatic:
+                    meth.addSource(("self.%s = %s", (("%s", v.name), v.expr)))
+
     def writeTo(self, output, indent):
         """ writes the string representation of this block
 
@@ -877,3 +952,29 @@ class Statement(Source):
         if (not lines) and name not in ('break', 'continue', 'raise'):
             self.addSource('pass')
         Source.writeTo(self, output, indent+1)
+
+class Variable(Source):
+    """Variable is a defined class member variable or auto variable of the
+    method.
+
+    """
+
+    def __init__(self, parent, name=None, expr=None):
+        Source.__init__(self, parent=parent, name=name)
+        self.expr = expr
+
+    def setExpression(self, expr):
+        """ sets the value of the expression for this Variable
+
+        @param value expression (see formatExpression in Source class).
+        @return None
+        """
+        self.expr = expr
+
+    @property
+    def isStatic(self):
+        """Check is this variable a static variable
+
+        @return if the variable is static return True
+        """
+        return 'static' in self.modifiers
