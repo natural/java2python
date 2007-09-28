@@ -106,6 +106,10 @@ class Source:
         self.type = None
         self.variables = set()
 
+        self.postIncDecInExprFixed = False
+        self.postIncDecVars = []
+        self.postIncDecCount= 0 
+
     def __str__(self):
         """ str(obj) -> source code defined in obj
 
@@ -159,6 +163,18 @@ class Source:
         @return None
         """
         self.lines.append(value)
+
+    def addSourceBefore(self, value, stat=None):
+        """ add source code to the end of this block, before the last line
+
+        @param value string, instance of Source (or subclass), or two-tuple
+        @return None
+        """
+        if len(self.lines) > 0:
+            idx = -2 if stat == None else self.lines.index(stat)
+            self.lines.insert(idx, value)
+        else:
+            self.lines.append(value)
 
     def addVariable(self, name, force=False):
         """ add variable name to set for tracking
@@ -324,6 +340,17 @@ class Source:
         self.addSource(s)
         return s
 
+    def newStatementBefore(self, name, stat=None):
+        """ creates a new Statement as a child of this block before the last
+
+        @param name name of statement
+        @param stat add statement before stat
+        @return Statement instance
+        """
+        s = Statement(parent=self, name=name)
+        self.addSourceBefore(s, stat)
+        return s
+
     def formatExpression(self, expr):
         """ format an expression set by the tree walker
 
@@ -406,6 +433,53 @@ class Source:
         """
         return (' ' * self.config.last('indent', 4)) * indent
 
+    def fixAssignInExpr(self, needFix, expr, left):
+        if not needFix: return expr
+        if self.name == 'if':
+            self.parent.addSourceBefore(expr, self)
+        elif self.name == 'while':
+            self.addSource(expr)
+        elif isinstance(self, Method):
+            self.addSource(expr)    
+        return left
+
+    def fixPostIncDecInExpr(self, needFix, expr, left, op):
+        if not needFix: return expr
+        if self.name == 'if':
+            avar = "_%s0" % left[1]
+            self.postIncDecVars.append((avar, left, op))
+            self.postIncDecInExprFixed = True
+            return '%s', avar
+        else:
+            self.postIncDecVars.append((left, op))
+            self.postIncDecInExprFixed = True
+            return '%s', left
+
+    def fixPostIncDecInExprAfter(self, expr):
+        if not self.postIncDecInExprFixed: return expr
+        if self.name == 'if':
+            for var in self.postIncDecVars:
+                self.parent.addSourceBefore((var[0] + ' = %s', var[1]), self)
+            for var in self.postIncDecVars:
+                self.parent.addSourceBefore(('%s ' + var[2] + '= 1', var[1]), self)
+        else:
+            for var in self.postIncDecVars:
+                left, op = var
+                self.addSource(('%s ' + op + "= 1", left))
+        self.postIncDecVars = []
+        self.postIncDecInExprFixed = False
+        return expr
+
+    def hasAssignInExpr(self, expr):
+        from lexer import ASSIGN, INC, DEC, POST_INC, POST_DEC, BAND_ASSIGN, SL_ASSIGN, BSR_ASSIGN, SR_ASSIGN, MOD_ASSIGN, DIV_ASSIGN, STAR_ASSIGN, MINUS_ASSIGN, PLUS_ASSIGN
+        if expr.getType() in (ASSIGN, INC, DEC, POST_INC, POST_DEC, BAND_ASSIGN, SL_ASSIGN, BSR_ASSIGN, SR_ASSIGN, MOD_ASSIGN, DIV_ASSIGN, STAR_ASSIGN, MINUS_ASSIGN, PLUS_ASSIGN):
+            return True
+        child = expr.getFirstChild()
+        while child:
+            ret = self.hasAssignInExpr(child)
+            if ret: return True
+            child = child.getNextSibling()
+        return False
 
 class Module(Source):
     """ Module -> specialized block type

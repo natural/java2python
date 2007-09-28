@@ -391,12 +391,23 @@ statement [block]
 
 
     |   {
-        while_stat = block.newStatement("while")
+        if_stat = while_stat = block.newStatement("while")
         }
-        #("while" while_expr = expression[block, False] 
-                  statement[while_stat])
+        #(wh:"while"
+          {
+            useif = block.hasAssignInExpr(wh.getFirstChild())
+            if (useif):
+                if_stat = while_stat.newStatement("if")
+                while_stat.setExpression("True")
+                if_stat.newStatement("break")
+          }
+          while_expr = expression[if_stat, False] 
+          statement[while_stat])
         {
-        while_stat.setExpression(while_expr)
+        if useif:
+            if_stat.setExpression(("not %s", while_expr))
+        else:
+            if_stat.setExpression(while_expr)
         }
 
 
@@ -404,12 +415,16 @@ statement [block]
         while_stat = block.newStatement("while")
         while_stat.setExpression("True")
         }
-        #("do" statement[while_stat] do_exp = expression[block, False])
-        {
+        #("do"
+          statement[while_stat]
+          {
             if_stat = while_stat.newStatement("if")
-            if_stat.setExpression(("not %s", do_exp))
             if_stat.newStatement("break")
-        }
+          }
+          do_exp = expression[if_stat, False])
+          {
+            if_stat.setExpression(("not %s", do_exp))
+          }
 
 
     |   {
@@ -550,61 +565,117 @@ returns [seq]
 
 expression [block, append=True]
 returns [exp]
-    :   #(EXPR exp = expr[block])
+    :   {
+        fixAssign = not append
+        }
+        #(EXPR exp = expr[block, fixAssign])
         {
         if append:
             block.addSource(exp)
+        if block.postIncDecInExprFixed:
+            exp = block.fixPostIncDecInExprAfter(exp)
         }
     ;
 
 
-expr [block]
+expr [block, fixAssign=True]
 returns [exp = block.unknownExpression]
     :   #(QUESTION a0=expr[block] b0=expr[block] c0=expr[block])
         {exp = ("%s %s", (("%s", b0), ("%s %s", (("if %s", a0), ("else %s", c0)))))}
 
     |   #(ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s = %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s = %s", (left, right)), left)}
 
     |   #(PLUS_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s += %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s += %s", (left, right)), left)}
 
     |   #(MINUS_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s -= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s -= %s", (left, right)), left)}
 
     |   #(STAR_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s *= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s *= %s", (left, right)), left)}
 
     |   #(DIV_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s /= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s /= %s", (left, right)), left)}
 
     |   #(MOD_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s %%= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s %%= %s", (left, right)), left)}
 
     |   #(SR_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s >>= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s >>= %s", (left, right)), left)}
 
     |   #(BSR_ASSIGN left=expr[block] right=expr[block])
         // raise an exception during parsing, not at runtime
         {raise NotImplementedError("BSR_ASSIGN")}
 
     |   #(SL_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s <<= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s <<= %s", (left, right)), left)}
 
     |   #(BAND_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s &= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s &= %s", (left, right)), left)}
 
     |   #(BXOR_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s ^= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s ^= %s", (left, right)), left)}
 
     |   #(BOR_ASSIGN left=expr[block] right=expr[block])
-        {exp = ("%s |= %s", (left, right))}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s |= %s", (left, right)), left)}
 
-    |   #(LOR left=expr[block] right=expr[block])
-        {exp = ("%s or %s", (left, right))}
+    |   { left_if = right_if = block }
+        #(lor:LOR
+          {
+            right_has = block.hasAssignInExpr(lor.getFirstChild().getNextSibling())
+            if right_has:
+                left_if = block.parent.newStatementBefore("if", block)
+                right_if = left_if.newStatement("if")
+          }
+          left=expr[left_if] right=expr[right_if])
+        {
+        if right_has:
+            left_if.setExpression(("not %s", left))
+            if left != "_ret":
+                left_else = block.parent.newStatementBefore("else", block)
+                left_else.addSource("_ret = True")
+            right_if.setExpression(right)
+            right_if.addSource("_ret = True")
+            right_else = left_if.newStatement("else")
+            right_else.addSource("_ret = False")
+            if left_if.postIncDecInExprFixed:
+                left_if.fixPostIncDecInExprAfter(left)
+            if right_if.postIncDecInExprFixed:
+                right_if.fixPostIncDecInExprAfter(right)
+            exp = "_ret"
+        else:
+            exp = ("%s or %s", (left, right))
 
-    |   #(LAND left=expr[block] right=expr[block])
-        {exp = ("%s and %s", (left, right))}
+        }
+
+    |   { left_if = right_if = block }
+        #(land:LAND
+          {
+            right_has = block.hasAssignInExpr(land.getFirstChild().getNextSibling())
+            if right_has:
+                left_if = block.parent.newStatementBefore("if", block)
+                right_if = left_if.newStatement("if")
+          }
+          left=expr[left_if] right=expr[right_if])
+        {
+        if right_has:
+            left_if.setExpression(left)
+            if left != "_ret":
+                left_else = block.parent.newStatementBefore("else", block)
+                left_else.addSource("_ret = False")
+            right_if.setExpression(right)
+            right_if.addSource("_ret = True")
+            right_else = left_if.newStatement("else")
+            right_else.addSource("_ret = False")
+            if left_if.postIncDecInExprFixed:
+                left_if.fixPostIncDecInExprAfter(left)
+            if right_if.postIncDecInExprFixed:
+                right_if.fixPostIncDecInExprAfter(right)
+            exp = "_ret"
+        else:
+            exp = ("%s and %s", (left, right))
+        }
 
     |   #(BOR left=expr[block] right=expr[block])
         {exp = ("%s | %s", (left, right))}
@@ -669,16 +740,16 @@ returns [exp = block.unknownExpression]
         {exp = ("%s * %s", (left, right))}
 
     |   #(INC ex=expr[block])
-        {exp = ("%s += 1", ex)}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s += 1", ex), ex)}
 
     |   #(DEC ex=expr[block])
-        {exp = ("%s -= 1", ex)}
+        {exp = block.fixAssignInExpr(fixAssign, ("%s -= 1", ex), ex)}
 
     |   #(POST_INC ex=expr[block])
-        {exp = ("%s += 1", ex)}
+        {exp = block.fixPostIncDecInExpr(fixAssign, ("%s += 1", ex), ex, "+")}
 
     |   #(POST_DEC ex=expr[block])
-        {exp = ("%s -= 1", ex)}
+        {exp = block.fixPostIncDecInExpr(fixAssign, ("%s -= 1", ex), ex, "-")}
 
     |   #(BNOT ex=expr[block])
         {exp = ("~%s", ex)}
