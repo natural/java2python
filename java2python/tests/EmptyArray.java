@@ -1,6 +1,9 @@
-class EmptyArray {
-    int [] b;
-    public static void main(String[] args) {
+import junit.framework.*;
+
+public class EmptyArray extends TestCase {
+
+    public void testEmptyArray() {
+        int [] b;
     }
 
 }
