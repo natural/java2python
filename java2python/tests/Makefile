@@ -1,8 +1,8 @@
 PYTHONPATH=../../:.
 CLASSPATH:=.:/usr/share/junit/lib/junit.jar
 
-PYOBJS=AssignInExpr.py EmptyArray.py
-JAVAOBJS=AssignInExpr EmptyArray
+PYOBJS=AssignInExpr.py EmptyArray.py Switches.py
+JAVAOBJS=AssignInExpr EmptyArray Switches
 
 all: python-test
 
