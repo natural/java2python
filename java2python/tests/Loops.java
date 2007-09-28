@@ -1,23 +1,25 @@
-class Loops {
-    public static void main(String[] args) {
-	for(int a = 1; a < 10;){
-	    a+= 3;
-	    System.out.println(a);
-	}
+import junit.framework.*;
 
-	for (int b = 0; b < 20; b+=2) {
-	}
+public class Loops extends TestCase {
 
-	doWhile();
+    public void testFor() {
+        for(int a = 1; a < 10;){
+            a+= 3;
+        }
+        Assert.assertEquals(a, 10);
+
+        for (int b = 0; b < 20; b+=2) {
+        }
+        Assert.assertEquals(b, 20);
     }
 
-    public static int doWhile() {
-	int x = 0;
-	do {
-	    System.out.println(x);
-	    x += 1;
-	} while (x <= 10);
-        return x;
+    public void testDoWhile() {
+        int x = 0;
+        do {
+            x += 1;
+        } while (x <= 10);
+        Assert.assertEquals(x, 11);
     }
+
 }
 
