@@ -11,6 +11,9 @@ public class Keywords extends TestCase {
         String elif = "this is elif";
         Assert.assertEquals(elif, "this is elif");
 
+        String from = "this is from";
+        Assert.assertEquals(elif, "this is from");
+
         String in = "this is in";
         Assert.assertEquals(in, "this is in");
 
