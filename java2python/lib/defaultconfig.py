@@ -94,6 +94,7 @@ typeTypeMap = {
     'Vector':'list',
     'boolean':'bool',
     'char':'str',
+    '[':'list',
 }
 
 ## mapping of java type values to python type values.  user-defined
