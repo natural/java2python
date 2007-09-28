@@ -307,6 +307,9 @@ class Source:
 
     @property
     def className(self):
+        """ Return className of the source in.
+
+        """
         if isinstance(self, Class):
             return self.name
         elif self.parent is not None:
@@ -380,10 +383,7 @@ class Source:
         while_stat = Statement(self, 'while')
         while_stat.setExpression('True')
         self.addSource(while_stat)
-        s = Statement(while_stat, 'if')
-        s.expr = 'False'
-        while_stat.addSource(s)
-        return while_stat, s
+        return while_stat
 
     def newStatement(self, name):
         """ creates a new Statement as a child of this block
@@ -407,7 +407,21 @@ class Source:
         self.addSourceBefore(s, stat)
         return s
 
+    def removeStatement(self, stat):
+        """ remove a statement from source.
+
+        @param stat Statement to be removed.
+        @return None
+        """
+        idx = self.lines.index(stat)
+        del self.lines[idx]
+
     def newVariable(self, name=None):
+        """ creates a new Variable for the block
+        
+        @param name name of the variable
+        @return Variable instance
+        """
         var = Variable(self)
         self.addVariable(var, True)
         return var
@@ -458,23 +472,6 @@ class Source:
         @return None
         """
         self.name = name
-
-    def fixSwitch(self, while_block, block):
-        """ fixes the first clause in an generated switch statement
-
-        @param block Statement instance and child of this block
-        @return None
-        """
-        lines = while_block.lines
-        if (not block in lines) or (block.name != 'if'):
-            return
-        i = lines.index(block)
-        if (len(lines) > i):
-            next = lines[i+1]
-            if next.name == 'elif':
-                lines.remove(next)
-                block.expr = next.expr
-                block.lines = next.lines
 
     def trimLines(self):
         """ removes empty lines from the end of this block

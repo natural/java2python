@@ -471,14 +471,13 @@ statement [block]
 
 
     |   {
-        while_block, switch_block = block.newSwitch()
+        while_block = block.newSwitch()
         }
         #("switch" switch_expr = expression[block, False]
                    (c:case_group[while_block, switch_expr])*
         )
         {
         while_block.newStatement("break")
-        block.fixSwitch(while_block, switch_block)
         }
 
     |   {
@@ -505,17 +504,24 @@ case_group [block, switch_expr]
             (#("case"
                newright = expression[other, False]
                {
-        if not right:
-            right = ("%s", newright)
-        else:
-            right = ("%s, %s", (right, newright))
+                if not right:
+                    right = ("%s", newright)
+                else:
+                    right = ("%s, %s", (right, newright))
                }
-              ) | "default" { right = block.emptyAssign } )+
-               statement_list[other]
+              )
+              | "default"
+               {
+                right = block.emptyAssign
+                block.removeStatement(other)
+                other = block
+               }
+            )+
+            statement_list[other]
         )
         {
         if right is block.emptyAssign:
-            other.setExpression("True")
+            pass
         elif right[0] == "%s":
             other.setExpression(("%s == %s", (switch_expr, right)))
         else:

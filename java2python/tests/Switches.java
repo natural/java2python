@@ -57,6 +57,7 @@ public class Switches extends TestCase {
         switch (i) {
             case 1:
                 if (i == 1) break;
+            case 5:
             default:
                 i = 2;
         }
