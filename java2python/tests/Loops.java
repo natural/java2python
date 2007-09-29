@@ -13,6 +13,14 @@ public class Loops extends TestCase {
         Assert.assertEquals(b, 20);
     }
 
+    public void testDeadLoop() {
+        int x = 0;
+        for (;;) {
+            x ++;
+            if (x > 10) break;
+        }
+    }
+
     public void testDoWhile() {
         int x = 0;
         do {
