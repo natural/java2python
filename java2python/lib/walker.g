@@ -382,7 +382,7 @@ statement [block]
         block.addComment("for-while")
         for_init, for_stat = block.newFor()
         for_iter = None
-        for_cond = "%s"
+        for_cond = "True"
         }
         #("for"
             #(FOR_INIT
