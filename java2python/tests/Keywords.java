@@ -31,5 +31,9 @@ public class Keywords extends TestCase {
 
         String str = "this is str";
         Assert.assertEquals(str, "this is str");
+
+        String None = "this is None";
+        Assert.assertEquals(None, "this is None");
+
     }
 }

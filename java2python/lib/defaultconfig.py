@@ -179,6 +179,7 @@ variableNameMapping = {
     'not':'not_',
     'or':'or_',
     'print':'print_',
+    'None':'None_',
     }
 
 
