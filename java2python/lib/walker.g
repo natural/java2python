@@ -97,7 +97,7 @@ returns [typ]
 
 builtin_type [block]
 returns [typ]
-    :   "void"    {typ = "None"   }
+    :   "void"    {typ = "null"   }
     |   "boolean" {typ = "bool"   }
     |   "byte"    {typ = "str"    }
     |   "char"    {typ = "str"    }
@@ -167,22 +167,21 @@ obj_block [block]
                 | method_def[block]
                 | variable_def[block, False]
                 | typ = type_def[block]
-                | #(STATIC_INIT statement_list[block])
+                | static_init[block]
                 | #(INSTANCE_INIT statement_list[block])
             )*
         )
-        { block.declVars() }
+        { block.fixCtor() }
     ;
 
 
 ctor_def [block]
     :   {
         meth = block.newMethod()
+        meth.calledSuperCtor = False
+        meth.calledOtherCtor = False
         }
         #(CTOR_DEF
-        {
-        meth.addSource("self.__init_vars__()")
-        }
             modifiers[meth]
             method_head[meth, "__init__"]
             (statement_list[meth])?
@@ -244,7 +243,7 @@ variable_def [block, append = True]
         )
         {
         if val == block.emptyAssign:
-            val = ("%s", block.config.combined("typeValueMap").get(typ, "None"))
+            val = ("%s", block.config.combined("typeValueMap").get(typ, "null"))
         var.setName(dec[1])
         var.setExpression(val)
         if append or var.isStatic:
@@ -252,6 +251,16 @@ variable_def [block, append = True]
         }
     ;
 
+static_init [block]
+    :   #(STATIC_INIT
+          {
+            if not hasattr(block, "static_init"):
+                block.static_init = block.newMethod("__static_init__")
+                block.static_init.addModifier("static")
+                block.parent.addSource("%s.__static_init__()\n" % block.className)
+          }
+          statement_list[block.static_init])
+    ;
 
 parameter_def [meth, exc=False]
     :   #(pd0:PARAMETER_DEF
@@ -386,7 +395,7 @@ statement [block]
         }
         #("for"
             #(FOR_INIT
-                ((variable_def[for_init])+ | for_exp = expr_list[for_init])?)
+                ((variable_def[for_init])+ | for_exp = expr_list[for_init, True])?)
             #(FOR_CONDITION (for_cond = expression[for_stat, False])?)
             #(FOR_ITERATOR  (for_iter = expr_list[for_stat, False])?)
             statement[for_stat]
@@ -463,7 +472,7 @@ statement [block]
         }
         #("return" (return_value = expression[block, False])? )
         {
-        if return_value in (None, ("%s", "None")):
+        if return_value in (None, ("%s", "null")):
             block.addSource("return")
         else:
             block.addSource(("return %s", return_value))
@@ -695,7 +704,7 @@ returns [exp = block.unknownExpression]
 
     |   #(NOT_EQUAL left=expr[block] right=expr[block])
         {
-        if right in ("None", (("%s", "None"))):
+        if right in ("null", (("%s", "null"))):
             exp = ("%s is not %s", (left, right))
         else:
             exp = ("(%s != %s)", (left, right))
@@ -703,7 +712,7 @@ returns [exp = block.unknownExpression]
 
     |   #(EQUAL left=expr[block] right=expr[block])
         {
-        if right in ("None", (("%s", "None"))):
+        if right in ("null", (("%s", "null"))):
             exp = ("%s is %s", (left, right))
         else:
             exp = ("(%s == %s)", (left, right))
@@ -842,7 +851,7 @@ returns [exp = block.missingValue]
     |   "true"  {exp = ("%s", "True"   )}
     |   "false" {exp = ("%s", "False"  )}
     |   "this"  {exp = ("%s", "self"   )}
-    |   "null"  {exp = ("%s", "None"   )}
+    |   "null"  {exp = ("%s", "null"   )}
     // type name used with instanceof
     |   typ = type_spec[block] {exp = ("%s", typ)}
     ;
@@ -852,8 +861,9 @@ ctor_call [block]
     :   #(cn:CTOR_CALL seq=expr_list[block, False] )
         {
         name = block.parent.name
-        call = ("super(%s, self).__init__(%s)", (("%s", name), ("%s", seq)))
+        call = ("self.__init__(%s)", ("%s", seq))
         block.addSource(call)
+        block.calledOtherCtor = True
         }
 
     |   #(SUPER_CTOR_CALL
@@ -868,6 +878,10 @@ ctor_call [block]
             block.addSource(call)
             }
         )
+        {
+        block.calledSuperCtor = True
+        block.stmtAfterSuper = block.newStatement("if")
+        }
     ;
 
 

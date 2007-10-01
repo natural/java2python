@@ -180,6 +180,7 @@ variableNameMapping = {
     'or':'or_',
     'print':'print_',
     'None':'None_',
+    'null':'None',
     }
 
 

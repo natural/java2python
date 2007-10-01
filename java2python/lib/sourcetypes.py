@@ -177,7 +177,7 @@ class Source:
             if isinstance(stat, int):
                 idx = stat
             else:
-                idx = -2 if stat == None else self.lines.index(stat)
+                idx = 0 if stat == None else self.lines.index(stat)
             self.lines.insert(idx, value)
         else:
             self.lines.append(value)
@@ -224,29 +224,64 @@ class Source:
                 yield v
 
     @property
-    def allMembers(self):
-        """ all member variables in this class
+    def methodVars(self):
+        """ all vars declared in the current method
 
-        @return yields all member names from this class
+        @return yeilds all vars declared in the method
+        """
+
+        for obj in [self, ] + list(self.allParents):
+            for v in obj.variables:
+                yield v.name
+            if isinstance(obj, Method): break
+
+    @property
+    def instanceMembers(self):
+        """ all instance members in this class
+
+        @return yields all instance member names from this class
         """
         for obj in [self, ] + list(self.allParents):
             if isinstance(obj, Class):
                 for v in obj.variables:
-                    yield v.name
-                for v in obj.methods:
-                    yield v.name
+                    if not v.isStatic:
+                        yield v.name
                 for v in obj.extraVars:
                     yield v
 
     @property
+    def instanceMethods(self):
+        """ all instance methods in this class
+
+        @return yields all instance method names from this class
+        """
+        for obj in [self, ] + list(self.allParents):
+            if isinstance(obj, Class):
+                for v in obj.methods:
+                    if not v.isStatic:
+                        yield v.name
+
+    @property
     def staticMembers(self):
-        """ all static member variable in this class
+        """ all static members in this class
 
         @return yields static member names from this class
         """
         for obj in [self, ] + list(self.allParents):
             if isinstance(obj, Class):
                 for v in obj.variables:
+                    if v.isStatic:
+                        yield v.name
+
+    @property
+    def staticMethods(self):
+        """ all static methods in this class
+
+        @return yields static method names from this class
+        """
+        for obj in [self, ] + list(self.allParents):
+            if isinstance(obj, Class):
+                for v in obj.methods:
                     if v.isStatic:
                         yield v.name
 
@@ -290,6 +325,14 @@ class Source:
         return isinstance(self, Method)
 
     @property
+    def isStatic(self):
+        """ True if this instance is static
+
+        @return if the variable is static return True
+        """
+        return 'static' in self.modifiers
+
+    @property
     def declFormat(self):
         """ string format for variable names in this block
 
@@ -324,20 +367,23 @@ class Source:
         @return fixed name or names
         """
         fixed = list(args)
-        allvars = list(self.allMembers)
-        staticvars = list(self.staticMembers)
+        methodvars = list(self.methodVars)
+        membervars = list(self.instanceMembers) + list(self.instanceMethods)
+        staticvars = list(self.staticMembers) + list(self.staticMethods)
         mapping = self.config.combined('variableNameMapping')
         format = self.declFormat
-        if not self.isClass:
-            for i, arg in enumerate(args):
-                if arg in staticvars:
-                    arg = mapping.get(arg, arg)
-                    fixed[i] = "%s.%s" % (self.className, arg)
-                elif arg in allvars:
-                    arg = mapping.get(arg, arg)
-                    fixed[i] = format % (arg, )
-                else:
-                    fixed[i] = mapping.get(arg, arg)
+        for i, arg in enumerate(args):
+            if arg in methodvars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = arg
+            elif arg in staticvars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = "%s.%s" % (self.className, arg)
+            elif arg in membervars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = format % (arg, )
+            else:
+                fixed[i] = mapping.get(arg, arg)
         if len(fixed) == 1:
             return fixed[0]
         else:
@@ -447,7 +493,7 @@ class Source:
         elif isinstance(first, basestring) and isinstance(second, tuple):
             return fixdecl(first) % format(second)
         elif isinstance(first, tuple) and isinstance(second, basestring):
-            return format(first) % format(second)
+            return format(first) % fixdecl(second)
         elif isinstance(first, tuple) and isinstance(second, tuple):
             return (format(first), format(second))
         else:
@@ -631,6 +677,21 @@ class Class(Source):
             name = self.formatExpression(name)
             self.bases.append(name)
 
+    def fixDecl(self, *args):
+        """ fixes variable names that are class members
+
+        @varparam args names to fix
+        @return fixed name or names
+        """
+        ret = list(args)
+        for i, arg in enumerate(args):
+            if self.className != arg:
+                ret[i] = Source.fixDecl(self, arg)
+        if len(ret) > 1:
+            return ret
+        else:
+            return ret[0]
+
     def formatDecl(self):
         """ generates a class statement accounting for base types
 
@@ -724,19 +785,37 @@ class Class(Source):
                 method.preamble.append('@%s.register(%s)' % (firstname, params))
                 method.name = '%s_%s' % (method.name, index)
 
-    def declVars(self):
+    def fixCtor(self):
         """Declare class member vars in init method
 
         """
-        meth = None
-        if "__init__" in list(self.allMembers):
-            meth = self.newMethod("__init_vars__")
-        elif len(self.variables) > 0:
-            meth = self.newMethod("__init__")
-        if meth:
-            for v in self.variables:
-                if not v.isStatic:
-                    meth.addSource(("self.%s = %s", (("%s", v.name), v.expr)))
+        found = False
+        for meth in self.methods:
+            if meth.name == '__init__':
+                found = True
+                break
+        if not found and len(list(self.instanceMembers)) > 0:
+            meth = self.newMethod('__init__')
+            meth.calledSuperCtor = False
+            meth.calledOtherCtor = False
+
+        for meth in self.methods:
+            if meth.name == '__init__':
+                if not (meth.calledSuperCtor or meth.calledOtherCtor):
+                    meth.addSourceBefore("super(%s, self).__init__()" % meth.className, 0)
+                    meth.stmtAfterSuper = meth.newStatementBefore("if", 1)
+
+                if not meth.calledOtherCtor:
+                    stmt = meth.stmtAfterSuper 
+                    meth.addSourceBefore("# begin of instance variables", stmt)
+                    for v in self.variables:
+                        if not v.isStatic:
+                            meth.addSourceBefore(
+                                ("self.%s = %s", (("%s", v.name), v.expr)),
+                                stmt)
+                    idx = meth.lines.index(stmt)
+                    meth.lines[idx] = "# end of instance variables"
+                    
 
     def writeTo(self, output, indent):
         """ writes the string representation of this block
@@ -968,10 +1047,3 @@ class Variable(Source):
         """
         self.expr = expr
 
-    @property
-    def isStatic(self):
-        """Check is this variable a static variable
-
-        @return if the variable is static return True
-        """
-        return 'static' in self.modifiers
