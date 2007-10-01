@@ -2,8 +2,9 @@ PYTHONPATH=../../:.
 CLASSPATH:=.:/usr/share/junit/lib/junit.jar
 
 PYOBJS=Loops.py AssignInExpr.py EmptyArray.py Switches.py ClassMember.py \
-	FloatFix.py Keywords.py
-JAVAOBJS=AssignInExpr EmptyArray Switches ClassMember
+	FloatFix.py Keywords.py ClassInit.py SuperCtorTest.py
+JAVAOBJS=Loops AssignInExpr EmptyArray Switches ClassMember FloatFix Keywords \
+	ClassInit SuperCtorTest
 
 all: python-test
 

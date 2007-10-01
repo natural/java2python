@@ -8,6 +8,7 @@
 modulePreamble = [
     'import unittest',
     'from unittest import TestCase',
+    'from overloading import overloaded',
     ]
 
 ## lines written at the end of each generated module.  this value is
@@ -22,4 +23,4 @@ variableNameMapping = {
     'Assert':'self',
     }
 
-
+fixPropMethods = False

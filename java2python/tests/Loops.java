@@ -3,12 +3,14 @@ import junit.framework.*;
 public class Loops extends TestCase {
 
     public void testFor() {
-        for(int a = 1; a < 10;){
+        int a, b;
+
+        for(a = 1; a < 10;){
             a+= 3;
         }
         Assert.assertEquals(a, 10);
 
-        for (int b = 0; b < 20; b+=2) {
+        for (b = 0; b < 20; b+=2) {
         }
         Assert.assertEquals(b, 20);
     }

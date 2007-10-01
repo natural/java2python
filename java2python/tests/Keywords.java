@@ -1,9 +1,13 @@
 import junit.framework.*;
 
 public class Keywords extends TestCase {
-    public static void main(String[] args) {
+    public static String None = "this is None";
+    public static String and = "this is and";
+
+    public void testKeywords() {
         String and = "this is and";
         Assert.assertEquals(and, "this is and");        
+        Assert.assertEquals(Keywords.and, "this is and");        
 
         String del = "this is del";
         Assert.assertEquals(del, "this is del");
@@ -12,7 +16,7 @@ public class Keywords extends TestCase {
         Assert.assertEquals(elif, "this is elif");
 
         String from = "this is from";
-        Assert.assertEquals(elif, "this is from");
+        Assert.assertEquals(from, "this is from");
 
         String in = "this is in";
         Assert.assertEquals(in, "this is in");
@@ -34,6 +38,6 @@ public class Keywords extends TestCase {
 
         String None = "this is None";
         Assert.assertEquals(None, "this is None");
-
+        Assert.assertEquals(Keywords.None, "this is None");
     }
 }
