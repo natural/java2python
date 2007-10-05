@@ -9,6 +9,10 @@ class Simple {
         c++;
         a++;
     }
+
+    public void setA(int a) {
+        this.a = a;
+    }
 }
 
 public class ClassMember extends TestCase {
@@ -26,5 +30,11 @@ public class ClassMember extends TestCase {
         x.add();
         Assert.assertEquals(Simple.c, 2);
         Assert.assertEquals(x.c, 2);
+    }
+
+    public void testParamName() {
+        Simple x = new Simple();
+        x.setA(10);
+        Assert.assertEquals(x.a, 10);
     }
 }

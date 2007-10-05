@@ -889,6 +889,7 @@ class Method(Source):
         name = self.alternateName(name)
         typ = Source.alternateName(self, typ, 'typeTypeMap')
         self.parameters.append((typ, name))
+        self.variables.append(Variable(self, name))
 
     def formatDecl(self, indent):
         """ generates a class statement accounting for base types
