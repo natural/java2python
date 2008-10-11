@@ -6,8 +6,8 @@ import os.path
 import sys
 from time import time
 
-from java2python.lib.lexer import Lexer
-from java2python.lib.parser import Parser
+from java2python.lib.JavaLexer import JavaLexer as Lexer
+from java2python.lib.JavaParser import JavaParser as Parser
 from java2python.lib.walker import Walker
 from java2python.lib.sourcetypes import Module, set_config
 
