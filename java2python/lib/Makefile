@@ -4,16 +4,16 @@
 all: parser.py lexer.py walker.py
 
 
-lexer.py: java.g
-	antlr java.g
+lexer.py: java15.g
+	runantlr java15.g
 
 
-parser.py: java.g
-	antlr java.g
+parser.py: java15.g
+	runantlr java15.g
 
 
-walker.py: walker.g lexer.py
-	antlr walker.g
+walker.py: walker.g
+	runantlr walker.g
 
 
 clean:

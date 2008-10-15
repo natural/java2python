@@ -58,6 +58,26 @@ returns [klass = block.newClass()]
           ext_clause = extends_clause[klass]
           interface_block[klass]
         )
+	|	#(ENUM_DEF
+          modifiers[klass]
+          name = identifier[klass]
+          imp_clause = implements_clause[klass]
+          enum_block[klass]
+        )
+	|	#(ANNOTATION_DEF
+          modifiers[klass]
+          name = identifier[klass]
+         annotation_block[klass]
+        )
+
+    ;
+
+annotation_block [block]
+    :{pass}
+    ;
+
+enum_block [block]
+    :{pass}
     ;
 
 
@@ -244,7 +264,8 @@ variable_def [block, append = True]
         {
         if val == block.emptyAssign:
             val = ("%s", block.config.combined("typeValueMap").get(typ, "null"))
-        var.setName(dec[1])
+        if dec:
+            var.setName(dec[1])
         var.setExpression(val)
         if append or var.isStatic:
             block.addSource( ("%s = %s", (dec, val)) )
