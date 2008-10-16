@@ -269,7 +269,7 @@ modifiers
             |
             //Semantic check that we aren't matching @interface as this is not an annotation
             //A nicer way to do this would be nice
-            {LA(1)==AT and not LT(2).getText() == ("interface")}? annotation
+            {self.LA(1)==AT and not self.LT(2).getText() == ("interface")}? annotation
         )*
 
         {#modifiers = #([MODIFIERS, "MODIFIERS"], #modifiers);}
@@ -1479,7 +1479,7 @@ ML_COMMENT
                 generateAmbigWarnings=false;
             }
         :
-            { LA(2)!='/' }? '*'
+            { self.LA(2)!='/' }? '*'
         |    '\r' '\n'        {$newline}
         |    '\r'            {$newline}
         |    '\n'            {$newline}

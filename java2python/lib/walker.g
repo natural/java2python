@@ -12,6 +12,9 @@ Original:
     Java 1.3 AST Recognizer Grammar
     Author: (see java.g preamble)
     This grammar is in the PUBLIC DOMAIN
+
+TODO:  STATIC_IMPORT test
+
 */
 
 
@@ -20,31 +23,28 @@ class walker extends TreeParser;
 options { importVocab = Java; }
 
 
-walk [source]
+walk[source]
     :   (pkg = package_def[source] )?
         (imp = import_def[source]  )*
         (typ = type_def[source]    )*
     ;
 
 
-package_def [block]
-returns [defn]
+package_def[block]
+returns[defn]
     :   #(PACKAGE_DEF defn = identifier[block])
-        {// block.addSource(("### package %s", defn))
-        }
     ;
 
 
-import_def [block]
-returns [defn]
-    :   #(IMPORT defn = identifier_star[block])
-        {// block.addSource(("### import %s", defn))
-        }
+import_def[block]
+returns[defn]
+    :   #( IMPORT defn = identifier_star[block] )
+	|	#( STATIC_IMPORT sdefn = identifier_star[block] )
     ;
 
 
-type_def [block]
-returns [klass = block.newClass()]
+type_def[block]
+returns[klass = block.newClass()]
     :   #(CLASS_DEF
           modifiers[klass]
           name = identifier[klass] {klass.setName(name)}
@@ -60,7 +60,7 @@ returns [klass = block.newClass()]
         )
 	|	#(ENUM_DEF
           modifiers[klass]
-          name = identifier[klass]
+          name = identifier[klass] {klass.setName(name)}
           imp_clause = implements_clause[klass]
           enum_block[klass]
         )
@@ -69,20 +69,103 @@ returns [klass = block.newClass()]
           name = identifier[klass]
          annotation_block[klass]
         )
-
-    ;
-
-annotation_block [block]
-    :{pass}
-    ;
-
-enum_block [block]
-    :{pass}
     ;
 
 
-type_spec [block]
-returns [spec]
+annotations[block]
+returns[as0]
+	:	#(ANNOTATIONS as0:(as1=annotation[block])*)
+	;
+
+annotation[block]
+returns[a1]
+	:	#(ANNOTATION
+            id0 = identifier[block]
+            a1:(annotationMemberValueInitializer[block] | (anntotationMemberValuePair[block])+)? )
+        {
+        if id0 or True:
+            block.addAnnotation(id0)
+        }
+	;
+
+annotationMemberValueInitializer[block]
+	:	e = expr[block] | a = annotation[block] | annotationMemberArrayInitializer[block]
+	;
+
+anntotationMemberValuePair[block]
+	:	#(ANNOTATION_MEMBER_VALUE_PAIR
+            IDENT
+            annotationMemberValueInitializer[block]
+        )
+	;
+
+annotationMemberArrayInitializer[block]
+	:	#(ANNOTATION_ARRAY_INIT
+            (annotationMemberArrayValueInitializer[block])*
+        )
+	;
+
+annotationMemberArrayValueInitializer[block]
+	:	e = expr[block] | a = annotation[block]
+	;
+
+
+annotation_block[block]
+	:	#(	OBJBLOCK
+			(	a = annotationFieldDecl[block]
+			|	variable_def[block]
+			|	a = type_def[block]
+			)*
+		)
+	;
+
+annotationFieldDecl[block]
+returns[id0]
+	:	#(ANNOTATION_FIELD_DEF
+            modifiers[block]
+            typ = type_spec[block]
+            id0:IDENT
+            (annotationMemberValueInitializer[block])?
+        )
+    ;
+
+
+
+enum_block[block]
+	:	#(	OBJBLOCK
+			(enum_constant_def[block])*
+			(	ctor_def[block]
+			|	method_def[block]
+			|	variable_def[block, False]
+			|	tdef = type_def[block]
+            |   #(STATIC_INIT statement_list[block])
+            |   #(INSTANCE_INIT statement_list[block])
+			)*
+		)
+	;
+
+enum_constant_def[block]
+	:	#(ENUM_CONSTANT_DEF
+            annos = annotations[block]
+            ident = identifier[block]
+            (elist = expr_list[block])?
+            (enum_constant_block[block])?
+        )
+	;
+
+enum_constant_block[block]
+	:	#(	OBJBLOCK
+			(	method_def[block]
+			|	variable_def[block, False]
+			|	tdef = type_def[block]
+            | #(INSTANCE_INIT statement_list[block])
+			)*
+		)
+	;
+
+
+type_spec[block]
+returns[spec]
     :   #(t0:TYPE type_spec_array[block])
         {
         first = t0.getFirstChild()
@@ -102,21 +185,21 @@ returns [spec]
     ;
 
 
-type_spec_array [block]
+type_spec_array[block]
     :   #(ad0:ARRAY_DECLARATOR type_spec_array[block])
     |   spec = type[block]
     ;
 
 
-type [block]
-returns [typ]
+type[block]
+returns[typ]
     :   typ = identifier[block]   {block.type = typ}
     |   typ = builtin_type[block] {block.type = typ}
     ;
 
 
-builtin_type [block]
-returns [typ]
+builtin_type[block]
+returns[typ]
     :   "void"    {typ = "null"   }
     |   "boolean" {typ = "bool"   }
     |   "byte"    {typ = "str"    }
@@ -129,7 +212,7 @@ returns [typ]
     ;
 
 
-modifiers [block, mod=None]
+modifiers[block, mod=None]
     :   #(MODIFIERS (mod = modifier[block]
         {
         if mod:
@@ -139,39 +222,40 @@ modifiers [block, mod=None]
     ;
 
 
-modifier [block]
-returns [mod]
-    :   pri0:"private"       {mod = pri0.getText()}
-    |   pub0:"public"        {mod = pub0.getText()}
-    |   pro0:"protected"     {mod = pro0.getText()}
-    |   sta0:"static"        {mod = sta0.getText()}
-    |   tra0:"transient"     {mod = tra0.getText()}
-    |   fin0:"final"         {mod = fin0.getText()}
-    |   abt0:"abstract"      {mod = abt0.getText()}
-    |   nat0:"native"        {mod = nat0.getText()}
-    |   ths0:"threadsafe"    {mod = ths0.getText()}
-    |   syn0:"synchronized"  {mod = syn0.getText()}
-    |   con0:"const"         {mod = con0.getText()}
-    |   vol0:"volatile"      {mod = vol0.getText()}
-    |   sfp0:"strictfp"      {mod = sfp0.getText()}
+modifier[block]
+returns[mod]
+    :   pri0:"private"         {mod = pri0.getText()}
+    |   pub0:"public"          {mod = pub0.getText()}
+    |   pro0:"protected"       {mod = pro0.getText()}
+    |   sta0:"static"          {mod = sta0.getText()}
+    |   tra0:"transient"       {mod = tra0.getText()}
+    |   fin0:"final"           {mod = fin0.getText()}
+    |   abt0:"abstract"        {mod = abt0.getText()}
+    |   nat0:"native"          {mod = nat0.getText()}
+    |   ths0:"threadsafe"      {mod = ths0.getText()}
+    |   syn0:"synchronized"    {mod = syn0.getText()}
+    |   con0:"const"           {mod = con0.getText()}
+    |   vol0:"volatile"        {mod = vol0.getText()}
+    |   sfp0:"strictfp"        {mod = sfp0.getText()}
+	|	mod = annotation[block]
     ;
 
 
-extends_clause [block]
-returns [clause = None]
+extends_clause[block]
+returns[clause = None]
     :   #(EXTENDS_CLAUSE
             (clause = identifier[block])*) {block.addBaseClass(clause)}
     ;
 
 
-implements_clause [block]
-returns [clause = None]
+implements_clause[block]
+returns[clause = None]
     :   #(IMPLEMENTS_CLAUSE
             (clause = identifier[block])*) {block.addBaseClass(clause)}
     ;
 
 
-interface_block [block]
+interface_block[block]
     :   #(OBJBLOCK
             (method_decl[block]
                 | variable_def[block, False]
@@ -181,7 +265,7 @@ interface_block [block]
     ;
 
 
-obj_block [block]
+obj_block[block]
     :   #(OBJBLOCK
             (ctor_def[block]
                 | method_def[block]
@@ -195,7 +279,7 @@ obj_block [block]
     ;
 
 
-ctor_def [block]
+ctor_def[block]
     :   {
         meth = block.newMethod()
         meth.calledSuperCtor = False
@@ -209,7 +293,7 @@ ctor_def [block]
     ;
 
 
-method_decl [block]
+method_decl[block]
     :   {
         meth = block.newMethod()
         meth.addSource("raise NotImplementedError()")
@@ -225,7 +309,7 @@ method_decl [block]
     ;
 
 
-method_head [meth, name=None]
+method_head[meth, name=None]
     :   ident = identifier[meth]
         {
         meth.setName(name if name else ident)
@@ -235,7 +319,7 @@ method_head [meth, name=None]
     ;
 
 
-method_def [block]
+method_def[block]
     :   {
         meth = block.newMethod()
         }
@@ -251,7 +335,7 @@ method_def [block]
     ;
 
 
-variable_def [block, append = True]
+variable_def[block, append = True]
     :   {
         var = block.newVariable()
         }
@@ -272,7 +356,7 @@ variable_def [block, append = True]
         }
     ;
 
-static_init [block]
+static_init[block]
     :   #(STATIC_INIT
           {
             if not hasattr(block, "static_init"):
@@ -283,7 +367,7 @@ static_init [block]
           statement_list[block.static_init])
     ;
 
-parameter_def [meth, exc=False]
+parameter_def[meth, exc=False]
     :   #(pd0:PARAMETER_DEF
             modifiers[meth]
             ptype = type_spec[meth]
@@ -300,34 +384,34 @@ parameter_def [meth, exc=False]
     ;
 
 
-obj_init [block]
+obj_init[block]
     :   #(INSTANCE_INIT statement_list[block])
     ;
 
 
-var_decl [block]
-returns [decl]
+var_decl[block]
+returns[decl]
     :   ident = identifier[block]      {decl = ("%s", ident)}
     |   LBRACK inner = var_decl[block] {decl = ("(%s)", inner)}
     ;
 
 
-var_init [block]
-returns [init = block.emptyAssign]
+var_init[block]
+returns[init = block.emptyAssign]
     :   #(ASSIGN init = initializer[block])
     |   // on purpose
     ;
 
 
-initializer [block]
-returns [init]
+initializer[block]
+returns[init]
     :   init = expression[block, False]
     |   init = array_initializer[block] { init = ("[%s]", init) }
     ;
 
 
-array_initializer [block]
-returns [ret = None]
+array_initializer[block]
+returns[ret = None]
     :  #(ARRAY_INIT
          (init = initializer[block]
           {
@@ -339,7 +423,7 @@ returns [ret = None]
     ;
 
 
-throws_clause [block, ident=None]
+throws_clause[block, ident=None]
     :   #("throws" (ident = identifier[block])*)
         {
         if ident:
@@ -348,9 +432,14 @@ throws_clause [block, ident=None]
     ;
 
 
-identifier [block]
-returns [ident]
-    :   id0:IDENT {ident = id0.getText()}
+
+identifier[block]
+returns[ident]
+    :   id0:IDENT
+        {
+        ident = id0.getText()
+        print "## ident:", ident
+        }
     |   {
         exp = ()
         }
@@ -360,12 +449,13 @@ returns [ident]
             ident = ("%s.%s", (("%s", exp), ("%s", id1.getText())))
         else:
             ident = id1.getText()
+        print "## ident:", ident
         }
     ;
 
 
-identifier_star [block]
-returns [ident]
+identifier_star[block]
+returns[ident]
     :   id0:IDENT {ident = id0.getText()}
     |   {
         exp = ()
@@ -382,13 +472,13 @@ returns [ident]
     ;
 
 
-statement_list [block]
+statement_list[block]
     :   #(SLIST (s1:statement[block])*)
     ;
 
 // MARKER
 
-statement [block]
+statement[block]
     :   typ = type_def[block]
     |   variable_def[block]
     |   exp = expression[block]
@@ -525,7 +615,7 @@ statement [block]
     ;
 
 
-case_group [block, switch_expr]
+case_group[block, switch_expr]
     :   {
         other = block.newStatement("if")
         right = None
@@ -560,7 +650,7 @@ case_group [block, switch_expr]
     ;
 
 
-try_block [block]
+try_block[block]
     {
     try_stat = block.newStatement("try")
 
@@ -577,7 +667,7 @@ try_block [block]
     ;
 
 
-handler [block]
+handler[block]
     :   #("catch"
             parameter_def[block, True]
             statement_list[block]
@@ -585,8 +675,8 @@ handler [block]
     ;
 
 
-expr_list [block, append=False]
-returns [seq]
+expr_list[block, append=False]
+returns[seq]
     :   #(ELIST
             (exp = expression[block, append]
             {
@@ -600,8 +690,8 @@ returns [seq]
     ;
 
 
-expression [block, append=True]
-returns [exp]
+expression[block, append=True]
+returns[exp]
     :   {
         fixAssign = not append
         }
@@ -615,8 +705,8 @@ returns [exp]
     ;
 
 
-expr [block, fixAssign=True]
-returns [exp = block.unknownExpression]
+expr[block, fixAssign=True]
+returns[exp = block.unknownExpression]
     :   #(QUESTION a0=expr[block] b0=expr[block] c0=expr[block])
         {exp = ("%s %s", (("%s", b0), ("%s %s", (("if %s", a0), ("else %s", c0)))))}
 
@@ -807,8 +897,8 @@ returns [exp = block.unknownExpression]
     ;
 
 
-primary_expr [block]
-returns [exp = block.missingValue]
+primary_expr[block]
+returns[exp = block.missingValue]
     :   i0:IDENT {exp = ("%s", i0.getText())}
 
     |   {
@@ -878,7 +968,7 @@ returns [exp = block.missingValue]
     ;
 
 
-ctor_call [block]
+ctor_call[block]
     :   #(cn:CTOR_CALL seq=expr_list[block, False] )
         {
         name = block.parent.name
@@ -906,8 +996,8 @@ ctor_call [block]
     ;
 
 
-array_index [block]
-returns [index]
+array_index[block]
+returns[index]
     :   #(INDEX_OP 
             array_exp = expr[block] 
             index_exp = expression[block, False]
@@ -918,8 +1008,8 @@ returns [index]
     ;
 
 
-constant [block]
-returns [value]
+constant[block]
+returns[value]
     :   i0:NUM_INT        {value = i0.getText()}
     |   c0:CHAR_LITERAL   {value = c0.getText()}
     |   s0:STRING_LITERAL {value = s0.getText()}
@@ -929,8 +1019,8 @@ returns [value]
     ;
 
 
-new_expression [block]
-returns [value = block.missingValue]
+new_expression[block]
+returns[value = block.missingValue]
     {
     exp = ()
     arrexp = None
@@ -964,8 +1054,8 @@ returns [value = block.missingValue]
     ;
 
 
-new_array_declarator [block]
-returns [exp = None]
+new_array_declarator[block]
+returns[exp = None]
     :   #(ad0:ARRAY_DECLARATOR
             (exp = new_array_declarator[block])? 
             (exp = expression[block, False])?

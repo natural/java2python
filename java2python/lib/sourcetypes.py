@@ -99,7 +99,8 @@ class Source:
         self.parent = parent
         self.name = name
         self.bases = []
-        self.modifiers = set()
+        self.annotations = []
+        self.modifiers = []
         self.preamble = []
         self.epilogue = []
         self.lines = []
@@ -149,13 +150,16 @@ class Source:
         prefix = self.config.last('commentPrefix', prefix)
         self.addSource('%s %s' % (prefix, text))
 
+    def addAnnotation(self, name):
+        self.annotations.append('@' + name)
+
     def addModifier(self, name):
         """ add a modifier to this source block
 
         @param name value of modifier, as a string
         @return None
         """
-        self.modifiers.add(name)
+        self.modifiers.append(name)
 
     def addSource(self, value):
         """ add source code to the end of this block
@@ -931,6 +935,11 @@ class Method(Source):
         """
         offset = self.I(indent)
         output.write('\n')
+
+
+        for anno in self.annotations:
+            output.write('%s%s\n' % (offset, anno))
+
         if self.config.last('writeModifiersComments'):
             output.write('%s## modifiers: %s\n' % (offset, str.join(',', self.modifiers)))
 
