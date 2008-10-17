@@ -4,6 +4,7 @@ import compiler
 import optparse
 import os.path
 import sys
+import traceback
 from time import time
 
 from java2python.lib.lexer import Lexer
@@ -31,7 +32,8 @@ def transform(options):
         P.compilationUnit()
     except (Exception, ), exc:
        print '*** exception while parsing:'
-       print exc
+       #print exc
+       traceback.print_exc()
        return 1
     comp_finish = time()
 

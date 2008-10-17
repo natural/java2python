@@ -13,33 +13,38 @@ Original:
     Author: (see java.g preamble)
     This grammar is in the PUBLIC DOMAIN
 
-TODO:  STATIC_IMPORT test
-
 */
+options {
+    language=Python;
+}
 
 
-options { language=Python; }
 class walker extends TreeParser;
-options { importVocab = Java; }
+options {
+    importVocab = Java;
+}
 
 
 walk[source]
-    :   (pkg = package_def[source] )?
-        (imp = import_def[source]  )*
-        (typ = type_def[source]    )*
+    :   (pkg = package_def[source])?
+        (imp = import_def[source])*
+        (typ = type_def[source])*
     ;
 
 
 package_def[block]
-returns[defn]
-    :   #(PACKAGE_DEF defn = identifier[block])
+returns[pkg_ident]
+    :   #(PACKAGE_DEF pkg_ident = identifier[block])
     ;
 
 
 import_def[block]
-returns[defn]
-    :   #( IMPORT defn = identifier_star[block] )
-	|	#( STATIC_IMPORT sdefn = identifier_star[block] )
+returns[imp_stat]
+    // we don't do anything with imports, but we could
+    :   #(IMPORT imp_stat = identifier_star[block] )
+    // static imports are ignored, too.  they might be partially
+    // implemented in the future.
+	|	#(STATIC_IMPORT imp_stat = identifier_star[block] )
     ;
 
 
@@ -66,67 +71,95 @@ returns[klass = block.newClass()]
         )
 	|	#(ANNOTATION_DEF
           modifiers[klass]
-          name = identifier[klass]
-         annotation_block[klass]
+          name = identifier[klass] {klass.setName(name)}
+          annotation_block[klass]
         )
     ;
 
 
 annotations[block]
-returns[as0]
-	:	#(ANNOTATIONS as0:(as1=annotation[block])*)
+returns[nil]
+	:	#(ANNOTATIONS (as1=annotation[block])*)
 	;
 
+
 annotation[block]
-returns[a1]
-	:	#(ANNOTATION
+returns[id0]
+	:	{
+        a1 = []
+        }
+        #(ANNOTATION
             id0 = identifier[block]
-            a1:(annotationMemberValueInitializer[block] | (anntotationMemberValuePair[block])+)? )
+            (a2=annotation_member_value_init[block] {a1.append(a2)}
+                | (a2=annotation_member_value_pair[block] {a1.append(a2)})+)?         )
         {
-        if id0 or True:
-            block.addAnnotation(id0)
+        if id0:
+            if a1:
+                block.addAnnotation("%s(%s)" % (id0, ", ".join(a1)))
+            else:
+                block.addAnnotation(id0)
         }
 	;
 
-annotationMemberValueInitializer[block]
-	:	e = expr[block] | a = annotation[block] | annotationMemberArrayInitializer[block]
+annotation_member_value_init[block]
+returns[init0]
+	:	e = expr[block]
+        {
+        init0=e[1]
+        }
+    | init0 = annotation[block]
+    | init0 = annotation_member_array_init[block]
 	;
 
-anntotationMemberValuePair[block]
+annotation_member_value_pair[block]
+returns[pair]
 	:	#(ANNOTATION_MEMBER_VALUE_PAIR
-            IDENT
-            annotationMemberValueInitializer[block]
+            id0:IDENT {block.setName(id0.getText())}
+            a1=annotation_member_value_init[block]
+            {pair = "%s=%s" % (id0.getText(), a1)}
         )
 	;
 
-annotationMemberArrayInitializer[block]
+annotation_member_array_init[block]
+returns[a]
 	:	#(ANNOTATION_ARRAY_INIT
-            (annotationMemberArrayValueInitializer[block])*
+            a:(annotation_member_array_value_init[block])*
         )
 	;
 
-annotationMemberArrayValueInitializer[block]
-	:	e = expr[block] | a = annotation[block]
+annotation_member_array_value_init[block]
+	:	e = expr[block]
+    | a = annotation[block]
 	;
 
 
 annotation_block[block]
 	:	#(	OBJBLOCK
-			(	a = annotationFieldDecl[block]
+			(	a = annotation_field_decl[block]
 			|	variable_def[block]
 			|	a = type_def[block]
 			)*
 		)
 	;
 
-annotationFieldDecl[block]
+annotation_field_decl[block]
 returns[id0]
-	:	#(ANNOTATION_FIELD_DEF
-            modifiers[block]
+	:	{
+        meth = block.newMethod()
+        an0 = None
+        }
+        #(ANNOTATION_FIELD_DEF
+            modifiers[meth]
             typ = type_spec[block]
             id0:IDENT
-            (annotationMemberValueInitializer[block])?
+            (an0 = annotation_member_value_init[meth])?
         )
+        {
+        meth.setName(id0.getText())
+        meth.type = typ
+        if an0 is not None:
+            meth.addSource("return %s" % an0)
+        }
     ;
 
 
@@ -438,7 +471,6 @@ returns[ident]
     :   id0:IDENT
         {
         ident = id0.getText()
-        print "## ident:", ident
         }
     |   {
         exp = ()
@@ -449,7 +481,6 @@ returns[ident]
             ident = ("%s.%s", (("%s", exp), ("%s", id1.getText())))
         else:
             ident = id1.getText()
-        print "## ident:", ident
         }
     ;
 

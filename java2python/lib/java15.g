@@ -1,5 +1,5 @@
 options {
-    language=Python;
+language=Python;
 }
 
 
@@ -67,7 +67,7 @@ packageDefinition
 // Import statement: import followed by a package or class name
 importDefinition
     options {defaultErrorHandler = true;}
-    {isStatic = False; }
+    { isStatic = False; }
     :    i:"import"^ {#i.setType(IMPORT);} ( "static"! {#i.setType(STATIC_IMPORT);} )? identifierStar SEMI!
     ;
 
@@ -75,7 +75,7 @@ importDefinition
 typeDefinition
     options {defaultErrorHandler = true;}
     :    m:modifiers!
-        typeDefinitionInternal[#m]
+        typeDefinitionInternal[#m] {print "### MMM", m}
     |    SEMI!
     ;
 
@@ -111,7 +111,7 @@ classTypeSpec[addImagNode]
             lb:LBRACK^ {#lb.setType(ARRAY_DECLARATOR);} RBRACK!
         )*
         {
-            if ( addImagNode ):
+            if (addImagNode):
                 #classTypeSpec = #(#[TYPE,"TYPE"], #classTypeSpec)
         }
     ;
@@ -124,9 +124,8 @@ classOrInterfaceType[addImagNode]
             IDENT (typeArguments)?
         )*
         {
-            if ( addImagNode ):
+            if (addImagNode):
                 #classOrInterfaceType = #(#[TYPE,"TYPE"], #classOrInterfaceType)
-
         }
     ;
 
@@ -152,13 +151,13 @@ wildcardType
 
 // Type arguments to a class or interface type
 typeArguments
-{currentLtLevel = 0}
+{currentLtLevel = 0;}
     :
-        {currentLtLevel = ltCounter;}
-        LT! {ltCounter+=1}
+        {currentLtLevel = self.ltCounter;}
+        LT! {self.ltCounter+=1;}
         typeArgument
         (options{greedy=true;}: // match as many as possible
-            {inputState.guessing !=0 or ltCounter == currentLtLevel + 1}?
+            {inputState.guessing !=0 or self.ltCounter == currentLtLevel + 1}?
             COMMA! typeArgument
         )*
 
@@ -170,17 +169,17 @@ typeArguments
 
         // make sure we have gobbled up enough '>' characters
         // if we are at the "top level" of nested typeArgument productions
-        {(currentLtLevel != 0) or ltCounter == currentLtLevel}?
+        {(currentLtLevel != 0) or self.ltCounter == currentLtLevel}?
 
         {#typeArguments = #(#[TYPE_ARGUMENTS, "TYPE_ARGUMENTS"], #typeArguments);}
     ;
 
 // this gobbles up *some* amount of '>' characters, and counts how many
 // it gobbled.
-protected typeArgumentsOrParametersEnd
-    :    GT! {ltCounter-=1;}
-    |    SR! {ltCounter-=2;}
-    |    BSR! {ltCounter-=3;}
+typeArgumentsOrParametersEnd
+    :    GT! {self.ltCounter-=1; print "WTF1"}
+    |    SR! {self.ltCounter-=2; print "WTF2"}
+    |    BSR! {self.ltCounter-=3; print "WTF3"}
     ;
 
 // Restriction on wildcard types based on super class or derrived class
@@ -192,7 +191,7 @@ typeArgumentBounds
             if (isUpperBounds):
                 #typeArgumentBounds = #(#[TYPE_UPPER_BOUNDS,"TYPE_UPPER_BOUNDS"], #typeArgumentBounds)
             else:
-                #typeArgumentBounds = #(#[TYPE_LOWER_BOUNDS,"TYPE_LOWER_BOUNDS"], #typeArgumentBounds);
+                #typeArgumentBounds = #(#[TYPE_LOWER_BOUNDS,"TYPE_LOWER_BOUNDS"], #typeArgumentBounds)
         }
     ;
 
@@ -204,7 +203,7 @@ builtInTypeArraySpec[addImagNode]
         )+
 
         {
-            if ( addImagNode ):
+            if (addImagNode):
                 #builtInTypeArraySpec = #(#[TYPE,"TYPE"], #builtInTypeArraySpec)
         }
     ;
@@ -217,9 +216,8 @@ builtInTypeSpec[addImagNode]
             lb:LBRACK^ {#lb.setType(ARRAY_DECLARATOR);} RBRACK!
         )*
         {
-            if ( addImagNode ):
+            if (addImagNode):
                 #builtInTypeSpec = #(#[TYPE,"TYPE"], #builtInTypeSpec)
-
         }
     ;
 
@@ -269,7 +267,7 @@ modifiers
             |
             //Semantic check that we aren't matching @interface as this is not an annotation
             //A nicer way to do this would be nice
-            {self.LA(1)==AT and not self.LT(2).getText() == ("interface")}? annotation
+            {LA(1)==AT and not (LT(2).getText()==("interface"))}? annotation
         )*
 
         {#modifiers = #([MODIFIERS, "MODIFIERS"], #modifiers);}
@@ -347,7 +345,7 @@ annotationMemberArrayValueInitializer
     ;
 
 superClassClause!
-    :    ( "extends" c:classOrInterfaceType[false] )?
+    :    ( "extends" c:classOrInterfaceType[False] )?
         {#superClassClause = #(#[EXTENDS_CLAUSE,"EXTENDS_CLAUSE"],c);}
     ;
 
@@ -398,16 +396,16 @@ annotationDefinition![modifiers]
     ;
 
 typeParameters
-{currentLtLevel = 0}
+{currentLtLevel = 0;}
     :
-        {currentLtLevel = ltCounter;}
-        LT! {ltCounter+=1}
+        {currentLtLevel = self.ltCounter;}
+        LT! {self.ltCounter+=1;}
         typeParameter (COMMA! typeParameter)*
         (typeArgumentsOrParametersEnd)?
 
         // make sure we have gobbled up enough '>' characters
         // if we are at the "top level" of nested typeArgument productions
-        {(currentLtLevel != 0) or ltCounter == currentLtLevel}?
+        {(currentLtLevel != 0) or self.ltCounter == currentLtLevel}?
 
         {#typeParameters = #(#[TYPE_PARAMETERS, "TYPE_PARAMETERS"], #typeParameters);}
     ;
@@ -422,7 +420,7 @@ typeParameter
 typeParameterBounds
     :
         "extends"! classOrInterfaceType[False]
-        (BAND! classOrInterfaceType[false])*
+        (BAND! classOrInterfaceType[False])*
         {#typeParameterBounds = #(#[TYPE_UPPER_BOUNDS,"TYPE_UPPER_BOUNDS"], #typeParameterBounds);}
     ;
 
@@ -477,7 +475,7 @@ annotationField!
 
                 SEMI
 
-                {#annotationField = #(#[ANNOTATION_FIELD_DEF,"ANNOTATION_FIELD_DEF"],
+                {#annotationField =  #(#[ANNOTATION_FIELD_DEF,"ANNOTATION_FIELD_DEF"],
                          mods,
                          #(#[TYPE,"TYPE"],rt),
                          i,amvi
@@ -678,10 +676,12 @@ explicitConstructorInvocation
 
 variableDefinitions[mods, t]
     :    variableDeclarator[self.getASTFactory().dupTree(mods),
-                            self.getASTFactory().dupList(t)] //dupList as this also copies siblings (like TYPE_ARGUMENTS)
+                            self.getASTFactory().dupList(t)]
+                             //dupList as this also copies siblings (like TYPE_ARGUMENTS)
         (    COMMA!
             variableDeclarator[self.getASTFactory().dupTree(mods),
-                            self.getASTFactory().dupList(t)] //dupList as this also copies siblings (like TYPE_ARGUMENTS)
+                               self.getASTFactory().dupList(t)]
+                              //dupList as this also copies siblings (like TYPE_ARGUMENTS)
         )*
     ;
 
@@ -1084,7 +1084,7 @@ relationalExpression
                 )
                 shiftExpression
             )*
-        |    "instanceof"^ typeSpec[true]
+        |    "instanceof"^ typeSpec[True]
         )
     ;
 
@@ -1125,15 +1125,15 @@ unaryExpressionNotPlusMinus
             }
         :    // If typecast is built in type, must be numeric operand
             // Have to backtrack to see if operator follows
-        (LPAREN builtInTypeSpec[True] RPAREN unaryExpression)=>
-        lpb:LPAREN^ {#lpb.setType(TYPECAST);} builtInTypeSpec[True] RPAREN!
+        (LPAREN builtInTypeSpec[true] RPAREN unaryExpression)=>
+        lpb:LPAREN^ {#lpb.setType(TYPECAST);} builtInTypeSpec[true] RPAREN!
         unaryExpression
 
         // Have to backtrack to see if operator follows. If no operator
         // follows, it's a typecast. No semantic checking needed to parse.
         // if it _looks_ like a cast, it _is_ a cast; else it's a "(expr)"
-    |    (LPAREN classTypeSpec[True] RPAREN unaryExpressionNotPlusMinus)=>
-        lp:LPAREN^ {#lp.setType(TYPECAST);} classTypeSpec[True] RPAREN!
+    |    (LPAREN classTypeSpec[true] RPAREN unaryExpressionNotPlusMinus)=>
+        lp:LPAREN^ {#lp.setType(TYPECAST);} classTypeSpec[true] RPAREN!
         unaryExpressionNotPlusMinus
 
     |    postfixExpression
@@ -1247,10 +1247,8 @@ identPrimary
         :    (    lp:LPAREN^ {#lp.setType(METHOD_CALL);}
                 // if the input is valid, only the last IDENT may
                 // have preceding typeArguments... rather hacky, this is...
-                {if (#ta2 is not None):
-                    self.addASTChild(currentAST, #ta2);}
-                {if (#ta2 is None):
-                    self.addASTChild(currentAST, #ta1);}
+                {if (#ta2 is not None):self.addASTChild(currentAST, #ta2);}
+                {if (#ta2 is None):self.addASTChild(currentAST, #ta1);}
                 argList RPAREN!
             )
         |    ( options {greedy=true;} :
@@ -1568,27 +1566,23 @@ IDENT
     :    ('a'..'z'|'A'..'Z'|'_'|'$') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'$')*
         {
             // check if "assert" keyword is enabled
-            if (self.assertEnabled and "assert" == ($getText)):
+            if (self.assertEnabled and "assert"==($getText)):
                 $setType(LITERAL_assert); // set token type for the rule in the parser
             // check if "enum" keyword is enabled
-            if (self.enumEnabled and "enum" == ($getText)):
+            if (self.enumEnabled and "enum"==($getText)):
                 $setType(LITERAL_enum); // set token type for the rule in the parser
-
         }
     ;
 
 
 // a numeric literal
 NUM_INT
-    {
-    isDecimal=False
-    t=[]
-    }
+    {isDecimal=False; t=None;}
     :    '.' {_ttype = DOT;}
             (
                 (('0'..'9')+ (EXPONENT)? (f1:FLOAT_SUFFIX {t=f1;})?
                 {
-                if (t is not None) and (t.getText().upper().index('F')>=0):
+                if (t is not None and t.getText().upper().index('F')>=0):
                     _ttype = NUM_FLOAT;
                 else:
                     _ttype = NUM_DOUBLE; // assume double
@@ -1598,7 +1592,7 @@ NUM_INT
                 (".." {_ttype = TRIPLE_DOT;})
             )?
 
-    |    (    '0' {isDecimal = True;} // special case for just '0'
+    |    (    '0' {isDecimal = true;} // special case for just '0'
             (    ('x'|'X')
                 (                                            // hex
                     // the 'e'|'E' and float suffix stuff look
@@ -1617,7 +1611,7 @@ NUM_INT
 
             |    ('0'..'7')+                                    // octal
             )?
-        |    ('1'..'9') ('0'..'9')*  {isDecimal=True;}        // non-zero decimal
+        |    ('1'..'9') ('0'..'9')*  {isDecimal=true;}        // non-zero decimal
         )
         (    ('l'|'L') { _ttype = NUM_LONG; }
 
@@ -1628,7 +1622,7 @@ NUM_INT
             |    f4:FLOAT_SUFFIX {t=f4;}
             )
             {
-            if (t is not None) and (t.getText().upper().index('F') >= 0):
+            if (t is not None and t.getText().upper().index('F') >= 0):
                 _ttype = NUM_FLOAT;
             else:
                 _ttype = NUM_DOUBLE; // assume double
