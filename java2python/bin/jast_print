@@ -1,65 +1,62 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+
+"""
 import sys
-
-from antlr import ASTVisitor
-
-from java2python.lib import lexer
-from java2python.lib import parser
-
+from antlr3 import FileStream, StringStream, CommonTokenStream
+from java2python.lib import JavaParser as Jp
+from java2python.lib.JavaLexer import JavaLexer, COMMENT, LINE_COMMENT, DEFAULT_CHANNEL, CLASS, HIDDEN
 try:
     import psyco
 except (ImportError, ):
     pass
 else:
-    psyco.full()
+    pass # psyco.full()
 
 
-class Printer(ASTVisitor):
-     def visit(self, node, level=0):
-        if not node:
-            return
-        txt = node.getText()
-        typ = node.getType()
-        print '%s%s:%s' % ('    '*level, typ, txt, )
-        self.visit(node.getFirstChild(), level+1)
-        if typ in (parser.CLASS_DEF, parser.PACKAGE_DEF, parser.IMPORT):
-            print
-        self.visit(node.getNextSibling(), level)
+def buildTokenMap():
+    return dict(
+        [(m, l) for l, m in [(k, getattr(Jp, k)) for k in dir(Jp)] if isinstance(m, int)]
+        )
+tokenMap = buildTokenMap()
 
 
-def show(filename):
-    if not filename:
-        args = []
-    else:
-        args = [filename, ]
-    
-    L = lexer.Lexer(*args)
-    P = parser.Parser(L)
-    P.setFilename(L.getFilename())
+def load_trees((stream_type, source)):
+    for channel in (DEFAULT_CHANNEL, HIDDEN):
+        stream = stream_type(source)
+        lexer = JavaLexer(stream)
+        tokens = CommonTokenStream(lexer, channel=channel)
+        parser = Jp.JavaParser(tokens)
+        yield parser.javaSource().tree
 
-    try:
-        P.compilationUnit()
-    except (Exception, ), exc:
-       print '*** exception while parsing:'
-       print exc
-       return 1
-    
-    ast = P.getAST()
-    ast = P.getAST()
-    if not ast:
-       print '*** error: no AST generated.'
-       return 2
 
-    printer = Printer()
-    printer.visit(ast)
+def show_trees(trees):
+    for tree in trees:
+        show(tree)
+
+
+def show(node, level=0):
+    txt = node.getText()
+    typ = tokenMap.get(node.getType(), '?')
+    args = ('    '*level,
+            typ,
+            (' : ' if txt != typ else ''),
+            (txt if txt != typ else ''))
+    print '%s%s%s%s' % args
+    for i in range(node.getChildCount()):
+        show(node.getChild(i), level+1)
     return 0
 
 
 if __name__ == '__main__':
     try:
-        name = sys.argv[1]
-    except (IndexError, ):
-        name = None
-    ret = show(name)
-    sys.exit(ret)
+        src = sys.argv[1]
+        locs = ((StringStream, sys.stdin.read())
+                if src == '-' else (FileStream, src))
+        trees = load_trees(locs)
+        sys.exit(show_trees(trees))
+    except (Exception, ), exc:
+        print exc
+        raise
+

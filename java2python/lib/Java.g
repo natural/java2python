@@ -234,72 +234,22 @@ tokens {
     VAR_DECLARATOR;
     VAR_DECLARATOR_LIST;
     VOID_METHOD_DECL;
+
+    V_COMMENT;
 }
 
 @header {
-##package com.habelitz.jsobjectizer.unmarshaller.antlrbridge.generated;
+#pass
 }
 
 @members {
-
-    mMessageCollectionEnabled = False
-    mHasErrors = False
-    mMessages = []
-
-    #
-    #  Switches error message collection on or of.
-    #
-    #  The standard destination for parser error messages is <code>System.err</code>.
-    #  However, if <code>true</code> gets passed to this method this default
-    #  behaviour will be switched off and all error messages will be collected
-    #  instead of written to anywhere.
-    #
-    #  The default value is <code>false</code>.
-    #
-    #  @param pNewState  <code>true</code> if error messages should be collected.
-    #
-    def enableErrorMessageCollection(self, pNewState):
-        self.mMessageCollectionEnabled = pNewState
-        if (not self.mMessages and self.mMessageCollectionEnabled):
-            self.mMessages = []
-
-    #
-    #  Collects an error message or passes the error message to <code>
-    #  super.emitErrorMessage(...)</code>.
-    #
-    #  The actual behaviour depends on whether collecting error messages
-    #  has been enabled or not.
-    #
-    #  @param pMessage  The error message.
-    #
-    def emitErrorMessage(self, pMessage):
-        if (self.mMessageCollectionEnabled):
-            mMessages.append(pMessage)
-        else:
-            self.emitErrorMessage(pMessage)
-
-    #
-    #  Returns collected error messages.
-    #
-    #  @return  A list holding collected error messages or <code>null</code> if
-    #           collecting error messages hasnt been enabled. Of course, this
-    #           list may be empty if no error message has been emited.
-    #
-    def getMessages(self):
-        return self.mMessages
-
-    #
-    #  Tells if parsing a Java source has caused any error messages.
-    #
-    #  @return  <code>true</code> if parsing a Java source has caused at least one error message.
-    #
-    def hasErrors(self):
-        return self.mHasErrors
+#pass
 }
 
 @lexer::header {
-##package com.habelitz.jsobjectizer.unmarshaller.antlrbridge.generated;
+#pass
 }
+
 
 @lexer::members {
 #
@@ -311,7 +261,7 @@ tokens {
 #  needed forever the lexer part of the grammar should be changed by replacing
 #  the 'if-else' stuff within the approprate lexer grammar actions.
 #
-preserveWhitespacesAndComments = False
+preserveWhitespacesAndComments = True
 }
 
 // Starting point for parsing a Java file.
@@ -1156,32 +1106,16 @@ JAVA_ID_PART
     |  '\u0030'..'\u0039'
     ;
 
-WS  :  (' '|'\r'|'\t'|'\u000C'|'\n')
-    {
-        if (not self.preserveWhitespacesAndComments):
-            skip()
-        else:
-            $channel = HIDDEN
 
-    }
+WS  :  (' '|'\r'|'\t'|'\u000C'|'\n') { $channel = HIDDEN }
     ;
+
 
 COMMENT
-    :   '/*' ( options {greedy=false;} : . )* '*/'
-    {
-        if (not self.preserveWhitespacesAndComments):
-            skip()
-        else:
-            $channel = HIDDEN
-    }
+    :   '/*' (options {greedy=false;} : . )*  '*/' { $channel = HIDDEN }
     ;
 
+
 LINE_COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n'
-    {
-        if (not self.preserveWhitespacesAndComments):
-            skip()
-        else:
-            $channel = HIDDEN
-    }
+    : '//' ~('\n'|'\r')* '\r'? '\n' { $channel = HIDDEN }
     ;
