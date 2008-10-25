@@ -36,51 +36,58 @@
  *
  */
 tree grammar JavaTreeParser;
-
-options {
-    language = Python;
-    backtrack = true;
-    memoize = true;
-    tokenVocab = Java;
-    ASTLabelType = CommonTree;
-}
-
+options {language=Python; backtrack=true; memoize=true; tokenVocab=Java; ASTLabelType=CommonTree;}
 
 @treeparser::header {
-# placeholder
+from java2python.lib.sourcestack import SimplePythonSourceStack
 }
 
 @treeparser::members {
 # placeholder
 }
 
-// Starting point for parsing a Java file.
-javaSource[M]
+javaSource[module]
+    @init { self.source = SimplePythonSourceStack(module) }
     :   ^(JAVA_SOURCE annotationList packageDeclaration? importDeclaration* typeDeclaration*)
     ;
 
 packageDeclaration
-    :   ^(PACKAGE qualifiedIdentifier)
+    :   ^(PACKAGE q0=qualifiedIdentifier)
+         { self.source.onPackageDecl($q0.text) }
     ;
 
 importDeclaration
-    :   ^(IMPORT STATIC? qualifiedIdentifier DOTSTAR?)
+    :   ^(IMPORT s0=STATIC? q0=qualifiedIdentifier d0=DOTSTAR?)
+         { self.source.onImportDecl($q0.text, bool($s0), bool($d0)) }
     ;
 
 typeDeclaration
-    :   ^(CLASS modifierList IDENT genericTypeParameterList? extendsClause? implementsClause? classTopLevelScope)
-    |   ^(INTERFACE modifierList IDENT genericTypeParameterList? extendsClause? interfaceTopLevelScope)
+    :   ^(CLASS m0=modifierList i0=IDENT t0=genericTypeParameterList? x0=extendsClause? p0=implementsClause?
+          { klass = self.source.onClass($i0.text, $m0.modifiers, $x0.clauses, $p0.clauses) }
+          classTopLevelScope
+          { self.source.pop() }
+        )
+
+    |   ^(INTERFACE m1=modifierList i1=IDENT t1=genericTypeParameterList? x1=extendsClause?
+          { self.source.onClass($i1.text, $m1.modifiers, $x1.clauses) }
+          interfaceTopLevelScope
+          { self.source.pop() }
+        )
+
     |   ^(ENUM modifierList IDENT implementsClause? enumTopLevelScope)
     |   ^(AT modifierList IDENT annotationTopLevelScope)
     ;
 
-extendsClause // actually 'type' for classes and 'type+' for interfaces, but this has
-              // been resolved by the parser grammar.
-    :   ^(EXTENDS_CLAUSE type+)
+extendsClause
+returns [clauses]
+    @init {clauses = []}
+    :   ^(EXTENDS_CLAUSE (t0=type { clauses.append($t0.value) })+)
     ;
 
 implementsClause
-    :   ^(IMPLEMENTS_CLAUSE type+)
+returns [clauses]
+    @init {clauses = []}
+    :   ^(IMPLEMENTS_CLAUSE (t0=type { clauses.append($t0.value) })+)
     ;
 
 genericTypeParameterList
@@ -108,13 +115,34 @@ classTopLevelScope
     :   ^(CLASS_TOP_LEVEL_SCOPE classScopeDeclarations*)
     ;
 
+// MARK
 classScopeDeclarations
     :   ^(CLASS_INSTANCE_INITIALIZER block)
     |   ^(CLASS_STATIC_INITIALIZER block)
-    |   ^(FUNCTION_METHOD_DECL modifierList genericTypeParameterList? type IDENT formalParameterList arrayDeclaratorList? throwsClause? block?)
-    |   ^(VOID_METHOD_DECL modifierList genericTypeParameterList? IDENT formalParameterList throwsClause? block?)
-    |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
-    |   ^(CONSTRUCTOR_DECL modifierList genericTypeParameterList? formalParameterList throwsClause? block)
+
+    |   ^(FUNCTION_METHOD_DECL m0=modifierList genericTypeParameterList? t0=type i0=IDENT
+          p0=formalParameterList arrayDeclaratorList? throwsClause?
+          { self.source.onMethod($i0.text, $m0.modifiers, $p0.params) }
+          block?
+          { self.source.pop() }
+        )
+
+    |   ^(VOID_METHOD_DECL m1=modifierList genericTypeParameterList? i1=IDENT
+          p1=formalParameterList throwsClause?
+          { self.source.onMethod($i1.text, $m1.modifiers, $p1.params) }
+          block?
+          { self.source.pop() }
+        )
+
+    |   ^(VAR_DECLARATION m2=modifierList t2=type v2=variableDeclaratorList)
+         { self.source.onVariables($v2.decls) }
+
+    |   ^(CONSTRUCTOR_DECL
+            modifierList
+            genericTypeParameterList?
+            formalParameterList
+            throwsClause?
+            block)
     |   typeDeclaration
     ;
 
@@ -125,23 +153,29 @@ interfaceTopLevelScope
 interfaceScopeDeclarations
     :   ^(FUNCTION_METHOD_DECL modifierList genericTypeParameterList? type IDENT formalParameterList arrayDeclaratorList? throwsClause?)
     |   ^(VOID_METHOD_DECL modifierList genericTypeParameterList? IDENT formalParameterList throwsClause?)
-                         // Interface constant declarations have been switched to variable
-                         // declarations by 'java.g'; the parser has already checked that
-                         // there's an obligatory initializer.
     |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
     |   typeDeclaration
     ;
 
 variableDeclaratorList
-    :   ^(VAR_DECLARATOR_LIST variableDeclarator+)
+returns [decls]
+    @init { decls = [] }
+    :   ^(VAR_DECLARATOR_LIST (v0=variableDeclarator { decls.append($v0.decl) } )+)
     ;
 
 variableDeclarator
-    :   ^(VAR_DECLARATOR variableDeclaratorId variableInitializer?)
+returns [decl]
+    @init { $decl = dict() }
+    :   ^(VAR_DECLARATOR v0=variableDeclaratorId { $decl = $v0.decl }
+          (vi0=variableInitializer { $decl["init"] = $vi0.text } )?
+         )
     ;
 
 variableDeclaratorId
-    :   ^(IDENT arrayDeclaratorList?)
+returns [decl]
+    @init { $decl = dict() }
+    :   ^(i0=IDENT { $decl["id"] = $i0.text } (a0=arrayDeclaratorList { $decl["array"] = [a0] })?
+        )
     ;
 
 variableInitializer
@@ -166,7 +200,9 @@ throwsClause
     ;
 
 modifierList
-    :   ^(MODIFIER_LIST modifier*)
+returns [modifiers]
+    @init {modifiers = []}
+    :   ^(MODIFIER_LIST (m0=modifier {modifiers.append($m0.text)})*)
     ;
 
 modifier
@@ -193,7 +229,9 @@ localModifier
     ;
 
 type
-    :   ^(TYPE (primitiveType | qualifiedTypeIdent) arrayDeclaratorList?)
+returns [value]
+    :   ^(TYPE (p0=primitiveType {$value = $p0.text} |
+                q0=qualifiedTypeIdent {$value = $q0.text}) arrayDeclaratorList?)
     ;
 
 qualifiedTypeIdent
@@ -230,11 +268,20 @@ genericWildcardBoundType
     ;
 
 formalParameterList
-    :   ^(FORMAL_PARAM_LIST formalParameterStandardDecl* formalParameterVarargDecl?)
+returns [params]
+    @init {params = []}
+    :   ^(FORMAL_PARAM_LIST (p0=formalParameterStandardDecl {params.append($p0.value)})*
+          formalParameterVarargDecl?
+        )
     ;
 
 formalParameterStandardDecl
-    :   ^(FORMAL_PARAM_STD_DECL localModifierList type variableDeclaratorId)
+returns [value]
+    :   ^(FORMAL_PARAM_STD_DECL localModifierList t0=type v0=variableDeclaratorId)
+         {
+         $value = $v0.decl
+         $value["type"] = $t0.text
+         }
     ;
 
 formalParameterVarargDecl
@@ -302,7 +349,8 @@ blockStatement
     ;
 
 localVariableDeclaration
-    :   ^(VAR_DECLARATION localModifierList type variableDeclaratorList)
+    :   ^(VAR_DECLARATION m0=localModifierList t0=type v0=variableDeclaratorList)
+        {v = self.source.onVariables($v0.decls) }
     ;
 
 
@@ -369,7 +417,9 @@ expression
     ;
 
 expr
-    :   ^(ASSIGN expr expr)
+returns [exp]
+    @init { exp = None }
+    :   ^(ASSIGN left=expr right=expr) { self.source.onAssign("+", left, right) }
     |   ^(PLUS_ASSIGN expr expr)
     |   ^(MINUS_ASSIGN expr expr)
     |   ^(STAR_ASSIGN expr expr)
@@ -411,10 +461,11 @@ expr
     |   ^(NOT expr)
     |   ^(LOGICAL_NOT expr)
     |   ^(CAST_EXPR type expr)
-    |   primaryExpression
+    |   p0=primaryExpression { $exp = $p0.exp }
     ;
 
 primaryExpression
+returns [exp]
     :   ^(  DOT
             (   primaryExpression
                 (   IDENT
@@ -428,11 +479,11 @@ primaryExpression
             )
         )
     |   parenthesizedExpression
-    |   IDENT
+    |   IDENT { $exp = $IDENT.text }
     |   ^(METHOD_CALL primaryExpression genericTypeArgumentList? arguments)
     |   explicitConstructorCall
     |   ^(ARRAY_ELEMENT_ACCESS primaryExpression expression)
-    |   literal
+    |   literal { $exp = $literal.text }
     |   newExpression
     |   THIS
     |   arrayTypeDeclarator

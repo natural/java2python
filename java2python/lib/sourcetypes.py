@@ -466,7 +466,7 @@ class Source:
 
     def newVariable(self, name=None):
         """ creates a new Variable for the block
-        
+
         @param name name of the variable
         @return Variable instance
         """
@@ -817,7 +817,6 @@ class Class(Source):
                                 stmt)
                     idx = meth.lines.index(stmt)
                     meth.lines[idx] = "# end of instance variables"
-                    
 
     def writeTo(self, output, indent):
         """ writes the string representation of this block
@@ -841,6 +840,9 @@ class Class(Source):
                 return 0
             self.lines.sort(methodsorter)
         name = self.name
+        offset = self.I(indent)
+        if config.last('writeModifiersComments') and self.modifiers:
+            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
         offset = self.I(indent+1)
         output.write('%s%s\n' % (self.I(indent), self.formatDecl()))
         if config.last('writeClassDocString'):
@@ -931,19 +933,19 @@ class Method(Source):
         @param indent indentation level of this block
         @return None
         """
+	config = self.config
         offset = self.I(indent)
         output.write('\n')
-        if self.config.last('writeModifiersComments'):
-            output.write('%s## modifiers: %s\n' % (offset, str.join(',', self.modifiers)))
-
-        sorter = self.config.last('methodPreambleSorter')
+        if config.last('writeModifiersComments') and self.modifiers:
+            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
+        sorter = config.last('methodPreambleSorter')
         if sorter:
             self.preamble.sort(sorter)
         for obj in self.preamble:
             output.write('%s%s\n' % (offset, obj))
         output.write('%s\n' % (self.formatDecl(indent), ))
 
-        writedoc = self.config.last('writeMethodDocString')
+        writedoc = config.last('writeMethodDocString')
         if writedoc:
             docoffset = self.I(indent+1)
             output.write('%s""" generated source for %s\n\n' % \

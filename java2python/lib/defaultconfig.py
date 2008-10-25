@@ -25,13 +25,13 @@ sortClassMethods = False
 
 ## if True, method modifiers are written as comments prior to method
 ## declarations.
-writeModifiersComments = False
+writeModifiersComments = True
 
 ## if True, a default docstring is generated for class statements.
 writeClassDocString = True
 
 ## if True, a default docstring is generated for method statements.
-writeMethodDocString = False
+writeMethodDocString = True
 
 ## if True, and if input source contains a "public static void main"
 ## method, a block is written to the end of the file to call the class

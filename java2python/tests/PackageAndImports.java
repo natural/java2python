@@ -8,8 +8,9 @@ import java.util.Calendar;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 
+import static java.lang.Math.PI;
+import static java.lang.Math.*;
 
-
-class SomePackage implements VariousItems {
+class PackageAndImports {
 }
 

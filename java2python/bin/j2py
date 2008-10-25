@@ -38,13 +38,13 @@ def transform(options):
     #print "###", tokens.discardOffChannelTokens; raise Exception()
     parser = JavaParser(tokens)
     if options.debug:
-        import java2python.lib.support as S
-        S.enable_trace = True
+	import java2python.lib.support as S
+	S.enable_trace = True
     comp_start = start = time()
     try:
-        #P.compilationUnit()
+	#P.compilationUnit()
 
-        root = parser.javaSource().tree
+	root = parser.javaSource().tree
     except (Exception, ), exc:
        print '*** exception while parsing:'
        print exc
@@ -53,7 +53,7 @@ def transform(options):
 
     ast_start = time()
     nodes = CommonTreeNodeStream(root)
-    
+
     nodes.setTokenStream(tokens)
     walker = loadTree()(nodes)
 
@@ -65,16 +65,16 @@ def transform(options):
 
     filein = fileout = filedefault = '-'
     if options.inputfile:
-        filein = os.path.basename(options.inputfile)
+	filein = os.path.basename(options.inputfile)
     if options.outputfile:
-        fileout = os.path.basename(options.outputfile)
+	fileout = os.path.basename(options.outputfile)
     elif fileout != filedefault:
-        fileout = '%s.py' % (os.path.splitext(filein)[0])
+	fileout = '%s.py' % (os.path.splitext(filein)[0])
 
     if fileout == filedefault:
-        output = sys.stdout
+	output = sys.stdout
     else:
-        output = open(fileout, 'w')
+	output = open(fileout, 'w')
 
     walk_start = time()
     set_config(options.configs, options.includedefaults)
@@ -86,50 +86,50 @@ def transform(options):
     walk_finish = time()
 
     if options.syntaxcheck:
-        try:
-            compiler.parse(source)
-        except (SyntaxError, ), ex:
-            msg = "## ERR:  %s" % (ex, )
-        else:
-            msg = '## INFO: generated source has valid syntax.'
-        print >> sys.stderr, msg
+	try:
+	    compiler.parse(source)
+	except (SyntaxError, ), ex:
+	    msg = "## ERR:  %s" % (ex, )
+	else:
+	    msg = '## INFO: generated source has valid syntax.'
+	print >> sys.stderr, msg
 
     finish = time()
     if options.timerun:
-        print >> sys.stderr, "## INFO: parser comp unit time: %.4f" % (comp_finish - comp_start)
-        print >> sys.stderr, "## INFO: ast get time: %.4f" % (ast_finish - ast_start)
-        print >> sys.stderr, "## INFO: walk and generate time: %.4f" % (walk_finish - walk_start)
-        print >> sys.stderr, "## INFO: total time: %.4f" % (finish - start)
+	print >> sys.stderr, "## INFO: parser comp unit time: %.4f" % (comp_finish - comp_start)
+	print >> sys.stderr, "## INFO: ast get time: %.4f" % (ast_finish - ast_start)
+	print >> sys.stderr, "## INFO: walk and generate time: %.4f" % (walk_finish - walk_start)
+	print >> sys.stderr, "## INFO: total time: %.4f" % (finish - start)
     return 0
 
 
 def cli_options(argv):
     parser = optparse.OptionParser(version='%prog 0.2')
     parser.add_option('-i', '--input', dest='inputfile',
-                      help='read INPUTFILE',
-                      metavar='INPUTFILE', default=None)
+		      help='read INPUTFILE',
+		      metavar='INPUTFILE', default=None)
     parser.add_option('-o', '--output', dest='outputfile',
-                      help='write OUTPUTFILE',
-                      metavar='OUTPUTFILE', default=None)
+		      help='write OUTPUTFILE',
+		      metavar='OUTPUTFILE', default=None)
     parser.add_option('-c', '--config', dest='configs',
-                      help='use CONFIG (multiple allowed)',
-                      metavar='CONFIG', default=[],
-                      action='append')
+		      help='use CONFIG (multiple allowed)',
+		      metavar='CONFIG', default=[],
+		      action='append')
     parser.add_option('-n', '--nodefaults', dest='includedefaults',
-                      help='ignore default configuration',
-                      default=True, action='store_false')
+		      help='ignore default configuration',
+		      default=True, action='store_false')
     parser.add_option('-s', '--syntaxcheck', dest='syntaxcheck',
-                      help='Check source syntax after generation',
-                      default=False, action='store_true')
+		      help='Check source syntax after generation',
+		      default=False, action='store_true')
     parser.add_option('-t', '--time', dest='timerun',
-                      help='Write processing time to stderr',
-                      default=False, action='store_true')
+		      help='Write processing time to stderr',
+		      default=False, action='store_true')
     parser.add_option('-d', '--debug', dest='debug',
-                      help='Write debug values to stderr',
-                      default=False, action='store_true')
+		      help='Write debug values to stderr',
+		      default=False, action='store_true')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
-        parser.error('Only one input file supported.')
+	parser.error('Only one input file supported.')
     return options, args
 
 if __name__ == '__main__':

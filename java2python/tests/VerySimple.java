@@ -1,5 +1,5 @@
 class VerySimple {
-    void main() {
+    void simple() {
         int x = 42;
     }
 }
