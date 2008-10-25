@@ -1,18 +1,14 @@
 PYTHONPATH=../../:.
-CLASSPATH=/usr/share/java/junit.jar:.
+CLASSPATH:=.:/usr/share/junit/lib/junit.jar
 
-java_sources := $(wildcard *.java)
-py_sources := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
+PYOBJS=Loops.py AssignInExpr.py EmptyArray.py Switches.py ClassMember.py \
+	FloatFix.py Keywords.py ClassInit.py SuperCtorTest.py
+JAVAOBJS=Loops AssignInExpr EmptyArray Switches ClassMember FloatFix Keywords \
+	ClassInit SuperCtorTest
 
-.SILENT: clean
-.PHONY: all $(java_sources) $(python_sources) clean
+all: python-test
 
-all: $(java_sources)
-
-
-$(java_sources):
-	javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig && rm $(basename $@).class && python $(basename $@).py
-
+python-test: $(PYOBJS)
 
 java-test: $(JAVAOBJS)
 
@@ -25,4 +21,5 @@ java-test: $(JAVAOBJS)
 	java junit.textui.TestRunner $@
 
 clean:
-	rm -f *.class *.pyc $(py_sources)
+	rm -f $(PYOBJS)
+	rm -f *.class *.pyc

@@ -57,7 +57,7 @@
 grammar Java;
 
 options {
-    language=Python;
+    language = Python;
     backtrack = true;
     memoize = true;
     output = AST;
@@ -234,37 +234,26 @@ tokens {
     VAR_DECLARATOR;
     VAR_DECLARATOR_LIST;
     VOID_METHOD_DECL;
-
-    V_COMMENT;
 }
 
 @header {
-#pass
+# placeholder
+
 }
 
 @members {
-#pass
+# placeholder
 }
 
 @lexer::header {
-#pass
+# placeholder
 }
-
 
 @lexer::members {
-#
-#  Determines if whitespaces and comments should be preserved or thrown away.
-#
-#  If <code>true</code> whitespaces and comments will be preserved within the
-#  hidden channel, otherwise the appropriate tokens will be skiped. This is
-#  a 'little bit' expensive, of course. If only one of the two behaviours is
-#  needed forever the lexer part of the grammar should be changed by replacing
-#  the 'if-else' stuff within the approprate lexer grammar actions.
-#
-preserveWhitespacesAndComments = True
+# placeholder
 }
 
-// Starting point for parsing a Java file.
+
 javaSource
     :   compilationUnit
         ->  ^(JAVA_SOURCE compilationUnit)
@@ -1106,16 +1095,13 @@ JAVA_ID_PART
     |  '\u0030'..'\u0039'
     ;
 
-
-WS  :  (' '|'\r'|'\t'|'\u000C'|'\n') { $channel = HIDDEN }
+WS  :  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel = HIDDEN}
     ;
-
 
 COMMENT
-    :   '/*' (options {greedy=false;} : . )*  '*/' { $channel = HIDDEN }
+    :   '/*' ( options {greedy=false;} : . )* '*/' {$channel = HIDDEN}
     ;
 
-
 LINE_COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n' { $channel = HIDDEN }
+    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel = HIDDEN}
     ;

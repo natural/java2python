@@ -27,6 +27,7 @@ def load_trees((stream_type, source)):
         stream = stream_type(source)
         lexer = JavaLexer(stream)
         tokens = CommonTokenStream(lexer, channel=channel)
+        tokens.channelOverrideMap[CLASS] = DEFAULT_CHANNEL
         parser = Jp.JavaParser(tokens)
         yield parser.javaSource().tree
 

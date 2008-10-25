@@ -1,12 +1,12 @@
-public class AnonClass {
+public class AnonTest {
     public static void main(String[] args) {
 
 	int y = 0;
 
 	test(
-	     new Object() {
-		 public void haveFrobinated( String e ) {
-		     System.out.println(e);
+	     new Frobinator() {
+		 public void haveFrobinated( FrobEvent e ) {
+		     otherAction();
 		 }
 	     }
 	     );

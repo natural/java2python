@@ -37,7 +37,6 @@
  */
 tree grammar JavaTreeParser;
 
-
 options {
     language = Python;
     backtrack = true;
@@ -48,344 +47,129 @@ options {
 
 
 @treeparser::header {
-from java2python.lib import sourcetypes
-from java2python.lib.support import tracer, trace_line
+# placeholder
 }
 
+@treeparser::members {
+# placeholder
+}
 
-javaSource[source]
-    @decorate { @tracer }
-    :   ^(JAVA_SOURCE
-            annotationList[source]
-            (p=packageDeclaration {source.addPackage(p)})?
-            (i=importDeclaration {source.addImport(i)})*
-            (t=typeDeclaration {source.addSource(t)})*
-        )
+// Starting point for parsing a Java file.
+javaSource[M]
+    :   ^(JAVA_SOURCE annotationList packageDeclaration? importDeclaration* typeDeclaration*)
     ;
-
 
 packageDeclaration
-returns [decl]
-    @decorate { @tracer }
-    :   ^(PACKAGE q=qualifiedIdentifier {decl=q})
+    :   ^(PACKAGE qualifiedIdentifier)
     ;
-
 
 importDeclaration
-returns [decl]
-    @decorate { @tracer }
-    :   ^(IMPORT STATIC? q=qualifiedIdentifier DOTSTAR?) {decl=(q, bool($DOTSTAR))}
+    :   ^(IMPORT STATIC? qualifiedIdentifier DOTSTAR?)
     ;
-
 
 typeDeclaration
-returns [klass]
-    @decorate { @tracer }
-    @init {
-        klass = sourcetypes.Class()
-    }
-
-    :   ^(CLASS
-            modifiers=modifierList[klass]
-            class_name=IDENT
-            genericTypeParameterList?
-            ext_clauses=extendsClause?
-            imp_clauses=implementsClause?
-            classTopLevelScope[klass]
-        )
-        {
-        klass.setName(class_name)
-        klass.addModifiers(modifiers)
-        klass.addBaseClasses(ext_clauses)
-        klass.addBaseClasses(imp_clauses)
-        }
-
-    |   ^(INTERFACE
-            modifiers=modifierList[klass]
-            interface_name=IDENT
-            genericTypeParameterList?
-            ext_clauses=extendsClause?
-            interfaceTopLevelScope[klass]
-        )
-        {
-        klass.setName(interface_name)
-        klass.addBaseClasses(ext_clauses)
-        }
-
-    |   ^(ENUM
-            modifiers=modifierList[klass]
-            enum_name=IDENT
-            imp_clauses=implementsClause?
-            enumTopLevelScope[klass]
-        )
-        {
-        klass.setName(enum_name)
-        }
-
-    |   ^(AT
-            modifiers=modifierList[klass]
-            anno_name=IDENT
-            blk=annotationTopLevelScope[klass]
-        )
-        {
-        klass.setName($anno_name)
-        klass.addModifiers(modifiers)
-        }
+    :   ^(CLASS modifierList IDENT genericTypeParameterList? extendsClause? implementsClause? classTopLevelScope)
+    |   ^(INTERFACE modifierList IDENT genericTypeParameterList? extendsClause? interfaceTopLevelScope)
+    |   ^(ENUM modifierList IDENT implementsClause? enumTopLevelScope)
+    |   ^(AT modifierList IDENT annotationTopLevelScope)
     ;
 
-
-extendsClause
-returns[clauses]
-    @decorate { @tracer }
-    @init { clauses = [] }
-    :   ^(EXTENDS_CLAUSE (t=type {clauses.append(t)})+)
+extendsClause // actually 'type' for classes and 'type+' for interfaces, but this has
+              // been resolved by the parser grammar.
+    :   ^(EXTENDS_CLAUSE type+)
     ;
-
 
 implementsClause
-returns[clauses]
-    @decorate { @tracer }
-    @init { clauses = [] }
-    :   ^(IMPLEMENTS_CLAUSE (t=type {clauses.append(t)})+)
+    :   ^(IMPLEMENTS_CLAUSE type+)
     ;
 
-
 genericTypeParameterList
-    @decorate { @tracer }
     :   ^(GENERIC_TYPE_PARAM_LIST genericTypeParameter+)
     ;
 
-
 genericTypeParameter
-    @decorate { @tracer }
-    :   ^(IDENT bound[None]?)
+    :   ^(IDENT bound?)
     ;
 
-
-bound[klass]
-    @decorate { @tracer }
+bound
     :   ^(EXTENDS_BOUND_LIST type+)
     ;
 
+enumTopLevelScope
+    :   ^(ENUM_TOP_LEVEL_SCOPE enumConstant+ classTopLevelScope?)
+    ;
 
-enumTopLevelScope[block]
-    @decorate { @tracer }
-    :   ^(ENUM_TOP_LEVEL_SCOPE enumConstant[block]+ classTopLevelScope[None]?)
+enumConstant
+    :   ^(IDENT annotationList arguments? classTopLevelScope?)
     ;
 
 
-enumConstant[block]
-    @decorate { @tracer }
-    :   ^(IDENT annotationList[block] arguments[block]? classTopLevelScope[block]?)
+classTopLevelScope
+    :   ^(CLASS_TOP_LEVEL_SCOPE classScopeDeclarations*)
     ;
 
-
-classTopLevelScope[source]
-    @decorate { @tracer }
-    :   ^(CLASS_TOP_LEVEL_SCOPE classScopeDeclarations[source]* )
-    ;
-
-
-classScopeDeclarations[source]
-    @decorate { @tracer }
-    @init {
-        blk = None
-        varrenamemap = source.config.combined('variableNameMapping')
-        typeValueMap = source.config.combined('typeValueMap')
-
-    }
-    :   ^(CLASS_INSTANCE_INITIALIZER block[source])
-    |   ^(CLASS_STATIC_INITIALIZER block[source])
-
-    |   {blk = source.newMethod()}
-        ^(FUNCTION_METHOD_DECL
-            modifiers=modifierList[blk]
-            genericTypeParameterList?
-            type
-            ident=IDENT
-            params=formalParameterList[blk]
-            arrayDeclaratorList?
-            throwsClause?
-            block[blk]?
-        )
-        {
-            blk.setName(ident)
-            blk.addModifiers(modifiers)
-            blk.addParameters(params)
-        }
-
-    |   {blk = source.newMethod()}
-        ^(VOID_METHOD_DECL
-            modifiers=modifierList[blk]
-            genericTypeParameterList?
-            ident=IDENT
-            params=formalParameterList[blk]
-            throwsClause?
-            block[blk]?
-        )
-        {
-            blk.setName(ident)
-            blk.addModifiers(modifiers)
-            blk.addParameters(params)
-        }
-
-    |   ^(VAR_DECLARATION
-            modifiers=modifierList[blk]
-            t=type
-            vds=variableDeclaratorList[source]
-        )
-        {
-            for name, value in vds:
-                if value is None:
-                    value = typeValueMap.get(t, 'None')
-                var = source.newVariable()
-                var.setName(name)
-                var.setExpression(value)
-                source.addSource( ("\%s = \%s", (("\%s", name, ), ("\%s", value, ))) )
-        }
-
-    |   ^(CONSTRUCTOR_DECL
-            modifiers=modifierList[blk]
-            genericTypeParameterList?
-            params=formalParameterList[source]
-            throwsClause?
-            block[source]
-        )
-
-    |   (t=typeDeclaration {source.addSource(t)})
-
-    ;
-
-
-interfaceTopLevelScope[block]
-    @decorate { @tracer }
-    :   ^(INTERFACE_TOP_LEVEL_SCOPE interfaceScopeDeclarations[block]*)
-    ;
-
-
-interfaceScopeDeclarations[source]
-    @decorate { @tracer }
-    :   ^(FUNCTION_METHOD_DECL
-            modifiers=modifierList[source]
-            genericTypeParameterList?
-            type
-            IDENT
-            params=formalParameterList[source]
-            arrayDeclaratorList?
-            throwsClause?
-        )
-    |   ^(VOID_METHOD_DECL
-            modifiers=modifierList[source]
-            genericTypeParameterList?
-            IDENT
-            params=formalParameterList[source]
-            throwsClause?
-        )
-    // Interface constant declarations have been switched to variable
-    // declarations by 'java.g'; the parser has already checked that
-    // there's an obligatory initializer.
-    |   ^(VAR_DECLARATION
-            modifiers=modifierList[source]
-            type
-            vds=variableDeclaratorList[source]
-        )
-        {
-            for name, value in vds:
-                if value is None:
-                    value = typeValueMap.get(t, 'None')
-                var = source.newVariable()
-                var.setName(name)
-                var.setExpression(value)
-                source.addSource( ("\%s = \%s", (("\%s", name, ), ("\%s", value, ))) )
-        }
-
+classScopeDeclarations
+    :   ^(CLASS_INSTANCE_INITIALIZER block)
+    |   ^(CLASS_STATIC_INITIALIZER block)
+    |   ^(FUNCTION_METHOD_DECL modifierList genericTypeParameterList? type IDENT formalParameterList arrayDeclaratorList? throwsClause? block?)
+    |   ^(VOID_METHOD_DECL modifierList genericTypeParameterList? IDENT formalParameterList throwsClause? block?)
+    |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
+    |   ^(CONSTRUCTOR_DECL modifierList genericTypeParameterList? formalParameterList throwsClause? block)
     |   typeDeclaration
     ;
 
-
-variableDeclaratorList[block]
-returns[decls]
-    @decorate { @tracer }
-    @init {
-        decls = []
-    }
-    :   ^(VAR_DECLARATOR_LIST (vd=variableDeclarator[block] {decls.append(vd)})+)
+interfaceTopLevelScope
+    :   ^(INTERFACE_TOP_LEVEL_SCOPE interfaceScopeDeclarations*)
     ;
 
-
-variableDeclarator[block]
-returns[decl]
-    @decorate { @tracer }
-    @init {
-        decl = []
-    }
-    @after {
-        if len(decl) == 1:decl.append(None)
-        retval = decl
-    }
-    :   ^(VAR_DECLARATOR
-            (v=variableDeclaratorId {decl.append(v)})
-            (i=variableInitializer[block] {decl.append(i)} )?)
+interfaceScopeDeclarations
+    :   ^(FUNCTION_METHOD_DECL modifierList genericTypeParameterList? type IDENT formalParameterList arrayDeclaratorList? throwsClause?)
+    |   ^(VOID_METHOD_DECL modifierList genericTypeParameterList? IDENT formalParameterList throwsClause?)
+                         // Interface constant declarations have been switched to variable
+                         // declarations by 'java.g'; the parser has already checked that
+                         // there's an obligatory initializer.
+    |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
+    |   typeDeclaration
     ;
 
+variableDeclaratorList
+    :   ^(VAR_DECLARATOR_LIST variableDeclarator+)
+    ;
+
+variableDeclarator
+    :   ^(VAR_DECLARATOR variableDeclaratorId variableInitializer?)
+    ;
 
 variableDeclaratorId
-returns[var]
-    @decorate { @tracer }
-    :   ^((i=IDENT {var=$i.text})
-          (a=arrayDeclaratorList {var=a})? )
+    :   ^(IDENT arrayDeclaratorList?)
     ;
 
-variableInitializer[block]
-returns [init]
-    @decorate { @tracer }
-    :   ai=arrayInitializer
-        {
-            init = ai
-        }
-    |   ex=expression[block]
-        {
-            init = ex
-        }
+variableInitializer
+    :   arrayInitializer
+    |   expression
     ;
 
 arrayDeclarator
-    @decorate { @tracer }
     :   LBRACK RBRACK
     ;
 
 arrayDeclaratorList
-    @decorate { @tracer }
     :   ^(ARRAY_DECLARATOR_LIST ARRAY_DECLARATOR*)
     ;
 
 arrayInitializer
-returns [vis]
-    @decorate { @tracer }
-    @init {
-        vis = []
-    }
-    :   ^(ARRAY_INITIALIZER (vi=variableInitializer[block] {vis.append(vi)})*)
+    :   ^(ARRAY_INITIALIZER variableInitializer*)
     ;
 
 throwsClause
-    @decorate { @tracer }
     :   ^(THROWS_CLAUSE qualifiedIdentifier+)
     ;
 
-
-modifierList[block]
-returns [modifiers]
-    @decorate { @tracer }
-    @init {
-        modifiers = []
-    }
-    :   ^(MODIFIER_LIST (modifier[block] {modifiers.append($modifier.text)})*)
+modifierList
+    :   ^(MODIFIER_LIST modifier*)
     ;
 
-
-modifier[block]
-    @decorate { @tracer }
+modifier
     :   PUBLIC
     |   PROTECTED
     |   PRIVATE
@@ -396,485 +180,304 @@ modifier[block]
     |   TRANSIENT
     |   VOLATILE
     |   STRICTFP
-    |   localModifier[block]
+    |   localModifier
     ;
 
-
-localModifierList[block]
-    @decorate { @tracer }
-    :   ^(LOCAL_MODIFIER_LIST localModifier[block]*)
+localModifierList
+    :   ^(LOCAL_MODIFIER_LIST localModifier*)
     ;
 
-
-localModifier[block]
-    @decorate { @tracer }
+localModifier
     :   FINAL
-    |   annotation[block]
+    |   annotation
     ;
-
 
 type
-returns [typ]
-    @decorate { @tracer }
-    :   ^(TYPE
-            ((p=primitiveType {typ=p}) |
-             (q=qualifiedTypeIdent {typ=q})) arrayDeclaratorList?)
+    :   ^(TYPE (primitiveType | qualifiedTypeIdent) arrayDeclaratorList?)
     ;
-
 
 qualifiedTypeIdent
-returns [qtid]
-    @decorate { @tracer }
-    @init { idents = [] }
-    @after { qtid = ",".join(idents) }
-    :   ^(QUALIFIED_TYPE_IDENT (t=typeIdent {idents.append(t)})+)
+    :   ^(QUALIFIED_TYPE_IDENT typeIdent+)
     ;
-
 
 typeIdent
-returns [tid]
-    @decorate { @tracer }
-    :   ^(IDENT {tid=$IDENT.text} genericTypeArgumentList?)
+    :   ^(IDENT genericTypeArgumentList?)
     ;
-
 
 primitiveType
-returns [ptype]
-    @decorate { @tracer }
-    :   BOOLEAN {ptype=$BOOLEAN.text}
-    |   CHAR {ptype=$CHAR.text}
-    |   BYTE {ptype=$BYTE.text}
-    |   SHORT {ptype=$SHORT.text}
-    |   INT {ptype=$INT.text}
-    |   LONG {ptype=$LONG.text}
-    |   FLOAT {ptype=$FLOAT.text}
-    |   DOUBLE {ptype=$DOUBLE.text}
+    :   BOOLEAN
+    |   CHAR
+    |   BYTE
+    |   SHORT
+    |   INT
+    |   LONG
+    |   FLOAT
+    |   DOUBLE
     ;
 
-
 genericTypeArgumentList
-    @decorate { @tracer }
     :   ^(GENERIC_TYPE_ARG_LIST genericTypeArgument+)
     ;
 
 genericTypeArgument
-    @decorate { @tracer }
     :   type
     |   ^(QUESTION genericWildcardBoundType?)
     ;
 
 genericWildcardBoundType
-    @decorate { @tracer }
     :   ^(EXTENDS type)
     |   ^(SUPER type)
     ;
 
-formalParameterList[block]
-returns [parameters]
-    @decorate { @tracer }
-    @init {
-        parameters = []
-    }
-    :   ^(FORMAL_PARAM_LIST
-            (p=formalParameterStandardDecl[block] {parameters.append(p)})*
-            formalParameterVarargDecl[block]?
-        )
+formalParameterList
+    :   ^(FORMAL_PARAM_LIST formalParameterStandardDecl* formalParameterVarargDecl?)
     ;
 
-formalParameterStandardDecl[block]
-returns [param]
-    @decorate { @tracer }
-    :   ^(FORMAL_PARAM_STD_DECL
-            localModifierList[block]
-            t=type
-            v=variableDeclaratorId
-        )
-        {
-        param = (t or "", v or "")
-        }
+formalParameterStandardDecl
+    :   ^(FORMAL_PARAM_STD_DECL localModifierList type variableDeclaratorId)
     ;
 
-formalParameterVarargDecl[block]
-    @decorate { @tracer }
-    :   ^(FORMAL_PARAM_VARARG_DECL localModifierList[block] type variableDeclaratorId)
+formalParameterVarargDecl
+    :   ^(FORMAL_PARAM_VARARG_DECL localModifierList type variableDeclaratorId)
     ;
-
 
 qualifiedIdentifier
-returns [qid]
-    @decorate { @tracer }
-    :   IDENT {qid=$IDENT.text}
-    |   ^(DOT q=qualifiedIdentifier IDENT {qid=(q or "") + "." + $IDENT.text})
+    :   IDENT
+    |   ^(DOT qualifiedIdentifier IDENT)
     ;
-
 
 // ANNOTATIONS
-annotationList[block]
-    @decorate { @tracer }
-    :   ^(ANNOTATION_LIST annotation[block]*)
+
+annotationList
+    :   ^(ANNOTATION_LIST annotation*)
     ;
 
-annotation[block]
-    @decorate { @tracer }
-    :   ^(AT qualifiedIdentifier annotationInit[block]?)
+annotation
+    :   ^(AT qualifiedIdentifier annotationInit?)
     ;
 
-annotationInit[block]
-    @decorate { @tracer }
-    :   ^(ANNOTATION_INIT_BLOCK annotationInitializers[block])
+annotationInit
+    :   ^(ANNOTATION_INIT_BLOCK annotationInitializers)
     ;
 
-annotationInitializers[block]
-    @decorate { @tracer }
-    :   ^(ANNOTATION_INIT_KEY_LIST annotationInitializer[block]+)
-    |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue[block])
+annotationInitializers
+    :   ^(ANNOTATION_INIT_KEY_LIST annotationInitializer+)
+    |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue)
     ;
 
-annotationInitializer[block]
-    @decorate { @tracer }
-    :   ^(IDENT annotationElementValue[block])
+annotationInitializer
+    :   ^(IDENT annotationElementValue)
     ;
 
-annotationElementValue[block]
-returns [ev]
-    @decorate { @tracer }
-    :   ^(ANNOTATION_INIT_ARRAY_ELEMENT annotationElementValue[block]*)
-    |   (an=annotation[block] {ev=an})
-    |   (ex=expression[block] {ev=ex})
+annotationElementValue
+    :   ^(ANNOTATION_INIT_ARRAY_ELEMENT annotationElementValue*)
+    |   annotation
+    |   expression
     ;
 
-annotationTopLevelScope[cls]
-returns [blk]
-    @decorate { @tracer }
-    @init {
-        blk = []
-    }
-    :   ^(ANNOTATION_TOP_LEVEL_SCOPE (b=annotationScopeDeclarations[cls] {blk.append(b)})*)
+annotationTopLevelScope
+    :   ^(ANNOTATION_TOP_LEVEL_SCOPE annotationScopeDeclarations*)
     ;
 
-annotationScopeDeclarations[source]
-returns [decls]
-    @decorate { @tracer }
-    @init {
-        decls = []
-    }
-    :   ^(ANNOTATION_METHOD_DECL
-          modifiers=modifierList[source]
-          t=type IDENT
-          (av=annotationDefaultValue[source])?
-        )
-        {
-            meth = source.newMethod($IDENT.text)
-            meth.addModifiers(modifiers)
-            if av:
-                pass
-            else:
-                pass
-        }
-    |   ^(VAR_DECLARATION modifiers=modifierList[source] t0=type variableDeclaratorList[source])
-        {
-            decls.append([t0, ""])
-        }
+annotationScopeDeclarations
+    :   ^(ANNOTATION_METHOD_DECL modifierList type IDENT annotationDefaultValue?)
+    |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
     |   typeDeclaration
     ;
 
-annotationDefaultValue[block]
-returns [v]
-    @decorate { @tracer }
-    :   ^(DEFAULT (a=annotationElementValue[block] {v=a}))
+annotationDefaultValue
+    :   ^(DEFAULT annotationElementValue)
+    ;
+
+// STATEMENTS / BLOCKS
+
+block
+    :   ^(BLOCK_SCOPE blockStatement*)
+    ;
+
+blockStatement
+    :   localVariableDeclaration
+    |   typeDeclaration
+    |   statement
+    ;
+
+localVariableDeclaration
+    :   ^(VAR_DECLARATION localModifierList type variableDeclaratorList)
     ;
 
 
-block[source]
-returns [statements]
-    @decorate { @tracer }
-    @init {
-        statements = []
-    }
-    :   ^(BLOCK_SCOPE (s=blockStatement[source] {if 0:source.addSource(s)})*)
-    ;
-
-
-blockStatement[source]
-returns [exp]
-    @decorate { @tracer }
-    :   (v=localVariableDeclaration[source] {exp=v})
-    |   (t=typeDeclaration {exp=t})
-    |   (s=statement[source] {exp=s; source.addSource(exp)})
-    ;
-
-
-localVariableDeclaration[source]
-returns [decl]
-    @decorate { @tracer }
-    :   ^(VAR_DECLARATION
-          localModifierList[source]
-          type
-          (vds=variableDeclaratorList[source] {decl=vds})
-        )
-        {
-            for name, value in vds:
-                if value is None:
-                    value = typeValueMap.get(t, 'None')
-                var = source.newVariable()
-                var.setName(name)
-                var.setExpression(value)
-                source.addSource( ("\%s = \%s", (("\%s", name, ), ("\%s", value, ))) )
-        }
-
-
-    ;
-
-
-statement[block]
-returns [s]
-    @decorate { @tracer }
-    :   x=block[None] {s=x}
-    |   ^(ASSERT expression[block] expression[block]?)
-    |   ^(IF parenthesizedExpression statement[block] statement[block]?)
-    |   ^(FOR forInit forCondition forUpdater statement[block])
-    |   ^(FOR_EACH localModifierList[block] type IDENT expression[block] statement[block])
-    |   ^(WHILE parenthesizedExpression statement[block])
-    |   ^(DO statement[block] parenthesizedExpression)
-        // The second optional block is the optional finally block.
-    |   ^(TRY block[None] catches[block]? block[None]?)
+statement
+    :   block
+    |   ^(ASSERT expression expression?)
+    |   ^(IF parenthesizedExpression statement statement?)
+    |   ^(FOR forInit forCondition forUpdater statement)
+    |   ^(FOR_EACH localModifierList type IDENT expression statement)
+    |   ^(WHILE parenthesizedExpression statement)
+    |   ^(DO statement parenthesizedExpression)
+    |   ^(TRY block catches? block?)  // The second optional block is the optional finally block.
     |   ^(SWITCH parenthesizedExpression switchBlockLabels)
-    |   ^(SYNCHRONIZED parenthesizedExpression block[None])
-    |   ^(RETURN expression[block]?)
-    |   ^(THROW expression[block])
+    |   ^(SYNCHRONIZED parenthesizedExpression block)
+    |   ^(RETURN expression?)
+    |   ^(THROW expression)
     |   ^(BREAK IDENT?)
     |   ^(CONTINUE IDENT?)
-    |   ^(LABELED_STATEMENT IDENT statement[block])
-    |   x=expression[block] {
-        s=x
-        }
+    |   ^(LABELED_STATEMENT IDENT statement)
+    |   expression
     |   SEMI // Empty statement.
     ;
 
-
-catches[block]
-    @decorate { @tracer }
-    :   ^(CATCH_CLAUSE_LIST catchClause[block]+)
+catches
+    :   ^(CATCH_CLAUSE_LIST catchClause+)
     ;
 
-
-catchClause[block]
-    @decorate { @tracer }
-    :   ^(CATCH formalParameterStandardDecl[block] block[None])
+catchClause
+    :   ^(CATCH formalParameterStandardDecl block)
     ;
-
 
 switchBlockLabels
-    @decorate { @tracer }
     :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel? switchCaseLabel*)
     ;
 
-
 switchCaseLabel
-    @decorate { @tracer }
-    :   ^(CASE expression[block] blockStatement[None]*)
+    :   ^(CASE expression blockStatement*)
     ;
-
 
 switchDefaultLabel
-    @decorate { @tracer }
-    :   ^(DEFAULT blockStatement[None]*)
+    :   ^(DEFAULT blockStatement*)
     ;
-
 
 forInit
-    @decorate { @tracer }
-    :   ^(FOR_INIT (localVariableDeclaration[None] | expression[block]*)?)
+    :   ^(FOR_INIT (localVariableDeclaration | expression*)?)
     ;
-
 
 forCondition
-    @decorate { @tracer }
-    :   ^(FOR_CONDITION expression[block]?)
+    :   ^(FOR_CONDITION expression?)
     ;
-
 
 forUpdater
-    @decorate { @tracer }
-    :   ^(FOR_UPDATE expression[block]*)
+    :   ^(FOR_UPDATE expression*)
     ;
 
+// EXPRESSIONS
 
 parenthesizedExpression
-    @decorate { @tracer }
-    :   ^(PARENTESIZED_EXPR expression[block])
+    :   ^(PARENTESIZED_EXPR expression)
     ;
 
-
-expression[block]
-returns[exp]
-    @decorate { @tracer }
-    :   ^(EXPR result=expr[block]) {exp = $result.text }
+expression
+    :   ^(EXPR expr)
     ;
 
-
-expr[block]
-returns[exp]
-    @decorate { @tracer }
-    :   ^(ASSIGN expr[block] expr[block] {exp="BADVAL"})
-    |   ^(PLUS_ASSIGN expr[block] expr[block])
-    |   ^(MINUS_ASSIGN expr[block] expr[block])
-    |   ^(STAR_ASSIGN expr[block] expr[block])
-    |   ^(DIV_ASSIGN expr[block] expr[block])
-    |   ^(AND_ASSIGN expr[block] expr[block])
-    |   ^(OR_ASSIGN expr[block] expr[block])
-    |   ^(XOR_ASSIGN expr[block] expr[block])
-    |   ^(MOD_ASSIGN expr[block] expr[block])
-    |   ^(BIT_SHIFT_RIGHT_ASSIGN expr[block] expr[block])
-    |   ^(SHIFT_RIGHT_ASSIGN expr[block] expr[block])
-    |   ^(SHIFT_LEFT_ASSIGN expr[block] expr[block])
-    |   ^(QUESTION expr[block] expr[block] expr[block])
-    |   ^(LOGICAL_OR expr[block] expr[block])
-    |   ^(LOGICAL_AND expr[block] expr[block])
-    |   ^(OR expr[block] expr[block])
-    |   ^(XOR expr[block] expr[block])
-    |   ^(AND expr[block] expr[block])
-    |   ^(EQUAL expr[block] expr[block])
-    |   ^(NOT_EQUAL expr[block] expr[block])
-    |   ^(INSTANCEOF expr[block] type)
-    |   ^(LESS_OR_EQUAL expr[block] expr[block])
-    |   ^(GREATER_OR_EQUAL expr[block] expr[block])
-    |   ^(BIT_SHIFT_RIGHT expr[block] expr[block])
-    |   ^(SHIFT_RIGHT expr[block] expr[block])
-    |   ^(GREATER_THAN expr[block] expr[block])
-    |   ^(SHIFT_LEFT expr[block] expr[block])
-    |   ^(LESS_THAN expr[block] expr[block])
-    |   ^(PLUS expr[block] expr[block])
-    |   ^(MINUS expr[block] expr[block])
-    |   ^(STAR expr[block] expr[block])
-    |   ^(DIV expr[block] expr[block])
-    |   ^(MOD expr[block] expr[block])
-    |   ^(UNARY_PLUS expr[block])
-    |   ^(UNARY_MINUS expr[block])
-    |   ^(PRE_INC expr[block])
-    |   ^(PRE_DEC expr[block])
-    |   ^(POST_INC expr[block])
-    |   ^(POST_DEC expr[block])
-    |   ^(NOT expr[block])
-    |   ^(LOGICAL_NOT expr[block])
-    |   ^(CAST_EXPR type expr[block])
-    |   ex=primaryExpression[block] {exp=ex}
+expr
+    :   ^(ASSIGN expr expr)
+    |   ^(PLUS_ASSIGN expr expr)
+    |   ^(MINUS_ASSIGN expr expr)
+    |   ^(STAR_ASSIGN expr expr)
+    |   ^(DIV_ASSIGN expr expr)
+    |   ^(AND_ASSIGN expr expr)
+    |   ^(OR_ASSIGN expr expr)
+    |   ^(XOR_ASSIGN expr expr)
+    |   ^(MOD_ASSIGN expr expr)
+    |   ^(BIT_SHIFT_RIGHT_ASSIGN expr expr)
+    |   ^(SHIFT_RIGHT_ASSIGN expr expr)
+    |   ^(SHIFT_LEFT_ASSIGN expr expr)
+    |   ^(QUESTION expr expr expr)
+    |   ^(LOGICAL_OR expr expr)
+    |   ^(LOGICAL_AND expr expr)
+    |   ^(OR expr expr)
+    |   ^(XOR expr expr)
+    |   ^(AND expr expr)
+    |   ^(EQUAL expr expr)
+    |   ^(NOT_EQUAL expr expr)
+    |   ^(INSTANCEOF expr type)
+    |   ^(LESS_OR_EQUAL expr expr)
+    |   ^(GREATER_OR_EQUAL expr expr)
+    |   ^(BIT_SHIFT_RIGHT expr expr)
+    |   ^(SHIFT_RIGHT expr expr)
+    |   ^(GREATER_THAN expr expr)
+    |   ^(SHIFT_LEFT expr expr)
+    |   ^(LESS_THAN expr expr)
+    |   ^(PLUS expr expr)
+    |   ^(MINUS expr expr)
+    |   ^(STAR expr expr)
+    |   ^(DIV expr expr)
+    |   ^(MOD expr expr)
+    |   ^(UNARY_PLUS expr)
+    |   ^(UNARY_MINUS expr)
+    |   ^(PRE_INC expr)
+    |   ^(PRE_DEC expr)
+    |   ^(POST_INC expr)
+    |   ^(POST_DEC expr)
+    |   ^(NOT expr)
+    |   ^(LOGICAL_NOT expr)
+    |   ^(CAST_EXPR type expr)
+    |   primaryExpression
     ;
 
-primaryExpression[block]
-returns [expression]
-    @decorate { @tracer }
+primaryExpression
     :   ^(  DOT
-            (   dotexpr=primaryExpression[block]
-                (   id0=IDENT
+            (   primaryExpression
+                (   IDENT
                 |   THIS
                 |   SUPER
-                |   ex1=innerNewExpression
-                |   ex=CLASS
+                |   innerNewExpression
+                |   CLASS
                 )
-            |   primitiveType ex=CLASS
-            |   VOID ex=CLASS
+            |   primitiveType CLASS
+            |   VOID CLASS
             )
         )
-        {
-        retval = ("\%s.\%s", (dotexpr, (ex, )))
-        }
-
     |   parenthesizedExpression
-    |   id1=IDENT {retval=id1}
-    |   ^(METHOD_CALL
-            expression2=primaryExpression[block]
-            genericTypeArgumentList?
-            argl=arguments[block]
-        )
-        {
-        #retval = expression2
-        if argl:
-            retval = ("\%s(\%s)", (expression2, argl))
-        else:
-            retval = ("\%s()", expression or "")
-        }
-    |   explicitConstructorCall[block]
-    |   ^(ARRAY_ELEMENT_ACCESS primaryExpression[block] expression[block])
-    |   ex4=literal {retval=ex4}
-    |   newExpression[block]
-    |   THIS {exp = ("\%s", "self")}
+    |   IDENT
+    |   ^(METHOD_CALL primaryExpression genericTypeArgumentList? arguments)
+    |   explicitConstructorCall
+    |   ^(ARRAY_ELEMENT_ACCESS primaryExpression expression)
+    |   literal
+    |   newExpression
+    |   THIS
     |   arrayTypeDeclarator
-    |   SUPER {exp = ("\%s", "super")}
+    |   SUPER
     ;
 
-
-explicitConstructorCall[block]
-    @decorate { @tracer }
-    :   ^(THIS_CONSTRUCTOR_CALL genericTypeArgumentList? arguments[block])
-    |   ^(SUPER_CONSTRUCTOR_CALL primaryExpression[block]? genericTypeArgumentList? arguments[block])
+explicitConstructorCall
+    :   ^(THIS_CONSTRUCTOR_CALL genericTypeArgumentList? arguments)
+    |   ^(SUPER_CONSTRUCTOR_CALL primaryExpression? genericTypeArgumentList? arguments)
     ;
-
 
 arrayTypeDeclarator
-    @decorate { @tracer }
     :   ^(ARRAY_DECLARATOR (arrayTypeDeclarator | qualifiedIdentifier | primitiveType))
     ;
 
-
-newExpression[block]
-    @decorate { @tracer }
+newExpression
     :   ^(  STATIC_ARRAY_CREATOR
-            (   primitiveType newArrayConstruction[block]
-            |   genericTypeArgumentList? qualifiedTypeIdent newArrayConstruction[block]
+            (   primitiveType newArrayConstruction
+            |   genericTypeArgumentList? qualifiedTypeIdent newArrayConstruction
             )
         )
-    |   ^(CLASS_CONSTRUCTOR_CALL
-          genericTypeArgumentList?
-          qualifiedTypeIdent
-          arguments[block]
-          classTopLevelScope[block]?
-        )
+    |   ^(CLASS_CONSTRUCTOR_CALL genericTypeArgumentList? qualifiedTypeIdent arguments classTopLevelScope?)
     ;
 
-
-innerNewExpression
-    @decorate { @tracer }
-    // something like 'InnerType innerType = outer.new InnerType();'
-    :   ^(CLASS_CONSTRUCTOR_CALL
-          genericTypeArgumentList?
-          IDENT
-          arguments[block]
-          classTopLevelScope[block]?
-        )
+innerNewExpression // something like 'InnerType innerType = outer.new InnerType();'
+    :   ^(CLASS_CONSTRUCTOR_CALL genericTypeArgumentList? IDENT arguments classTopLevelScope?)
     ;
 
-
-newArrayConstruction[block]
-    @decorate { @tracer }
+newArrayConstruction
     :   arrayDeclaratorList arrayInitializer
-    |   expression[block]+ arrayDeclaratorList?
+    |   expression+ arrayDeclaratorList?
     ;
 
-
-arguments[block]
-returns[args]
-    @decorate { @tracer }
-    @init {
-        args = []
-    }
-    @after {
-        retval = args
-    }
-    :   ^(ARGUMENT_LIST (exp=expression[block] {args.append(exp)})*)
+arguments
+    :   ^(ARGUMENT_LIST expression*)
     ;
-
 
 literal
-returns[lit]
-    @decorate { @tracer }
-    :   v=HEX_LITERAL {lit=$v.text}
-    |   v=OCTAL_LITERAL {lit=$v.text}
-    |   v=DECIMAL_LITERAL {lit=$v.text}
-    |   v=FLOATING_POINT_LITERAL {lit=$v.text}
-    |   v=CHARACTER_LITERAL {lit=$v.text}
-    |   v=STRING_LITERAL {lit=$v.text}
-    |   TRUE {lit=True}
-    |   FALSE {lit=False}
-    |   NULL {lit=None}
+    :   HEX_LITERAL
+    |   OCTAL_LITERAL
+    |   DECIMAL_LITERAL
+    |   FLOATING_POINT_LITERAL
+    |   CHARACTER_LITERAL
+    |   STRING_LITERAL
+    |   TRUE
+    |   FALSE
+    |   NULL
     ;

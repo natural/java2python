@@ -109,7 +109,7 @@ class Source:
 
         self.postIncDecInExprFixed = False
         self.postIncDecVars = []
-        self.postIncDecCount= 0
+        self.postIncDecCount= 0 
 
     def __str__(self):
         """ str(obj) -> source code defined in obj
@@ -139,18 +139,6 @@ class Source:
             except (AttributeError, ):
                 output.write('%s%s\n' % (offset, line))
 
-    def addPackage(self, text):
-        self.addComment("namespace_packages('%s')" % (text, ))
-
-    def addImport(self, text):
-        star = None
-        if isinstance(text, tuple):
-            text, star = text
-        if star:
-            self.addComment("from %s import *" % (text, ))
-        else:
-            self.addComment('import %s' % (text, ))
-
     def addComment(self, text, prefix='##'):
         """ add a comment to this source block
 
@@ -169,10 +157,6 @@ class Source:
         """
         self.modifiers.add(name)
 
-    def addModifiers(self, modifiers):
-        for m in modifiers:
-            self.addModifier(m)
-
     def addSource(self, value):
         """ add source code to the end of this block
 
@@ -180,10 +164,6 @@ class Source:
         @return None
         """
         self.lines.append(value)
-
-    def addSources(self, lines):
-        for line in lines:
-            self.addSource(line)
 
     def addSourceBefore(self, value, stat=None):
         """ add source code to the end of this block, before the last line
@@ -212,13 +192,10 @@ class Source:
         @keyparam force=False, if True, always add to set
         @return None
         """
+        if not isinstance(var, Variable):
+            var = Variable(var)
         if force or (var.name and self.isClass):
             self.variables.append(var)
-
-    def addVariables(self, variables, force=False):
-        for name, var in variables:
-            v = Variable(self, name, var)
-            self.addVariable(v, force=force)
 
     def addMethod(self, meth):
         self.methods.append(meth)
@@ -489,7 +466,7 @@ class Source:
 
     def newVariable(self, name=None):
         """ creates a new Variable for the block
-
+        
         @param name name of the variable
         @return Variable instance
         """
@@ -549,7 +526,6 @@ class Source:
 
         @return None
         """
-        return ## FIXME
         lines = self.lines
         if lines:
             while not lines[-1]:
@@ -703,10 +679,6 @@ class Class(Source):
             name = self.formatExpression(name)
             self.bases.append(name)
 
-    def addBaseClasses(self, classes):
-        for c in (classes if classes else ()):
-            self.addBaseClass(c)
-
     def fixDecl(self, *args):
         """ fixes variable names that are class members
 
@@ -845,7 +817,7 @@ class Class(Source):
                                 stmt)
                     idx = meth.lines.index(stmt)
                     meth.lines[idx] = "# end of instance variables"
-
+                    
 
     def writeTo(self, output, indent):
         """ writes the string representation of this block
@@ -875,7 +847,6 @@ class Class(Source):
             output.write('%s""" generated source for %s\n\n' % (offset, name))
             output.write('%s"""\n' % (offset, ))
         Source.writeTo(self, output, indent+1)
-        output.write("\n")
 
 
 class Method(Source):
@@ -921,11 +892,6 @@ class Method(Source):
         typ = Source.alternateName(self, typ, 'typeTypeMap')
         self.parameters.append((typ, name))
         self.variables.append(Variable(self, name))
-
-    def addParameters(self, params):
-        for ptype, ident in params:
-            self.addParameter(ptype, ident)
-
 
     def formatDecl(self, indent):
         """ generates a class statement accounting for base types

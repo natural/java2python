@@ -6,12 +6,9 @@ import os.path
 import sys
 from time import time
 
-from antlr3 import ANTLRStringStream, CommonTokenStream
-from antlr3.tree import CommonTreeNodeStream
-
-from java2python.lib.JavaParser import JavaParser
-from java2python.lib.JavaLexer import JavaLexer
-
+from java2python.lib.lexer import Lexer
+from java2python.lib.parser import Parser
+from java2python.lib.walker import Walker
 from java2python.lib.sourcetypes import Module, set_config
 
 
@@ -20,31 +17,18 @@ try:
 except (ImportError, ):
     pass
 else:
-    pass # psyco.full()
+    psyco.full()
 
-def loadTree():
-    from java2python.lib.JavaTreeParser import JavaTreeParser
-    return JavaTreeParser
 
 def transform(options):
-    #lexer_args = [options.inputfile, ] if options.inputfile else []
-    #L = Lexer(*lexer_args)
-    #P = Parser(L)
-    #W = Walker()
-    source = open(options.inputfile).read()
-    stream = ANTLRStringStream(source)
-    lexer = JavaLexer(stream)
-    tokens = CommonTokenStream(lexer)
-    #print "###", tokens.discardOffChannelTokens; raise Exception()
-    parser = JavaParser(tokens)
-    if options.debug:
-        import java2python.lib.support as S
-        S.enable_trace = True
+    lexer_args = [options.inputfile, ] if options.inputfile else []
+    L = Lexer(*lexer_args)
+    P = Parser(L)
+    W = Walker()
+
     comp_start = start = time()
     try:
-        #P.compilationUnit()
-
-        root = parser.javaSource().tree
+        P.compilationUnit()
     except (Exception, ), exc:
        print '*** exception while parsing:'
        print exc
@@ -52,16 +36,11 @@ def transform(options):
     comp_finish = time()
 
     ast_start = time()
-    nodes = CommonTreeNodeStream(root)
-    
-    nodes.setTokenStream(tokens)
-    walker = loadTree()(nodes)
-
-
+    ast = P.getAST()
     ast_finish = time()
-#    if not ast:
-#       print '*** error: no AST generated.'
-#       return 2
+    if not ast:
+       print '*** error: no AST generated.'
+       return 2
 
     filein = fileout = filedefault = '-'
     if options.inputfile:
@@ -79,8 +58,7 @@ def transform(options):
     walk_start = time()
     set_config(options.configs, options.includedefaults)
     M = Module(filein, fileout)
-    #W.walk(ast, M)
-    walker.javaSource(M)
+    W.walk(ast, M)
     source = str(M)
     print >> output, source
     walk_finish = time()
@@ -123,9 +101,6 @@ def cli_options(argv):
                       default=False, action='store_true')
     parser.add_option('-t', '--time', dest='timerun',
                       help='Write processing time to stderr',
-                      default=False, action='store_true')
-    parser.add_option('-d', '--debug', dest='debug',
-                      help='Write debug values to stderr',
                       default=False, action='store_true')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
