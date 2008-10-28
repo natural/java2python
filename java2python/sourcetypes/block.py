@@ -566,7 +566,7 @@ class Module(Block):
     def writeExtraLines(self, name, output):
         """ writes a sequence of lines given a config attribute name
 
-        Lines may be callable.  Refer to the defaultconfig module for
+        Lines may be callable.  Refer to the config.default module for
         details.
 
         @param name configuration module attribute

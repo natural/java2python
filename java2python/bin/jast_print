@@ -8,8 +8,8 @@ import sys
 from antlr3 import FileStream, StringStream, CommonTokenStream
 from antlr3.dottreegen import DOTTreeGenerator
 
-from java2python.lib import JavaParser as Jp
-from java2python.lib.JavaLexer import JavaLexer, COMMENT, LINE_COMMENT, DEFAULT_CHANNEL, CLASS, HIDDEN
+from java2python.parser import JavaParser as Jp
+from java2python.parser.JavaLexer import JavaLexer, COMMENT, LINE_COMMENT, DEFAULT_CHANNEL, CLASS, HIDDEN
 try:
     import psyco
 except (ImportError, ):

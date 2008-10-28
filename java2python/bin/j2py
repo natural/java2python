@@ -9,8 +9,8 @@ from time import time
 from antlr3 import ANTLRStringStream, CommonTokenStream
 from antlr3.tree import CommonTreeNodeStream
 
-from java2python.lib.JavaParser import JavaParser
-from java2python.lib.JavaLexer import JavaLexer
+from java2python.parser.JavaParser import JavaParser
+from java2python.parser.JavaLexer import JavaLexer
 
 from java2python.sourcetypes import Module, set_config
 
@@ -24,7 +24,7 @@ else:
     pass # psyco.full()
 
 def loadTree():
-    from java2python.lib.JavaTreeParser import JavaTreeParser
+    from java2python.parser.JavaTreeParser import JavaTreeParser
     return JavaTreeParser
 
 def transform(options):
@@ -39,7 +39,7 @@ def transform(options):
     #print "###", tokens.discardOffChannelTokens; raise Exception()
     parser = JavaParser(tokens)
     if options.debug:
-	import java2python.lib.support as S
+	import java2python.parser.support as S
 	S.enable_trace = True
     comp_start = start = time()
     try:

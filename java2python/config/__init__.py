@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.lib import import_name
+from java2python.parser import import_name
 
 
 def set_config_target(target, names, includeDefault=True):
@@ -11,7 +11,7 @@ def set_config_target(target, names, includeDefault=True):
     @return None
     """
     if includeDefault:
-        names.insert(0, 'java2python.lib.defaultconfig')
+        names.insert(0, 'java2python.config.default')
     target.config = Config(*names)
 
 

@@ -1,13 +1,13 @@
-.PHONY: all clean lib
+.PHONY: all clean parser
 
 
-all: lib
+all: parser
 
 
 clean:
 	rm -f *.pyo
 	rm -f *.pyc
-	cd lib && $(MAKE) clean
+	cd parser && $(MAKE) clean
 
-lib:
-	cd lib && $(MAKE)
+parser:
+	cd parser && $(MAKE)
