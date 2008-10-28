@@ -28,10 +28,10 @@ sortClassMethods = False
 writeModifiersComments = True
 
 ## if True, a default docstring is generated for class statements.
-writeClassDocString = True
+writeClassDocString = False
 
 ## if True, a default docstring is generated for method statements.
-writeMethodDocString = True
+writeMethodDocString = False
 
 ## if True, and if input source contains a "public static void main"
 ## method, a block is written to the end of the file to call the class
@@ -168,20 +168,10 @@ baseClassMembers = {
 }
 
 
-variableNameMapping = {
-    'str':'strval',
-    'and':'and_',
-    'del':'del_',
-    'elif':'elif_',
-    'from':'from_',
-    'in':'in_',
-    'is':'is_',
-    'not':'not_',
-    'or':'or_',
-    'print':'print_',
-    'None':'None_',
-    'null':'None',
-    }
+def make_variableNameMapping():
+    import keyword, __builtin__
+    return dict((k, '%s_' % k) for k in keyword.kwlist + __builtin__.__dict__.keys())
+variableNameMapping = make_variableNameMapping()
 
 
 exceptionTypeMapping = {
@@ -197,3 +187,30 @@ methodPreambleSorter = None
 ## use a block like this to sort decorators by name.
 ## def methodPreambleSorter(a, b):
 ##     return cmp(a, b)
+
+
+
+##
+##
+##
+def _ignorePackageDecl(s, v):
+    pass
+
+def _commentPackageDecl(s, v):
+    return s.addComment("original package definition: %s" % (v, ))
+
+def _namespacePackageDecl(s, v):
+    return s.addComment("namespace_packages('%s')" % (v, ))
+
+
+packageDeclHandler = _commentPackageDecl
+
+
+##
+##
+##
+def _commentImportDecl(s, v):
+    return s.addComment("import %s")
+
+importDeclHandler = _commentImportDecl
+

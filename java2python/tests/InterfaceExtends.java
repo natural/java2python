@@ -1,4 +1,14 @@
 interface RainbowColors {
+    void make_rgb(int x);
+    int roy();
+    int g();
+    int biv();
+
+    int red = 0;
+    int green = 0;
+    int blue = 0;
+
+    class Clr {};
 }
 
 interface PrintColors {

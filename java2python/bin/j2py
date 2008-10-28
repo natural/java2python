@@ -12,7 +12,7 @@ from antlr3.tree import CommonTreeNodeStream
 from java2python.lib.JavaParser import JavaParser
 from java2python.lib.JavaLexer import JavaLexer
 
-from java2python.lib.sourcetypes import Module, set_config
+from java2python.sourcetypes import Module, set_config
 
 
 try:
@@ -20,6 +20,7 @@ try:
 except (ImportError, ):
     pass
 else:
+    psyco.full()
     pass # psyco.full()
 
 def loadTree():
@@ -104,7 +105,7 @@ def transform(options):
 
 
 def cli_options(argv):
-    parser = optparse.OptionParser(version='%prog 0.2')
+    parser = optparse.OptionParser(version='%prog 0.3')
     parser.add_option('-i', '--input', dest='inputfile',
 		      help='read INPUTFILE',
 		      metavar='INPUTFILE', default=None)
@@ -130,6 +131,8 @@ def cli_options(argv):
     options, args = parser.parse_args(argv)
     if len(args) > 2:
 	parser.error('Only one input file supported.')
+    elif len(args) == 2:
+	options.inputfile = args[1]
     return options, args
 
 if __name__ == '__main__':

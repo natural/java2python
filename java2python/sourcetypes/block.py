@@ -1,84 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.lib.sourcetypes -> classes for building python source code.
-
-When used by java2python.lib.walker, the Module class below is updated
-as the java AST is walked.  Refer to the java2python script for usage.
+""" java2python.sourcetypes.block -> basic building block of output source code.
 
 """
 from cStringIO import StringIO
-import re
+from re import sub as rxsub
 
-
-def import_name(name):
-    """ import_name(name) -> import and return a module by name in dotted form
-
-    Copied from the Python lib docs.
-
-    @param name module or package name in dotted form
-    @return module object
-    """
-    mod = __import__(name)
-    for comp in name.split('.')[1:]:
-        mod = getattr(mod, comp)
-    return mod
-
+from java2python.config import Config, set_config_target
 
 def set_config(names, includeDefault=True):
-    """ build and set a Config object on the Source class
-
-    @param names sequence of module names
-    @keyparam includeDefault=True flag to include default configuration module
-    @return None
-    """
-    if includeDefault:
-        names.insert(0, 'java2python.lib.defaultconfig')
-    Source.config = Config(*names)
+    return set_config_target(Block, names, includeDefault)
 
 
-class Config:
-    """ Config -> wraps multiple configuration modules
-
-
-    """
-    def __init__(self, *names):
-        self.configs = [import_name(name) for name in names]
-
-    def all(self, name, missing=None):
-        """ value of name in each config module
-
-        @param name module attribute as string
-        @keyparam missing=None default for missing attributes
-        @return list of values
-        """
-        return (getattr(config, name, missing) for config in self.configs)
-
-    def last(self, name, default=None):
-        """ value from final config module to define name
-
-        @param name module attribute as string
-        @keyparam default=None value returned if all modules lack name
-        @return value from config module
-        """
-        for config in reversed(self.configs):
-            if hasattr(config, name):
-                return getattr(config, name)
-        return default
-
-    def combined(self, name):
-        """ combined mapping of named dictionaries from all config modules
-
-        @param dictionary attribute as string
-        @return dictionary updated with each named dictionary
-        """
-        combined = {}
-        for mapping in self.all(name, {}):
-            combined.update(mapping)
-        return combined
-
-
-class Source:
-    """ Source -> base class for source code types.
+class Block:
+    """ Block -> base class for source code types.
 
     Instances have methods to create new child instances, e.g., newClass
     to create a new class.
@@ -109,7 +44,7 @@ class Source:
 
         self.postIncDecInExprFixed = False
         self.postIncDecVars = []
-        self.postIncDecCount= 0 
+        self.postIncDecCount= 0
 
     def __str__(self):
         """ str(obj) -> source code defined in obj
@@ -120,7 +55,7 @@ class Source:
         source = out.getvalue()
         for subs in self.config.all('outputSubs', []):
             for sub in subs:
-                source = re.sub(sub[0], sub[1], source)
+                source = rxsub(sub[0], sub[1], source)
         return source
 
     def writeTo(self, output, indent):
@@ -160,7 +95,7 @@ class Source:
     def addSource(self, value):
         """ add source code to the end of this block
 
-        @param value string, instance of Source (or subclass), or two-tuple
+        @param value string, instance of Block (or subclass), or two-tuple
         @return None
         """
         self.lines.append(value)
@@ -169,11 +104,11 @@ class Source:
         """ add source code to the end of this block, before the last line
         or the specified statement
 
-        @param value string, instance of Source (or subclass), or two-tuple
+        @param value string, instance of Block (or subclass), or two-tuple
         @param stat Statement, insert source before this statement
         @return None
         """
-        if len(self.lines) > 0:
+        if len(self.lines):
             if isinstance(stat, int):
                 idx = stat
             else:
@@ -192,7 +127,7 @@ class Source:
         @keyparam force=False, if True, always add to set
         @return None
         """
-        if not isinstance(var, Variable):
+	if not getattr(var, 'isVariable', False):
             var = Variable(var)
         if force or (var.name and self.isClass):
             self.variables.append(var)
@@ -235,7 +170,8 @@ class Source:
         for obj in [self, ] + list(self.allParents):
             for v in obj.variables:
                 yield v.name
-            if isinstance(obj, Method): break
+            if obj.isMethod:
+		break
 
     @property
     def instanceMembers(self):
@@ -244,7 +180,7 @@ class Source:
         @return yields all instance member names from this class
         """
         for obj in [self, ] + list(self.allParents):
-            if isinstance(obj, Class):
+	    if obj.isClass:
                 for v in obj.variables:
                     if not v.isStatic:
                         yield v.name
@@ -258,7 +194,7 @@ class Source:
         @return yields all instance method names from this class
         """
         for obj in [self, ] + list(self.allParents):
-            if isinstance(obj, Class):
+	    if obj.isClass:
                 for v in obj.methods:
                     if not v.isStatic:
                         yield v.name
@@ -270,7 +206,7 @@ class Source:
         @return yields static member names from this class
         """
         for obj in [self, ] + list(self.allParents):
-            if isinstance(obj, Class):
+	    if obj.isClass:
                 for v in obj.variables:
                     if v.isStatic:
                         yield v.name
@@ -282,7 +218,7 @@ class Source:
         @return yields static method names from this class
         """
         for obj in [self, ] + list(self.allParents):
-            if isinstance(obj, Class):
+	    if obj.isClass:
                 for v in obj.methods:
                     if v.isStatic:
                         yield v.name
@@ -317,14 +253,14 @@ class Source:
         """ True if this instance is a Class
 
         """
-        return isinstance(self, Class)
+	return False
 
     @property
     def isMethod(self):
         """ True if this instance is a Method
 
         """
-        return isinstance(self, Method)
+	return False
 
     @property
     def isStatic(self):
@@ -333,6 +269,14 @@ class Source:
         @return if the variable is static return True
         """
         return 'static' in self.modifiers
+
+    @property
+    def isVariable(self):
+        """ True if this instance is static
+
+        @return if the variable is static return True
+        """
+        return False
 
     @property
     def declFormat(self):
@@ -355,12 +299,10 @@ class Source:
         """ Return className of the source in.
 
         """
-        if isinstance(self, Class):
-            return self.name
-        elif self.parent is not None:
+        if self.parent is not None:
             return self.parent.className
-        else:
-            return 'ERROR'
+	else:
+	    raise TypeError("Not a Class and parent not a Class")
 
     def fixDecl(self, *args):
         """ fixes variable names that are class members
@@ -406,7 +348,7 @@ class Source:
 
         @return two-tuple of initializer Statement and block Statement
         """
-        s = Source(self)
+        s = Block(self)
         f = Statement(self, 'while')
         self.addSource(s)
         self.addSource(f)
@@ -464,14 +406,14 @@ class Source:
         idx = self.lines.index(stat)
         del self.lines[idx]
 
-    def newVariable(self, name=None):
+    def newVariable(self, name=None, force=True):
         """ creates a new Variable for the block
 
         @param name name of the variable
         @return Variable instance
         """
         var = Variable(self)
-        self.addVariable(var, True)
+        self.addVariable(var, force)
         return var
 
     def formatExpression(self, expr):
@@ -483,6 +425,7 @@ class Source:
         @param expr string or two-tuple
         @return interpolated, fixed expression as string
         """
+	print "## formatExpression", expr
         fixdecl = self.fixDecl
 
         if isinstance(expr, basestring):
@@ -499,6 +442,7 @@ class Source:
         elif isinstance(first, tuple) and isinstance(second, tuple):
             return (format(first), format(second))
         else:
+	    return str(expr)
             raise NotImplementedError('Unhandled expression type:  %s' % expr)
 
     def alternateName(self, name, key='renameAnyMap'):
@@ -527,9 +471,15 @@ class Source:
         @return None
         """
         lines = self.lines
-        if lines:
-            while not lines[-1]:
-                lines.pop()
+	while True:
+	    if lines:
+		if not lines[-1]:
+		    lines.pop()
+		else:
+		    break
+	    else:
+		break
+
 
     def I(self, indent):
         """ calculated indentation string
@@ -546,7 +496,7 @@ class Source:
         elif self.name == 'while':
             self.addSource(expr)
         elif isinstance(self, Method):
-            self.addSource(expr)    
+            self.addSource(expr)
         return left
 
     def fixPostIncDecInExpr(self, needFix, expr, left, op):
@@ -587,14 +537,15 @@ class Source:
             child = child.getNextSibling()
         return False
 
-class Module(Source):
+
+class Module(Block):
     """ Module -> specialized block type
 
     Module instances write a preamble before writing their source
     objects.
     """
     def __init__(self, infile, outfile):
-        Source.__init__(self, parent=None, name=None)
+        Block.__init__(self, parent=None, name=None)
         self.infile = infile
         self.outfile = outfile
 
@@ -607,7 +558,7 @@ class Module(Source):
         """
         self.writeExtraLines('modulePreamble', output)
         output.write('\n')
-        Source.writeTo(self, output, indent)
+        Block.writeTo(self, output, indent)
         self.writeExtraLines('moduleEpilogue', output)
         if self.config.last('writeMainMethodScript'):
             self.writeMainBlock(output)
@@ -653,10 +604,25 @@ class Module(Source):
                 output.write("%s%s.main(sys.argv)\n" % (offset, name))
 
 
-class Class(Source):
+class Class(Block):
     """ Class -> specialized block type
 
     """
+
+    @property
+    def className(self):
+        """ Return className of the source in.
+
+        """
+        return self.name
+
+    @property
+    def isClass(self):
+        """ True if this instance is a Class
+
+        """
+	return True
+
     @property
     def extraVars(self):
         """ extra variable names from base classes (defined externally)
@@ -676,7 +642,7 @@ class Class(Source):
         @return None
         """
         if name and (name not in self.bases):
-            name = self.formatExpression(name)
+            #name = self.formatExpression(name) ## just for now -- fix me later!
             self.bases.append(name)
 
     def fixDecl(self, *args):
@@ -688,7 +654,7 @@ class Class(Source):
         ret = list(args)
         for i, arg in enumerate(args):
             if self.className != arg:
-                ret[i] = Source.fixDecl(self, arg)
+                ret[i] = Block.fixDecl(self, arg)
         if len(ret) > 1:
             return ret
         else:
@@ -736,12 +702,13 @@ class Class(Source):
 
         @return None
         """
+	skips = [lambda x:x.name!='__init__', lambda x:'@overloaded' not in x.preamble, ]
         mapping = [(m.name, len(m.parameters)) for m in self.blockMethods]
         propmap = {}
-
         for meth in self.blockMethods:
             name = meth.name
-            if (name, 1) in mapping and (name, 2) in mapping:
+	    pred = [x(meth) for x in skips]
+            if all(pred) and (name, 1) in mapping and (name, 2) in mapping:
                 argc = len(meth.parameters)
                 methmap = propmap.setdefault(name, {1:None, 2:None})
                 methmap[argc] = meth
@@ -828,10 +795,8 @@ class Class(Source):
         config = self.config
         if config.last('fixPropMethods'):
             self.fixPropMethods()
-
         if config.last('fixOverloadMethods'):
             self.fixOverloadMethods()
-
         if config.last('sortClassMethods'):
             def methodsorter(x, y):
                 if getattr(x, 'isMethod', False) and \
@@ -842,16 +807,20 @@ class Class(Source):
         name = self.name
         offset = self.I(indent)
         if config.last('writeModifiersComments') and self.modifiers:
-            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
+	    for mod in self.modifiers:
+                fs = "%s## %s\n" if mod.startswith("@") else '%s## modifier: %s\n'
+                output.write(fs % (offset, mod))
         offset = self.I(indent+1)
         output.write('%s%s\n' % (self.I(indent), self.formatDecl()))
         if config.last('writeClassDocString'):
             output.write('%s""" generated source for %s\n\n' % (offset, name))
             output.write('%s"""\n' % (offset, ))
-        Source.writeTo(self, output, indent+1)
+	elif not self.lines:
+	    self.lines.append("pass")
+        Block.writeTo(self, output, indent+1)
 
 
-class Method(Source):
+class Method(Block):
     """ Method -> specialized block type
 
     """
@@ -859,8 +828,15 @@ class Method(Source):
     classFirstParam = ('type', 'cls')
 
     def __init__(self, parent, name):
-        Source.__init__(self, parent=parent, name=name)
+        Block.__init__(self, parent=parent, name=name)
         self.parameters = [self.instanceFirstParam, ]
+
+    @property
+    def isMethod(self):
+        """ True if this instance is a Method
+
+        """
+	return True
 
     def addModifier(self, name):
         """ adds named modifier to method
@@ -881,7 +857,7 @@ class Method(Source):
                 if (deco == self.classmethodLiteral) and (self.parameters) \
                        and (self.parameters[0] == self.instanceFirstParam):
                     self.parameters[0] = self.classFirstParam
-        Source.addModifier(self, name)
+        Block.addModifier(self, name)
 
     def addParameter(self, typ, name):
         """ adds named parameter to method
@@ -891,7 +867,7 @@ class Method(Source):
         @return None
         """
         name = self.alternateName(name)
-        typ = Source.alternateName(self, typ, 'typeTypeMap')
+        typ = Block.alternateName(self, typ, 'typeTypeMap')
         self.parameters.append((typ, name))
         self.variables.append(Variable(self, name))
 
@@ -924,7 +900,7 @@ class Method(Source):
         try:
             return mapping[name]
         except (KeyError, ):
-            return Source.alternateName(self, name)
+            return Block.alternateName(self, name)
 
     def writeTo(self, output, indent):
         """ writes the string representation of this block
@@ -945,16 +921,17 @@ class Method(Source):
             output.write('%s%s\n' % (offset, obj))
         output.write('%s\n' % (self.formatDecl(indent), ))
 
+        self.trimLines()
         writedoc = config.last('writeMethodDocString')
         if writedoc:
             docoffset = self.I(indent+1)
             output.write('%s""" generated source for %s\n\n' % \
                          (docoffset, self.name))
             output.write('%s"""\n' % (docoffset, ))
-        if (not self.lines) and (not writedoc):
-            self.addSource('pass')
-        self.trimLines()
-        Source.writeTo(self, output, indent+1)
+        elif not self.lines:
+            self.lines.append('pass')
+
+        Block.writeTo(self, output, indent+1)
         try:
             next = self.parent.lines[1+self.parent.lines.index(self)]
             addline = not next.isMethod
@@ -964,14 +941,14 @@ class Method(Source):
             output.write('\n')
 
 
-class Statement(Source):
+class Statement(Block):
     """ Statement -> specialized block type
 
-    Unlike Source instances, Statement instances have expressions.  These
+    Unlike Block instances, Statement instances have expressions.  These
     expressions are evaluated before they're output.
     """
     def __init__(self, parent, name=None, expr=None):
-        Source.__init__(self, parent=parent, name=name)
+        Block.__init__(self, parent=parent, name=name)
         self.expr = expr
 
     @property
@@ -1003,7 +980,7 @@ class Statement(Source):
     def setExpression(self, value):
         """ sets the value of the expression for this Statement
 
-        @param value expression (see formatExpression in Source class).
+        @param value expression (see formatExpression in Block class).
         @return None
         """
         self.expr = value
@@ -1032,23 +1009,31 @@ class Statement(Source):
         output.write('\n')
         if (not lines) and name not in ('break', 'continue', 'raise'):
             self.addSource('pass')
-        Source.writeTo(self, output, indent+1)
+        Block.writeTo(self, output, indent+1)
 
-class Variable(Source):
+
+class Variable(Block):
     """Variable is a defined class member variable or auto variable of the
     method.
 
     """
 
     def __init__(self, parent, name=None, expr=None):
-        Source.__init__(self, parent=parent, name=name)
+        Block.__init__(self, parent=parent, name=name)
         self.expr = expr
 
     def setExpression(self, expr):
         """ sets the value of the expression for this Variable
 
-        @param value expression (see formatExpression in Source class).
+        @param value expression (see formatExpression in Block class).
         @return None
         """
         self.expr = expr
 
+    @property
+    def isVariable(self):
+        """ True if this instance is static
+
+        @return if the variable is static return True
+        """
+        return True

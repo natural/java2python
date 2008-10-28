@@ -3,8 +3,11 @@
 """
 
 """
+import optparse
 import sys
 from antlr3 import FileStream, StringStream, CommonTokenStream
+from antlr3.dottreegen import DOTTreeGenerator
+
 from java2python.lib import JavaParser as Jp
 from java2python.lib.JavaLexer import JavaLexer, COMMENT, LINE_COMMENT, DEFAULT_CHANNEL, CLASS, HIDDEN
 try:
@@ -50,9 +53,21 @@ def show(node, level=0):
     return 0
 
 
+def cli_options(argv):
+    parser = optparse.OptionParser(version='%prog 0.3')
+    parser.add_option('-i', '--input', dest='inputfile',
+		      help='read INPUTFILE',
+		      metavar='INPUTFILE', default=None)
+    options, args = parser.parse_args(argv)
+    if len(args) == 2:
+	options.inputfile = args[1]
+    return options, args
+
+
 if __name__ == '__main__':
+    options, args = cli_options(sys.argv)
+    src = options.inputfile
     try:
-        src = sys.argv[1]
         locs = ((StringStream, sys.stdin.read())
                 if src == '-' else (FileStream, src))
         trees = load_trees(locs)
@@ -61,3 +76,4 @@ if __name__ == '__main__':
         print exc
         raise
 
+st = stringtemplate3 
