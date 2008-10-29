@@ -1,4 +1,5 @@
 .PHONY: all clean parser
+.SILENT: clean
 
 
 all: parser

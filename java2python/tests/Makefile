@@ -11,8 +11,9 @@ all: $(java_sources)
 
 
 $(java_sources):
-	javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig && rm $(basename $@).class && python $(basename $@).py
-
+	javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig
+	@chmod u+x $(basename $@).py
+	@bash ./compare_outputs.sh "java $(basename $@)" "python $(basename $@).py" "$@"
 
 java-test: $(JAVAOBJS)
 

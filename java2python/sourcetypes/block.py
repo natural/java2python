@@ -4,6 +4,8 @@
 
 """
 from cStringIO import StringIO
+from itertools import dropwhile
+from operator import not_
 from re import sub as rxsub
 
 from java2python.config import Config, set_config_target
@@ -34,14 +36,14 @@ class Block:
         self.parent = parent
         self.name = name
         self.bases = []
-        self.modifiers = set()
+        self.modifiers = []
         self.preamble = []
         self.epilogue = []
         self.lines = []
         self.type = None
-        self.variables = list()
-        self.methods = list()
-
+        self.variables = []
+        self.methods = []
+        ## ug.
         self.postIncDecInExprFixed = False
         self.postIncDecVars = []
         self.postIncDecCount= 0
@@ -72,7 +74,14 @@ class Block:
             try:
                 line.writeTo(output, indent)
             except (AttributeError, ):
-                output.write('%s%s\n' % (offset, line))
+                if line:
+                    output.write('%s%s\n' % (offset, line))
+
+        #for line in self.lines:
+        #    print "#####>>>", repr(line)
+
+    # The next set of functions are for configuring and filling the
+    # block.
 
     def addComment(self, text, prefix='##'):
         """ add a comment to this source block
@@ -90,7 +99,7 @@ class Block:
         @param name value of modifier, as a string
         @return None
         """
-        self.modifiers.add(name)
+        self.modifiers.append(name)
 
     def addSource(self, value):
         """ add source code to the end of this block
@@ -134,6 +143,10 @@ class Block:
 
     def addMethod(self, meth):
         self.methods.append(meth)
+
+
+    # The next set of property methods are sugar for various queries
+    # on a block.  Some subclasses of Block override these.
 
     @property
     def allParents(self):
@@ -283,55 +296,31 @@ class Block:
         """ string format for variable names in this block
 
         """
+        # seriously, wtf.
         for parent in [self, ] + list(self.allParents):
             if parent.isMethod:
                 preamble = parent.preamble
-                if self.classmethodLiteral in preamble:
-                    return 'cls.%s'
-                elif self.staticmethodLiteral in preamble:
+                if self.staticmethodLiteral in preamble:
+                    return '%s'
+                elif self.classmethodLiteral in preamble:
                     return '%s'
                 else:
                     return 'self.%s'
         return '%s ## ERROR'
 
     @property
+    def nameOrClassName(self):
+        return self.name if self.isClass else self.className
+
+    @property
     def className(self):
-        """ Return className of the source in.
+        """
 
         """
         if self.parent is not None:
             return self.parent.className
 	else:
-	    raise TypeError("Not a Class and parent not a Class")
-
-    def fixDecl(self, *args):
-        """ fixes variable names that are class members
-
-        @varparam args names to fix
-        @return fixed name or names
-        """
-        fixed = list(args)
-        methodvars = list(self.methodVars)
-        membervars = list(self.instanceMembers) + list(self.instanceMethods)
-        staticvars = list(self.staticMembers) + list(self.staticMethods)
-        mapping = self.config.combined('variableNameMapping')
-        format = self.declFormat
-        for i, arg in enumerate(args):
-            if arg in methodvars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = arg
-            elif arg in staticvars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = "%s.%s" % (self.className, arg)
-            elif arg in membervars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = format % (arg, )
-            else:
-                fixed[i] = mapping.get(arg, arg)
-        if len(fixed) == 1:
-            return fixed[0]
-        else:
-            return tuple(fixed)
+            return None
 
     def newClass(self, name=None):
         """ creates a new Class object as a child of this block
@@ -385,7 +374,7 @@ class Block:
         self.addSource(s)
         return s
 
-    def newStatementBefore(self, name, stat=None):
+    def newStatementAbove(self, name, stat=None):
         """ creates a new Statement as a child of this block before the last
         or the specified statement.
 
@@ -415,6 +404,56 @@ class Block:
         var = Variable(self)
         self.addVariable(var, force)
         return var
+
+    ## Useful utilities.
+
+    def trimLines(self):
+        """ removes empty lines from the end of this block
+
+        @return None
+        """
+        self.lines = list(reversed(list(dropwhile(not_, reversed(self.lines)))))
+
+    def I(self, indent):
+        """ calculated indentation string
+
+        @param indent integer indentation level
+        @return string of spaces
+        """
+        return (' ' * self.config.last('indent', 4)) * indent
+
+
+    # Here are the dragons.  They are crisp and dreadful.  I wish they
+    # were gone.
+
+    def fixDecl(self, *args):
+        """ fixes variable names that are class members
+
+        @varparam args names to fix
+        @return fixed name or names
+        """
+        fixed = list(args)
+        methodvars = list(self.methodVars)
+        membervars = list(self.instanceMembers) + list(self.instanceMethods)
+        staticvars = list(self.staticMembers) + list(self.staticMethods)
+        mapping = self.config.combined('variableNameMapping')
+        format = self.declFormat
+        for i, arg in enumerate(args):
+            if arg in methodvars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = arg
+            elif arg in staticvars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = "%s.%s" % (self.nameOrClassName, arg)
+            elif arg in membervars:
+                arg = mapping.get(arg, arg)
+                fixed[i] = format % (arg, )
+            else:
+                fixed[i] = mapping.get(arg, arg)
+        if len(fixed) == 1:
+            return fixed[0]
+        else:
+            return tuple(fixed)
 
     def formatExpression(self, expr):
         """ format an expression set by the tree walker
@@ -457,37 +496,6 @@ class Block:
         except (KeyError, ):
             return name
 
-    def setName(self, name):
-        """ sets the name of this block
-
-        @param name any string
-        @return None
-        """
-        self.name = name
-
-    def trimLines(self):
-        """ removes empty lines from the end of this block
-
-        @return None
-        """
-        lines = self.lines
-	while True:
-	    if lines:
-		if not lines[-1]:
-		    lines.pop()
-		else:
-		    break
-	    else:
-		break
-
-
-    def I(self, indent):
-        """ calculated indentation string
-
-        @param indent integer indentation level
-        @return string of spaces
-        """
-        return (' ' * self.config.last('indent', 4)) * indent
 
     def fixAssignInExpr(self, needFix, expr, left):
         if not needFix: return expr
@@ -596,7 +604,7 @@ class Module(Block):
         else:
             mods = main.modifiers
             typ = main.type
-            if ('public' in mods) and ('static' in mods) and (typ == 'void'):
+            if ('public' in mods) and ('static' in mods) and (typ in ('void', None)):
                 name = cls.name
                 offset = self.I(1)
                 output.write("if __name__ == '__main__':\n")
@@ -604,14 +612,51 @@ class Module(Block):
                 output.write("%s%s.main(sys.argv)\n" % (offset, name))
 
 
+
+maybeAttr = lambda v, n:getattr(v, n, None)
+
+
 class Class(Block):
     """ Class -> specialized block type
 
     """
+    def writeTo(self, output, indent):
+        """ writes the string representation of this block
+
+        @param output any writable file-like object
+        @param indent indentation level of this block
+        @return None
+        """
+        config = self.config
+        if config.last('fixPropMethods'):
+            self.fixPropMethods()
+        if config.last('fixOverloadMethods'):
+            self.fixOverloadMethods()
+        if config.last('sortClassMethods'):
+            def methodsorter(x, y):
+                if maybeAttr(x, 'isMethod') and maybeAttr(y, 'isMethod'):
+                    return cmp(x.name, y.name)
+                return 0
+            self.lines.sort(methodsorter)
+        name = self.name
+        offset = self.I(indent)
+        for mod in self.modifiers:
+            isdeco = mod.startswith("@")
+            if config.last('writeModifiersComments') or isdeco:
+                fs = "%s## %s\n" if isdeco else '%s## modifier: %s\n'
+                output.write(fs % (offset, mod))
+        offset = self.I(indent+1)
+        output.write('%s%s\n' % (self.I(indent), self.formatDecl()))
+        if config.last('writeClassDocString'):
+            output.write('%s""" generated source for %s\n\n' % (offset, name))
+            output.write('%s"""\n' % (offset, ))
+	elif not self.lines:
+	    self.lines.append("pass")
+        Block.writeTo(self, output, indent+1)
 
     @property
     def className(self):
-        """ Return className of the source in.
+        """
 
         """
         return self.name
@@ -645,6 +690,15 @@ class Class(Block):
             #name = self.formatExpression(name) ## just for now -- fix me later!
             self.bases.append(name)
 
+    def addModifier(self, name):
+        """ add a modifier to this source block
+
+        @param name value of modifier, as a string
+        @return None
+        """
+	## check 2vs3 and adjust -- class decos not supported in 2.x.
+        self.modifiers.append(name)
+
     def fixDecl(self, *args):
         """ fixes variable names that are class members
 
@@ -653,7 +707,7 @@ class Class(Block):
         """
         ret = list(args)
         for i, arg in enumerate(args):
-            if self.className != arg:
+            if self.name != arg:
                 ret[i] = Block.fixDecl(self, arg)
         if len(ret) > 1:
             return ret
@@ -771,8 +825,8 @@ class Class(Block):
         for meth in self.methods:
             if meth.name == '__init__':
                 if not (meth.calledSuperCtor or meth.calledOtherCtor):
-                    meth.addSourceBefore("super(%s, self).__init__()" % meth.className, 0)
-                    meth.stmtAfterSuper = meth.newStatementBefore("if", 1)
+                    meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName, 0)
+                    meth.stmtAfterSuper = meth.newStatementAbove("if", 1)
 
                 if not meth.calledOtherCtor:
                     stmt = meth.stmtAfterSuper 
@@ -785,41 +839,6 @@ class Class(Block):
                     idx = meth.lines.index(stmt)
                     meth.lines[idx] = "# end of instance variables"
 
-    def writeTo(self, output, indent):
-        """ writes the string representation of this block
-
-        @param output any writable file-like object
-        @param indent indentation level of this block
-        @return None
-        """
-        config = self.config
-        if config.last('fixPropMethods'):
-            self.fixPropMethods()
-        if config.last('fixOverloadMethods'):
-            self.fixOverloadMethods()
-        if config.last('sortClassMethods'):
-            def methodsorter(x, y):
-                if getattr(x, 'isMethod', False) and \
-                       getattr(y, 'isMethod', False):
-                    return cmp(x.name, y.name)
-                return 0
-            self.lines.sort(methodsorter)
-        name = self.name
-        offset = self.I(indent)
-        if config.last('writeModifiersComments') and self.modifiers:
-	    for mod in self.modifiers:
-                fs = "%s## %s\n" if mod.startswith("@") else '%s## modifier: %s\n'
-                output.write(fs % (offset, mod))
-        offset = self.I(indent+1)
-        output.write('%s%s\n' % (self.I(indent), self.formatDecl()))
-        if config.last('writeClassDocString'):
-            output.write('%s""" generated source for %s\n\n' % (offset, name))
-            output.write('%s"""\n' % (offset, ))
-	elif not self.lines:
-	    self.lines.append("pass")
-        Block.writeTo(self, output, indent+1)
-
-
 class Method(Block):
     """ Method -> specialized block type
 
@@ -830,6 +849,41 @@ class Method(Block):
     def __init__(self, parent, name):
         Block.__init__(self, parent=parent, name=name)
         self.parameters = [self.instanceFirstParam, ]
+
+    def writeTo(self, output, indent):
+        """ writes the string representation of this block
+
+        @param output any writable file-like object
+        @param indent indentation level of this block
+        @return None
+        """
+	config = self.config
+        offset = self.I(indent)
+        if config.last('writeModifiersComments') and self.modifiers:
+            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
+        sorter = config.last('methodPreambleSorter')
+        if sorter:
+            self.preamble.sort(sorter)
+        for obj in self.preamble:
+            output.write('%s%s\n' % (offset, obj))
+        output.write('%s\n' % (self.formatDecl(indent), ))
+        self.trimLines()
+        writedoc = config.last('writeMethodDocString')
+        if writedoc:
+            docoffset = self.I(indent+1)
+            output.write('%s""" generated source for %s\n\n' % \
+                         (docoffset, self.name))
+            output.write('%s"""\n' % (docoffset, ))
+        elif not self.lines:
+            self.lines.append('pass')
+        Block.writeTo(self, output, indent+1)
+        #try:
+        #    next = self.parent.lines[1+self.parent.lines.index(self)]
+        #    addline = not next.isMethod
+        #except (IndexError, AttributeError, ):
+        #    addline = True
+        #if addline:
+        #    output.write('\n')
 
     @property
     def isMethod(self):
@@ -901,44 +955,6 @@ class Method(Block):
             return mapping[name]
         except (KeyError, ):
             return Block.alternateName(self, name)
-
-    def writeTo(self, output, indent):
-        """ writes the string representation of this block
-
-        @param output any writable file-like object
-        @param indent indentation level of this block
-        @return None
-        """
-	config = self.config
-        offset = self.I(indent)
-        output.write('\n')
-        if config.last('writeModifiersComments') and self.modifiers:
-            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
-        sorter = config.last('methodPreambleSorter')
-        if sorter:
-            self.preamble.sort(sorter)
-        for obj in self.preamble:
-            output.write('%s%s\n' % (offset, obj))
-        output.write('%s\n' % (self.formatDecl(indent), ))
-
-        self.trimLines()
-        writedoc = config.last('writeMethodDocString')
-        if writedoc:
-            docoffset = self.I(indent+1)
-            output.write('%s""" generated source for %s\n\n' % \
-                         (docoffset, self.name))
-            output.write('%s"""\n' % (docoffset, ))
-        elif not self.lines:
-            self.lines.append('pass')
-
-        Block.writeTo(self, output, indent+1)
-        try:
-            next = self.parent.lines[1+self.parent.lines.index(self)]
-            addline = not next.isMethod
-        except (IndexError, AttributeError, ):
-            addline = True
-        if addline:
-            output.write('\n')
 
 
 class Statement(Block):

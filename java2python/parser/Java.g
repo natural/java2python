@@ -1,58 +1,56 @@
-/**
- * An ANTLRv3 capable Java 1.5 grammar for building ASTs.
- *
- * Note that there's also the tree grammar 'JavaTreeParser.g' that can be fed
- * with this grammer's output.
- *
- *
- * Please report any detected errors or even suggestions regarding this grammar
- * to
- *
- *          dieter [D O T] habelitz [A T] habelitz [D O T] com
- *
- *      with the subject
- *
- *          jsom grammar: [your subject note]
- *
- * To generate a parser based on this grammar you'll need ANTLRv3, which you can
- * get from 'http://www.antlr.org'.
- *
- *
- * This grammar is published under the ...
- *
- * BSD licence
- *
- * Copyright (c) 2007-2008 by HABELITZ Software Developments
- *
- * All rights reserved.
- *
- * http://www.habelitz.com
- *
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  1. Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY HABELITZ SOFTWARE DEVELOPMENTS ('HSD') ``AS IS''
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL 'HSD' BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
+/*
+An ANTLRv3 capable Java 1.5 grammar for building ASTs.
+
+Note that there's also the tree grammar 'JavaTreeParser.g' that can be fed
+with this grammer's output.
+
+Please report any detected errors or even suggestions regarding this grammar
+to
+
+         dieter [D O T] habelitz [A T] habelitz [D O T] com
+
+     with the subject
+
+         jsom grammar: [your subject note]
+
+To generate a parser based on this grammar you'll need ANTLRv3, which you can
+get from 'http://www.antlr.org'.
+
+
+This grammar is published under the ...
+
+BSD licence
+
+Copyright (c) 2007-2008 by HABELITZ Software Developments
+
+All rights reserved.
+
+http://www.habelitz.com
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY HABELITZ SOFTWARE DEVELOPMENTS ('HSD') ``AS IS''
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL 'HSD' BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 
 grammar Java;
 
@@ -63,6 +61,9 @@ options {
     output = AST;
     ASTLabelType = CommonTree;
 }
+
+
+
 
 tokens {
 
@@ -255,6 +256,10 @@ tokens {
 
 
 javaSource
+    @init {
+        from java2python.parser.extra import CommentSavingCommonTreeAdaptor
+        self.adaptor = CommentSavingCommonTreeAdaptor()
+        }
     :   compilationUnit
         ->  ^(JAVA_SOURCE compilationUnit)
     ;
@@ -1011,6 +1016,7 @@ literal
     |   NULL
     ;
 
+
 // LEXER
 
 HEX_LITERAL : '0' ('x'|'X') HEX_DIGIT+ INTEGER_TYPE_SUFFIX? ;
@@ -1099,9 +1105,9 @@ WS  :  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel = HIDDEN}
     ;
 
 COMMENT
-    :   '/*' ( options {greedy=false;} : . )* '*/' {$channel = HIDDEN}
+    :   '/*' ( options {greedy=false;} : . )* '*/' {$channel = HIDDEN }
     ;
 
 LINE_COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel = HIDDEN}
+    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel = HIDDEN }
     ;

@@ -32,7 +32,7 @@ class SimplePythonSourceStack(object):
     def onClass(self, name, mods=None, extends=None, implements=None):
 	print "## onClass", name, mods, extends, implements
 	klass = self.current.newClass()
-	klass.setName(name)
+	klass.name = name
 
 	def annoDecl(v):
 	    s = []
@@ -54,7 +54,6 @@ class SimplePythonSourceStack(object):
 		else:
 		    suffix = ""
 		name += suffix
-		## check 2vs3 and adjust -- class decos not supported in 2.x.
 		klass.addModifier("@" + name)
 
 	for base in (extends or []) + (implements or []):
@@ -65,7 +64,7 @@ class SimplePythonSourceStack(object):
     def onMethod(self, name, mods=None, params=None):
 	print "## onMethod", name, mods, params
 	meth = self.current.newMethod()
-	meth.setName(name)
+	meth.name = name
 	for mod in (mods or []):
 	    meth.addModifier(mod)
 	for param in (params or []):
@@ -102,9 +101,11 @@ class SimplePythonSourceStack(object):
 	    name, value = var.get("id", "?"), var.get("init", marker)
 	    name = renames.get(name, name)
 	    v = self.current.newVariable(name)
-	    v.setName(name)
-
+	    v.name = name
 	    if 'init' in var:
+                if isinstance(value, (list, tuple)) and len(value)==2:
+                    methname, margs = value
+                    value = "%s(%s)" % (methname, str.join(", ", margs))
 		src = "%s = %s" % (name, value)
 	    else:
 		src = "%s = %s()" % (name, var.get('type'))
@@ -113,7 +114,8 @@ class SimplePythonSourceStack(object):
 
     def onAssign(self, op, left, right):
         #self.source.current.fixAssignInExpr(True, ("\%s = \%s", (left, right)), left)
-        #self.current.addSource("%s %s %s" % (left, op, right))
+        print "## onAssign", op, left, right, "##"
+        self.current.addSource("%s %s %s" % (left, op, right))
 	pass
 
     def onReturn(self, pex):
@@ -138,7 +140,7 @@ class SimplePythonSourceStack(object):
 
     def onEnum(self, name, values):
 	klass = self.onClass(name)
-	klass.addBaseClass('EnumValue')
+	## klass.addBaseClass('EnumValue')
 	return klass
 
 

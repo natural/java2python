@@ -1,40 +1,39 @@
-/**
- * For more information see the head comment within the 'java.g' grammar file
- * that defines the input for this tree grammar.
- *
- * BSD licence
- *
- * Copyright (c) 2007-2008 by HABELITZ Software Developments
- *
- * All rights reserved.
- *
- * http://www.habelitz.com
- *
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- *  1. Redistributions of source code must retain the above copyright
- *     notice, this list of conditions and the following disclaimer.
- *  2. Redistributions in binary form must reproduce the above copyright
- *     notice, this list of conditions and the following disclaimer in the
- *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY HABELITZ SOFTWARE DEVELOPMENTS ('HSD') ``AS IS''
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL 'HSD' BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
- * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
- * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- */
+/*
+For more information see the head comment within the 'java.g' grammar file
+that defines the input for this tree grammar.
+
+BSD licence
+
+Copyright (c) 2007-2008 by HABELITZ Software Developments
+
+All rights reserved.
+
+http://www.habelitz.com
+
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
+ 3. The name of the author may not be used to endorse or promote products
+    derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY HABELITZ SOFTWARE DEVELOPMENTS ('HSD') ``AS IS''
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED. IN NO EVENT SHALL 'HSD' BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
 tree grammar JavaTreeParser;
 
 options {
@@ -82,7 +81,7 @@ typeDeclaration
         )
 
     |   ^(ENUM m2=modifierList i2=IDENT p2=implementsClause?
-          { klass = self.source.onClass($i2.text, $m2.modifiers, ['EnumClass', ], $p2.clauses) }
+          { klass = self.source.onClass($i2.text, $m2.modifiers, None, $p2.clauses) }
           enumTopLevelScope
           { self.source.pop() }
         )
@@ -212,7 +211,7 @@ variableDeclarator returns [decl]
 
 variableDeclaratorId returns [decl]
     @init { $decl = dict() }
-    :   ^(i0=IDENT { $decl["id"] = $i0.text } (a0=arrayDeclaratorList { $decl["array"] = [a0] })?
+    :   ^(i0=IDENT { $decl["id"] = $i0.text } (a0=arrayDeclaratorList { $decl["array"] = [$a0.text] })?
         )
     ;
 variableInitializer returns [exp]
@@ -452,7 +451,7 @@ expression returns [exp]
 
 expr returns [exp]
     :   ^(ASSIGN left=expr right=expr) { self.source.onAssign("+", left, right) }
-    |   ^(PLUS_ASSIGN expr expr)
+    |   ^(PLUS_ASSIGN left=expr right=expr) { self.source.onAssign("+=", left, right) }
     |   ^(MINUS_ASSIGN expr expr)
     |   ^(STAR_ASSIGN expr expr)
     |   ^(DIV_ASSIGN expr expr)
