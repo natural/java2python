@@ -6,12 +6,12 @@ import os.path
 import sys
 from time import time
 
-from antlr3 import ANTLRStringStream, CommonTokenStream
+from antlr3 import ANTLRStringStream
 from antlr3.tree import CommonTreeNodeStream
 
+from java2python.parser.extra import LocalTokenStream
 from java2python.parser.JavaParser import JavaParser
 from java2python.parser.JavaLexer import JavaLexer
-
 from java2python.sourcetypes import Module, set_config
 
 
@@ -28,23 +28,17 @@ def loadTree():
     return JavaTreeParser
 
 def transform(options):
-    #lexer_args = [options.inputfile, ] if options.inputfile else []
-    #L = Lexer(*lexer_args)
-    #P = Parser(L)
-    #W = Walker()
     source = open(options.inputfile).read()
     stream = ANTLRStringStream(source)
     lexer = JavaLexer(stream)
-    tokens = CommonTokenStream(lexer)
-    #print "###", tokens.discardOffChannelTokens; raise Exception()
+    tokens = LocalTokenStream(lexer)
     parser = JavaParser(tokens)
     if options.debug:
-	import java2python.parser.support as S
-	S.enable_trace = True
+	#import java2python.parser.support as S
+	#S.enable_trace = True
+        pass
     comp_start = start = time()
     try:
-	#P.compilationUnit()
-
 	root = parser.javaSource().tree
     except (Exception, ), exc:
        print '*** exception while parsing:'
@@ -54,12 +48,10 @@ def transform(options):
 
     ast_start = time()
     nodes = CommonTreeNodeStream(root)
-
     nodes.setTokenStream(tokens)
     walker = loadTree()(nodes)
-
-
     ast_finish = time()
+
 #    if not ast:
 #       print '*** error: no AST generated.'
 #       return 2
@@ -79,10 +71,9 @@ def transform(options):
 
     walk_start = time()
     set_config(options.configs, options.includedefaults)
-    M = Module(filein, fileout)
-    #W.walk(ast, M)
-    walker.javaSource(M)
-    source = str(M)
+    mod = Module(filein, fileout)
+    walker.javaSource(mod)
+    source = mod.asString()
     print >> output, source
     walk_finish = time()
 

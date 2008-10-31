@@ -22,3 +22,7 @@ variableNameMapping = {
     }
 
 fixPropMethods = False
+
+outputSubs = [
+    (r'(.*?)\.getMessage\(\)', r'\1.message'),
+    ]

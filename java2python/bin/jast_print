@@ -10,50 +10,49 @@ import sys
 from antlr3 import FileStream, StringStream
 from antlr3.dottreegen import DOTTreeGenerator
 
-from java2python.parser import JavaParser as Jp
 from java2python.parser.extra import LocalTokenStream
 from java2python.parser.JavaLexer import JavaLexer
+from java2python.parser.JavaParser import JavaParser
 
 try:
     import psyco
 except (ImportError, ):
     pass
 else:
-    psyco.full()
+    pass # psyco.full()
 
 
-def buildTokenMap():
-    return dict(
-        [(m, l) for l, m in [(k, getattr(Jp, k)) for k in dir(Jp)] if isinstance(m, int)]
-        )
-tokenMap = buildTokenMap()
+tokenMap = JavaParser.tokenMap()
 
 
 def load_trees((stream_type, source)):
     stream = stream_type(source)
     lexer = JavaLexer(stream)
     tokens = LocalTokenStream(lexer)
-    parser = Jp.JavaParser(tokens)
-    yield parser.javaSource().tree
+    parser = JavaParser(tokens)
+    comp = parser.javaSource()
+    yield comp.tree, parser, lexer, tokens, stream
 
 
 def show_trees(trees):
-    for tree in trees:
+    for tree, p, l, t, s in trees:
         show(tree)
 
 
 def show(node, level=0):
-    ##print "###", type(node)
     txt = node.getText()
     typ = tokenMap.get(node.getType(), '?')
+
     args = ('    '*level,
             typ,
             (' : ' if txt != typ else ''),
             (txt if txt != typ else ''))
     print '%s%s%s%s' % args
-    comment = getattr(node, 'comment', None)
-    if comment:
-        print '%s%s : %s' % ('    '*level, 'COMMENT_SEQ', node.comment)
+    comments = getattr(node, 'comments', None)
+    if comments:
+        print '%s%s' % ('    '*(level+1), 'COMMENTS_SEQ')
+        for cs in node.comments:
+            print '%sCOMMENT : %s' % ('    '*(level+2), cs)
 
     for i in range(node.getChildCount()):
         show(node.getChild(i), level+1)
@@ -82,5 +81,3 @@ if __name__ == '__main__':
     except (Exception, ), exc:
         print exc
         raise
-
-st = stringtemplate3 

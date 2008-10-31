@@ -47,21 +47,24 @@ class Block:
         self.postIncDecInExprFixed = False
         self.postIncDecVars = []
         self.postIncDecCount= 0
+        self.externalComments = []
 
-    def __str__(self):
-        """ str(obj) -> source code defined in obj
+    def asString(self):
+        """ asString() -> source code defined in obj
 
         """
         out = StringIO()
-        self.writeTo(out, 0)
+        self.dumps(out, 0)
         source = out.getvalue()
         for subs in self.config.all('outputSubs', []):
             for sub in subs:
                 source = rxsub(sub[0], sub[1], source)
         return source
 
-    def writeTo(self, output, indent):
-        """ writes the string representation of this block
+    def dumps(self, output, indent):
+        """ Serialize this object to stream output.
+
+        writes the string representation of this block
 
         @param output any writable file-like object
         @param indent indentation level of this block
@@ -72,13 +75,10 @@ class Block:
             if isinstance(line, tuple):
                 line = self.formatExpression(line)
             try:
-                line.writeTo(output, indent)
+                line.dumps(output, indent)
             except (AttributeError, ):
                 if line:
                     output.write('%s%s\n' % (offset, line))
-
-        #for line in self.lines:
-        #    print "#####>>>", repr(line)
 
     # The next set of functions are for configuring and filling the
     # block.
@@ -332,6 +332,13 @@ class Block:
         self.addSource(c)
         return c
 
+    def newForEach(self):
+        s = Block(self)
+        f = Statement(self, 'for')
+        self.addSource(s)
+        self.addSource(f)
+        return s, f
+
     def newFor(self):
         """ creates a new 'for' Statement as a child of this block
 
@@ -464,12 +471,9 @@ class Block:
         @param expr string or two-tuple
         @return interpolated, fixed expression as string
         """
-	print "## formatExpression", expr
         fixdecl = self.fixDecl
-
         if isinstance(expr, basestring):
-            return fixdecl(expr)
-
+            return expr # fixdecl(expr)
         format = self.formatExpression
         first, second = expr
         if isinstance(first, basestring) and isinstance(second, basestring):
@@ -557,7 +561,7 @@ class Module(Block):
         self.infile = infile
         self.outfile = outfile
 
-    def writeTo(self, output, indent):
+    def dumps(self, output, indent):
         """ writes the string representation of this block
 
         @param output any writable file-like object
@@ -566,7 +570,7 @@ class Module(Block):
         """
         self.writeExtraLines('modulePreamble', output)
         output.write('\n')
-        Block.writeTo(self, output, indent)
+        Block.dumps(self, output, indent)
         self.writeExtraLines('moduleEpilogue', output)
         if self.config.last('writeMainMethodScript'):
             self.writeMainBlock(output)
@@ -620,7 +624,7 @@ class Class(Block):
     """ Class -> specialized block type
 
     """
-    def writeTo(self, output, indent):
+    def dumps(self, output, indent):
         """ writes the string representation of this block
 
         @param output any writable file-like object
@@ -652,7 +656,7 @@ class Class(Block):
             output.write('%s"""\n' % (offset, ))
 	elif not self.lines:
 	    self.lines.append("pass")
-        Block.writeTo(self, output, indent+1)
+        Block.dumps(self, output, indent+1)
 
     @property
     def className(self):
@@ -850,7 +854,7 @@ class Method(Block):
         Block.__init__(self, parent=parent, name=name)
         self.parameters = [self.instanceFirstParam, ]
 
-    def writeTo(self, output, indent):
+    def dumps(self, output, indent):
         """ writes the string representation of this block
 
         @param output any writable file-like object
@@ -876,7 +880,7 @@ class Method(Block):
             output.write('%s"""\n' % (docoffset, ))
         elif not self.lines:
             self.lines.append('pass')
-        Block.writeTo(self, output, indent+1)
+        Block.dumps(self, output, indent+1)
         #try:
         #    next = self.parent.lines[1+self.parent.lines.index(self)]
         #    addline = not next.isMethod
@@ -1001,7 +1005,7 @@ class Statement(Block):
         """
         self.expr = value
 
-    def writeTo(self, output, indent):
+    def dumps(self, output, indent):
         """ writes the string representation of this block
 
         @param output any writable file-like object
@@ -1023,9 +1027,9 @@ class Statement(Block):
         if self.needsBlockIndicator:
             output.write(':')
         output.write('\n')
-        if (not lines) and name not in ('break', 'continue', 'raise'):
+        if (not lines) and not name.startswith(('break', 'continue', 'raise', 'assert')):
             self.addSource('pass')
-        Block.writeTo(self, output, indent+1)
+        Block.dumps(self, output, indent+1)
 
 
 class Variable(Block):

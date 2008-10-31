@@ -239,11 +239,13 @@ tokens {
 
 @header {
 # placeholder
-
 }
 
 @members {
-# placeholder
+    @staticmethod
+    def tokenMap():
+        src = globals().items()
+        return dict([(v, k) for k, v in src if isinstance(v, int)])
 }
 
 @lexer::header {
@@ -257,8 +259,8 @@ tokens {
 
 javaSource
     @init {
-        from java2python.parser.extra import CommentSavingCommonTreeAdaptor
-        self.adaptor = CommentSavingCommonTreeAdaptor()
+        from java2python.parser.extra import LocalTreeAdaptor
+        self.adaptor = LocalTreeAdaptor()
         }
     :   compilationUnit
         ->  ^(JAVA_SOURCE compilationUnit)
