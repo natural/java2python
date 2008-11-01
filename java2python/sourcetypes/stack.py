@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-import logging
+from logging import debug
 
-logging.basicConfig(level=logging.DEBUG)
-debug = logging.debug
-## yes, one of those
+## yes, one of those.
 marker = object()
 
 
@@ -15,32 +13,30 @@ class SimplePythonSourceStack(object):
 	return self.stack[-1]
     current = property(get_current)
 
-
     def onPackageDecl(self, name):
 	self.current.addComment("namespace_packages('%s')" % name)
-
 
     def onImportDecl(self, name, isStatic, isStar):
 	if isStatic:
 	    if isStar:
-		c = "from %s import *" % name
+		c = 'from %s import *' % name
 	    else:
 		names = name.split('.')
-		c = "from %s import %s" % (str.join('.', names[:-1]), names[-1])
+		c = 'from %s import %s' % (str.join('.', names[:-1]), names[-1])
 	else:
-	    c = "import %s" % name
+	    c = 'import %s' % name
 	self.current.addComment(c)
 
     def onBreak(self, label):
-        debug("onBreak %s", label)
+        debug('%s', label)
         self.current.addSource('break' + (' #label:' + label if label else ''))
 
     def onContinue(self, label):
-        debug("onContinue %s", label)
+        debug('%s', label)
         self.current.addSource('continue' + (' # ' + label if label else ''))
 
     def onClass(self, name, mods=None, extends=None, implements=None):
-	debug("onClass %s %s %s %s", name, mods, extends, implements)
+	debug('%s %s %s', name, mods, extends, implements)
 	klass = self.current.newClass()
 	klass.name = name
 
@@ -49,10 +45,10 @@ class SimplePythonSourceStack(object):
 	    for d in v:
 		for k in d:
 		    if len(k) == 2:
-			s.append("%s=%s" % tuple(k))
+			s.append('%s=%s' % tuple(k))
 		    else:
 			s.append(k)
-	    return ", ".join(s)
+	    return ', '.join(s)
 
 	for mod in (mods or []):
 	    if isinstance(mod, basestring):
@@ -60,11 +56,11 @@ class SimplePythonSourceStack(object):
 	    elif isinstance(mod, list):
 		name, inits = mod
 		if inits:
-		    suffix = "(" + annoDecl(inits) +  ")"
+		    suffix = '(' + annoDecl(inits) +  ')'
 		else:
-		    suffix = ""
+		    suffix = ''
 		name += suffix
-		klass.addModifier("@" + name)
+		klass.addModifier('@' + name)
 
 	for base in (extends or []) + (implements or []):
 	    klass.addBaseClass(base)
@@ -72,14 +68,14 @@ class SimplePythonSourceStack(object):
 	return klass
 
     def onForEach(self, typ, ident, exp):
-        debug("onForEach %s %s %s", typ, ident, exp)
+        debug('%s %s %s', typ, ident, exp)
         blk, stat = self.current.newForEach()
-        stat.setExpression("%s in %s" % (ident, exp))
+        stat.setExpression('%s in %s' % (ident, exp))
         self.push(stat)
         return blk, stat
 
     def onFor(self, expressions, condition):
-        debug("onFor %s %s", expressions, condition)
+        debug('%s %s', expressions, condition)
         blk, stat = self.current.newFor()
         #for expr in expressions:
         #    self.current.addSource(expr)
@@ -93,41 +89,38 @@ class SimplePythonSourceStack(object):
     def onForFinish(self, stat, updates, pop=False):
         for update in updates:
             stat.addSource(update)
-        if pop:
-            self.pop()
+        return (self.pop() if pop else None)
 
     def onDo(self):
-        debug("onDo")
-        stat = self.current.newStatement("while")
+        debug('')
+        stat = self.current.newStatement('while')
         stat.setExpression('True')
         self.push(stat)
         return stat
 
     def onDoFinish(self, stat, expr, pop=False):
-        debug("onDoFinish %s %s %s", stat, expr, pop)
-        ifstat = stat.newStatement("if")
-        ifstat.newStatement("break")
-        ifstat.setExpression("not %s" % expr)
-        if pop:
-            self.pop()
+        debug('%s %s %s', stat, expr, pop)
+        ifstat = stat.newStatement('if')
+        ifstat.newStatement('break')
+        ifstat.setExpression('not %s' % expr)
+        return (self.pop() if pop else None)
 
     def onWhile(self):
-        stat = self.current.newStatement("while")
+        stat = self.current.newStatement('while')
         self.push(stat)
         return stat
 
     def onWhileFinish(self, stat, expr, pop=False):
         stat.setExpression(expr)
-        if pop:
-            self.pop()
+        return (self.pop() if pop else None)
 
     def onThrow(self, expr):
-        stat = self.current.newStatement("raise")
+        stat = self.current.newStatement('raise')
         stat.setExpression(expr)
         return stat
 
     def onMethod(self, name, mods=None, params=None, pop=False):
-	debug("onMethod %s %s %s", name, mods, params)
+	debug('%s %s %s', name, mods, params)
 	meth = self.current.newMethod()
 	meth.name = name
 	for mod in (mods or []):
@@ -138,18 +131,16 @@ class SimplePythonSourceStack(object):
 	    t, p, a = param.get('type', ''), param.get('id', ''), param.get('array')
 	    meth.addParameter(t, p)
 	self.push(meth)
-        if pop:
-            self.pop()
-	return meth
+        return (self.pop() if pop else meth)
 
     def onAnnotationMethod(self, name, annodecls, default):
 	meth = self.onMethod(name)
 	for annodecl in (annodecls or []):
             meth.addModifier(annodecl[0])
 	if default:
-	    src = "return %s" % (default, )
+	    src = 'return %s' % (default, )
 	else:
-	    src = "pass"
+	    src = 'pass'
         meth.addSource(src)
 	self.pop()
 	return meth
@@ -163,66 +154,82 @@ class SimplePythonSourceStack(object):
         return exp
 
     def makeMethodExpr(self, pex, args):
-	debug("makeMethodExpr %s %s", pex, args)
-        src = str(pex or "None") + "(" + str.join(", ", [str(a or "") for a in args]) + ")"
+	debug('%s %s', pex, args)
+        src = str(pex or 'None') + '(' + str.join(', ', [str(a or '') for a in args]) + ')'
 	return src
 	#self.current.addSource(src)
 
     def onVariables(self, variables, applyType=marker):
-	debug("onVariables %s %s", variables, applyType)
+	debug('%s %s', variables, applyType)
         if applyType is not marker:
             for var in variables:
                 var['type'] = applyType
 	renames = self.current.config.combined('variableNameMapping')
 	for var in variables:
-	    name, value = var.get("id", "?"), var.get("init", marker)
+	    name, value = var.get('id', '?'), var.get('init', marker)
 	    name = renames.get(name, name)
 	    v = self.current.newVariable(name)
 	    v.name = name
 	    if 'init' in var:
                 if isinstance(value, (list, tuple)) and len(value)==2:
                     methname, margs = value
-                    value = "%s(%s)" % (methname, str.join(", ", margs))
-		src = "%s = %s" % (name, value)
+                    value = '%s(%s)' % (methname, str.join(', ', margs))
+		src = '%s = %s' % (name, value)
 	    else:
-		src = "%s = %s()" % (name, var.get('type'))
+		src = '%s = %s()' % (name, var.get('type'))
 	    self.current.addSource(src)
 
 
     def onAssign(self, op, left, right):
-        #self.source.current.fixAssignInExpr(True, ("\%s = \%s", (left, right)), left)
-        debug("onAssign %s %s %s", op, left, right)
-        self.current.addSource("%s %s %s" % (left, op, right))
+        #self.source.current.fixAssignInExpr(True, ('\%s = \%s', (left, right)), left)
+        debug('%s %s %s', op, left, right)
+        self.current.addSource('%s %s %s' % (left, op, right))
 	pass
 
     def onReturn(self, pex):
-	debug("onReturn %s", pex)
-	src = ("return %s", pex) if pex else "return"
+	debug('%s', pex)
+	src = ('return %s', pex) if pex else 'return'
 	self.current.addSource(src)
 
     def push(self, value):
-        debug("push %s", (value.name if hasattr(value, 'name') else value))
+        debug('%s', (value.name if hasattr(value, 'name') else value))
 	self.stack.append(value)
 
     def pop(self):
         value = self.stack.pop()
-        debug("pop %s", (value.name if hasattr(value, 'name') else value))
+        debug('%s', (value.name if hasattr(value, 'name') else value))
 	return value
 
 
     def altName(self, name):
 	return self.current.fixDecl(name)
 
-
-    def onEnumScope(self, enums):
-	debug("onEnumScope %s", enums)
-
-
-    def onEnum(self, name, values):
+    def onEnum(self, name, mods=None, implements=None):
+        debug('%s', name)
 	klass = self.onClass(name)
-	## klass.addBaseClass('EnumValue')
+        #from java2python.config.enumhandlers import minjava
+        #minjava(self)
 	return klass
 
+    def onEnumConstant(self, decl):
+        name = decl['id']
+        debug('%s', name)
+
+        if not name.startswith('<missing'):
+            ## use a simpler method
+            from java2python.config.enumhandlers import pystrings, pyints
+            pyints(self, decl)
+
+        if 0:
+            if 'klass' not in decl: # a new class for the enum constant was created
+                #klass = self.onClass(name)
+                #self.pop()
+                pass
+            else:
+                if not name.startswith('<missing'):
+                    ## use a simpler method
+                    from java2python.config.enumhandlers import pystrings, pyints
+                    pyints(self, decl)
 
     def onAnnoType(self, name, modifiers):
 	## lookup base class
@@ -231,36 +238,36 @@ class SimplePythonSourceStack(object):
 	return klass
 
     def fixFloatLiteral(self, value):
-        if value.startswith("."):
-            value = "0" + value
-        if value.endswith(("f", "d")):
+        if value.startswith('.'):
+            value = '0' + value
+        if value.endswith(('f', 'd')):
             value = value[:-1]
-        elif value.endswith(("l", "L")):
-            value = value[:-1] + "L"
+        elif value.endswith(('l', 'L')):
+            value = value[:-1] + 'L'
         return value
 
 
     def makeArrayAccess(self, pri, exp):
-        return "%s[%s]" % (pri, exp, )
+        return '%s[%s]' % (pri, exp, )
 
 
     def onAssert(self, exp, arg=marker):
-        debug("onAssert %s %s", exp, arg)
+        debug('%s %s', exp, arg)
         if arg is not marker:
-            src = "assert %s, %s" % (exp, arg, )
+            src = 'assert %s, %s' % (exp, arg, )
             s = self.current.newStatement(src)
         else:
-            src = "assert %s" % (exp, )
+            src = 'assert %s' % (exp, )
             s = self.current.newStatement(src)
             #s.setExpression(exp)
 
     def onTry(self):
-        stat = self.current.newStatement("try")
+        stat = self.current.newStatement('try')
         self.push(stat)
         return stat
 
     def onExcept(self):
-        stat = self.current.newStatement("except")
+        stat = self.current.newStatement('except')
         self.push(stat)
         return stat
 
@@ -269,10 +276,9 @@ class SimplePythonSourceStack(object):
         nam = clause.get('id')
         src = '(%s, ), %s' % (exc, nam)
         stat.setExpression(src)
-        if pop:
-            self.pop()
+        return (self.pop() if pop else None)
 
     def onFinally(self):
-        stat = self.current.newStatement("finally")
+        stat = self.current.newStatement('finally')
         self.push(stat)
         return stat

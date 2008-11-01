@@ -1,3 +1,7 @@
+private class EmptyClass {}
+
+
+
 class Fiddles {
     int x = 1;
     int y = x;
@@ -8,6 +12,8 @@ class Fiddles {
         C( this.check() +1 );
 
     }
+
+
     void B(int x, int y, int z) {}
     void C(int x) {}
 

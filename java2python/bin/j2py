@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import compiler
+import logging
 import optparse
 import os.path
 import sys
+from collections import defaultdict
 from time import time
 
 from antlr3 import ANTLRStringStream
@@ -12,8 +14,8 @@ from antlr3.tree import CommonTreeNodeStream
 from java2python.parser.extra import LocalTokenStream
 from java2python.parser.JavaParser import JavaParser
 from java2python.parser.JavaLexer import JavaLexer
-from java2python.sourcetypes import Module, set_config
-
+from java2python.parser.JavaTreeParser import JavaTreeParser
+from java2python.sourcetypes import Module
 
 try:
     import psyco
@@ -21,36 +23,31 @@ except (ImportError, ):
     pass
 else:
     psyco.full()
-    pass # psyco.full()
 
-def loadTree():
-    from java2python.parser.JavaTreeParser import JavaTreeParser
-    return JavaTreeParser
 
 def transform(options):
+    timed = defaultdict(time)
+    timed['overall']
+
     source = open(options.inputfile).read()
     stream = ANTLRStringStream(source)
     lexer = JavaLexer(stream)
     tokens = LocalTokenStream(lexer)
     parser = JavaParser(tokens)
-    if options.debug:
-	#import java2python.parser.support as S
-	#S.enable_trace = True
-        pass
-    comp_start = start = time()
+
+    timed['comp']
     try:
 	root = parser.javaSource().tree
     except (Exception, ), exc:
-       print '*** exception while parsing:'
-       print exc
-       return 1
-    comp_finish = time()
+        logging.exception('exception while parsing')
+        return 1
+    timed['comp_finish']
 
-    ast_start = time()
+    timed['ast']
     nodes = CommonTreeNodeStream(root)
     nodes.setTokenStream(tokens)
-    walker = loadTree()(nodes)
-    ast_finish = time()
+    walker = JavaTreeParser(nodes)
+    timed['ast_finish']
 
 #    if not ast:
 #       print '*** error: no AST generated.'
@@ -69,29 +66,31 @@ def transform(options):
     else:
 	output = open(fileout, 'w')
 
-    walk_start = time()
-    set_config(options.configs, options.includedefaults)
+    configs = options.configs
+    if options.includedefaults:
+        configs.insert(0, 'java2python.config.default')
+    Module.setConfigs(configs)
     mod = Module(filein, fileout)
+
+
+    timed['walk']
     walker.javaSource(mod)
     source = mod.asString()
     print >> output, source
-    walk_finish = time()
+    timed['walk_finish']
 
-    if options.syntaxcheck:
-	try:
-	    compiler.parse(source)
-	except (SyntaxError, ), ex:
-	    msg = "## ERR:  %s" % (ex, )
-	else:
-	    msg = '## INFO: generated source has valid syntax.'
-	print >> sys.stderr, msg
+    try:
+        compiler.parse(source)
+    except (SyntaxError, ), ex:
+        logging.warning('Generated source has invalid syntax.')
+    else:
+        logging.info('Generated source has valid syntax.')
 
-    finish = time()
-    if options.timerun:
-	print >> sys.stderr, "## INFO: parser comp unit time: %.4f" % (comp_finish - comp_start)
-	print >> sys.stderr, "## INFO: ast get time: %.4f" % (ast_finish - ast_start)
-	print >> sys.stderr, "## INFO: walk and generate time: %.4f" % (walk_finish - walk_start)
-	print >> sys.stderr, "## INFO: total time: %.4f" % (finish - start)
+    timed['overall_finish']
+    logging.info('Parser comp unit time: %.4f', timed['comp_finish'] - timed['comp'])
+    logging.info('AST get time: %.4f', timed['ast_finish'] - timed['ast'])
+    logging.info('Walk and generate time: %.4f', timed['walk_finish'] - timed['walk'])
+    logging.info('Total time: %.4f', timed['overall_finish'] - timed['overall'])
     return 0
 
 
@@ -110,15 +109,9 @@ def cli_options(argv):
     parser.add_option('-n', '--nodefaults', dest='includedefaults',
 		      help='ignore default configuration',
 		      default=True, action='store_false')
-    parser.add_option('-s', '--syntaxcheck', dest='syntaxcheck',
-		      help='Check source syntax after generation',
-		      default=False, action='store_true')
-    parser.add_option('-t', '--time', dest='timerun',
-		      help='Write processing time to stderr',
-		      default=False, action='store_true')
-    parser.add_option('-d', '--debug', dest='debug',
-		      help='Write debug values to stderr',
-		      default=False, action='store_true')
+    parser.add_option('-l', '--loglevel', dest='loglevel',
+		      help='Set log level',
+		      default=30, type='int')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
 	parser.error('Only one input file supported.')
@@ -128,5 +121,7 @@ def cli_options(argv):
 
 if __name__ == '__main__':
     options, args = cli_options(sys.argv)
+    fmt = '# %(levelname)s %(funcName)s : %(message)s'
+    logging.basicConfig(level=options.loglevel, format=fmt)
     ret = transform(options)
     sys.exit(ret)

@@ -46,6 +46,9 @@ classesInheritObject = True
 ## in method declarations.  set to 0 to disable.
 minIndentParams = 5
 
+from java2python.config import enumhandlers
+enumHandler = enumhandlers.minjava # or fulljava', pyints, pystrings, noop, subclass
+
 ## Note about modulePreamble and moduleEpilogue:
 ##
 ## Items in both of these lists may be strings or callables.  If

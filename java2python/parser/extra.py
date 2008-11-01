@@ -117,10 +117,10 @@ class CommentFormatter(object):
         tokens = input.tokens.tokens[start_idx:stop_idx]
         comments = [(t, getattr(t, 'comments', None)) for t in tokens]
         comments = [(t, c) for t, c in comments if c]
-        for token, comment_set in comments:
+        for token, comment_set in reversed(comments):
             token.comments = None
-            for typ, val in comment_set:
+            for typ, val in reversed(comment_set):
                 formatter = self.commentFormatters[typ]
                 for line in formatter(val):
                     if line:
-                        source.current.addComment(line)
+                        source.current.addComment(line, end=False)
