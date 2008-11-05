@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.sourcetypes.block import Block, maybeAttr
+from java2python.sourcetypes.block import Block, maybeattr
 
 
 class Module(Block):
@@ -55,7 +55,7 @@ class Module(Block):
             return
         try:
             cls = self.findMainClass()
-            methods = [m for m in cls.lines if maybeAttr(m, 'isMethod')]
+            methods = [m for m in cls.lines if maybeattr(m, 'isMethod')]
             main = [m for m in methods if m.name == 'main'][0]
         except (AttributeError, IndexError, ):
             pass
@@ -71,11 +71,11 @@ class Module(Block):
 
     def findMainClass(self):
         try:
-            clss = [c for c in self.lines if maybeAttr(c, 'name')==self.name]
+            clss = [c for c in self.lines if maybeattr(c, 'name')==self.name]
             if clss:
                 cls = clss[0]
             else:
-                cls = [c for c in self.lines if maybeAttr(c, 'isClass')][0]
+                cls = [c for c in self.lines if maybeattr(c, 'isClass')][0]
         except (IndexError, ):
             cls = None
         return cls

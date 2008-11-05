@@ -10,7 +10,7 @@ import sys
 from antlr3 import FileStream, StringStream
 from antlr3.dottreegen import DOTTreeGenerator
 
-from java2python.parser.extra import LocalTokenStream
+from java2python.parser.helpers import LocalTokenStream
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaParser import JavaParser
 
@@ -78,6 +78,9 @@ if __name__ == '__main__':
                 if src == '-' else (FileStream, src))
         trees = load_trees(locs)
         sys.exit(show_trees(trees))
+    except (IOError, ):
+        print >> sys.stderr, 'Could not open input file.'
+        sys.exit(1)
     except (Exception, ), exc:
-        print exc
-        raise
+        print >> sys.stderr,  exc
+        sys.exit(2)

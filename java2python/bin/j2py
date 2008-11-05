@@ -11,7 +11,7 @@ from time import time
 from antlr3 import ANTLRStringStream
 from antlr3.tree import CommonTreeNodeStream
 
-from java2python.parser.extra import LocalTokenStream
+from java2python.parser.helpers import LocalTokenStream
 from java2python.parser.JavaParser import JavaParser
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaTreeParser import JavaTreeParser
@@ -48,7 +48,6 @@ def transform(options):
     nodes.setTokenStream(tokens)
     walker = JavaTreeParser(nodes)
     timed['ast_finish']
-
 #    if not ast:
 #       print '*** error: no AST generated.'
 #       return 2
@@ -72,7 +71,6 @@ def transform(options):
     Module.setConfigs(configs)
     mod = Module(filein, fileout)
 
-
     timed['walk']
     walker.javaSource(mod)
     source = mod.asString()
@@ -87,10 +85,11 @@ def transform(options):
         logging.info('Generated source has valid syntax.')
 
     timed['overall_finish']
-    logging.info('Parser comp unit time: %.4f', timed['comp_finish'] - timed['comp'])
-    logging.info('AST get time: %.4f', timed['ast_finish'] - timed['ast'])
-    logging.info('Walk and generate time: %.4f', timed['walk_finish'] - timed['walk'])
-    logging.info('Total time: %.4f', timed['overall_finish'] - timed['overall'])
+    info, ts = logging.info, timed
+    info('Parser comp unit time: %.4f', ts['comp_finish'] - ts['comp'])
+    info('AST get time: %.4f', ts['ast_finish'] - ts['ast'])
+    info('Walk and generate time: %.4f', ts['walk_finish'] - ts['walk'])
+    info('Total time: %.4f', ts['overall_finish'] - ts['overall'])
     return 0
 
 

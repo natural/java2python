@@ -5,91 +5,111 @@
 """
 from cStringIO import StringIO
 from itertools import dropwhile
+from logging import debug, warn, exception
 from operator import not_
 from re import sub as rxsub
+from string import Template
 
 from java2python.config import Config
 
-def maybeAttr(obj, name, default=None):
+
+def maybeattr(obj, name, default=None):
     return getattr(obj, name, default)
 
 
-class Block:
-    """ Block -> base class for source code types.
+class BlockScannerShard:
+    # This set of methods are sugar for various queries on a block.
+    # Some subclasses of Block override these.
+    def allParents(self):
+        """ generator to provide each ancestor of this instance
 
-    Instances have methods to create new child instances, e.g., newClass
-    to create a new class.
-
-    This class contains some attributes only used by subclasses; their
-    creation in this base type is strictly from laziness.
-
-    """
-    anonymousClassCount = 0
-    classmethodLiteral = '@classmethod'
-    config = None
-    emptyAssign = ('%s', '<empty>')
-    missingValue = ('%s', '<missing>')
-    staticmethodLiteral = '@staticmethod'
-    unknownExpression = ('%s', '<unknown>')
-
-    def __init__(self, parent=None, name=None):
-        self.parent = parent
-        self.name = name
-        self.bases = []
-        self.modifiers = []
-        self.preamble = []
-        self.epilogue = []
-        self.lines = []
-        self.type = None
-        self.variables = []
-        self.methods = []
-        ## ug.
-        self.postIncDecInExprFixed = False
-        self.postIncDecVars = []
-        self.postIncDecCount= 0
-        self.externalComments = []
-
-    def __iter__(self):
-        for line in self.lines:
-            yield line
-
-    @classmethod
-    def setConfigs(cls, configs):
-        ## always place it on the root so all instances of all Block
-        ## types get the same object.  also means any instance of any
-        ## Block type can set the config for all other instances of
-        ## all Block types.  dr. seuss would have loved oop and its
-        ## goop.
-        Block.config = Config(*configs)
-
-    def asString(self):
-        """ asString() -> source code defined in obj
-
+        @return yields individual ancestors of this instance one at a time
         """
-        out = StringIO()
-        self.dump(out, 0)
-        source = out.getvalue()
-        for subs in self.config.all('outputSubs', []):
-            for sub in subs:
-                source = rxsub(sub[0], sub[1], source)
-        return source
+        previous = self.parent
+        while previous:
+            yield previous
+            previous = previous.parent
 
-    def dump(self, output, indent):
-        """ Serialize this object to stream output.
+    def allVars(self):
+        """ all variables in this instance and its ancestors
 
-        @param output any writable file-like object
-        @param indent indentation level of this block
-        @return None
+        @return yields variable names from this instance and all ancestors
         """
-        offset = self.I(indent)
-        for line in self:
-            if isinstance(line, tuple):
-                line = self.formatExpression(line)
-            if hasattr(line, 'dump'):
-                line.dump(output, indent)
-            elif line:
-                output.write('%s%s\n' % (offset, line))
+        for obj in [self, ] + list(self.allParents()):
+            for v in obj.variables:
+                yield v.name
+            for v in obj.methods:
+                yield v.name
+            for v in obj.extraVars:
+                yield v
 
+    def blockMethods(self):
+        """ all source objects that are methods
+
+        @return generator expression with all methods in this block
+        """
+        return (m for m in self.lines if getattr(m, 'isMethod', False))
+
+    def methodVars(self):
+        """ all vars declared in the current method
+
+        @return yeilds all vars declared in the method
+        """
+
+        for obj in [self, ] + list(self.allParents()):
+            for v in obj.variables:
+                yield v.name
+            if obj.isMethod:
+		break
+
+    def instanceMembers(self):
+        """ all instance members in this class
+
+        @return yields all instance member names from this class
+        """
+        for obj in [self, ] + list(self.allParents()):
+	    if obj.isClass:
+                for v in obj.variables:
+                    if not v.isStatic:
+                        yield v.name
+                for v in obj.extraVars:
+                    yield v
+
+    def instanceMethods(self):
+        """ all instance methods in this class
+
+        @return yields all instance method names from this class
+        """
+        for obj in [self, ] + list(self.allParents()):
+	    if obj.isClass:
+                for v in obj.methods:
+                    if not v.isStatic:
+                        yield v.name
+
+    def staticMembers(self):
+        """ all static members in this class
+
+        @return yields static member names from this class
+        """
+        for obj in [self, ] + list(self.allParents()):
+	    if obj.isClass:
+                for v in obj.variables:
+                    if v.isStatic:
+                        yield v.name
+
+    def staticMethods(self):
+        """ all static methods in this class
+
+        @return yields static method names from this class
+        """
+        for obj in [self, ] + list(self.allParents()):
+	    if obj.isClass:
+                for v in obj.methods:
+                    if v.isStatic:
+                        yield v.name
+
+
+class BlockMakesShard:
     # The next set of functions are for configuring and filling the
     # block.
 
@@ -160,174 +180,8 @@ class Block:
     def addMethod(self, meth):
         self.methods.append(meth)
 
-    # The next set of property methods are sugar for various queries
-    # on a block.  Some subclasses of Block override these.
 
-    @property
-    def allParents(self):
-        """ generator to provide each ancestor of this instance
-
-        @return yields individual ancestors of this instance one at a time
-        """
-        previous = self.parent
-        while previous:
-            yield previous
-            previous = previous.parent
-
-    @property
-    def allVars(self):
-        """ all variables in this instance and its ancestors
-
-        @return yields variable names from this instance and all ancestors
-        """
-        for obj in [self, ] + list(self.allParents):
-            for v in obj.variables:
-                yield v.name
-            for v in obj.methods:
-                yield v.name
-            for v in obj.extraVars:
-                yield v
-
-    @property
-    def methodVars(self):
-        """ all vars declared in the current method
-
-        @return yeilds all vars declared in the method
-        """
-
-        for obj in [self, ] + list(self.allParents):
-            for v in obj.variables:
-                yield v.name
-            if obj.isMethod:
-		break
-
-    @property
-    def instanceMembers(self):
-        """ all instance members in this class
-
-        @return yields all instance member names from this class
-        """
-        for obj in [self, ] + list(self.allParents):
-	    if obj.isClass:
-                for v in obj.variables:
-                    if not v.isStatic:
-                        yield v.name
-                for v in obj.extraVars:
-                    yield v
-
-    @property
-    def instanceMethods(self):
-        """ all instance methods in this class
-
-        @return yields all instance method names from this class
-        """
-        for obj in [self, ] + list(self.allParents):
-	    if obj.isClass:
-                for v in obj.methods:
-                    if not v.isStatic:
-                        yield v.name
-
-    @property
-    def staticMembers(self):
-        """ all static members in this class
-
-        @return yields static member names from this class
-        """
-        for obj in [self, ] + list(self.allParents):
-	    if obj.isClass:
-                for v in obj.variables:
-                    if v.isStatic:
-                        yield v.name
-
-    @property
-    def staticMethods(self):
-        """ all static methods in this class
-
-        @return yields static method names from this class
-        """
-        for obj in [self, ] + list(self.allParents):
-	    if obj.isClass:
-                for v in obj.methods:
-                    if v.isStatic:
-                        yield v.name
-
-    @property
-    def extraVars(self):
-        """ extra variable names; subclasses can and should reimplement
-
-        @return sequence of variable names
-        """
-        return []
-
-    @property
-    def blockMethods(self):
-        """ all source objects that are methods
-
-        @return generator expression with all methods in this block
-        """
-        return (m for m in self.lines if getattr(m, 'isMethod', False))
-
-    @property
-    def isClass(self):
-        """ True if this instance is a Class
-
-        """
-	return False
-
-    @property
-    def isMethod(self):
-        """ True if this instance is a Method
-
-        """
-	return False
-
-    @property
-    def isStatic(self):
-        """ True if this instance is static
-
-        @return if the variable is static return True
-        """
-        return 'static' in self.modifiers
-
-    @property
-    def isVariable(self):
-        """ True if this instance is static
-
-        @return if the variable is static return True
-        """
-        return False
-
-    @property
-    def declFormat(self):
-        """ string format for variable names in this block
-
-        """
-        # seriously, wtf.
-        for parent in [self, ] + list(self.allParents):
-            if parent.isMethod:
-                preamble = parent.preamble
-                if self.staticmethodLiteral in preamble:
-                    return '%s'
-                elif self.classmethodLiteral in preamble:
-                    return '%s'
-                else:
-                    return 'self.%s'
-        return '%s ## ERROR'
-
-    @property
-    def nameOrClassName(self):
-        return self.name if self.isClass else self.className
-
-    @property
-    def className(self):
-        """
-
-        """
-        if self.parent is not None:
-            return self.parent.className
-	else:
-            return None
-
+class BlockMakeNewShard:
     def newClass(self, name=None):
         """ creates a new Class object as a child of this block
 
@@ -340,6 +194,7 @@ class Block:
         return c
 
     def newForEach(self):
+        from java2python.sourcetypes import Statement
         s = Block(self)
         f = Statement(self, 'for')
         self.addSource(s)
@@ -351,6 +206,7 @@ class Block:
 
         @return two-tuple of initializer Statement and block Statement
         """
+        from java2python.sourcetypes import Statement
         s = Block(self)
         f = Statement(self, 'while')
         self.addSource(s)
@@ -415,23 +271,83 @@ class Block:
         self.addVariable(var, force)
         return var
 
-    def removeStatement(self, stat):
-        """ remove a statement from source.
 
-        @param stat Statement to be removed.
-        @return None
+class BlockPropsShard:
+    @property
+    def isStatic(self):
+        """ True if this instance is static
+
+        @return if the variable is static return True
         """
-        idx = self.lines.index(stat)
-        del self.lines[idx]
+        return 'static' in self.modifiers
 
-    ## Useful utilities.
+    @property
+    def nameOrClassName(self):
+        return self.name if self.isClass else self.className
 
-    def trimLines(self):
-        """ removes empty lines from the end of this block
-
-        @return None
+    @property
+    def className(self):
         """
-        self.lines = list(reversed(list(dropwhile(not_, reversed(self.lines)))))
+
+        """
+        if self.parent is not None:
+            return self.parent.className
+	else:
+            return None
+
+
+class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsShard, ):
+    """ Block -> base class for source code types.
+
+    Instances have methods to create new child instances, e.g., newClass
+    to create a new class.
+
+    This class contains some attributes only used by subclasses; their
+    creation in this base type is strictly from laziness.
+
+    """
+    anonymousClassCount = 0
+    classmethodLiteral = '@classmethod'
+    config = None
+    emptyAssign = ('%s', '<empty>')
+    missingValue = ('%s', '<missing>')
+    staticmethodLiteral = '@staticmethod'
+    unknownExpression = ('%s', '<unknown>')
+
+    def __init__(self, parent=None, name=None):
+        self.parent = parent
+        self.name = name
+        self.bases = []
+        self.modifiers = []
+        self.preamble = []
+        self.epilogue = []
+        self.lines = []
+        self.type = None
+        self.variables = []
+        self.methods = []
+        self.isClass = False
+        self.isMethod = False
+        self.isVariable = False
+
+        ## ug.
+        self.postIncDecInExprFixed = False
+        self.postIncDecVars = []
+        self.postIncDecCount= 0
+        self.externalComments = []
+        self.extraVars = []
+
+    def __iter__(self):
+        for line in self.lines:
+            yield line
+
+    @classmethod
+    def setConfigs(cls, configs):
+        ## always place it on the root so all instances of all Block
+        ## types get the same object.  also means any instance of any
+        ## Block type can set the config for all other instances of
+        ## all Block types.  dr. seuss would have loved oop and its
+        ## goop.
+        Block.config = Config(*configs)
 
     def I(self, indent):
         """ calculated indentation string
@@ -441,9 +357,54 @@ class Block:
         """
         return (' ' * self.config.last('indent', 4)) * indent
 
+    def asString(self):
+        """ asString() -> source code defined in obj
+
+        """
+        out = StringIO()
+        self.dump(out, 0)
+        source = out.getvalue()
+        for subs in self.config.all('outputSubs', []):
+            for sub in subs:
+                source = rxsub(sub[0], sub[1], source)
+        return source
+
+    def dump(self, output, indent):
+        """ Serialize this object to stream output.
+
+        @param output any writable file-like object
+        @param indent indentation level of this block
+        @return None
+        """
+        offset = self.I(indent)
+        for line in self:
+            if isinstance(line, (tuple, dict)):
+                line = self.formatExpression(line)
+            if hasattr(line, 'dump'):
+                line.dump(output, indent)
+            elif line:
+                output.write('%s%s\n' % (offset, line))
+
 
     # Here are the dragons.  They are crisp and dreadful.  I wish they
     # were gone.
+
+    @property
+    def declFormat(self):
+        """ string format for variable names in this block
+
+        """
+        # seriously, wtf.
+        for parent in [self, ] + list(self.allParents()):
+            if parent.isMethod:
+                preamble = parent.preamble
+                if self.staticmethodLiteral in preamble:
+                    return '%s'
+                elif self.classmethodLiteral in preamble:
+                    return '%s'
+                else:
+                    return 'self.%s'
+        return '%s ## ERROR'
 
     def fixDecl(self, *args):
         """ fixes variable names that are class members
@@ -452,9 +413,9 @@ class Block:
         @return fixed name or names
         """
         fixed = list(args)
-        methodvars = list(self.methodVars)
-        membervars = list(self.instanceMembers) + list(self.instanceMethods)
-        staticvars = list(self.staticMembers) + list(self.staticMethods)
+        methodvars = list(self.methodVars())
+        membervars = list(self.instanceMembers()) + list(self.instanceMethods())
+        staticvars = list(self.staticMembers()) + list(self.staticMethods())
         mapping = self.config.combined('variableNameMapping')
         format = self.declFormat
         for i, arg in enumerate(args):
@@ -474,7 +435,7 @@ class Block:
         else:
             return tuple(fixed)
 
-    def formatExpression(self, expr):
+    def formatExpression(self, expr, deep=0):
         """ format an expression set by the tree walker
 
         Expressions are either strings or nested two-tuples of
@@ -483,22 +444,71 @@ class Block:
         @param expr string or two-tuple
         @return interpolated, fixed expression as string
         """
+        i = deep*'    '
+        debug('%sstart: %s', i, expr)
+        if isinstance(expr, tuple):
+            raise "FOOOOO"
+            first, second = expr
+            debug('%sfirst:%s second:%s', i, first, second)
+            first, second = (self.formatExpression(first, deep+1),
+                             self.formatExpression(second, deep+1), )
+            try:
+
+                val = first % second
+            except (Exception, ), exc:
+                val = (first, second, )
+                debug("%sexception: '%s', '%s' %s", i, first, second, exc)
+        elif isinstance(expr, list):
+            val = ", ".join(self.formatExpression(v) for v in expr)
+        elif isinstance(expr, dict):
+            e2 = expr.copy()
+            if 'right' in expr:
+                e2['right'] = self.formatExpression(expr['right'], deep+1)
+            if 'left' in expr:
+                e2['left'] = self.formatExpression(expr['left'], deep+1)
+            fmt = expr['fmt']
+            if '$' in fmt:
+                val = Template(fmt).substitute(e2)
+            elif '%' in fmt:
+                val = fmt % e2
+                warn('old-style string formatting: %s', expr)
+            else:
+                val = '<ERROR>'
+                warn('bad expression: %s', expr)
+        else:
+           val = expr
+        debug('%sval:%s', i, val)
+        return val
+
+    def old_formatExpression(self, v):
         fixdecl = self.fixDecl
+        fixdecl = lambda x:x
         if isinstance(expr, basestring):
             return expr # fixdecl(expr)
         format = self.formatExpression
         first, second = expr
-        if isinstance(first, basestring) and isinstance(second, basestring):
-            return fixdecl(first) % fixdecl(second)
-        elif isinstance(first, basestring) and isinstance(second, tuple):
-            return fixdecl(first) % format(second)
-        elif isinstance(first, tuple) and isinstance(second, basestring):
-            return format(first) % fixdecl(second)
-        elif isinstance(first, tuple) and isinstance(second, tuple):
-            return (format(first), format(second))
-        else:
-	    return str(expr)
-            raise NotImplementedError('Unhandled expression type:  %s' % expr)
+        debug("%s::%s %s::%s", type(first).__name__, first, type(second).__name__, second, )
+        try:
+            if isinstance(first, basestring) and isinstance(second, basestring):
+                debug("str+str")
+                return first % second
+                #return fixdecl(first) % fixdecl(second)
+            elif isinstance(first, basestring) and isinstance(second, tuple):
+                debug("str+tuple")
+                return first % format(second)
+                return fixdecl(first) % format(second)
+            elif isinstance(first, tuple) and isinstance(second, basestring):
+                debug("tuple+str")
+                return format(first) % fixdecl(second)
+            elif isinstance(first, tuple) and isinstance(second, tuple):
+                debug("tuple+tuple")
+                return (format(first), format(second))
+            else:
+                #return str(expr)
+                raise NotImplementedError('Unhandled expression type:  %s' % expr)
+        except (Exception, ):
+            exception("unhandled expression %s %s", first, second)
+
 
     def alternateName(self, name, key='renameAnyMap'):
         """ returns an alternate for given name
@@ -560,3 +570,10 @@ class Block:
             if ret: return True
             child = child.getNextSibling()
         return False
+
+    def trimLines(self):
+        """ removes empty lines from the end of this block
+
+        @return None
+        """
+        self.lines = list(reversed(list(dropwhile(not_, reversed(self.lines)))))

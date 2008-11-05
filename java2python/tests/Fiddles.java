@@ -1,4 +1,4 @@
-private class EmptyClass {}
+class EmptyClass {}
 
 
 
@@ -32,5 +32,6 @@ class Fiddles {
         float f = .3f;
         double d = .4d;
         long l = 234l;
+	x += 1;
     }
 }

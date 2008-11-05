@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.sourcetypes.block import Block, maybeAttr
+from java2python.sourcetypes.block import Block
 
 
 class Statement(Block):
@@ -21,7 +21,7 @@ class Statement(Block):
         @return None
         """
         name = self.name
-        parents = self.allParents
+        parents = self.allParents()
         lines = self.lines
         if self.isBadLabel or self.isNoOp:
             return
@@ -44,7 +44,7 @@ class Statement(Block):
 
         """
         if self.name in ('break', 'continue'):
-            parent_names = [p.name for p in self.allParents]
+            parent_names = [p.name for p in self.allParents()]
             if 'while' not in parent_names and 'for' not in parent_names:
                 return True
 

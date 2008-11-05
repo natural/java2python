@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.sourcetypes.block import Block, maybeAttr
+from java2python.sourcetypes.block import Block
 
 
 class Method(Block):
@@ -14,6 +14,7 @@ class Method(Block):
         Block.__init__(self, parent=parent, name=name)
         self.parameters = [self.instanceFirstParam, ]
         self.addSource('pass')
+        self.isMethod = True
 
     def dump(self, output, indent):
         """ writes the string representation of this block
@@ -40,13 +41,6 @@ class Method(Block):
             output.write('%s"""\n' % (docoffset, ))
         Block.dump(self, output, indent+1)
         output.write('\n')
-
-    @property
-    def isMethod(self):
-        """ True if this instance is a Method
-
-        """
-	return True
 
     def addModifier(self, name):
         """ adds named modifier to method

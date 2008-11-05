@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.sourcetypes.block import Block, maybeAttr
+from java2python.sourcetypes.block import Block, maybeattr
 
 
 class Class(Block):
@@ -10,6 +10,7 @@ class Class(Block):
     def __init__(self, parent=None, name=None):
         Block.__init__(self, parent, name)
         self.addSource('pass')
+        self.isClass = True
 
     def dump(self, output, indent):
         """ writes the string representation of this block
@@ -19,7 +20,7 @@ class Class(Block):
         @return None
         """
         config = self.config
-
+        output.write('\n')
         ## move this next chunk of code to and override of addSource;
         ## don't like modifications during write
         if config.last('fixPropMethods'):
@@ -28,7 +29,7 @@ class Class(Block):
             self.fixOverloadMethods()
         if config.last('sortClassMethods'):
             def methodsorter(x, y):
-                if maybeAttr(x, 'isMethod') and maybeAttr(y, 'isMethod'):
+                if maybeattr(x, 'isMethod') and maybeattr(y, 'isMethod'):
                     return cmp(x.name, y.name)
                 return 0
             self.lines.sort(methodsorter)
@@ -58,13 +59,6 @@ class Class(Block):
 
         """
         return self.name
-
-    @property
-    def isClass(self):
-        """ True if this instance is a Class
-
-        """
-	return True
 
     @property
     def extraVars(self):
@@ -155,9 +149,9 @@ class Class(Block):
         @return None
         """
 	skips = [lambda x:x.name!='__init__', lambda x:'@overloaded' not in x.preamble, ]
-        mapping = [(m.name, len(m.parameters)) for m in self.blockMethods]
+        mapping = [(m.name, len(m.parameters)) for m in self.blockMethods()]
         propmap = {}
-        for meth in self.blockMethods:
+        for meth in self.blockMethods():
             name = meth.name
 	    pred = [x(meth) for x in skips]
             if all(pred) and (name, 1) in mapping and (name, 2) in mapping:
@@ -189,11 +183,11 @@ class Class(Block):
         @return None
         """
         overloads = {}
-        for method in self.blockMethods:
+        for method in self.blockMethods():
             name = method.name
             overloads[name] = 1 + overloads.setdefault(name, 0)
         for name in [n for n, c in overloads.items() if c>1]:
-            renames = [m for m in self.blockMethods if m.name == name]
+            renames = [m for m in self.blockMethods() if m.name == name]
             first, remainder = renames[0], renames[1:]
             first.preamble.append('@overloaded')
             firstname = first.name
@@ -211,7 +205,7 @@ class Class(Block):
             if meth.name == '__init__':
                 found = True
                 break
-        if not found and len(list(self.instanceMembers)) > 0:
+        if not found and len(list(self.instanceMembers())) > 0:
             meth = self.newMethod('__init__')
             meth.calledSuperCtor = False
             meth.calledOtherCtor = False

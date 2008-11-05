@@ -14,9 +14,11 @@ class SimplePythonSourceStack(object):
     current = property(get_current)
 
     def onPackageDecl(self, name):
+        debug('%s', name)
 	self.current.addComment("namespace_packages('%s')" % name)
 
     def onImportDecl(self, name, isStatic, isStar):
+        debug('%s %s %s', name, isStatic, isStar)
 	if isStatic:
 	    if isStar:
 		c = 'from %s import *' % name
@@ -36,7 +38,7 @@ class SimplePythonSourceStack(object):
         self.current.addSource('continue' + (' # ' + label if label else ''))
 
     def onClass(self, name, mods=None, extends=None, implements=None):
-	debug('%s %s %s', name, mods, extends, implements)
+	debug('%s %s %s %s', name, mods, extends, implements)
 	klass = self.current.newClass()
 	klass.name = name
 
@@ -128,7 +130,7 @@ class SimplePythonSourceStack(object):
 	for param in (params or []):
 	    #if len(param) == 2:
 	    #    param += [None]
-	    t, p, a = param.get('type', ''), param.get('id', ''), param.get('array')
+	    t, p, a = param.get('type', ''), param.get('left', ''), param.get('array')
 	    meth.addParameter(t, p)
 	self.push(meth)
         return (self.pop() if pop else meth)
@@ -147,14 +149,20 @@ class SimplePythonSourceStack(object):
 
 
     def makeParamDecl(self, src, typ, isVariadic=False):
+
         exp = src.copy()
-        exp['type']=typ
+        exp['type'] = typ
+        exp['fmt'] = '$left'
         if isVariadic:
             exp['id'] = '*' + exp['id']
+        debug('(return value) %s %s %s', exp, typ, isVariadic)
         return exp
 
     def makeMethodExpr(self, pex, args):
 	debug('%s %s', pex, args)
+        args = [dict(fmt="$left", left=arg) for arg in args]
+        return dict(left=pex, right=args, fmt='$left($right)')
+        return ('%s(%s)', (pex, args, ))
         src = str(pex or 'None') + '(' + str.join(', ', [str(a or '') for a in args]) + ')'
 	return src
 	#self.current.addSource(src)
@@ -166,17 +174,19 @@ class SimplePythonSourceStack(object):
                 var['type'] = applyType
 	renames = self.current.config.combined('variableNameMapping')
 	for var in variables:
-	    name, value = var.get('id', '?'), var.get('init', marker)
+	    name = var.get('left', '?')
 	    name = renames.get(name, name)
 	    v = self.current.newVariable(name)
 	    v.name = name
-	    if 'init' in var:
-                if isinstance(value, (list, tuple)) and len(value)==2:
-                    methname, margs = value
-                    value = '%s(%s)' % (methname, str.join(', ', margs))
-		src = '%s = %s' % (name, value)
+            src = {'id':name, 'fmt':'', 'left':'', 'right':'', }
+	    if 'right' in var:
+                src['fmt'] = '$left = $right'
+                src['left'] = src['id']
+                src['right'] = var['right']
 	    else:
-		src = '%s = %s()' % (name, var.get('type'))
+		#src = ('%s = %s()', (name, var.get('type')))
+                src['fmt'] = '$id = $val()'
+                src['right'] = '^^^'
 	    self.current.addSource(src)
 
 
@@ -184,7 +194,6 @@ class SimplePythonSourceStack(object):
         #self.source.current.fixAssignInExpr(True, ('\%s = \%s', (left, right)), left)
         debug('%s %s %s', op, left, right)
         self.current.addSource('%s %s %s' % (left, op, right))
-	pass
 
     def onReturn(self, pex):
 	debug('%s', pex)

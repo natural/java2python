@@ -11,6 +11,7 @@ class Variable(Block):
     def __init__(self, parent, name=None, expr=None):
         Block.__init__(self, parent=parent, name=name)
         self.expr = expr
+        self.isVariable = True
 
     def setExpression(self, expr):
         """ sets the value of the expression for this Variable
@@ -20,10 +21,3 @@ class Variable(Block):
         """
         self.expr = expr
 
-    @property
-    def isVariable(self):
-        """ True if this instance is static
-
-        @return if the variable is static return True
-        """
-        return True

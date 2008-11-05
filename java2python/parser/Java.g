@@ -259,7 +259,7 @@ tokens {
 
 javaSource
     @init {
-        from java2python.parser.extra import LocalTreeAdaptor
+        from java2python.parser.helpers import LocalTreeAdaptor
         self.adaptor = LocalTreeAdaptor()
         }
     :   compilationUnit
