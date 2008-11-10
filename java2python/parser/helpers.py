@@ -1,15 +1,11 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
 from java2python.parser import JavaLexer
 from java2python.sourcetypes import SimplePythonSourceStack
-
-
-def ev(left='', right='', format='', **kwds):
-    d = dict(left=left, right=right, format=format, )
-    d.update(kwds)
-    return d
 
 
 class LocalTreeParser(TreeParser):

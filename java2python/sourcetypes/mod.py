@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.sourcetypes.block import Block, maybeattr
+from java2python.sourcetypes.block import Block
 
 
 class Module(Block):
@@ -30,15 +30,3 @@ class Module(Block):
         Block.dump(self, output, indent)
         for writer in (self.config.last('postOutModWriters') or ()):
             writer (self, output)
-
-    def findMainClass(self):
-        try:
-            clss = [c for c in self.lines if maybeattr(c, 'name')==self.name]
-            if clss:
-                cls = clss[0]
-            else:
-                cls = [c for c in self.lines if maybeattr(c, 'isClass')][0]
-        except (IndexError, ):
-            cls = None
-        return cls
-

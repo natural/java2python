@@ -4,25 +4,16 @@
 
 """
 from cStringIO import StringIO
-from itertools import dropwhile
 from logging import debug, warn, exception
-from operator import not_
 from re import sub as rxsub
 from string import Template
+
 
 from java2python.config import Config
 
 
-def maybeattr(obj, name, default=None):
-    return getattr(obj, name, default)
 
 
-def trim(lines):
-    """ removes empty lines from the end of given sequence.
-
-    @return lines without trailing empty lines
-    """
-    return list(reversed(list(dropwhile(not_, reversed(lines)))))
 
 
 class BlockScannerShard:

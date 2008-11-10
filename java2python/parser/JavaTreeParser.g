@@ -40,7 +40,8 @@ options { language=Python; backtrack=true; memoize=true; tokenVocab=Java;
           ASTLabelType=CommonTree; superClass=LocalTreeParser; }
 
 @treeparser::header {
-from java2python.parser.helpers import LocalTreeParser, ev
+from java2python import ev
+from java2python.parser.helpers import LocalTreeParser
 }
 
 // this is the interface for the client, and the client must pass in a
