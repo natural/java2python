@@ -54,16 +54,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 grammar Java;
 
-options {
-    language = Python;
-    backtrack = true;
-    memoize = true;
-    output = AST;
-    ASTLabelType = CommonTree;
-}
-
-
-
+options { language=Python; backtrack=true; memoize=true; output=AST;
+          ASTLabelType=CommonTree; }
 
 tokens {
 

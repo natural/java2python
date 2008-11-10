@@ -12,42 +12,93 @@ commentPrefix = '##'
 ## later in its definition.
 bubbleInnerClasses = True
 
-## if True, classes are scanned for methods that look like accessors.
-## Matching methods are renamed and declared as properties.
-fixPropMethods = True
-
-## if True, classes are scanned for duplicate method names.  Matching
-## methods are augmented with the '@overloaded' decorator.
-fixOverloadMethods = True
-
-## if True, class methods are sorted by name before output.
-sortClassMethods = False
-
-## if True, method modifiers are written as comments prior to method
-## declarations.
-writeModifiersComments = True
-
-## if True, a default docstring is generated for class statements.
-writeClassDocString = False
-
-## if True, a default docstring is generated for method statements.
-writeMethodDocString = False
-
-## if True, and if input source contains a "public static void main"
-## method, a block is written to the end of the file to call the class
-## method with sys.argv.
-writeMainMethodScript = True
-
-## if True, classes without base classes will instead inherit from
-## object.
-classesInheritObject = True
-
 ## minimum parameter count to trigger indentation of parameter names
 ## in method declarations.  set to 0 to disable.
 minIndentParams = 5
 
+## this value controls how enums are created, if at all.  the default
+## creates enums as classes with minimum support for the interface and
+## behavior defined for java classes.  in the enumhandlers module, the
+## other usable functions are or fulljava, pyints, pystrings, noop,
+## and subclass.
 from java2python.config import enumhandlers
-enumHandler = enumhandlers.minjava # or fulljava', pyints, pystrings, noop, subclass
+enumConstantHandlers = [
+    #enumhandlers.minjava,
+    enumhandlers.pyints,
+    ]
+
+## the default import statement handler converts them to comment.
+from java2python.config import importhandlers
+importHandlers = [
+    importhandlers.pycomments,
+    ]
+
+## similarly, package statements are also converted to comments.
+from java2python.config import packagehandlers
+packageHandlers = [
+    packagehandlers.pysetuptools_comments,
+    #packagehandlers.pycomments,
+    #packagehandlers.pysetuptools,
+    ]
+
+## these functions finish the construction of a class block.
+from java2python.config import classhandlers
+classHandlers = [
+
+    ## with this handler, classes are scanned for duplicate method
+    ## names.  matching methods are augmented with the '@overloaded'
+    ## decorator.
+    classhandlers.fixOverloadMethods,
+
+    classhandlers.fixCtor,
+
+    ## this function scans the class for methods that look like
+    ## accessors.  matching methods are renamed and declared as
+    ## properties.
+    classhandlers.fixPropMethods,
+
+    ## this function sorts sorts class methods by name.
+    classhandlers.sortClassMethods,
+
+    ## this function inserts a simple docstring at the beginning of
+    ## the class definition.
+    classhandlers.insertDocString,
+
+    classhandlers.insertModifiers,
+
+    classhandlers.fixBaseClasses,
+    ]
+
+## these functions complete the construction of method blocks.
+from java2python.config import methodhandlers
+methodHandlers = [
+    ## this function inserts a simple docstring at the beginning of
+    ## the class definition.
+    methodhandlers.insertDocString,
+
+    ## this function adds a comment with the original function's
+    ## modifiers.
+    methodhandlers.insertModifiers,
+    ]
+
+
+## these functions are writers; they're called to write directly to an
+## output when a module is dumped.  they use the modulePreamble and
+## moduleEpilogue values below.
+from java2python.config import modhandlers
+preOutModWriters = [
+    modhandlers.preamble,
+    ]
+
+
+postOutModWriters = [
+    modhandlers.epilogue,
+    ## with this function, if the source contains a "public static
+    ## void main" method, a block is written to the end of the file to
+    ## call the class method with sys.argv.
+    modhandlers.ifMainScript,
+    ]
+
 
 ## Note about modulePreamble and moduleEpilogue:
 ##
@@ -183,39 +234,4 @@ exceptionTypeMapping = {
     'NoSuchFieldError':'AttributeError',
     'NoSuchMethodException':'AttributeError',
     }
-
-
-## define this name in your configuration modules to sort decorators
-## before they're output.  example follows.
-methodPreambleSorter = None
-
-## use a block like this to sort decorators by name.
-## def methodPreambleSorter(a, b):
-##     return cmp(a, b)
-
-
-
-##
-##
-##
-def _ignorePackageDecl(s, v):
-    pass
-
-def _commentPackageDecl(s, v):
-    return s.addComment("original package definition: %s" % (v, ))
-
-def _namespacePackageDecl(s, v):
-    return s.addComment("namespace_packages('%s')" % (v, ))
-
-
-packageDeclHandler = _commentPackageDecl
-
-
-##
-##
-##
-def _commentImportDecl(s, v):
-    return s.addComment("import %s")
-
-importDeclHandler = _commentImportDecl
 

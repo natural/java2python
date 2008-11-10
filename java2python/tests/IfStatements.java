@@ -1,8 +1,6 @@
-class ForStatements {
+class IfStatements {
     public static void main(String[] args) {
-        int z = 0;
-
-	int[] someInts = {0+z, 1, 2};
+	int[] someInts = {0, 1, 2};
         for (int i: someInts)
             System.out.println(i);
         for (int j: someInts) {
@@ -12,8 +10,8 @@ class ForStatements {
             System.out.println(someInts[k]);
         }
 
-
-            for (;;) { break ; };
+        outtahere:
+            for (;;) { break outtahere; };
 
         for (int x=32;;) { break; };
 

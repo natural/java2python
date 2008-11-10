@@ -25,6 +25,31 @@ else:
     psyco.full()
 
 
+def bad_loglevel(name, value):
+    msg = 'option %s: invalid loglevel: %r'
+    raise optparse.OptionValueError(msg % (name, value))
+
+
+def check_loglevel(option, opt, value):
+    try:
+        lvl = int(value)
+    except (ValueError, ):
+        name = value.upper()
+        if name not in logging._levelNames:
+            bad_loglevel(opt, value)
+        lvl = logging._levelNames[name]
+    else:
+        if lvl not in logging._levelNames:
+            bad_loglevel(opt, value)
+    return lvl
+
+
+class LocalOption(optparse.Option):
+    TYPES = optparse.Option.TYPES + ('loglevel', )
+    TYPE_CHECKER = optparse.Option.TYPE_CHECKER.copy()
+    TYPE_CHECKER['loglevel'] = check_loglevel
+
+
 def transform(options):
     timed = defaultdict(time)
     timed['overall']
@@ -94,7 +119,7 @@ def transform(options):
 
 
 def cli_options(argv):
-    parser = optparse.OptionParser(version='%prog 0.3')
+    parser = optparse.OptionParser(option_class=LocalOption, version='%prog 0.3')
     parser.add_option('-i', '--input', dest='inputfile',
 		      help='read INPUTFILE',
 		      metavar='INPUTFILE', default=None)
@@ -109,8 +134,8 @@ def cli_options(argv):
 		      help='ignore default configuration',
 		      default=True, action='store_false')
     parser.add_option('-l', '--loglevel', dest='loglevel',
-		      help='Set log level',
-		      default=30, type='int')
+		      help='Set log level by name or value',
+		      default='INFO', type='loglevel')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
 	parser.error('Only one input file supported.')
@@ -120,7 +145,7 @@ def cli_options(argv):
 
 if __name__ == '__main__':
     options, args = cli_options(sys.argv)
-    fmt = '# %(levelname)s %(funcName)s : %(message)s'
+    fmt = '# %(levelname)s %(funcName)s: %(message)s'
     logging.basicConfig(level=options.loglevel, format=fmt)
     ret = transform(options)
     sys.exit(ret)

@@ -9,16 +9,12 @@ from itertools import count
 intmap = defaultdict(lambda: count(0).next)
 
 
-def noop(self, decl):
-    """ enum handler that does nothing """
-
-
 def minjava(self):
-    vf = self.current.newMethod('values')
+    vf = self.top.newMethod('values')
     vf.addModifier('static')
     vf.addSource('return [v for v in cls.__dict__.values() if isinstance(v, type)]')
 
-    vf = self.current.newMethod('valueOf')
+    vf = self.top.newMethod('valueOf')
     vf.addModifier('static')
     vf.addParameter('string', 'key')
     vf.addComment('propegate AttributeError (not IllegalArgumentExcption)')
@@ -30,7 +26,7 @@ def pystrings(self, decl):
 
     """
     const = decl['id']
-    self.current.addSource("%s = '%s'" % (const, const))
+    self.top.addSource("%s = '%s'" % (const, const))
 
 
 def pyints(self, decl):
@@ -38,8 +34,8 @@ def pyints(self, decl):
 
     """
     const = decl['id']
-    next = intmap[self.current.name]
-    self.current.addSource('%s = %s' % (const, next()))
+    next = intmap[self.top.name]
+    self.top.addSource('%s = %s' % (const, next()))
 
 
 def subclasser(classname):

@@ -1,10 +1,10 @@
 import junit.framework.*;
 
 public class FloatFix extends TestCase {
-
-    public void testFloatFix() {
-        float b = 1.2f;
-        Assert.assertEquals(b, 1.2f);
+    public static void main(String[] args) {
+        float f = 1.2f;
+        Boolean b = (f == 1.2f);
+        System.out.println( b.toString().toLowerCase() );
     }
 
 }

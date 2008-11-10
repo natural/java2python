@@ -6,20 +6,32 @@ from java2python.parser import JavaLexer
 from java2python.sourcetypes import SimplePythonSourceStack
 
 
+def ev(left='', right='', format='', **kwds):
+    d = dict(left=left, right=right, format=format, )
+    d.update(kwds)
+    return d
+
+
 class LocalTreeParser(TreeParser):
-    """
+    """ Replacement tree parser base class.
 
     """
     def __init__(self, *a, **b):
 	super(LocalTreeParser, self).__init__(*a, **b)
-        self.commentHandler = CommentFormatter(self)
-        self.source = None
+        self.commentHandler = self.sourceStack = None
 
     def onJavaSource(self, module):
-        self.source = SimplePythonSourceStack(module)
+        """ Called by the tree parser when walking begins.
+
+        """
+        self.commentHandler = CommentFormatter(self)
+        self.sourceStack = SimplePythonSourceStack(module)
 
     def __getattr__(self, name):
-        return getattr(self.source, name)
+        """ Defer failed attribute lookups to the source stack object.
+
+        """
+        return getattr(self.sourceStack, name)
 
 
 class LocalTreeAdaptor(CommonTreeAdaptor):
@@ -111,7 +123,7 @@ class CommentFormatter(object):
         yield v[2:].strip()
 
     def __call__(self, start):
-        input, source = self.parser.input, self.parser.source
+        input, source = self.parser.input, self.parser.sourceStack
         start_idx = input.getTreeAdaptor().getTokenStartIndex(start)
         stop_idx = input.getTreeAdaptor().getTokenStopIndex(start)
         tokens = input.tokens.tokens[start_idx:stop_idx]
@@ -123,4 +135,4 @@ class CommentFormatter(object):
                 formatter = self.commentFormatters[typ]
                 for line in formatter(val):
                     if line:
-                        source.current.addComment(line, end=False)
+                        source.top.addComment(line, end=False)

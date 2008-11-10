@@ -25,49 +25,11 @@ class Module(Block):
         @param indent indentation level of this block
         @return None
         """
-        self.dumpConfigValues(output, 'modulePreamble')
+        for writer in (self.config.last('preOutModWriters') or ()):
+            writer(self, output)
         Block.dump(self, output, indent)
-        self.dumpConfigValues(output, 'moduleEpilogue')
-        self.dumpIfMainScript(output)
-
-    def dumpConfigValues(self, output, name):
-        """ writes a sequence of lines given a config attribute name
-
-        Lines may be callable.  Refer to the config.default module for
-        details.
-
-        @param output writable file-like object
-        @param name configuration module attribute
-        @return None
-        """
-        for lines in self.config.all(name, []):
-            for line in lines:
-                line = line(self) if callable(line) else line
-                output.write('%s\n' % (line, ))
-
-    def dumpIfMainScript(self, output):
-        """ writes a block to call the module as a script
-
-        @param output writable file-like object
-        @return None
-        """
-        if not self.config.last('writeMainMethodScript'):
-            return
-        try:
-            cls = self.findMainClass()
-            methods = [m for m in cls.lines if maybeattr(m, 'isMethod')]
-            main = [m for m in methods if m.name == 'main'][0]
-        except (AttributeError, IndexError, ):
-            pass
-        else:
-            mods = main.modifiers
-            typ = main.type
-            if ('public' in mods) and ('static' in mods) and (typ in ('void', None)):
-                name = cls.name
-                offset = self.I(1)
-                output.write("if __name__ == '__main__':\n")
-                output.write("%simport sys\n" % offset)
-                output.write("%s%s.main(sys.argv)\n" % (offset, name))
+        for writer in (self.config.last('postOutModWriters') or ()):
+            writer (self, output)
 
     def findMainClass(self):
         try:

@@ -9,6 +9,14 @@ class Method(Block):
     """
     instanceFirstParam = ('object', 'self')
     classFirstParam = ('type', 'cls')
+    calledSuperCtor = False
+    calledOtherCtor = False
+
+    def outerClassName(self):
+        for parent in self.allParents():
+            if parent.isClass:
+                return parent.name
+        return None
 
     def __init__(self, parent, name):
         Block.__init__(self, parent=parent, name=name)
@@ -23,22 +31,12 @@ class Method(Block):
         @param indent indentation level of this block
         @return None
         """
-	config = self.config
+        for handler in (self.config.last('methodHandlers') or ()):
+            handler(self)
         offset = self.I(indent)
-        if config.last('writeModifiersComments') and self.modifiers:
-            output.write('%s## modifiers: %s\n' % (offset, str.join(', ', self.modifiers)))
-        sorter = config.last('methodPreambleSorter')
-        if sorter:
-            self.preamble.sort(sorter)
-        for obj in self.preamble:
-            output.write('%s%s\n' % (offset, obj))
+        for line in self.prefix:
+            output.write('%s%s\n' % (offset, line))
         output.write('%s\n' % (self.formatDecl(indent), ))
-        writedoc = config.last('writeMethodDocString')
-        if writedoc:
-            docoffset = self.I(indent+1)
-            output.write('%s""" generated source for %s\n\n' % \
-                         (docoffset, self.name))
-            output.write('%s"""\n' % (docoffset, ))
         Block.dump(self, output, indent+1)
         output.write('\n')
 

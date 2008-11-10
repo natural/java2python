@@ -17,6 +17,14 @@ def maybeattr(obj, name, default=None):
     return getattr(obj, name, default)
 
 
+def trim(lines):
+    """ removes empty lines from the end of given sequence.
+
+    @return lines without trailing empty lines
+    """
+    return list(reversed(list(dropwhile(not_, reversed(lines)))))
+
+
 class BlockScannerShard:
     # This set of methods are sugar for various queries on a block.
     # Some subclasses of Block override these.
@@ -152,14 +160,18 @@ class BlockMakesShard:
         @param stat Statement, insert source before this statement
         @return None
         """
-        if len(self.lines):
+        lines = self.lines
+        if len(lines):
             if isinstance(stat, int):
                 idx = stat
             else:
-                idx = 0 if stat == None else self.lines.index(stat)
-            self.lines.insert(idx, src)
+                idx = 0 if stat == None else lines.index(stat)
+            if idx<len(lines) and lines[idx] == 'pass':
+                lines[idx] = src
+            else:
+                lines.insert(idx, src)
         else:
-            self.lines.append(src)
+            lines.append(src)
 
     def addVariable(self, var, force=False):
         """ add variable name to set for tracking
@@ -322,6 +334,7 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
         self.preamble = []
         self.epilogue = []
         self.lines = []
+        self.prefix = []
         self.type = None
         self.variables = []
         self.methods = []
@@ -342,11 +355,11 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
 
     @classmethod
     def setConfigs(cls, configs):
-        ## always place it on the root so all instances of all Block
-        ## types get the same object.  also means any instance of any
-        ## Block type can set the config for all other instances of
-        ## all Block types.  dr. seuss would have loved oop and its
-        ## goop.
+        ## always place it on the root class so all instances of all
+        ## Block types get the same object.  also means any instance
+        ## of any Block type can set the config for all other
+        ## instances of all Block types.  dr. seuss would have loved
+        ## oop and its goop.
         Block.config = Config(*configs)
 
     def I(self, indent):
@@ -385,6 +398,20 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
             elif line:
                 output.write('%s%s\n' % (offset, line))
 
+    def dumpConfigValues(self, output, name):
+        """ writes a sequence of lines given a config attribute name
+
+        Lines may be callable.  Refer to the config.default module for
+        details.
+
+        @param output writable file-like object
+        @param name configuration module attribute
+        @return None
+        """
+        for lines in self.config.all(name, []):
+            for line in lines:
+                line = line(self) if callable(line) else line
+                output.write('%s\n' % (line, ))
 
     # Here are the dragons.  They are crisp and dreadful.  I wish they
     # were gone.
@@ -435,50 +462,31 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
         else:
             return tuple(fixed)
 
-    def formatExpression(self, expr, deep=0):
+    def formatExpression(self, obj):
         """ format an expression set by the tree walker
 
         Expressions are either strings or nested two-tuples of
         format strings and their arguments.
 
-        @param expr string or two-tuple
+        @param obj string or two-tuple
         @return interpolated, fixed expression as string
         """
-        i = deep*'    '
-        debug('%sstart: %s', i, expr)
-        if isinstance(expr, tuple):
-            raise "FOOOOO"
-            first, second = expr
-            debug('%sfirst:%s second:%s', i, first, second)
-            first, second = (self.formatExpression(first, deep+1),
-                             self.formatExpression(second, deep+1), )
-            try:
-
-                val = first % second
-            except (Exception, ), exc:
-                val = (first, second, )
-                debug("%sexception: '%s', '%s' %s", i, first, second, exc)
-        elif isinstance(expr, list):
-            val = ", ".join(self.formatExpression(v) for v in expr)
-        elif isinstance(expr, dict):
-            e2 = expr.copy()
-            if 'right' in expr:
-                e2['right'] = self.formatExpression(expr['right'], deep+1)
-            if 'left' in expr:
-                e2['left'] = self.formatExpression(expr['left'], deep+1)
-            fmt = expr['fmt']
-            if '$' in fmt:
-                val = Template(fmt).substitute(e2)
-            elif '%' in fmt:
-                val = fmt % e2
-                warn('old-style string formatting: %s', expr)
-            else:
-                val = '<ERROR>'
-                warn('bad expression: %s', expr)
+        if isinstance(obj, tuple):
+            #raise Exception(str(obj))
+            expr = str(obj)
+        elif isinstance(obj, list):
+            expr = ', '.join(self.formatExpression(v) for v in obj)
+        elif isinstance(obj, dict):
+            inner = obj.copy()
+            format = inner['format']
+            if 'right' in obj:
+                inner['right'] = self.formatExpression(obj['right'])
+            if 'left' in obj:
+                inner['left'] = self.formatExpression(obj['left'])
+            expr = Template(format).substitute(inner)
         else:
-           val = expr
-        debug('%sval:%s', i, val)
-        return val
+           expr = obj
+        return expr
 
     def old_formatExpression(self, v):
         fixdecl = self.fixDecl
@@ -571,9 +579,3 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
             child = child.getNextSibling()
         return False
 
-    def trimLines(self):
-        """ removes empty lines from the end of this block
-
-        @return None
-        """
-        self.lines = list(reversed(list(dropwhile(not_, reversed(self.lines)))))

@@ -21,13 +21,11 @@ variableNameMapping = {
     'Assert':'self',
     }
 
-fixPropMethods = False
 
 outputSubs = [
     (r'(.*?)\.getMessage\(\)', r'\1.message'),
     ]
 
 
-writeModifiersComments = False
 
 logLevel = 10
