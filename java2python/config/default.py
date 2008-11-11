@@ -21,82 +21,76 @@ minIndentParams = 5
 ## behavior defined for java classes.  in the enumhandlers module, the
 ## other usable functions are or fulljava, pyints, pystrings, noop,
 ## and subclass.
-from java2python.config import enumhandlers
 enumConstantHandlers = [
     #enumhandlers.minjava,
-    enumhandlers.pyints,
+    'java2python.config.enumhandlers.pyints',
     ]
 
 ## the default import statement handler converts them to comment.
-from java2python.config import importhandlers
 importHandlers = [
-    importhandlers.pycomments,
+    'java2python.config.importhandlers.pycomments',
     ]
 
 ## similarly, package statements are also converted to comments.
-from java2python.config import packagehandlers
 packageHandlers = [
-    packagehandlers.pysetuptools_comments,
+    'java2python.config.packagehandlers.pysetuptools_comments',
     #packagehandlers.pycomments,
     #packagehandlers.pysetuptools,
     ]
 
 ## these functions finish the construction of a class block.
-from java2python.config import classhandlers
 classHandlers = [
 
     ## with this handler, classes are scanned for duplicate method
     ## names.  matching methods are augmented with the '@overloaded'
     ## decorator.
-    classhandlers.fixOverloadMethods,
+    'java2python.config.classhandlers.fixOverloadMethods',
 
-    classhandlers.fixCtor,
+    'java2python.config.classhandlers.fixCtor',
 
     ## this function scans the class for methods that look like
     ## accessors.  matching methods are renamed and declared as
     ## properties.
-    classhandlers.fixPropMethods,
+    'java2python.config.classhandlers.fixPropMethods',
 
     ## this function sorts sorts class methods by name.
-    classhandlers.sortClassMethods,
+    'java2python.config.classhandlers.sortClassMethods',
 
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    classhandlers.insertDocString,
+    'java2python.config.basichandlers.insertDocString',
 
-    classhandlers.insertModifiers,
+    'java2python.config.classhandlers.insertModifiers',
 
-    classhandlers.fixBaseClasses,
+    'java2python.config.classhandlers.fixBaseClasses',
     ]
 
 ## these functions complete the construction of method blocks.
-from java2python.config import methodhandlers
 methodHandlers = [
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    methodhandlers.insertDocString,
+    'java2python.config.basichandlers.insertDocString',
 
     ## this function adds a comment with the original function's
     ## modifiers.
-    methodhandlers.insertModifiers,
+    'java2python.config.methodhandlers.insertModifiers',
     ]
 
 
 ## these functions are writers; they're called to write directly to an
 ## output when a module is dumped.  they use the modulePreamble and
 ## moduleEpilogue values below.
-from java2python.config import modhandlers
 preOutModWriters = [
-    modhandlers.preamble,
+    'java2python.config.modhandlers.preamble',
     ]
 
 
 postOutModWriters = [
-    modhandlers.epilogue,
+    'java2python.config.modhandlers.epilogue',
     ## with this function, if the source contains a "public static
     ## void main" method, a block is written to the end of the file to
     ## call the class method with sys.argv.
-    modhandlers.ifMainScript,
+    'java2python.config.modhandlers.ifMainScript',
     ]
 
 
@@ -130,13 +124,16 @@ moduleEpilogue = [
 outputSubs = [
     (r'(\.self\.)', '.'),
     (r'String\.valueOf\((.*?)\)', r'str(\1)'),
-    (r'System\.out\.println\((.*?)\)', r'print \1'),
+    (r'System\.out\.println\((.*)\)', r'print \1'),
     (r'System\.out\.print_\((.*?)\)', r'print \1,'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     (r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+
+    (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),
+
     (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),
     ]
@@ -228,6 +225,7 @@ def make_variableNameMapping():
     import keyword, __builtin__
     return dict((k, '%s_' % k) for k in keyword.kwlist + __builtin__.__dict__.keys())
 variableNameMapping = make_variableNameMapping()
+del variableNameMapping['object']
 
 
 exceptionTypeMapping = {

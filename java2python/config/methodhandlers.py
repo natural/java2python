@@ -3,20 +3,6 @@
 from java2python import maybeattr
 
 
-def insertDocString(block):
-    # for now, just put in something not very useful
-    block.lines = [
-        '""" generated source for %s\n' % (block.name, ),
-        '',
-        '"""',
-        ] + block.lines
-
-
 def insertModifiers(block):
-    prefix = block.prefix
-    prefix.append(
-        '## modifiers: %s' % (str.join(', ', block.modifiers))
-    )
-
-
-
+    nondecos = [m for m in block.modifiers if not m.startswith('@')]
+    block.prefix.insert(0, '# modifiers: %s' % (str.join(', ', nondecos)))

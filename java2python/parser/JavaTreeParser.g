@@ -41,7 +41,7 @@ options { language=Python; backtrack=true; memoize=true; tokenVocab=Java;
 
 @treeparser::header {
 from java2python import ev
-from java2python.parser.helpers import LocalTreeParser
+from java2python.parser.local import LocalTreeParser
 }
 
 // this is the interface for the client, and the client must pass in a
@@ -63,12 +63,13 @@ packageDeclaration
 // packages, the user can control the behavior via the configuration.
 importDeclaration
     :   ^(IMPORT st0=STATIC? qi0=qualifiedIdentifier ds0=DOTSTAR?)
-         { self.onImportDecl($qi0.value, bool($st0), bool($ds0)) }
+         { self.onImportDecl($qi0.value, $st0, $ds0) }
     ;
 
 // the typeDeclaration rule covers classes, interfaces, enums and
 // annotations.  note how the blocks are built in-line within the rule
 // and that each is popped after the rule.
+
 typeDeclaration @after { self.commentHandler($start) }
     :   ^(CLASS md0=modifierList id0=IDENT tp0=genericTypeParameterList?
           et0=extendsClause? im0=implementsClause?
@@ -597,7 +598,8 @@ primaryExpression returns [value] @init { $value = dict() }
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
     |   IDENT { $value = ev($text, format="${left}")  }
     |   ^(METHOD_CALL p0=primaryExpression genericTypeArgumentList? a0=arguments
-            { $value = self.makeMethodExpr($p0.value, $a0.args) }
+            { $value = ev($p0.value, $a0.args, "${left}(${right})")
+              #self.makeMethodExpr($p0.value, $a0.args) }
         )
     |   explicitConstructorCall
     |   ^(ARRAY_ELEMENT_ACCESS p0=primaryExpression e0=expression
@@ -653,8 +655,10 @@ newArrayConstruction returns [value] @init { $value, format = "", "${right}" }
         arrayDeclaratorList?
     ;
 
-arguments returns [args] @init { $args = [] }
-    :   ^(ARGUMENT_LIST (ex0=expression { $args.append($ex0.value) })*)
+arguments returns [args] @init { $args, format = "", "${right}" }
+    :   ^(ARGUMENT_LIST (ex0=expression
+          { $args, format = ev($args, $ex0.value, format), "${left}, ${right}" })*
+        )
     ;
 
 literal returns [value]

@@ -55,14 +55,15 @@ def fixCtor(block):
         if meth.name == '__init__':
             if not (meth.calledSuperCtor or meth.calledOtherCtor):
                 meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName(), 0)
-                meth.stmtAfterSuper = meth.newStatementAbove("if", 1)
+                meth.stmtAfterSuper = meth.newStatementAbove("placeholder", 1) # wtf
             if not meth.calledOtherCtor:
                 stmt = meth.stmtAfterSuper
                 meth.addSourceBefore("# begin of instance variables", stmt)
                 for v in block.variables:
                     if not v.isStatic:
                         meth.addSourceBefore(
-                            ("self.%s = %s", (("%s", v.name), v.expr)),
+                            meth.formatExpression(dict(left=v.name, right=v.expr,
+                                 format="self.$left = $right")),
                             stmt)
                 idx = meth.lines.index(stmt)
                 meth.lines[idx] = "# end of instance variables"
@@ -105,15 +106,6 @@ def sortClassMethods(block):
             return cmp(x.name, y.name)
         return 0
     block.lines.sort(methodsorter)
-
-
-def insertDocString(block):
-    # for now, just put in something not very useful
-    block.lines = [
-        '""" generated source for %s\n' % (block.name, ),
-        '',
-        '"""',
-        ] + block.lines
 
 
 def insertModifiers(block):

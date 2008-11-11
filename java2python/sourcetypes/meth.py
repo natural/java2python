@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from java2python import maybeimport
 from java2python.sourcetypes.block import Block
 
 
@@ -31,7 +32,8 @@ class Method(Block):
         @param indent indentation level of this block
         @return None
         """
-        for handler in (self.config.last('methodHandlers') or ()):
+        for handler in self.config.last('methodHandlers', ()):
+            handler = maybeimport(handler)
             handler(self)
         offset = self.I(indent)
         for line in self.prefix:
@@ -55,7 +57,7 @@ class Method(Block):
             pass
         else:
             if deco not in self.preamble:
-                self.preamble.append(deco)
+                self.prefix.append(deco)
                 if (deco == self.classmethodLiteral) and (self.parameters) \
                        and (self.parameters[0] == self.instanceFirstParam):
                     self.parameters[0] = self.classFirstParam

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from java2python import maybeimport
 from java2python.sourcetypes.block import Block
 
 
@@ -25,8 +26,10 @@ class Module(Block):
         @param indent indentation level of this block
         @return None
         """
-        for writer in (self.config.last('preOutModWriters') or ()):
-            writer(self, output)
+        def doWriters(key):
+            for writer in self.config.last(key, ()):
+                writer = maybeimport(writer)
+                writer(self, output)
+        doWriters('preOutModWriters')
         Block.dump(self, output, indent)
-        for writer in (self.config.last('postOutModWriters') or ()):
-            writer (self, output)
+        doWriters('postOutModWriters')

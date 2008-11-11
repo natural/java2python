@@ -8,12 +8,7 @@ from logging import debug, warn, exception
 from re import sub as rxsub
 from string import Template
 
-
 from java2python.config import Config
-
-
-
-
 
 
 class BlockScannerShard:
@@ -476,7 +471,9 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
                 inner['left'] = self.formatExpression(obj['left'])
             expr = Template(format).substitute(inner)
         else:
-           expr = obj
+            renames = self.config.combined('variableNameMapping')
+            expr = renames.get(obj, obj)
+            #expr = obj
         return expr
 
     def old_formatExpression(self, v):

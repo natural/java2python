@@ -11,7 +11,7 @@ from time import time
 from antlr3 import ANTLRStringStream
 from antlr3.tree import CommonTreeNodeStream
 
-from java2python.parser.helpers import LocalTokenStream
+from java2python.parser.local import LocalTokenStream
 from java2python.parser.JavaParser import JavaParser
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaTreeParser import JavaTreeParser
@@ -23,6 +23,9 @@ except (ImportError, ):
     pass
 else:
     psyco.full()
+
+## 2.6 doesn't find the testconfig.py module in the tests dir.
+sys.path.insert(0, ".")
 
 
 def bad_loglevel(name, value):
@@ -54,7 +57,13 @@ def transform(options):
     timed = defaultdict(time)
     timed['overall']
 
-    source = open(options.inputfile).read()
+    try:
+        source = open(options.inputfile).read()
+    except (IOError, ), exc:
+        code, msg = exc.args[0:2]
+        print 'IOError: %s.' % (msg, )
+        return code
+
     stream = ANTLRStringStream(source)
     lexer = JavaLexer(stream)
     tokens = LocalTokenStream(lexer)

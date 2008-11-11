@@ -10,7 +10,7 @@ import sys
 from antlr3 import FileStream, StringStream
 from antlr3.dottreegen import DOTTreeGenerator
 
-from java2python.parser.helpers import LocalTokenStream
+from java2python.parser.local import LocalTokenStream
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaParser import JavaParser
 

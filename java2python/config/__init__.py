@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.parser import import_name
+from java2python import import_name
 
 
 def set_config_target(target, names, includeDefault=True):

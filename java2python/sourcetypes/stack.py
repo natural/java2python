@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from logging import debug
+from java2python import maybeimport
 
 ## yes, one of those.
 marker = object()
@@ -23,7 +24,8 @@ class SimplePythonSourceStack:
 
     def makeMethodExpr(self, methexpr, methargs):
 	debug('%s %s', methexpr, methargs)
-        methargs = [dict(format='$left', left=arg) for arg in methargs]
+        #methargs = [dict(format='$left', left=arg) for arg in methargs]
+        methargs = methargs
         return dict(left=methexpr, right=methargs, format='$left($right)')
 
     def makeParamDecl(self, src, typ, isVariadic=False):
@@ -136,6 +138,7 @@ class SimplePythonSourceStack:
         if name.startswith('<missing'):
             return
         for handler in self.top.config.last('enumConstantHandlers', ()):
+            handler = maybeimport(handler)
             handler(self, decl)
         if 0: # not name.startswith('<missing'):
             ## use a simpler method
@@ -178,8 +181,10 @@ class SimplePythonSourceStack:
         return (self.pop() if pop else None)
 
     def onImportDecl(self, decl, isStatic, isStar):
+        isStatic, isStar = bool(isStatic), bool(isStar)
         debug('%s', decl)
-        for handler in (self.top.config.last('importHandlers') or ()):
+        for handler in self.top.config.last('importHandlers', ()):
+            handler = maybeimport(handler)
             handler(self, decl, isStatic, isStar)
         return decl
 
@@ -199,7 +204,8 @@ class SimplePythonSourceStack:
 
     def onPackageDecl(self, decl):
         debug('%s', decl)
-        for handler in (self.top.config.last('packageHandlers') or ()):
+        for handler in self.top.config.last('packageHandlers', ()):
+            handler = maybeimport(handler)
             handler(self, decl)
         return decl
 
@@ -253,9 +259,11 @@ class SimplePythonSourceStack:
             src = {'format':'$left = $right', 'left':name, 'right':'', }
 	    if 'right' in var:
                 src['right'] = var['right']
+                v.expr = var['right']
 	    else:
                 src['format'] += '()'
                 src['right'] = var.get('type', 'MissingType')
+                v.expr = src['right']
 	    self.top.addSource(src)
 
     def onWhile(self):

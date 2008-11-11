@@ -1,9 +1,6 @@
-import junit.framework.*;
-
-public class FloatFix extends TestCase {
+public class FloatFix  {
     public static void main(String[] args) {
-        float f = 1.2f;
-        Boolean b = (f == 1.2f);
+        Boolean b = (0 == 3);
         System.out.println( b.toString().toLowerCase() );
     }
 
