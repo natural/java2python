@@ -11,11 +11,11 @@ from time import time
 from antlr3 import ANTLRStringStream
 from antlr3.tree import CommonTreeNodeStream
 
+from java2python.blocks import Module
 from java2python.parser.local import LocalTokenStream
 from java2python.parser.JavaParser import JavaParser
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaTreeParser import JavaTreeParser
-from java2python.sourcetypes import Module
 
 try:
     import psyco

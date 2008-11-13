@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from java2python import maybeimport
-from java2python.sourcetypes.block import Block
+from java2python.blocks.block import Block
 
 
 class Module(Block):

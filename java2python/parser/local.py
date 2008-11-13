@@ -5,8 +5,9 @@ from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
 from java2python import maybeimport
+from java2python.blocks import SimplePythonSourceStack
 from java2python.parser import JavaLexer
-from java2python.sourcetypes import SimplePythonSourceStack
+
 
 
 class LocalTreeParser(TreeParser):

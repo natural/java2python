@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.sourcetypes.block -> basic building block of output source code.
+""" java2python.blocks.block -> basic building block of output source code.
 
 """
 from cStringIO import StringIO
@@ -169,7 +169,7 @@ class BlockMakesShard:
         @keyparam force=False, if True, always add to set
         @return None
         """
-        from java2python.sourcetypes import Variable
+        from java2python.blocks import Variable
         if not isinstance(var, Variable):
             var = Variable(var)
         if force or (var.name and self.isClass):
@@ -186,13 +186,13 @@ class BlockMakeNewShard:
         @keyparam name=None name of new method
         @return Class instance
         """
-        from java2python.sourcetypes import Class
+        from java2python.blocks import Class
         c = Class(parent=self, name=name)
         self.addSource(c)
         return c
 
     def newForEach(self):
-        from java2python.sourcetypes import Statement
+        from java2python.blocks import Statement
         s = Block(self)
         f = Statement(self, 'for')
         self.addSource(s)
@@ -204,7 +204,7 @@ class BlockMakeNewShard:
 
         @return two-tuple of initializer Statement and block Statement
         """
-        from java2python.sourcetypes import Statement
+        from java2python.blocks import Statement
         s = Block(self)
         f = Statement(self, 'while')
         self.addSource(s)
@@ -217,7 +217,7 @@ class BlockMakeNewShard:
         @keyparam name=None name of new method
         @return Method instance
         """
-        from java2python.sourcetypes import Method
+        from java2python.blocks import Method
         m = Method(parent=self, name=name)
         self.addMethod(m)
         self.addSource(m)
@@ -228,7 +228,7 @@ class BlockMakeNewShard:
 
         @return Statement instance
         """
-        from java2python.sourcetypes import Statement
+        from java2python.blocks import Statement
         while_stat = Statement(self, 'while')
         while_stat.setExpression('True')
         self.addSource(while_stat)
@@ -240,7 +240,7 @@ class BlockMakeNewShard:
         @param name name of statement
         @return Statement instance
         """
-        from java2python.sourcetypes import Statement
+        from java2python.blocks import Statement
         s = Statement(parent=self, name=name)
         self.addSource(s)
         return s
@@ -253,7 +253,7 @@ class BlockMakeNewShard:
         @param stat add statement before this one
         @return Statement instance
         """
-        from java2python.sourcetypes import Statement
+        from java2python.blocks import Statement
         s = Statement(parent=self, name=name)
         self.addSourceBefore(s, stat)
         return s
@@ -264,7 +264,7 @@ class BlockMakeNewShard:
         @param name name of the variable
         @return Variable instance
         """
-        from java2python.sourcetypes import Variable
+        from java2python.blocks import Variable
         var = Variable(self)
         var.name = name
         self.addVariable(var, force)
