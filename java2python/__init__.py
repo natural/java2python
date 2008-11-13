@@ -13,8 +13,8 @@ def ev(left='', right='', format='', **kwds):
     return d
 
 
-def import_name(name, reloaded=False):
-    """ import_name(name) -> import and return a module by name in dotted form
+def importmod(name, reloaded=False):
+    """ importmod(name) -> import and return a module by name in dotted form
 
     Copied from the Python lib docs.
 
@@ -31,7 +31,7 @@ def import_name(name, reloaded=False):
     return mod
 
 
-def import_item(name, reloaded=False):
+def importval(name, reloaded=False):
     """ import an item from a module by dotted name
 
     @param name module and attribute string, i.e., foo.bar.baz
@@ -39,7 +39,7 @@ def import_item(name, reloaded=False):
     """
     names = name.split('.')
     modname, itemname = names[0:-1], names[-1]
-    mod = import_name(str.join('.', modname), reloaded=reloaded)
+    mod = importmod(str.join('.', modname), reloaded=reloaded)
     return getattr(mod, itemname)
 
 
@@ -52,7 +52,7 @@ def maybeattr(obj, name, default=None):
 
 def maybeimport(obj):
     if isinstance(obj, (basestring, )):
-        return import_item(obj)
+        return importval(obj)
     return obj
 
 def trimlines(lines):

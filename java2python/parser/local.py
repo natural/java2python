@@ -4,6 +4,7 @@
 from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
+from java2python import maybeimport
 from java2python.parser import JavaLexer
 from java2python.sourcetypes import SimplePythonSourceStack
 
@@ -50,6 +51,7 @@ class LocalTokenStream(CommonTokenStream):
     commentTargetTypes = [
         JavaLexer.CLASS,
         JavaLexer.IDENT,
+        JavaLexer.EXPR,
     ]
 
     def skipOffTokenChannels(self, start):
@@ -100,23 +102,6 @@ class LocalTokenStream(CommonTokenStream):
 class CommentFormatter(object):
     def __init__(self, parser):
         self.parser = parser
-        self.commentFormatters = {
-            JavaLexer.COMMENT : self.formatMultiLineComment,
-            JavaLexer.LINE_COMMENT : self.formatLineComment,
-            }
-
-    def formatMultiLineComment(self, v):
-        v = v.strip()[2:-2]
-        for line in v.split('\n'):
-            line = line.strip()
-            if line.startswith('*'):
-                line = line[1:]
-            if line.endswith('*'):
-                line = line[:-1]
-            yield line.strip()
-
-    def formatLineComment(self, v):
-        yield v[2:].strip()
 
     def __call__(self, start):
         input, source = self.parser.input, self.parser.sourceStack
@@ -125,10 +110,9 @@ class CommentFormatter(object):
         tokens = input.tokens.tokens[start_idx:stop_idx]
         comments = [(t, getattr(t, 'comments', None)) for t in tokens]
         comments = [(t, c) for t, c in comments if c]
+
         for token, comment_set in reversed(comments):
             token.comments = None
             for typ, val in reversed(comment_set):
-                formatter = self.commentFormatters[typ]
-                for line in formatter(val):
-                    if line:
-                        source.top.addComment(line, end=False)
+                for handler in source.top.config.handlers('commentHandlers'):
+                    handler(source.top, val, typ)

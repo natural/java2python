@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from logging import debug
-from java2python import maybeimport
+from java2python import ev
 
 ## yes, one of those.
 marker = object()
@@ -22,20 +22,17 @@ class SimplePythonSourceStack:
         value = dict(left=typ, right=ctor, format='[$left() for _ in range($right)]')
         return value
 
-    def makeMethodExpr(self, methexpr, methargs):
-	debug('%s %s', methexpr, methargs)
-        #methargs = [dict(format='$left', left=arg) for arg in methargs]
-        methargs = methargs
-        return dict(left=methexpr, right=methargs, format='$left($right)')
+    def makeParamDecl(self, decl, typ, isVariadic=False):
+        debug('%s %s %s', decl, typ, isVariadic)
+        new = decl.copy()
+        new.update(type=typ, format='$left',
+                   left=ev('*' if isVariadic else '', decl, '$left$right'))
+        debug('%s', new)
+        return new
 
-    def makeParamDecl(self, src, typ, isVariadic=False):
-        exp = src.copy()
-        exp['type'] = typ
-        exp['format'] = '$left'
-        if isVariadic:
-            exp['id'] = '*' + exp['id']
-        debug('(return value) %s %s %s', exp, typ, isVariadic)
-        return exp
+    def mapType(self, v):
+        lookup = self.top.config.combined('typeTypeMap')
+        return lookup.get(v, v)
 
     def onAnnoMethod(self, name, annodecls, default):
 	meth = self.onMethod(name)
@@ -66,7 +63,7 @@ class SimplePythonSourceStack:
 
     def onAssign(self, op, left, right):
         debug('%s %s %s', op, left, right)
-        src = dict(format='$left %s $right' % op, left=left, right=right)
+        src = ev(left, right, '$left %s $right' % op)
         self.top.addSource(src)
 
     def onBreak(self, label):
@@ -137,8 +134,7 @@ class SimplePythonSourceStack:
         debug('%s', name)
         if name.startswith('<missing'):
             return
-        for handler in self.top.config.last('enumConstantHandlers', ()):
-            handler = maybeimport(handler)
+        for handler in self.top.config.handlers('enumConstantHandlers'):
             handler(self, decl)
         if 0: # not name.startswith('<missing'):
             ## use a simpler method
@@ -183,8 +179,7 @@ class SimplePythonSourceStack:
     def onImportDecl(self, decl, isStatic, isStar):
         isStatic, isStar = bool(isStatic), bool(isStar)
         debug('%s', decl)
-        for handler in self.top.config.last('importHandlers', ()):
-            handler = maybeimport(handler)
+        for handler in self.top.config.handlers('importHandlers'):
             handler(self, decl, isStatic, isStar)
         return decl
 
@@ -198,14 +193,14 @@ class SimplePythonSourceStack:
 	    #if len(param) == 2:
 	    #    param += [None]
 	    t, p, a = param.get('type', ''), param.get('left', ''), param.get('array')
+            p = meth.formatExpression(p)
 	    meth.addParameter(t, p)
 	self.push(meth)
         return (self.pop() if pop else meth)
 
     def onPackageDecl(self, decl):
         debug('%s', decl)
-        for handler in self.top.config.last('packageHandlers', ()):
-            handler = maybeimport(handler)
+        for handler in self.top.config.handlers('packageHandlers'):
             handler(self, decl)
         return decl
 
@@ -245,25 +240,45 @@ class SimplePythonSourceStack:
         self.push(stat)
         return stat
 
-    def onVariables(self, variables, applyType=marker):
-	debug('%s %s', variables, applyType)
+    def onLocalDecls(self, decls, typ):
+        debug('%s %s', decls, typ)
+        for decl in decls:
+            if 'right' in decl and not decl['right']:
+                renames = self.top.config.combined('typeTypeMap')
+                try:
+                    rtyp = renames.get(typ, typ)
+                except (TypeError, ):
+                    rtyp = typ
+                decl['right'] = ev(rtyp, format='$left()')
+            name = decl.get('left', None)
+            right = decl.get('right', None)
+            if name is None or right is None:
+                continue
+            src = ev(name, right, '$left = $right')
+            self.top.addSource(src)
+
+    def onVariables(self, decls, applyType=marker):
+	debug('%s %s', decls, applyType)
         if applyType is not marker:
-            for var in variables:
-                var['type'] = applyType
+            for decl in decls:
+                ## need to specify "type()" not just "type" ??
+                #decl['right'] = applyType
+                if not decl['right']:
+                    decl['right'] = applyType
+                decl['type'] = applyType
 	renames = self.top.config.combined('variableNameMapping')
-	for var in variables:
-	    name = var.get('left', '?')
+	for decl in decls:
+	    name = decl.get('left', '?')
 	    name = renames.get(name, name)
-	    v = self.top.newVariable(name)
-	    v.name = name
+	    var = self.top.newVariable(name)
             src = {'format':'$left = $right', 'left':name, 'right':'', }
-	    if 'right' in var:
-                src['right'] = var['right']
-                v.expr = var['right']
+	    if 'right' in decl:
+                src['right'] = decl['right']
+                var.expr = decl['right']
 	    else:
                 src['format'] += '()'
-                src['right'] = var.get('type', 'MissingType')
-                v.expr = src['right']
+                src['right'] = decl.get('type', 'MissingType')
+                var.expr = src['right']
 	    self.top.addSource(src)
 
     def onWhile(self):

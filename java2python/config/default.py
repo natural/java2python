@@ -16,6 +16,12 @@ bubbleInnerClasses = True
 ## in method declarations.  set to 0 to disable.
 minIndentParams = 5
 
+commentHandlers = [
+    # javadoc2docstring
+    # javadoc2pythondoc
+    'java2python.config.commenthandlers.simple',
+    ]
+
 ## this value controls how enums are created, if at all.  the default
 ## creates enums as classes with minimum support for the interface and
 ## behavior defined for java classes.  in the enumhandlers module, the
@@ -80,12 +86,12 @@ methodHandlers = [
 ## these functions are writers; they're called to write directly to an
 ## output when a module is dumped.  they use the modulePreamble and
 ## moduleEpilogue values below.
-preOutModWriters = [
+modulePreambleWriters = [
     'java2python.config.modhandlers.preamble',
     ]
 
 
-postOutModWriters = [
+moduleEpilogueWriters = [
     'java2python.config.modhandlers.epilogue',
     ## with this function, if the source contains a "public static
     ## void main" method, a block is written to the end of the file to
@@ -142,6 +148,8 @@ outputSubs = [
 ## configuration modules can replace and/or augment this mapping.
 typeTypeMap = {
     'String':'str',
+    'Integer':'int',
+    'Object':'object',
     'int':'int',
     'double':'float',
     'Vector':'list',
@@ -225,7 +233,6 @@ def make_variableNameMapping():
     import keyword, __builtin__
     return dict((k, '%s_' % k) for k in keyword.kwlist + __builtin__.__dict__.keys())
 variableNameMapping = make_variableNameMapping()
-del variableNameMapping['object']
 
 
 exceptionTypeMapping = {

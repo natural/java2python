@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python import import_name
+from java2python import importmod, maybeimport
 
 
 def set_config_target(target, names, includeDefault=True):
@@ -21,7 +21,7 @@ class Config:
 
     """
     def __init__(self, *names):
-        self.configs = [import_name(name) for name in names]
+        self.configs = [importmod(name) for name in names]
 
     def all(self, name, missing=None):
         """ value of name in each config module
@@ -47,10 +47,32 @@ class Config:
     def combined(self, name):
         """ combined mapping of named dictionaries from all config modules
 
-        @param dictionary attribute as string
+        @param name attribute as string
         @return dictionary updated with each named dictionary
         """
         combined = {}
         for mapping in self.all(name, {}):
             combined.update(mapping)
         return combined
+
+    def handler(self, name, default=None):
+        """ single handler from last config module, possibly imported
+
+        @param name handler attribute as string
+        @keyparam default=None value returned if all modules lack name
+        @return value from config module
+        """
+        item = self.last(name, default)
+        if item is not default:
+            item = maybeimport(item)
+        return item
+
+    def handlers(self, name):
+        """ yields handlers from last config module, each possibly imported
+
+        @param name handler attribute as string
+        @return list of values
+        """
+        handlers = self.last(name, ())
+        for handler in handlers:
+            yield maybeimport(handler)

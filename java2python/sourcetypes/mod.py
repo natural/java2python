@@ -30,6 +30,6 @@ class Module(Block):
             for writer in self.config.last(key, ()):
                 writer = maybeimport(writer)
                 writer(self, output)
-        doWriters('preOutModWriters')
+        doWriters('modulePreambleWriters')
         Block.dump(self, output, indent)
-        doWriters('postOutModWriters')
+        doWriters('moduleEpilogueWriters')

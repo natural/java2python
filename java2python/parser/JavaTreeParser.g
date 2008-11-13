@@ -124,10 +124,10 @@ enumTopLevelScope
         )
     ;
 
+// nb:  we're making an extra class body only if there's a scope.
 enumConstant returns [decl] @init { decl = dict() }
     :   ^(id0=IDENT an0=annotationList ag0=arguments?
           { $decl.update(id=$id0.text, annos=$an0.annos, args=$ag0.args) }
-          // nb:  we're making an extra class body only if there's a scope.
           ({ $decl.update(klass=self.onClass($id0.text)) } classTopLevelScope)?
         )
     ;
@@ -139,15 +139,13 @@ classTopLevelScope
 classScopeDeclarations @after { self.commentHandler($start) }
     :   ^(CLASS_INSTANCE_INITIALIZER block)
     |   ^(CLASS_STATIC_INITIALIZER block)
-
-    |   ^(FUNCTION_METHOD_DECL md0=modifierList genericTypeParameterList? tp0=type id0=IDENT
-          fp0=formalParameterList arrayDeclaratorList? throwsClause?
+    |   ^(FUNCTION_METHOD_DECL md0=modifierList genericTypeParameterList? tp0=type
+          id0=IDENT fp0=formalParameterList arrayDeclaratorList? throwsClause?
           { self.onMethod($id0.text, $md0.mods, $fp0.params) }
           block?
           { self.commentHandler($start)
             self.pop() }
         )
-
     |   ^(VOID_METHOD_DECL md1=modifierList genericTypeParameterList? id1=IDENT
           fp1=formalParameterList throwsClause?
           { self.onMethod($id1.text, $md1.mods, $fp1.params) }
@@ -155,10 +153,8 @@ classScopeDeclarations @after { self.commentHandler($start) }
           { self.commentHandler($start)
             self.pop() }
         )
-
     |   ^(VAR_DECLARATION md2=modifierList tp2=type vd2=variableDeclaratorList)
          { self.onVariables($vd2.decls, $tp2.value) }
-
     |   ^(CONSTRUCTOR_DECL md3=modifierList genericTypeParameterList?
           fp3=formalParameterList throwsClause?
           { self.onMethod("__init__", $md3.mods, $fp3.params) }
@@ -166,7 +162,6 @@ classScopeDeclarations @after { self.commentHandler($start) }
           { self.commentHandler($start)
             self.pop() }
         )
-
     |   typeDeclaration
     ;
 
@@ -193,13 +188,13 @@ variableDeclaratorList returns [decls] @init { $decls = [] }
     :   ^(VAR_DECLARATOR_LIST (v0=variableDeclarator { $decls.append($v0.decl) })+)
     ;
 
-variableDeclarator returns [decl] @init { $decl = dict() }
+variableDeclarator returns [decl] @init { $decl = ev() }
     :   ^(VAR_DECLARATOR v0=variableDeclaratorId { $decl = $v0.decl }
           (vi0=variableInitializer { $decl["right"] = $vi0.value })?
          )
     ;
 
-variableDeclaratorId returns [decl] @init { $decl = dict() }
+variableDeclaratorId returns [decl] @init { $decl = ev(format="${left}") }
     :   ^(id0=IDENT { $decl["left"] = $id0.text }
               (ad0=arrayDeclaratorList { $decl["array"] = [$ad0.text] })?
         )
@@ -259,8 +254,8 @@ localModifierList returns [mods] @init { $mods = [] }
 
 type returns [value] @init { $value = ev(format="${left}") }
     :   ^(TYPE
-          (pt0=primitiveType { $value["left"] = $pt0.text } |
-           qt0=qualifiedTypeIdent { $value["left"] = $qt0.text })
+          (pt0=primitiveType { $value["left"] = self.mapType($pt0.text) } |
+           qt0=qualifiedTypeIdent { $value["left"] = self.mapType($qt0.value) })
           (arrayDeclaratorList
            { $value["format"] += "list" #$arrayDeclaratorList.value
              $value["left"] = ""
@@ -269,8 +264,8 @@ type returns [value] @init { $value = ev(format="${left}") }
         )
     ;
 
-qualifiedTypeIdent @after { self.commentHandler($start) }
-    :   ^(QUALIFIED_TYPE_IDENT typeIdent+)
+qualifiedTypeIdent returns [value] @after { self.commentHandler($start) }
+    :   ^(QUALIFIED_TYPE_IDENT (ti0=typeIdent { $value = $ti0.value })+)
     ;
 
 typeIdent returns [value]
@@ -387,7 +382,7 @@ blockStatement
 
 localVariableDeclaration
     :   ^(VAR_DECLARATION md0=localModifierList tp0=type vd0=variableDeclaratorList)
-         { self.onVariables($vd0.decls, $tp0.value) }
+         { self.onLocalDecls($vd0.decls, $tp0.value) }
     ;
 
 statement
@@ -481,7 +476,7 @@ forUpdater returns [values] @init { $values = [] }
 
 parenthesizedExpression returns [value]
     :   ^(PARENTESIZED_EXPR ex0=expression
-          { $value = dict(format="(${left})", left=$ex0.value) }
+          { $value = ev(left=$ex0.value, format="(${left})") }
         )
     ;
 
@@ -490,102 +485,68 @@ expression returns [value]
     ;
 
 expr returns [value]
-    :   ^(ASSIGN left=expr right=expr)
-          { self.onAssign("=", left, right) }
+    :   ^(ASSIGN lv0=expr rv0=expr) { self.onAssign("=", lv0, rv0) }
+    |   ^(PLUS_ASSIGN lv0=expr rv0=expr) { self.onAssign("+=", lv0, rv0) }
+    |   ^(MINUS_ASSIGN lv0=expr rv0=expr) { self.onAssign("-=", lv0, rv0) }
+    |   ^(STAR_ASSIGN lv0=expr rv0=expr) { self.onAssign("*=", lv0, rv0) }
+    |   ^(DIV_ASSIGN lv0=expr rv0=expr) { self.onAssign("/=", lv0, rv0) }
+    |   ^(AND_ASSIGN lv0=expr rv0=expr) { self.onAssign("&=", lv0, rv0) }
+    |   ^(OR_ASSIGN  lv0=expr rv0=expr) { self.onAssign("|=", lv0, rv0) }
+    |   ^(XOR_ASSIGN lv0=expr rv0=expr) { self.onAssign("^=", lv0, rv0) }
+    |   ^(MOD_ASSIGN lv0=expr rv0=expr) { self.onAssign("\%=", lv0, rv0) }
 
-    |   ^(PLUS_ASSIGN left=expr right=expr)
-          { self.onAssign("+=", left, right) }
-
-    |   ^(MINUS_ASSIGN expr expr)
-
-    |   ^(STAR_ASSIGN expr expr)
-
-    |   ^(DIV_ASSIGN expr expr)
-
-    |   ^(AND_ASSIGN expr expr)
-
-    |   ^(OR_ASSIGN expr expr)
-
-    |   ^(XOR_ASSIGN expr expr)
-
-    |   ^(MOD_ASSIGN expr expr)
-
+        // no translation and/or test case for these:
     |   ^(BIT_SHIFT_RIGHT_ASSIGN expr expr)
-
     |   ^(SHIFT_RIGHT_ASSIGN left=expr right=expr) { self.onAssign(">>=", left, right) }
-
     |   ^(SHIFT_LEFT_ASSIGN left=expr right=expr) { self.onAssign("<<=", left, right) }
 
-    |   ^(QUESTION expr expr expr)
-        // {exp = ("%s %s", (("%s", b0), ("%s %s", (("if %s", a0), ("else %s", c0)))))}
+    |   ^(QUESTION lv0=expr rv0=expr rv1=expr)
+          { $value = ev(lv0, rv0, "(${right} if ${left} else ${rv1})", rv1=rv1) }
+    |   ^(LOGICAL_OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} or ${right}") }
+    |   ^(LOGICAL_AND lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} and ${right}") }
+    |   ^(OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} | ${right}") }
+    |   ^(XOR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} ^ ${right}") }
+    |   ^(AND lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} & ${right}") }
+    |   ^(EQUAL lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} == ${right}") }
+    |   ^(NOT_EQUAL lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} != ${right}") }
 
-    |   ^(LOGICAL_OR lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} or ${right}") }
-
-    |   ^(LOGICAL_AND lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} and ${right}") }
-
-    |   ^(OR expr expr)
-
-    |   ^(XOR expr expr)
-
-    |   ^(AND expr expr)
-
-    |   ^(EQUAL lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} == ${right}") }
-
-    |   ^(NOT_EQUAL lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} != ${right}") }
-
-    |   ^(INSTANCEOF expr type)
-
+    |   ^(INSTANCEOF lv0=expr tp0=type)
+          { $value = ev(lv0, $tp0.value, "isinstance(${left}, (${right}, ))") }
     |   ^(LESS_OR_EQUAL lv0=expr rv0=expr)
           { $value = ev(lv0, rv0, "${left} <= ${right}") }
-
     |   ^(GREATER_OR_EQUAL lv0=expr rv0=expr)
           { $value = ev(lv0, rv0, "${left} >= ${right}") }
 
     |   ^(BIT_SHIFT_RIGHT expr expr)
 
-    |   ^(SHIFT_RIGHT left=expr right=expr) { self.onAssign(">>", left, right) }
+    |   ^(SHIFT_RIGHT lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} >> ${right}") }
+    |   ^(GREATER_THAN lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} > ${right}") }
+    |   ^(SHIFT_LEFT lv0=expr rv0=expr)  { $value = ev(lv0, rv0, "${left} << ${right}") }
+    |   ^(LESS_THAN lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} < ${right}") }
 
-    |   ^(GREATER_THAN lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} > ${right}") }
+    |   ^(PLUS lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} + ${right}") }
+    |   ^(MINUS lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} - ${right}") }
+    |   ^(STAR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} * ${right}") }
+    |   ^(DIV lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} / ${right}") }
+    |   ^(MOD lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} \% ${right}") }
+    |   ^(UNARY_PLUS lv0=expr) { $value = ev(lv0, format="+${left}") }
+    |   ^(UNARY_MINUS lv0=expr) { $value = ev(lv0, format="-${left}") }
 
-    |   ^(SHIFT_LEFT left=expr right=expr) { self.onAssign("<<", left, right) }
-
-    |   ^(LESS_THAN lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} < ${right}") }
-
-    |   ^(PLUS lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} + ${right}") }
-
-    |   ^(MINUS expr expr)
-
-    |   ^(STAR lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} * ${right}") }
-
-    |   ^(DIV lv0=expr rv0=expr)
-          { $value = ev(lv0, rv0, "${left} / ${right}") }
-
-    |   ^(MOD expr expr)
-    |   ^(UNARY_PLUS expr)
-    |   ^(UNARY_MINUS expr)
     |   ^(PRE_INC lv0=expr)     { $value = ev(lv0, format="${left} += 1") }
     |   ^(PRE_DEC lv0=expr)     { $value = ev(lv0, format="${left} -= 1") }
     |   ^(POST_INC lv0=expr)    { $value = ev(lv0, format="${left} += 1") }
     |   ^(POST_DEC lv0=expr)    { $value = ev(lv0, format="${left} -= 1") }
-    |   ^(NOT lv0=expr)         { $value = ev(lv0, format="not ${left}") }
+    |   ^(NOT lv0=expr)         { $value = ev(lv0, format="~${left}") }
     |   ^(LOGICAL_NOT lv0=expr) { $value = ev(lv0, format="not ${left}") }
     |   ^(CAST_EXPR lv0=type rv0=expr)   { $value = ev(lv0, rv0, "${left}(${right})") }
     |   p0=primaryExpression { $value = $p0.value }
     ;
 
-primaryExpression returns [value] @init { $value = dict() }
+primaryExpression returns [value] @init { $value = ev() }
     :   ^(  DOT
             (p0=primaryExpression
-             { $value = dict(left=$p0.value, format="${left}.${right}") }
-                (   i0=IDENT { $value["right"] = dict(left=$i0.text, format="${left}")}
+             { $value = ev($p0.value, format="${left}.${right}") }
+                (   i0=IDENT { $value["right"] = ev($i0.text, format="${left}")}
                 |   THIS
                 |   SUPER
                 |   innerNewExpression
@@ -598,8 +559,7 @@ primaryExpression returns [value] @init { $value = dict() }
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
     |   IDENT { $value = ev($text, format="${left}")  }
     |   ^(METHOD_CALL p0=primaryExpression genericTypeArgumentList? a0=arguments
-            { $value = ev($p0.value, $a0.args, "${left}(${right})")
-              #self.makeMethodExpr($p0.value, $a0.args) }
+            { $value = ev($p0.value, $a0.args, "${left}(${right})") }
         )
     |   explicitConstructorCall
     |   ^(ARRAY_ELEMENT_ACCESS p0=primaryExpression e0=expression
@@ -607,7 +567,7 @@ primaryExpression returns [value] @init { $value = dict() }
         )
     |   literal { $value = $literal.value }
     |   newExpression { $value = $newExpression.value }
-    |   THIS { $value = dict(format="${right}", right="self") }
+    |   THIS { $value = ev('self', format="${left}") }
     |   arrayTypeDeclarator
     |   SUPER
     ;
@@ -633,7 +593,7 @@ newExpression returns [value]
 
     |   ^(CLASS_CONSTRUCTOR_CALL genericTypeArgumentList? q1=qualifiedTypeIdent
           a1=arguments classTopLevelScope?
-          { $value = self.makeMethodExpr($q1.text, $a1.args) }
+          { $value = ev($q1.value, $a1.args, "${left}(${right})") }
         )
     ;
 
@@ -655,12 +615,15 @@ newArrayConstruction returns [value] @init { $value, format = "", "${right}" }
         arrayDeclaratorList?
     ;
 
+//
 arguments returns [args] @init { $args, format = "", "${right}" }
     :   ^(ARGUMENT_LIST (ex0=expression
           { $args, format = ev($args, $ex0.value, format), "${left}, ${right}" })*
         )
     ;
 
+// pretty straight-forward.  see the tests/Literals.java class for its
+// exercise.
 literal returns [value]
     :   HEX_LITERAL { $value = $text }
     |   OCTAL_LITERAL { $value = $text }

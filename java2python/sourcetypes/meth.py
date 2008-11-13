@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python import maybeimport
 from java2python.sourcetypes.block import Block
 
 
@@ -32,8 +31,7 @@ class Method(Block):
         @param indent indentation level of this block
         @return None
         """
-        for handler in self.config.last('methodHandlers', ()):
-            handler = maybeimport(handler)
+        for handler in self.config.handlers('methodHandlers'):
             handler(self)
         offset = self.I(indent)
         for line in self.prefix:

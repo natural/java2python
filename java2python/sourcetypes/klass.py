@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python import maybeattr, maybeimport
 from java2python.sourcetypes.block import Block
 
 
@@ -20,8 +19,7 @@ class Class(Block):
         @param indent indentation level of this block
         @return None
         """
-        for handler in self.config.last('classHandlers', ()):
-            handler = maybeimport(handler)
+        for handler in self.config.handlers('classHandlers'):
             handler(self)
         offset = self.I(indent)
         for line in self.prefix:

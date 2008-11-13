@@ -266,6 +266,7 @@ class BlockMakeNewShard:
         """
         from java2python.sourcetypes import Variable
         var = Variable(self)
+        var.name = name
         self.addVariable(var, force)
         return var
 
@@ -367,6 +368,10 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
             for sub in subs:
                 source = rxsub(sub[0], sub[1], source)
         return source
+
+    ## Big problem: dump is not idempotent, children do far too many
+    ## state changes.  should invoke config-handlers at some other
+    ## point, e.g., block complete.
 
     def dump(self, output, indent):
         """ Serialize this object to stream output.
@@ -471,9 +476,9 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
                 inner['left'] = self.formatExpression(obj['left'])
             expr = Template(format).substitute(inner)
         else:
-            renames = self.config.combined('variableNameMapping')
-            expr = renames.get(obj, obj)
-            #expr = obj
+            #renames = self.config.combined('variableNameMapping')
+            #expr = renames.get(obj, obj)
+            expr = obj
         return expr
 
     def old_formatExpression(self, v):

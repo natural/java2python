@@ -27,5 +27,4 @@ outputSubs = [
     ]
 
 
-
-logLevel = 10
+commentHandlers = []
