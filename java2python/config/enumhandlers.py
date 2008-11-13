@@ -10,11 +10,11 @@ intmap = defaultdict(lambda: count(0).next)
 
 
 def minjava(self):
-    vf = self.top.newMethod('values')
+    vf = self.top.makeMethod('values')
     vf.addModifier('static')
     vf.addSource('return [v for v in cls.__dict__.values() if isinstance(v, type)]')
 
-    vf = self.top.newMethod('valueOf')
+    vf = self.top.makeMethod('valueOf')
     vf.addModifier('static')
     vf.addParameter('string', 'key')
     vf.addComment('propegate AttributeError (not IllegalArgumentExcption)')

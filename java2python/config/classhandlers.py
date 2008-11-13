@@ -48,14 +48,14 @@ def fixCtor(block):
             found = True
             break
     if not found and len(list(block.instanceMembers())) > 0:
-        meth = block.newMethod('__init__')
+        meth = block.makeMethod('__init__')
         meth.calledSuperCtor = False
         meth.calledOtherCtor = False
     for meth in block.methods:
         if meth.name == '__init__':
             if not (meth.calledSuperCtor or meth.calledOtherCtor):
                 meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName(), 0)
-                meth.stmtAfterSuper = meth.newStatementAbove("placeholder", 1) # wtf
+                meth.stmtAfterSuper = meth.makeStatementBefore("placeholder", 1) # wtf
             if not meth.calledOtherCtor:
                 stmt = meth.stmtAfterSuper
                 meth.addSourceBefore("# begin of instance variables", stmt)

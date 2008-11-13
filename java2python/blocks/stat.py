@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.blocks.block import Block
+from java2python.blocks.base import BasicBlock
 
 
-class Statement(Block):
+class Statement(BasicBlock):
     """ Statement -> specialized block type
 
-    Unlike Block instances, Statement instances have expressions.  These
+    Unlike BasicBlock instances, Statement instances have expressions.  These
     expressions are evaluated before they're output.
     """
     def __init__(self, parent, name=None, expr=None):
-        Block.__init__(self, parent=parent, name=name)
+        BasicBlock.__init__(self, parent=parent, name=name)
         self.expr = expr
 
     def dump(self, output, indent):
@@ -35,7 +35,7 @@ class Statement(Block):
         output.write('\n')
         if (not lines) and not name.startswith(('break', 'continue', 'raise', 'assert')):
             self.addSource('pass')
-        Block.dump(self, output, indent+1)
+        BasicBlock.dump(self, output, indent+1)
 
     @property
     def isBadLabel(self):
@@ -66,7 +66,7 @@ class Statement(Block):
     def setExpression(self, value):
         """ sets the value of the expression for this Statement
 
-        @param value expression (see formatExpression in Block class).
+        @param value expression (see formatExpression in BasicBlock class).
         @return None
         """
         self.expr = value

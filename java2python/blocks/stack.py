@@ -58,7 +58,7 @@ class SimplePythonSourceStack:
             src = dict(format='$left, $right', left=exp, right=arg)
         else:
             src = dict(format='$left', left=exp)
-        stat = self.top.newStatement('assert')
+        stat = self.top.makeStatement('assert')
         stat.setExpression(src)
 
     def onAssign(self, op, left, right):
@@ -75,7 +75,7 @@ class SimplePythonSourceStack:
 
     def onClass(self, name, mods=None, extends=None, implements=None):
 	debug('%s %s %s %s', name, mods, extends, implements)
-	klass = self.top.newClass()
+	klass = self.top.makeClass()
 	klass.name = name
 
 	def annoDecl(v):
@@ -112,15 +112,15 @@ class SimplePythonSourceStack:
 
     def onDo(self):
         debug('')
-        stat = self.top.newStatement('while')
+        stat = self.top.makeStatement('while')
         stat.setExpression('True')
         self.push(stat)
         return stat
 
     def onDoFinish(self, stat, expr, pop=False):
         debug('%s %s %s', stat, expr, pop)
-        ifstat = stat.newStatement('if')
-        ifstat.newStatement('break')
+        ifstat = stat.makeStatement('if')
+        ifstat.makeStatement('break')
         ifstat.setExpression(dict(format='not $left', left=expr))
         return (self.pop() if pop else None)
 
@@ -153,7 +153,7 @@ class SimplePythonSourceStack:
 
     def onFor(self, expressions, condition):
         debug('%s %s', expressions, condition)
-        blk, stat = self.top.newFor()
+        blk, stat = self.top.makeFor()
         #for expr in expressions:
         #    self.top.addSource(expr)
         if condition is None:
@@ -165,7 +165,7 @@ class SimplePythonSourceStack:
 
     def onForEach(self, typ, ident, exp):
         debug('%s %s %s', typ, ident, exp)
-        blk, stat = self.top.newForEach()
+        blk, stat = self.top.makeForEach()
         src = dict(format='$left in $right', left=ident, right=exp)
         stat.setExpression(src)
         self.push(stat)
@@ -185,7 +185,7 @@ class SimplePythonSourceStack:
 
     def onMethod(self, name, mods=None, params=None, pop=False):
 	debug('%s %s %s', name, mods, params)
-	meth = self.top.newMethod()
+	meth = self.top.makeMethod()
 	meth.name = name
 	for mod in (mods or []):
 	    meth.addModifier(mod)
@@ -216,17 +216,17 @@ class SimplePythonSourceStack:
         self.top.addSource(expr)
 
     def onThrow(self, expr):
-        stat = self.top.newStatement('raise')
+        stat = self.top.makeStatement('raise')
         stat.setExpression(expr)
         return stat
 
     def onTry(self):
-        stat = self.top.newStatement('try')
+        stat = self.top.makeStatement('try')
         self.push(stat)
         return stat
 
     def onTryExcept(self):
-        stat = self.top.newStatement('except')
+        stat = self.top.makeStatement('except')
         self.push(stat)
         return stat
 
@@ -236,7 +236,7 @@ class SimplePythonSourceStack:
         return (self.pop() if pop else None)
 
     def onTryFinally(self):
-        stat = self.top.newStatement('finally')
+        stat = self.top.makeStatement('finally')
         self.push(stat)
         return stat
 
@@ -270,7 +270,7 @@ class SimplePythonSourceStack:
 	for decl in decls:
 	    name = decl.get('left', '?')
 	    name = renames.get(name, name)
-	    var = self.top.newVariable(name)
+	    var = self.top.addVariable(name, True)
             src = {'format':'$left = $right', 'left':name, 'right':'', }
 	    if 'right' in decl:
                 src['right'] = decl['right']
@@ -282,7 +282,7 @@ class SimplePythonSourceStack:
 	    self.top.addSource(src)
 
     def onWhile(self):
-        stat = self.top.newStatement('while')
+        stat = self.top.makeStatement('while')
         self.push(stat)
         return stat
 

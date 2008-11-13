@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.blocks.block -> basic building block of output source code.
+""" java2python.blocks.base -> basic building block of output source code.
 
 """
 from cStringIO import StringIO
@@ -13,7 +13,7 @@ from java2python.config import Config
 
 class BlockScannerShard:
     # This set of methods are sugar for various queries on a block.
-    # Some subclasses of Block override these.
+    # Some subclasses of BasicBlock override these.
     def allParents(self):
         """ generator to provide each ancestor of this instance
 
@@ -103,7 +103,7 @@ class BlockScannerShard:
                         yield v.name
 
 
-class BlockMakesShard:
+class BlockAddingShard:
     # The next set of functions are for configuring and filling the
     # block.
 
@@ -128,7 +128,7 @@ class BlockMakesShard:
     def addSource(self, src, end=True):
         """ add source code to the end of this block
 
-        @param src string, instance of Block (or subclass), or two-tuple
+        @param src string, instance of BasicBlock (or subclass), or two-tuple
         @return None
         """
         if len(self.lines) == 1 and self.lines[0] == 'pass':
@@ -142,7 +142,7 @@ class BlockMakesShard:
         """ add source code to the end of this block, before the last line
         or the specified statement
 
-        @param src string, instance of Block (or subclass), or two-tuple
+        @param src string, instance of BasicBlock (or subclass), or two-tuple
         @param stat Statement, insert source before this statement
         @return None
         """
@@ -159,7 +159,7 @@ class BlockMakesShard:
         else:
             lines.append(src)
 
-    def addVariable(self, var, force=False):
+    def addVariable(self, obj, force=False):
         """ add variable name to set for tracking
 
         Variables are only added to Class instances unless the force
@@ -170,17 +170,21 @@ class BlockMakesShard:
         @return None
         """
         from java2python.blocks import Variable
-        if not isinstance(var, Variable):
-            var = Variable(var)
+        if isinstance(obj, Variable):
+            var = obj
+        else:
+            var = Variable(obj)
+            var.name = obj
         if force or (var.name and self.isClass):
             self.variables.append(var)
+        return var
 
     def addMethod(self, meth):
         self.methods.append(meth)
 
 
-class BlockMakeNewShard:
-    def newClass(self, name=None):
+class BlockMakerShard:
+    def makeClass(self, name=None):
         """ creates a new Class object as a child of this block
 
         @keyparam name=None name of new method
@@ -191,27 +195,27 @@ class BlockMakeNewShard:
         self.addSource(c)
         return c
 
-    def newForEach(self):
+    def makeForEach(self):
         from java2python.blocks import Statement
-        s = Block(self)
+        s = BasicBlock(self)
         f = Statement(self, 'for')
         self.addSource(s)
         self.addSource(f)
         return s, f
 
-    def newFor(self):
+    def makeFor(self):
         """ creates a new 'for' Statement as a child of this block
 
         @return two-tuple of initializer Statement and block Statement
         """
         from java2python.blocks import Statement
-        s = Block(self)
+        s = BasicBlock(self)
         f = Statement(self, 'while')
         self.addSource(s)
         self.addSource(f)
         return s, f
 
-    def newMethod(self, name=None):
+    def makeMethod(self, name=None):
         """ creates a new Method object as a child of this block
 
         @keyparam name=None name of new method
@@ -223,7 +227,7 @@ class BlockMakeNewShard:
         self.addSource(m)
         return m
 
-    def newSwitch(self):
+    def makeSwitch(self):
         """ creates a new 'if' Statement as a child of this block
 
         @return Statement instance
@@ -234,7 +238,7 @@ class BlockMakeNewShard:
         self.addSource(while_stat)
         return while_stat
 
-    def newStatement(self, name):
+    def makeStatement(self, name):
         """ creates a new Statement as a child of this block
 
         @param name name of statement
@@ -245,7 +249,7 @@ class BlockMakeNewShard:
         self.addSource(s)
         return s
 
-    def newStatementAbove(self, name, stat=None):
+    def makeStatementBefore(self, name, stat=None):
         """ creates a new Statement as a child of this block before the last
         or the specified statement.
 
@@ -257,18 +261,6 @@ class BlockMakeNewShard:
         s = Statement(parent=self, name=name)
         self.addSourceBefore(s, stat)
         return s
-
-    def newVariable(self, name=None, force=True):
-        """ creates a new Variable for the block
-
-        @param name name of the variable
-        @return Variable instance
-        """
-        from java2python.blocks import Variable
-        var = Variable(self)
-        var.name = name
-        self.addVariable(var, force)
-        return var
 
 
 class BlockPropsShard:
@@ -295,10 +287,10 @@ class BlockPropsShard:
             return None
 
 
-class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsShard, ):
-    """ Block -> base class for source code types.
+class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockPropsShard, ):
+    """ BasicBlock -> base class for source code types.
 
-    Instances have methods to create new child instances, e.g., newClass
+    Instances have methods to create new child instances, e.g., makeClass
     to create a new class.
 
     This class contains some attributes only used by subclasses; their
@@ -343,11 +335,11 @@ class Block(BlockMakesShard, BlockMakeNewShard, BlockScannerShard, BlockPropsSha
     @classmethod
     def setConfigs(cls, configs):
         ## always place it on the root class so all instances of all
-        ## Block types get the same object.  also means any instance
-        ## of any Block type can set the config for all other
-        ## instances of all Block types.  dr. seuss would have loved
+        ## BasicBlock types get the same object.  also means any instance
+        ## of any BasicBlock type can set the config for all other
+        ## instances of all BasicBlock types.  dr. seuss would have loved
         ## oop and its goop.
-        Block.config = Config(*configs)
+        BasicBlock.config = Config(*configs)
 
     def I(self, indent):
         """ calculated indentation string
