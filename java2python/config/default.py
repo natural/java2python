@@ -5,7 +5,7 @@
 indent = 4
 
 ## prefix for comments
-commentPrefix = '##'
+commentPrefix = '## '
 
 ## move inner class definitions to the top of their outer class.
 ## allows the outer class to reference the inner class definition
@@ -79,6 +79,7 @@ methodHandlers = [
 
     ## this function adds a comment with the original function's
     ## modifiers.
+    'java2python.config.methodhandlers.insertReturn',
     'java2python.config.methodhandlers.insertModifiers',
     ]
 

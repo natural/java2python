@@ -17,6 +17,10 @@ class BlockStack:
     def top(self):
 	return self.stack[-1]
 
+    def altId(self, value):
+	renames = self.top.config.combined('variableNameMapping')
+        return renames.get(value, value)
+
     def makeArrayCreator(self, typ, ctor):
         ## it can't be this easy
         value = dict(left=typ, right=ctor, format='[$left() for _ in range($right)]')
@@ -68,6 +72,7 @@ class BlockStack:
 
     def onBreak(self, label):
         debug('%s', label)
+        label = self.altId(label)
         ## ident doesn't need expression formatting, so we add the
         ## string directly.  same true below for the 'continue'
         ## statement.
@@ -75,6 +80,7 @@ class BlockStack:
 
     def onClass(self, name, mods=None, extends=None, implements=None):
 	debug('%s %s %s %s', name, mods, extends, implements)
+        name = self.altId(name)
 	klass = self.top.makeClass()
 	klass.name = name
 
@@ -108,6 +114,7 @@ class BlockStack:
 
     def onContinue(self, label):
         debug('%s', label)
+        label = self.altId(label)
         self.top.addSource('continue' + (' # ' + label if label else ''))
 
     def onDo(self):
@@ -183,10 +190,12 @@ class BlockStack:
             handler(self, decl, isStatic, isStar)
         return decl
 
-    def onMethod(self, name, mods=None, params=None, pop=False):
+    def onMethod(self, name, mods=None, params=None, typ=None, pop=False):
 	debug('%s %s %s', name, mods, params)
+        name = self.altId(name)
 	meth = self.top.makeMethod()
 	meth.name = name
+        meth.type = typ
 	for mod in (mods or []):
 	    meth.addModifier(mod)
 	for param in (params or []):
@@ -266,7 +275,8 @@ class BlockStack:
                 if not decl['right']:
                     decl['right'] = applyType
                 decl['type'] = applyType
-	renames = self.top.config.combined('variableNameMapping')
+	#renames = self.top.config.combined('variableNameMapping')
+        renames = {}
 	for decl in decls:
 	    name = decl.get('left', '?')
 	    name = renames.get(name, name)

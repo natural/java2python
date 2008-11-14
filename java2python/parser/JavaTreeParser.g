@@ -68,7 +68,6 @@ importDeclaration
 // the typeDeclaration rule covers classes, interfaces, enums and
 // annotations.  note how the blocks are built in-line within the rule
 // and that each is popped after the rule.
-
 typeDeclaration @after { self.commentHandler($start) }
     :   ^(CLASS md0=modifierList id0=IDENT tp0=genericTypeParameterList?
           et0=extendsClause? im0=implementsClause?
@@ -140,14 +139,14 @@ classScopeDeclarations @after { self.commentHandler($start) }
     |   ^(CLASS_STATIC_INITIALIZER block)
     |   ^(FUNCTION_METHOD_DECL md0=modifierList genericTypeParameterList? tp0=type
           id0=IDENT fp0=formalParameterList arrayDeclaratorList? throwsClause?
-          { self.onMethod($id0.text, $md0.mods, $fp0.params) }
+          { self.onMethod($id0.text, $md0.mods, $fp0.params, $tp0.value) }
           block?
           { self.commentHandler($start)
             self.pop() }
         )
     |   ^(VOID_METHOD_DECL md1=modifierList genericTypeParameterList? id1=IDENT
           fp1=formalParameterList throwsClause?
-          { self.onMethod($id1.text, $md1.mods, $fp1.params) }
+          { self.onMethod($id1.text, $md1.mods, $fp1.params, "void") }
           block?
           { self.commentHandler($start)
             self.pop() }
@@ -172,11 +171,11 @@ interfaceScopeDeclarations
     :   ^(FUNCTION_METHOD_DECL md0=modifierList genericTypeParameterList?
           tp0=type id0=IDENT fp0=formalParameterList
           arrayDeclaratorList? throwsClause?
-          { self.onMethod($id0.text, $md0.mods, $fp0.params, pop=True) }
+          { self.onMethod($id0.text, $md0.mods, $fp0.params, $tp0.value, pop=True) }
         )
     |   ^(VOID_METHOD_DECL md1=modifierList genericTypeParameterList? id0=IDENT
           fp1=formalParameterList throwsClause?
-          { self.onMethod($id0.text, $md1.mods, $fp1.params, pop=True) }
+          { self.onMethod($id0.text, $md1.mods, $fp1.params, "void", pop=True) }
         )
     |   ^(VAR_DECLARATION modifierList tp2=type vd0=variableDeclaratorList)
           { self.onVariables($vd0.decls, $tp2.value) }
@@ -194,7 +193,7 @@ variableDeclarator returns [decl] @init { $decl = ev() }
     ;
 
 variableDeclaratorId returns [decl] @init { $decl = ev(format="${left}") }
-    :   ^(id0=IDENT { $decl["left"] = $id0.text }
+    :   ^(id0=IDENT { $decl["left"] = self.altId($id0.text) }
               (ad0=arrayDeclaratorList { $decl["array"] = [$ad0.text] })?
         )
     ;
@@ -268,7 +267,7 @@ qualifiedTypeIdent returns [value] @after { self.commentHandler($start) }
     ;
 
 typeIdent returns [value]
-    :   ^(id0=IDENT genericTypeArgumentList?) { $value = $id0.text }
+    :   ^(id0=IDENT genericTypeArgumentList?) { $value = self.altId($id0.text) }
     ;
 
 primitiveType
@@ -319,7 +318,7 @@ formalParameterVarargDecl returns [value]
 qualifiedIdentifier returns [value]
     :   IDENT { $value = ev($text, format="${left}") }
     |   ^(DOT qi0=qualifiedIdentifier IDENT
-        { $value = ev($qi0.value, $IDENT.text, "${left}.${right}") })
+        { $value = ev($qi0.value, self.altId($IDENT.text), "${left}.${right}") })
     ;
 
 annotationList returns [annos] @init { $annos = [] }
@@ -401,7 +400,7 @@ statement
 
     |   ^(FOR_EACH
              localModifierList t1=type i1=IDENT e1=expression
-             { self.onForEach($t1.value, $i1.text, $e1.value) }
+             { self.onForEach($t1.value, self.altId($i1.text), $e1.value) }
              statement
              { self.pop() }
         )
@@ -545,7 +544,7 @@ primaryExpression returns [value] @init { $value = ev() }
     :   ^(  DOT
             (p0=primaryExpression
              { $value = ev($p0.value, format="${left}.${right}") }
-                (   i0=IDENT { $value["right"] = ev($i0.text, format="${left}")}
+                (   i0=IDENT { $value["right"] = ev(self.altId($i0.text), format="${left}")}
                 |   THIS
                 |   SUPER
                 |   innerNewExpression
@@ -556,7 +555,7 @@ primaryExpression returns [value] @init { $value = ev() }
             )
         )
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
-    |   IDENT { $value = ev($text, format="${left}")  }
+    |   IDENT { $value = ev(self.altId($text), format="${left}")  }
     |   ^(METHOD_CALL p0=primaryExpression genericTypeArgumentList? a0=arguments
             { $value = ev($p0.value, $a0.args, "${left}(${right})") }
         )

@@ -54,14 +54,14 @@ def fixCtor(block):
     for meth in block.methods:
         if meth.name == '__init__':
             if not (meth.calledSuperCtor or meth.calledOtherCtor):
-                meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName, 0)
+                meth.addSource("super(%s, self).__init__()" % meth.outerClassName, index=0)
                 meth.stmtAfterSuper = meth.makeStatementBefore("placeholder", 1) # wtf
             if not meth.calledOtherCtor:
                 stmt = meth.stmtAfterSuper
-                meth.addSourceBefore("# begin of instance variables", stmt)
+                meth.addSource("# begin of instance variables", stmt)
                 for v in block.variables:
                     if not v.isStatic:
-                        meth.addSourceBefore(
+                        meth.addSource(
                             meth.formatExpression(dict(left=v.name, right=v.expr,
                                  format="self.$left = $right")),
                             stmt)

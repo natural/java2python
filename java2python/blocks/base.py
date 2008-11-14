@@ -13,16 +13,16 @@ from java2python import maybeattr
 from java2python.config import Config
 
 
-class BlockScannerShard:
+class BlockPropShard:
     @property
     def blockMethods(self):
         """ all source objects that are methods """
-        return (m for m in self.lines if getattr(m, 'isMethod', False))
+        return (m for m in self.lines if maybeattr(m, 'isMethod'))
 
     @property
     def family(self):
         """ this object and its parents """
-        return chain([self, ], self.parents)
+        return chain([self], self.parents)
 
     @property
     def instanceMembers(self):
@@ -103,7 +103,7 @@ class BlockAddingShard:
     # The next set of functions are for configuring and filling the
     # block.
 
-    def addComment(self, text, prefix='##', end=True):
+    def addComment(self, text, prefix='# ', index=None):
         """ add a comment to this source block
 
         @param text value of comment
@@ -111,7 +111,10 @@ class BlockAddingShard:
         @return None
         """
         prefix = self.config.last('commentPrefix', prefix)
-        self.addSource('%s %s' % (prefix, text), end=end)
+        self.addSource('%s%s' % (prefix, text), index)
+
+    def addMethod(self, meth):
+        self.methods.append(meth)
 
     def addModifier(self, name):
         """ add a modifier to this source block
@@ -121,39 +124,21 @@ class BlockAddingShard:
         """
         self.modifiers.append(name)
 
-    def addSource(self, src, end=True):
+    def addSource(self, src, index=None):
         """ add source code to the end of this block
 
         @param src string, instance of BasicBlock (or subclass), or two-tuple
         @return None
         """
-        if len(self.lines) == 1 and self.lines[0] == 'pass':
-            self.lines.pop()
-        if end:
-            self.lines.append(src)
-        else:
-            self.lines.insert(0, src)
-
-    def addSourceBefore(self, src, stat=None):
-        """ add source code to the end of this block, before the last line
-        or the specified statement
-
-        @param src string, instance of BasicBlock (or subclass), or two-tuple
-        @param stat Statement, insert source before this statement
-        @return None
-        """
         lines = self.lines
-        if len(lines):
-            if isinstance(stat, int):
-                idx = stat
-            else:
-                idx = 0 if stat == None else lines.index(stat)
-            if idx<len(lines) and lines[idx] == 'pass':
-                lines[idx] = src
-            else:
-                lines.insert(idx, src)
-        else:
+        if lines == ['pass']:
+            lines.pop()
+        if index is None:
             lines.append(src)
+        else:
+            if index in lines:
+                index = lines.index(index)
+            lines.insert(index, src)
 
     def addVariable(self, obj, force=False):
         """ add variable name to set for tracking
@@ -175,11 +160,12 @@ class BlockAddingShard:
             self.variables.append(var)
         return var
 
-    def addMethod(self, meth):
-        self.methods.append(meth)
-
 
 class BlockMakerShard:
+    """ This class provides a set of alternate constructors for the
+        various subclasses.
+
+    """
     def makeClass(self, name=None):
         """ creates a new Class object as a child of this block
 
@@ -255,11 +241,11 @@ class BlockMakerShard:
         """
         from java2python.blocks import Statement
         s = Statement(parent=self, name=name)
-        self.addSourceBefore(s, stat)
+        self.addSource(s, index=stat)
         return s
 
 
-class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, ):
+class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
     """ BasicBlock -> base class for source code types.
 
     Instances have methods to create new child instances, e.g., makeClass
@@ -269,13 +255,10 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, ):
     creation in this base type is strictly from laziness.
 
     """
-    anonymousClassCount = 0
-    classmethodLiteral = '@classmethod'
+    ## anonymousClassCount = 0 # what did this provide?
+    classmethodLiteral, staticmethodLiteral = '@classmethod', '@staticmethod'
     config = None
-    emptyAssign = ('%s', '<empty>')
-    missingValue = ('%s', '<missing>')
-    staticmethodLiteral = '@staticmethod'
-    unknownExpression = ('%s', '<unknown>')
+    isClass = isMethod = isVariable = False
 
     def __init__(self, parent=None, name=None):
         self.parent = parent
@@ -289,15 +272,6 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, ):
         self.type = None
         self.variables = []
         self.methods = []
-        self.isClass = False
-        self.isMethod = False
-        self.isVariable = False
-
-        ## ug.
-        self.postIncDecInExprFixed = False
-        self.postIncDecVars = []
-        self.postIncDecCount= 0
-        self.externalComments = []
         self.extraVars = []
 
     def __iter__(self):
@@ -458,10 +432,18 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, ):
 
 
 class CruftiesFromPreviousImplementation:
+    def init():
+        ## ug.
+        self.postIncDecInExprFixed = False
+        self.postIncDecVars = []
+        self.postIncDecCount= 0
+
+
+
     def fixAssignInExpr(self, needFix, expr, left):
         if not needFix: return expr
         if self.name == 'if':
-            self.parent.addSourceBefore(expr, self)
+            self.parent.addSource(expr, self)
         elif self.name == 'while':
             self.addSource(expr)
         elif isinstance(self, Method):
@@ -484,9 +466,9 @@ class CruftiesFromPreviousImplementation:
         if not self.postIncDecInExprFixed: return expr
         if self.name == 'if':
             for var in self.postIncDecVars:
-                self.parent.addSourceBefore((var[0] + ' = %s', var[1]), self)
+                self.parent.addSource((var[0] + ' = %s', var[1]), self)
             for var in self.postIncDecVars:
-                self.parent.addSourceBefore(('%s ' + var[2] + '= 1', var[1]), self)
+                self.parent.addSource(('%s ' + var[2] + '= 1', var[1]), self)
         else:
             for var in self.postIncDecVars:
                 left, op = var

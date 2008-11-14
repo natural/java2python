@@ -101,7 +101,7 @@ class Class(BasicBlock):
         """
         c = Class(parent=self, name=None)
         if self.config.last('bubbleInnerClasses'):
-            self.addSourceBefore(c, 0)
+            self.addSource(c, 0)
         else:
             self.addSource(c)
         return c
