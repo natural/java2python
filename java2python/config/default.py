@@ -19,29 +19,29 @@ minIndentParams = 5
 commentHandlers = [
     # javadoc2docstring
     # javadoc2pythondoc
-    'java2python.config.commenthandlers.simple',
+    'java2python.modes.simpleComments',
     ]
 
 ## this value controls how enums are created, if at all.  the default
 ## creates enums as classes with minimum support for the interface and
-## behavior defined for java classes.  in the enumhandlers module, the
-## other usable functions are or fulljava, pyints, pystrings, noop,
-## and subclass.
+## behavior defined for java classes.  in the modes.enums module, the
+## other usable functions are or fullJava, pyInts, pyStrings and
+## subClass.
 enumConstantHandlers = [
-    #enumhandlers.minjava,
-    'java2python.config.enumhandlers.pyints',
+    'java2python.modes.enums.pyInts',
+    #'java2python.modes.enums.minJava',
     ]
 
 ## the default import statement handler converts them to comment.
 importHandlers = [
-    'java2python.config.importhandlers.pycomments',
+    'java2python.modes.commentImport',
     ]
 
 ## similarly, package statements are also converted to comments.
 packageHandlers = [
-    'java2python.config.packagehandlers.pysetuptools_comments',
-    #packagehandlers.pycomments,
-    #packagehandlers.pysetuptools,
+    'java2python.modes.commentPackage',
+    #'java2python.modes.setupToolsPackage',
+    #'java2python.modes.setupToolsPackageComment',
     ]
 
 ## these functions finish the construction of a class block.
@@ -50,37 +50,37 @@ classHandlers = [
     ## with this handler, classes are scanned for duplicate method
     ## names.  matching methods are augmented with the '@overloaded'
     ## decorator.
-    'java2python.config.classhandlers.fixOverloadMethods',
+    'java2python.modes.classes.fixOverloadMethods',
 
-    'java2python.config.classhandlers.fixCtor',
+    'java2python.modes.classes.fixCtor',
 
     ## this function scans the class for methods that look like
     ## accessors.  matching methods are renamed and declared as
     ## properties.
-    'java2python.config.classhandlers.fixPropMethods',
+    'java2python.modes.classes.fixPropMethods',
 
     ## this function sorts sorts class methods by name.
-    'java2python.config.classhandlers.sortClassMethods',
+    'java2python.modes.classes.sortClassMethods',
 
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    'java2python.config.basichandlers.insertDocString',
+    'java2python.modes.simpleDocString',
 
-    'java2python.config.classhandlers.insertModifiers',
+    'java2python.modes.classes.insertModifiers',
 
-    'java2python.config.classhandlers.fixBaseClasses',
+    'java2python.modes.classes.fixBaseClasses',
     ]
 
 ## these functions complete the construction of method blocks.
 methodHandlers = [
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    'java2python.config.basichandlers.insertDocString',
+    'java2python.modes.simpleDocString',
 
     ## this function adds a comment with the original function's
     ## modifiers.
-    'java2python.config.methodhandlers.insertReturn',
-    'java2python.config.methodhandlers.insertModifiers',
+    'java2python.modes.methods.insertReturn',
+    'java2python.modes.methods.insertModifiers',
     ]
 
 
@@ -88,16 +88,16 @@ methodHandlers = [
 ## output when a module is dumped.  they use the modulePreamble and
 ## moduleEpilogue values below.
 modulePreambleWriters = [
-    'java2python.config.modhandlers.preamble',
+    'java2python.modes.modules.preamble',
     ]
 
 
 moduleEpilogueWriters = [
-    'java2python.config.modhandlers.epilogue',
+    'java2python.modes.modules.epilogue',
     ## with this function, if the source contains a "public static
     ## void main" method, a block is written to the end of the file to
     ## call the class method with sys.argv.
-    'java2python.config.modhandlers.ifMainScript',
+    'java2python.modes.modules.ifMainScript',
     ]
 
 

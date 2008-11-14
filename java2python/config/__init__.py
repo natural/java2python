@@ -6,7 +6,6 @@ from java2python import importmod, maybeimport
 class Config:
     """ Config -> wraps multiple configuration modules
 
-
     """
     def __init__(self, names):
         self.configs = [importmod(name) for name in names]
@@ -16,7 +15,7 @@ class Config:
 
         @param name module attribute as string
         @keyparam missing=None default for missing attributes
-        @return list of values
+        @return sequence of values
         """
         return (getattr(config, name, missing) for config in self.configs)
 

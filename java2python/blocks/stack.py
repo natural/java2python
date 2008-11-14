@@ -172,6 +172,7 @@ class BlockStack:
 
     def onForEach(self, typ, ident, exp):
         debug('%s %s %s', typ, ident, exp)
+        ident = self.altId(ident)
         blk, stat = self.top.makeForEach()
         src = dict(format='$left in $right', left=ident, right=exp)
         stat.setExpression(src)

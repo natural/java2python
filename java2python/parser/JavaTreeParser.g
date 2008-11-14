@@ -316,7 +316,7 @@ formalParameterVarargDecl returns [value]
     ;
 
 qualifiedIdentifier returns [value]
-    :   IDENT { $value = ev($text, format="${left}") }
+    :   IDENT { $value = ev(self.altId($text), format="${left}") }
     |   ^(DOT qi0=qualifiedIdentifier IDENT
         { $value = ev($qi0.value, self.altId($IDENT.text), "${left}.${right}") })
     ;
@@ -400,7 +400,7 @@ statement
 
     |   ^(FOR_EACH
              localModifierList t1=type i1=IDENT e1=expression
-             { self.onForEach($t1.value, self.altId($i1.text), $e1.value) }
+             { self.onForEach($t1.value, $i1.text, $e1.value) }
              statement
              { self.pop() }
         )

@@ -9,7 +9,7 @@ from itertools import count
 intmap = defaultdict(lambda: count(0).next)
 
 
-def minjava(self):
+def minJava(self, decl):
     vf = self.top.makeMethod('values')
     vf.addModifier('static')
     vf.addSource('return [v for v in cls.__dict__.values() if isinstance(v, type)]')
@@ -21,7 +21,7 @@ def minjava(self):
     vf.addSource('return getattr(cls, key)')
 
 
-def pystrings(self, decl):
+def pyStrings(self, decl):
     """ string enums, e.g., A, B, C; becomes A, B, C = ('A', 'B', 'C')
 
     """
@@ -29,7 +29,7 @@ def pystrings(self, decl):
     self.top.addSource("%s = '%s'" % (const, const))
 
 
-def pyints(self, decl):
+def pyInts(self, decl):
     """ range enums, e.g,. A, B, C; becomes A, B, C = (0, 1, 2)
 
     """
@@ -38,7 +38,7 @@ def pyints(self, decl):
     self.top.addSource('%s = %s' % (const, next()))
 
 
-def subclasser(classname):
+def subClass(classname):
     """
 
     """
