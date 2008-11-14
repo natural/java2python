@@ -102,8 +102,8 @@ def transform(options):
     configs = options.configs
     if options.includedefaults:
         configs.insert(0, 'java2python.config.default')
-    Module.setConfigs(configs)
     mod = Module(filein, fileout)
+    mod.setConfigs(configs)
 
     timed['walk']
     walker.javaSource(mod)

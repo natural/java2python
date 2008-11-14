@@ -4,64 +4,30 @@
 
 """
 from cStringIO import StringIO
+from itertools import chain
 from logging import debug, warn, exception
 from re import sub as rxsub
 from string import Template
 
+from java2python import maybeattr
 from java2python.config import Config
 
 
 class BlockScannerShard:
-    # This set of methods are sugar for various queries on a block.
-    # Some subclasses of BasicBlock override these.
-    def allParents(self):
-        """ generator to provide each ancestor of this instance
-
-        @return yields individual ancestors of this instance one at a time
-        """
-        previous = self.parent
-        while previous:
-            yield previous
-            previous = previous.parent
-
-    def allVars(self):
-        """ all variables in this instance and its ancestors
-
-        @return yields variable names from this instance and all ancestors
-        """
-        for obj in [self, ] + list(self.allParents()):
-            for v in obj.variables:
-                yield v.name
-            for v in obj.methods:
-                yield v.name
-            for v in obj.extraVars:
-                yield v
-
+    @property
     def blockMethods(self):
-        """ all source objects that are methods
-
-        @return generator expression with all methods in this block
-        """
+        """ all source objects that are methods """
         return (m for m in self.lines if getattr(m, 'isMethod', False))
 
-    def methodVars(self):
-        """ all vars declared in the current method
+    @property
+    def family(self):
+        """ this object and its parents """
+        return chain([self, ], self.parents)
 
-        @return yeilds all vars declared in the method
-        """
-
-        for obj in [self, ] + list(self.allParents()):
-            for v in obj.variables:
-                yield v.name
-            if obj.isMethod:
-		break
-
+    @property
     def instanceMembers(self):
-        """ all instance members in this class
-
-        @return yields all instance member names from this class
-        """
-        for obj in [self, ] + list(self.allParents()):
+        """ all instance members in this class """
+        for obj in self.family:
 	    if obj.isClass:
                 for v in obj.variables:
                     if not v.isStatic:
@@ -69,34 +35,64 @@ class BlockScannerShard:
                 for v in obj.extraVars:
                     yield v
 
+    @property
     def instanceMethods(self):
-        """ all instance methods in this class
-
-        @return yields all instance method names from this class
-        """
-        for obj in [self, ] + list(self.allParents()):
+        """ all instance methods in this class """
+        for obj in self.family:
 	    if obj.isClass:
                 for v in obj.methods:
                     if not v.isStatic:
                         yield v.name
 
-    def staticMembers(self):
-        """ all static members in this class
+    @property
+    def isStatic(self):
+        """ True if this instance is static """
+        return 'static' in self.modifiers
 
-        @return yields static member names from this class
-        """
-        for obj in [self, ] + list(self.allParents()):
+    @property
+    def methodVars(self):
+        """ all vars declared in the current method """
+        for obj in self.family:
+            for v in obj.variables:
+                yield v.name
+            if obj.isMethod:
+		break
+
+    @property
+    def nameOrClassName(self):
+        """ the closest class name """
+        for obj in self.family:
+            if obj.isClass:
+                return obj.name
+
+    @property
+    def outerClassName(self):
+        """ the closest outer class name """
+        for obj in self.parents:
+            if obj.isClass:
+                return obj.name
+
+    @property
+    def parents(self):
+        """ generates each ancestor of this instance """
+        previous = self.parent
+        while previous:
+            yield previous
+            previous = previous.parent
+
+    @property
+    def staticMembers(self):
+        """ all static members in this class """
+        for obj in self.family:
 	    if obj.isClass:
                 for v in obj.variables:
                     if v.isStatic:
                         yield v.name
 
+    @property
     def staticMethods(self):
-        """ all static methods in this class
-
-        @return yields static method names from this class
-        """
-        for obj in [self, ] + list(self.allParents()):
+        """ all static methods in this class """
+        for obj in self.family:
 	    if obj.isClass:
                 for v in obj.methods:
                     if v.isStatic:
@@ -263,31 +259,7 @@ class BlockMakerShard:
         return s
 
 
-class BlockPropsShard:
-    @property
-    def isStatic(self):
-        """ True if this instance is static
-
-        @return if the variable is static return True
-        """
-        return 'static' in self.modifiers
-
-    @property
-    def nameOrClassName(self):
-        return self.name if self.isClass else self.className
-
-    @property
-    def className(self):
-        """
-
-        """
-        if self.parent is not None:
-            return self.parent.className
-	else:
-            return None
-
-
-class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockPropsShard, ):
+class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, ):
     """ BasicBlock -> base class for source code types.
 
     Instances have methods to create new child instances, e.g., makeClass
@@ -332,14 +304,13 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
         for line in self.lines:
             yield line
 
-    @classmethod
-    def setConfigs(cls, configs):
+    def setConfigs(self, configs):
         ## always place it on the root class so all instances of all
         ## BasicBlock types get the same object.  also means any instance
         ## of any BasicBlock type can set the config for all other
         ## instances of all BasicBlock types.  dr. seuss would have loved
         ## oop and its goop.
-        BasicBlock.config = Config(*configs)
+        BasicBlock.config = Config(configs)
 
     def I(self, indent):
         """ calculated indentation string
@@ -405,7 +376,7 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
 
         """
         # seriously, wtf.
-        for parent in [self, ] + list(self.allParents()):
+        for parent in self.family:
             if parent.isMethod:
                 preamble = parent.preamble
                 if self.staticmethodLiteral in preamble:
@@ -423,9 +394,9 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
         @return fixed name or names
         """
         fixed = list(args)
-        methodvars = list(self.methodVars())
-        membervars = list(self.instanceMembers()) + list(self.instanceMethods())
-        staticvars = list(self.staticMembers()) + list(self.staticMethods())
+        methodvars = list(self.methodVars)
+        membervars = list(chain(self.instanceMembers, self.instanceMethods))
+        staticvars = list(chain(self.staticMembers, self.staticMethods))
         mapping = self.config.combined('variableNameMapping')
         format = self.declFormat
         for i, arg in enumerate(args):
@@ -455,7 +426,7 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
         @return interpolated, fixed expression as string
         """
         if isinstance(obj, tuple):
-            #raise Exception(str(obj))
+            raise Exception(str(obj))
             expr = str(obj)
         elif isinstance(obj, list):
             expr = ', '.join(self.formatExpression(v) for v in obj)
@@ -473,36 +444,6 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
             expr = obj
         return expr
 
-    def old_formatExpression(self, v):
-        fixdecl = self.fixDecl
-        fixdecl = lambda x:x
-        if isinstance(expr, basestring):
-            return expr # fixdecl(expr)
-        format = self.formatExpression
-        first, second = expr
-        debug("%s::%s %s::%s", type(first).__name__, first, type(second).__name__, second, )
-        try:
-            if isinstance(first, basestring) and isinstance(second, basestring):
-                debug("str+str")
-                return first % second
-                #return fixdecl(first) % fixdecl(second)
-            elif isinstance(first, basestring) and isinstance(second, tuple):
-                debug("str+tuple")
-                return first % format(second)
-                return fixdecl(first) % format(second)
-            elif isinstance(first, tuple) and isinstance(second, basestring):
-                debug("tuple+str")
-                return format(first) % fixdecl(second)
-            elif isinstance(first, tuple) and isinstance(second, tuple):
-                debug("tuple+tuple")
-                return (format(first), format(second))
-            else:
-                #return str(expr)
-                raise NotImplementedError('Unhandled expression type:  %s' % expr)
-        except (Exception, ):
-            exception("unhandled expression %s %s", first, second)
-
-
     def alternateName(self, name, key='renameAnyMap'):
         """ returns an alternate for given name
 
@@ -516,6 +457,7 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
             return name
 
 
+class CruftiesFromPreviousImplementation:
     def fixAssignInExpr(self, needFix, expr, left):
         if not needFix: return expr
         if self.name == 'if':
@@ -564,3 +506,42 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockScannerShard, BlockProp
             child = child.getNextSibling()
         return False
 
+    def allVars(self):
+        """ all variables in this instance and its ancestors """
+        for obj in self.family:
+            for v in obj.variables:
+                yield v.name
+            for v in obj.methods:
+                yield v.name
+            for v in obj.extraVars:
+                yield v
+
+
+    def old_formatExpression(self, v):
+        fixdecl = self.fixDecl
+        fixdecl = lambda x:x
+        if isinstance(expr, basestring):
+            return expr # fixdecl(expr)
+        format = self.formatExpression
+        first, second = expr
+        debug("%s::%s %s::%s", type(first).__name__, first, type(second).__name__, second, )
+        try:
+            if isinstance(first, basestring) and isinstance(second, basestring):
+                debug("str+str")
+                return first % second
+                #return fixdecl(first) % fixdecl(second)
+            elif isinstance(first, basestring) and isinstance(second, tuple):
+                debug("str+tuple")
+                return first % format(second)
+                return fixdecl(first) % format(second)
+            elif isinstance(first, tuple) and isinstance(second, basestring):
+                debug("tuple+str")
+                return format(first) % fixdecl(second)
+            elif isinstance(first, tuple) and isinstance(second, tuple):
+                debug("tuple+tuple")
+                return (format(first), format(second))
+            else:
+                #return str(expr)
+                raise NotImplementedError('Unhandled expression type:  %s' % expr)
+        except (Exception, ):
+            exception("unhandled expression %s %s", first, second)

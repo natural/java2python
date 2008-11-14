@@ -3,24 +3,12 @@
 from java2python import importmod, maybeimport
 
 
-def set_config_target(target, names, includeDefault=True):
-    """ build and set a Config object on the target object
-
-    @param names sequence of module names
-    @keyparam includeDefault=True flag to include default configuration module
-    @return None
-    """
-    if includeDefault:
-        names.insert(0, 'java2python.config.default')
-    target.config = Config(*names)
-
-
 class Config:
     """ Config -> wraps multiple configuration modules
 
 
     """
-    def __init__(self, *names):
+    def __init__(self, names):
         self.configs = [importmod(name) for name in names]
 
     def all(self, name, missing=None):

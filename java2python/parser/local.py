@@ -4,8 +4,7 @@
 from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
-from java2python import maybeimport
-from java2python.blocks import SimplePythonSourceStack
+from java2python.blocks import BlockStack
 from java2python.parser import JavaLexer
 
 
@@ -23,7 +22,7 @@ class LocalTreeParser(TreeParser):
 
         """
         self.commentHandler = CommentFormatter(self)
-        self.sourceStack = SimplePythonSourceStack(module)
+        self.sourceStack = BlockStack(module)
 
     def __getattr__(self, name):
         """ Defer failed attribute lookups to the source stack object.

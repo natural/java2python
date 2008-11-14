@@ -6,7 +6,7 @@ from java2python import ev
 marker = object()
 
 
-class SimplePythonSourceStack:
+class BlockStack:
     """ A simple stack of source blocks.
 
     """

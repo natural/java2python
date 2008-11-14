@@ -251,6 +251,8 @@ tokens {
 
 javaSource
     @init {
+        ## we overwrite the adapter object with our own so that it can
+        ## copy comments found by the lexer into the tree parser nodes.
         from java2python.parser.local import LocalTreeAdaptor
         self.adaptor = LocalTreeAdaptor()
         }

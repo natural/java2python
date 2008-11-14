@@ -44,9 +44,8 @@ from java2python import ev
 from java2python.parser.local import LocalTreeParser
 }
 
-// this is the interface for the client, and the client must pass in a
-// block instance when called.  the block instance is modified by the
-// remaining rules in this grammar.
+// this is the interface for the client.  the client passes a block
+// for the grammar to fill.
 javaSource [module] @init { self.onJavaSource(module) }
     :   ^(JAVA_SOURCE annotationList packageDeclaration? importDeclaration*
             typeDeclaration*

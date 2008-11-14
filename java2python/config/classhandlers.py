@@ -24,11 +24,11 @@ def fixOverloadMethods(block):
     @return None
     """
     overloads = {}
-    for method in block.blockMethods():
+    for method in block.blockMethods:
         name = method.name
         overloads[name] = 1 + overloads.setdefault(name, 0)
     for name in [n for n, c in overloads.items() if c>1]:
-        renames = [m for m in block.blockMethods() if m.name == name]
+        renames = [m for m in block.blockMethods if m.name == name]
         first, remainder = renames[0], renames[1:]
         first.preamble.append('@overloaded')
         firstname = first.name
@@ -47,14 +47,14 @@ def fixCtor(block):
         if meth.name == '__init__':
             found = True
             break
-    if not found and len(list(block.instanceMembers())) > 0:
+    if not found and len(list(block.instanceMembers)) > 0:
         meth = block.makeMethod('__init__')
         meth.calledSuperCtor = False
         meth.calledOtherCtor = False
     for meth in block.methods:
         if meth.name == '__init__':
             if not (meth.calledSuperCtor or meth.calledOtherCtor):
-                meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName(), 0)
+                meth.addSourceBefore("super(%s, self).__init__()" % meth.outerClassName, 0)
                 meth.stmtAfterSuper = meth.makeStatementBefore("placeholder", 1) # wtf
             if not meth.calledOtherCtor:
                 stmt = meth.stmtAfterSuper
@@ -79,9 +79,9 @@ def fixPropMethods(block):
     @return None
     """
     skips = [lambda x:x.name!='__init__', lambda x:'@overloaded' not in x.preamble, ]
-    mapping = [(m.name, len(m.parameters)) for m in block.blockMethods()]
+    mapping = [(m.name, len(m.parameters)) for m in block.blockMethods]
     propmap = {}
-    for meth in block.blockMethods():
+    for meth in block.blockMethods:
         name = meth.name
         pred = [x(meth) for x in skips]
         if all(pred) and (name, 1) in mapping and (name, 2) in mapping:
