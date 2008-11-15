@@ -252,8 +252,8 @@ localModifierList returns [mods] @init { $mods = [] }
 
 type returns [value] @init { $value = ev(format="${left}") }
     :   ^(TYPE
-          (pt0=primitiveType { $value["left"] = self.mapType($pt0.text) } |
-           qt0=qualifiedTypeIdent { $value["left"] = self.mapType($qt0.value) })
+          (pt0=primitiveType { $value["left"] = self.altType($pt0.text) } |
+           qt0=qualifiedTypeIdent { $value["left"] = self.altType($qt0.value) })
           (arrayDeclaratorList
            { $value["format"] += "list" #$arrayDeclaratorList.value
              $value["left"] = ""
@@ -389,42 +389,49 @@ statement
                  (ex1=expression { args.append($ex1.value) })?)
             { self.onAssert(*args) }
         )
-
-    |   ^(IF parenthesizedExpression statement statement?)
-
+    |   ^(IF pe0=parenthesizedExpression
+             { ifstat, elsestat = self.onIf($pe0.value) }
+             statement
+             { self.pop() }
+             ({self.push(elsestat)} statement? { self.pop() })
+        )
     |   ^(FOR i0=forInit c0=forCondition u0=forUpdater
              { b, s = self.onFor($i0.values, $c0.cond) }
              statement
              { self.onForFinish(s, $u0.values, pop=True) }
         )
-
     |   ^(FOR_EACH
              localModifierList t1=type i1=IDENT e1=expression
              { self.onForEach($t1.value, $i1.text, $e1.value) }
              statement
              { self.pop() }
         )
-
     |   ^(WHILE { ws = self.onWhile() }
             p0=parenthesizedExpression
             statement
             { self.onWhileFinish(ws, $p0.value, pop=True) }
         )
-
     |   ^(DO { ds = self.onDo() }
             statement
             (p0=parenthesizedExpression { self.onDoFinish(ds, $p0.value, pop=True) })
         )
-
     |   ^(TRY { self.onTry() }
           block
           { self.pop() }
           catches?
           ({ self.onTryFinally() } block { self.pop() } )?
         )
+    |   ^(SWITCH pe0=parenthesizedExpression { self.onSwitch($pe0.value) }
+          switchBlockLabels
+          { self.pop() }
+        )
 
-    |   ^(SWITCH parenthesizedExpression switchBlockLabels)
-    |   ^(SYNCHRONIZED parenthesizedExpression block)
+    |   ^(SYNCHRONIZED pe0=parenthesizedExpression
+          { ss = self.onSync($pe0.value) }
+          block
+          { self.pop() }
+        )
+
     |   ^(RETURN (ex0=expression { self.onReturn($ex0.value) })?)
     |   ^(THROW (ex0=expression { self.onThrow($ex0.value) }))
 
@@ -452,11 +459,13 @@ switchBlockLabels
     ;
 
 switchCaseLabel
-    :   ^(CASE expression blockStatement*)
+    :   ^(CASE ex0=expression { self.onSwitchCase($ex0.value) }
+          blockStatement*
+        )
     ;
 
 switchDefaultLabel
-    :   ^(DEFAULT blockStatement*)
+    :   ^(DEFAULT (blockStatement { self.onSwitchDefault() } )*)
     ;
 
 forInit returns [values] @init { $values = [] }
@@ -492,12 +501,12 @@ expr returns [value]
     |   ^(OR_ASSIGN  lv0=expr rv0=expr) { self.onAssign("|=", lv0, rv0) }
     |   ^(XOR_ASSIGN lv0=expr rv0=expr) { self.onAssign("^=", lv0, rv0) }
     |   ^(MOD_ASSIGN lv0=expr rv0=expr) { self.onAssign("\%=", lv0, rv0) }
-
-        // no translation and/or test case for these:
-    |   ^(BIT_SHIFT_RIGHT_ASSIGN expr expr)
-    |   ^(SHIFT_RIGHT_ASSIGN left=expr right=expr) { self.onAssign(">>=", left, right) }
-    |   ^(SHIFT_LEFT_ASSIGN left=expr right=expr) { self.onAssign("<<=", left, right) }
-
+    |   ^(BIT_SHIFT_RIGHT_ASSIGN lv0=expr rv0=expr)
+          { $value = self.onBsrAssign(lv0, rv0) }
+    |   ^(SHIFT_RIGHT_ASSIGN left=expr right=expr)
+          { self.onAssign(">>=", left, right) }
+    |   ^(SHIFT_LEFT_ASSIGN left=expr right=expr)
+          { self.onAssign("<<=", left, right) }
     |   ^(QUESTION lv0=expr rv0=expr rv1=expr)
           { $value = ev(lv0, rv0, "(${right} if ${left} else ${rv1})", rv1=rv1) }
     |   ^(LOGICAL_OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} or ${right}") }
@@ -515,7 +524,7 @@ expr returns [value]
     |   ^(GREATER_OR_EQUAL lv0=expr rv0=expr)
           { $value = ev(lv0, rv0, "${left} >= ${right}") }
 
-    |   ^(BIT_SHIFT_RIGHT expr expr)
+    |   ^(BIT_SHIFT_RIGHT lv0=expr rv0=expr) { $value = self.onBsr(lv0, rv0) }
 
     |   ^(SHIFT_RIGHT lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} >> ${right}") }
     |   ^(GREATER_THAN lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} > ${right}") }

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 from logging import debug
-from java2python import ev
+from java2python import ev, marker
 
-## yes, one of those.
-marker = object()
-
+## javadoc handler
+## enums
+## annos
+## arrays
+## statements
+## diff testing
 
 class BlockStack:
     """ A simple stack of source blocks.
@@ -13,13 +16,27 @@ class BlockStack:
     def __init__(self, module):
 	self.stack = [module]
 
-    @property
-    def top(self):
-	return self.stack[-1]
+    def bottom(self):return self.stack[0]
+    bottom = property(bottom)
+
+    def top(self):return self.stack[-1]
+    top = property(top)
+
+    def onBsr(self, left, right):
+        handler = self.top.config.handler('bsrHandler')
+        return handler(self, left, right)
+
+    def onBsrAssign(self, left, right):
+        handler = self.top.config.handler('bsrHandlerAssign')
+        return handler(self, left, right)
 
     def altId(self, value):
-	renames = self.top.config.combined('variableNameMapping')
-        return renames.get(value, value)
+	alt = self.top.config.combined('identRenames')
+        return alt.get(value, value)
+
+    def altType(self, value):
+        alt = self.top.config.combined('typeRenames')
+        return alt.get(value, value)
 
     def makeArrayCreator(self, typ, ctor):
         ## it can't be this easy
@@ -33,10 +50,6 @@ class BlockStack:
                    left=ev('*' if isVariadic else '', decl, '$left$right'))
         debug('%s', new)
         return new
-
-    def mapType(self, v):
-        lookup = self.top.config.combined('typeTypeMap')
-        return lookup.get(v, v)
 
     def onAnnoMethod(self, name, annodecls, default):
 	meth = self.onMethod(name)
@@ -158,6 +171,40 @@ class BlockStack:
                     from java2python.config.enumhandlers import pystrings, pyints
                     pyints(self, decl)
 
+    def onIf(self, expr):
+        debug('%s', expr)
+        ifstat, elsestat = self.top.makeIf()
+        rexpr = expr.copy()
+        rexpr['format'] = '$left' # don't need parens in python if-statements
+        ifstat.expr = rexpr
+        self.push(ifstat)
+        return ifstat, elsestat
+
+    def onSwitch(self, expr):
+        debug('%s', expr)
+        switchstat, elsestat = self.top.makeIf()
+        switchstat.expr = expr
+        self.push(switchstat)
+        return switchstat
+
+    def onSwitchCase(self, expr):
+        last = self.top
+        last.expr = expr
+        self.pop()
+        elsestat = self.top.makeStatement('elif')
+        elsestat.expr = last.expr
+        self.push(elsestat)
+
+    def onSwitchDefault(self):
+        pass
+
+    def onSync(self, expr):
+        debug('%s', expr)
+        syncstat = self.top.makeStatement('with')
+        syncstat.expr = ev(right=expr, format='exlock($right)')
+        self.push(syncstat)
+        return syncstat
+
     def onFor(self, expressions, condition):
         debug('%s %s', expressions, condition)
         blk, stat = self.top.makeFor()
@@ -174,7 +221,7 @@ class BlockStack:
         debug('%s %s %s', typ, ident, exp)
         ident = self.altId(ident)
         blk, stat = self.top.makeForEach()
-        src = dict(format='$left in $right', left=ident, right=exp)
+        src = ev(ident, exp, '$left in $right')
         stat.setExpression(src)
         self.push(stat)
         return blk, stat
@@ -254,7 +301,7 @@ class BlockStack:
         debug('%s %s', decls, typ)
         for decl in decls:
             if 'right' in decl and not decl['right']:
-                renames = self.top.config.combined('typeTypeMap')
+                renames = self.top.config.combined('typeRenames')
                 try:
                     rtyp = renames.get(typ, typ)
                 except (TypeError, ):
@@ -276,7 +323,7 @@ class BlockStack:
                 if not decl['right']:
                     decl['right'] = applyType
                 decl['type'] = applyType
-	#renames = self.top.config.combined('variableNameMapping')
+	#renames = self.top.config.combined('identRenames')
         renames = {}
 	for decl in decls:
 	    name = decl.get('left', '?')

@@ -4,6 +4,8 @@ from itertools import dropwhile
 from operator import not_
 
 
+marker = object()
+
 def ev(left='', right='', format='', **kwds):
     """ Sugar for creating a formatting value dictionary.
 
@@ -61,3 +63,5 @@ def trimlines(lines):
     @return lines without trailing empty lines
     """
     return list(reversed(list(dropwhile(not_, reversed(lines)))))
+
+

@@ -16,6 +16,10 @@ bubbleInnerClasses = True
 ## in method declarations.  set to 0 to disable.
 minIndentParams = 5
 
+## these handle shift right and bit shift right assignments.
+bsrHandler = 'java2python.modes.functionBsr'
+bsrHandlerAssign = 'java2python.modes.functionBsrAssign'
+
 commentHandlers = [
     # javadoc2docstring
     # javadoc2pythondoc
@@ -32,12 +36,18 @@ enumConstantHandlers = [
     #'java2python.modes.enums.minJava',
     ]
 
-## the default import statement handler converts them to comment.
+
+## this value controls how import statements are processed.  the
+## default converts the statement into a comment.  user-supplied
+## handlers could map between java and python packages.
 importHandlers = [
     'java2python.modes.commentImport',
     ]
 
-## similarly, package statements are also converted to comments.
+
+## these functions control how package statements are processed.
+## packages-as-comments and packages-as-setuptools are supported, but
+## only one should be necessary.
 packageHandlers = [
     'java2python.modes.commentPackage',
     #'java2python.modes.setupToolsPackage',
@@ -46,7 +56,6 @@ packageHandlers = [
 
 ## these functions finish the construction of a class block.
 classHandlers = [
-
     ## with this handler, classes are scanned for duplicate method
     ## names.  matching methods are augmented with the '@overloaded'
     ## decorator.
@@ -65,9 +74,7 @@ classHandlers = [
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
     'java2python.modes.simpleDocString',
-
     'java2python.modes.classes.insertModifiers',
-
     'java2python.modes.classes.fixBaseClasses',
     ]
 
@@ -147,7 +154,7 @@ outputSubs = [
 
 ## mapping of java type names to python type names.  user-defined
 ## configuration modules can replace and/or augment this mapping.
-typeTypeMap = {
+typeRenames = {
     'String':'str',
     'Integer':'int',
     'Object':'object',
@@ -230,10 +237,10 @@ baseClassMembers = {
 }
 
 
-def make_variableNameMapping():
-    import keyword, __builtin__
-    return dict((k, '%s_' % k) for k in keyword.kwlist + __builtin__.__dict__.keys())
-variableNameMapping = make_variableNameMapping()
+def make_identRenames():
+    import keyword as kw, __builtin__ as bltin
+    return dict((k, '%s_' % k) for k in kw.kwlist + bltin.__dict__.keys())
+identRenames = make_identRenames()
 
 
 exceptionTypeMapping = {

@@ -197,6 +197,18 @@ class BlockMakerShard:
         self.addSource(f)
         return s, f
 
+    def makeIf(self, ):
+        from java2python.blocks import Statement
+        f = Statement(self, 'if')
+        e = Statement(self, 'else')
+        #b, ba = BasicBlock(self), BasicBlock(self)
+        self.addSource(f)
+        self.addSource(e)
+        #self.addSource(b)
+        #self.addSource(ba)
+        #return b, ba, f, e
+        return f, e
+
     def makeMethod(self, name=None):
         """ creates a new Method object as a child of this block
 
@@ -371,7 +383,7 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
         methodvars = list(self.methodVars)
         membervars = list(chain(self.instanceMembers, self.instanceMethods))
         staticvars = list(chain(self.staticMembers, self.staticMethods))
-        mapping = self.config.combined('variableNameMapping')
+        mapping = self.config.combined('identRenames')
         format = self.declFormat
         for i, arg in enumerate(args):
             if arg in methodvars:
@@ -413,7 +425,7 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
                 inner['left'] = self.formatExpression(obj['left'])
             expr = Template(format).substitute(inner)
         else:
-            #renames = self.config.combined('variableNameMapping')
+            #renames = self.config.combined('identRenames')
             #expr = renames.get(obj, obj)
             expr = obj
         return expr

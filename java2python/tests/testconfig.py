@@ -17,7 +17,7 @@ moduleEpilogue = [
     ]
 
 
-variableNameMapping = {
+identRenames = {
     'Assert':'self',
     }
 

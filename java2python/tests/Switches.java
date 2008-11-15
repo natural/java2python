@@ -1,21 +1,4 @@
-import junit.framework.*;
-
-public class Switches extends TestCase {
-
-    public void testSwitches() {
-        Assert.assertEquals(switch1(1), 1);
-        Assert.assertEquals(switch1(2), 2);
-        Assert.assertEquals(switch1(3), 10);
-        Assert.assertEquals(switch1(10), 4);
-
-        Assert.assertEquals(switch2(3), 2);
-        Assert.assertEquals(switch2(3), 2);
-
-        Assert.assertEquals(switch3(3), 4);
-
-        Assert.assertEquals(switch4(1), 1);
-        Assert.assertEquals(switch4(3), 2);
-    }
+public class Switches  {
 
     public int switch1(int i) {
         switch (i) {
@@ -31,6 +14,7 @@ public class Switches extends TestCase {
         return i;
     }
 
+    /*
     public int switch2(int i) {
         switch (i) {
             case 3:
@@ -63,5 +47,5 @@ public class Switches extends TestCase {
         }
         return i;
     }
-
+    */
 }

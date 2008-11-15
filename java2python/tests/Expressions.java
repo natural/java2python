@@ -79,10 +79,13 @@ class Expressions {
 	System.out.println(~xi);
 	System.out.println(!(xi==3) ? 1 : 0);
 
-	/*
-	System.out.println(++xi);
-	System.out.println(xi++);
-	*/
+	xi = -4096;
+	System.out.println(xi);
+	System.out.println(xi >>> 10);
+
+	//System.out.println(xi >>>= 10);
+
+
 
     }
 }

@@ -2,6 +2,8 @@
 # -*- coding: utf-8 -*-
 
 from functools import partial
+from logging import warn
+from java2python import ev
 from java2python.parser import JavaLexer
 
 
@@ -69,3 +71,36 @@ def simpleDocString(block):
         '',
         '"""',
         ] + ([] if block.lines == ['pass'] else block.lines)
+
+
+def getBsrSrc():
+    from inspect import getsource
+    from java2python.modes.includes import bsr
+    return getsource(bsr)
+
+
+def functionBsr(stack, left, right):
+    src = getBsrSrc()
+    if src not in stack.bottom:
+        stack.bottom.addSource(src, 0)
+    return ev(left, right, 'bsr($left, $right)')
+
+
+def functionBsrAssign(stack, left, right):
+    src = getBsrSrc()
+    if src not in stack.bottom:
+        stack.bottom.addSource(src, 0)
+    return ev(left, right, '$left = bsr($left, $right)')
+
+
+def getSyncDecoSrc():
+    from inspect import getsource
+    from java2python.modes.includes import synchronized
+    return "from threading import RLock\n%s" getsource(synchronized)
+
+
+def synchronizedDeco(stack):
+    src = getSyncDecoSrc()
+    if src not in stack.bottom:
+        stack.bottom.addSource(src, 0)
+    return ev(left, right, '$left = bsr($left, $right)')

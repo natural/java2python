@@ -167,7 +167,7 @@ class Method(BasicBlock):
         @return None
         """
         name = self.alternateName(name)
-        typ = BasicBlock.alternateName(self, typ, 'typeTypeMap')
+        typ = BasicBlock.alternateName(self, typ, 'typeRenames')
         self.parameters.append((typ, name))
         #self.addVariable(Variable(self, name))
         self.addVariable(name)
@@ -291,7 +291,7 @@ class Statement(BasicBlock):
 
         """
         return self.name in ('if', 'while', 'for', 'else', 'elif',
-                             'try', 'except', 'finally')
+                             'try', 'except', 'finally', 'with')
 
     def setExpression(self, value):
         """ sets the value of the expression for this Statement
