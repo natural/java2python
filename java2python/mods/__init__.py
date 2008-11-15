@@ -75,7 +75,7 @@ def simpleDocString(block):
 
 def getBsrSrc():
     from inspect import getsource
-    from java2python.modes.includes import bsr
+    from java2python.mods.includes import bsr
     return getsource(bsr)
 
 
@@ -95,7 +95,7 @@ def functionBsrAssign(stack, left, right):
 
 def getSyncDecoSrc():
     from inspect import getsource
-    from java2python.modes.includes import synchronized
+    from java2python.mods.includes import synchronized
     return "from threading import RLock\n%s" getsource(synchronized)
 
 

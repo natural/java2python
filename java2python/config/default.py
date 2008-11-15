@@ -17,23 +17,23 @@ bubbleInnerClasses = True
 minIndentParams = 5
 
 ## these handle shift right and bit shift right assignments.
-bsrHandler = 'java2python.modes.functionBsr'
-bsrHandlerAssign = 'java2python.modes.functionBsrAssign'
+bsrHandler = 'java2python.mods.functionBsr'
+bsrHandlerAssign = 'java2python.mods.functionBsrAssign'
 
 commentHandlers = [
     # javadoc2docstring
     # javadoc2pythondoc
-    'java2python.modes.simpleComments',
+    'java2python.mods.simpleComments',
     ]
 
 ## this value controls how enums are created, if at all.  the default
 ## creates enums as classes with minimum support for the interface and
-## behavior defined for java classes.  in the modes.enums module, the
+## behavior defined for java classes.  in the.mods.enums module, the
 ## other usable functions are or fullJava, pyInts, pyStrings and
 ## subClass.
 enumConstantHandlers = [
-    'java2python.modes.enums.pyInts',
-    #'java2python.modes.enums.minJava',
+    'java2python.mods.enums.pyInts',
+    #'java2python.mods.enums.minJava',
     ]
 
 
@@ -41,7 +41,7 @@ enumConstantHandlers = [
 ## default converts the statement into a comment.  user-supplied
 ## handlers could map between java and python packages.
 importHandlers = [
-    'java2python.modes.commentImport',
+    'java2python.mods.commentImport',
     ]
 
 
@@ -49,9 +49,9 @@ importHandlers = [
 ## packages-as-comments and packages-as-setuptools are supported, but
 ## only one should be necessary.
 packageHandlers = [
-    'java2python.modes.commentPackage',
-    #'java2python.modes.setupToolsPackage',
-    #'java2python.modes.setupToolsPackageComment',
+    'java2python.mods.commentPackage',
+    #'java2python.mods.setupToolsPackage',
+    #'java2python.mods.setupToolsPackageComment',
     ]
 
 ## these functions finish the construction of a class block.
@@ -59,35 +59,35 @@ classHandlers = [
     ## with this handler, classes are scanned for duplicate method
     ## names.  matching methods are augmented with the '@overloaded'
     ## decorator.
-    'java2python.modes.classes.fixOverloadMethods',
+    'java2python.mods.classes.fixOverloadMethods',
 
-    'java2python.modes.classes.fixCtor',
+    'java2python.mods.classes.fixCtor',
 
     ## this function scans the class for methods that look like
     ## accessors.  matching methods are renamed and declared as
     ## properties.
-    'java2python.modes.classes.fixPropMethods',
+    'java2python.mods.classes.fixPropMethods',
 
     ## this function sorts sorts class methods by name.
-    'java2python.modes.classes.sortClassMethods',
+    'java2python.mods.classes.sortClassMethods',
 
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    'java2python.modes.simpleDocString',
-    'java2python.modes.classes.insertModifiers',
-    'java2python.modes.classes.fixBaseClasses',
+    'java2python.mods.simpleDocString',
+    'java2python.mods.classes.insertModifiers',
+    'java2python.mods.classes.fixBaseClasses',
     ]
 
 ## these functions complete the construction of method blocks.
 methodHandlers = [
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
-    'java2python.modes.simpleDocString',
+    'java2python.mods.simpleDocString',
 
     ## this function adds a comment with the original function's
     ## modifiers.
-    'java2python.modes.methods.insertReturn',
-    'java2python.modes.methods.insertModifiers',
+    'java2python.mods.methods.insertReturn',
+    'java2python.mods.methods.insertModifiers',
     ]
 
 
@@ -95,16 +95,16 @@ methodHandlers = [
 ## output when a module is dumped.  they use the modulePreamble and
 ## moduleEpilogue values below.
 modulePreambleWriters = [
-    'java2python.modes.modules.preamble',
+    'java2python.mods.modules.preamble',
     ]
 
 
 moduleEpilogueWriters = [
-    'java2python.modes.modules.epilogue',
+    'java2python.mods.modules.epilogue',
     ## with this function, if the source contains a "public static
     ## void main" method, a block is written to the end of the file to
     ## call the class method with sys.argv.
-    'java2python.modes.modules.ifMainScript',
+    'java2python.mods.modules.ifMainScript',
     ]
 
 
