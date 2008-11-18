@@ -82,8 +82,8 @@ class Expressions {
 	xi = -4096;
 	System.out.println(xi);
 	System.out.println(xi >>> 10);
-
-	//System.out.println(xi >>>= 10);
+        xi >>>= 10;
+	System.out.println(xi);
 
 
 

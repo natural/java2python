@@ -9,9 +9,10 @@ from java2python.parser import JavaLexer
 
 def simpleComments(block, text, typ):
     ## config prefix is used for comments via addComment
-    def simpleMultiFormat(rawComment):
-        rawComment = rawComment.strip()[2:-2]
-        for line in rawComment.split('\n'):
+
+    def simpleMultiFormat(raw):
+        raw = raw.strip()[2:-2]
+        for line in raw.split('\n'):
             line = line.strip()
             if line.startswith('*'):
                 line = line[1:]
@@ -19,8 +20,8 @@ def simpleComments(block, text, typ):
                 line = line[:-1]
             yield line.strip()
 
-    def simpleSingleFormat(rawComment):
-        yield rawComment[2:].strip()
+    def simpleSingleFormat(raw):
+        yield raw[2:].strip()
 
     lines = ()
     if typ == JavaLexer.COMMENT:
@@ -96,7 +97,7 @@ def functionBsrAssign(stack, left, right):
 def getSyncDecoSrc():
     from inspect import getsource
     from java2python.mods.includes import synchronized
-    return "from threading import RLock\n%s" getsource(synchronized)
+    return 'from threading import RLock\n%s' % getsource(synchronized)
 
 
 def synchronizedDeco(stack):

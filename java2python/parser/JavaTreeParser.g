@@ -126,7 +126,7 @@ enumTopLevelScope
 enumConstant returns [decl] @init { decl = dict() }
     :   ^(id0=IDENT an0=annotationList ag0=arguments?
           { $decl.update(id=$id0.text, annos=$an0.annos, args=$ag0.args) }
-          ({ $decl.update(klass=self.onClass($id0.text)) } classTopLevelScope)?
+          ({ $decl.update(klass=self.onClass($id0.text)) } classTopLevelScope { if 0:self.pop() })?
         )
     ;
 
@@ -392,7 +392,9 @@ statement
     |   ^(IF pe0=parenthesizedExpression
              { ifstat, elsestat = self.onIf($pe0.value) }
              statement
-             { self.pop() }
+             { self.onIfFinish()
+               self.pop()
+             }
              ({self.push(elsestat)} statement? { self.pop() })
         )
     |   ^(FOR i0=forInit c0=forCondition u0=forUpdater
@@ -434,7 +436,6 @@ statement
 
     |   ^(RETURN (ex0=expression { self.onReturn($ex0.value) })?)
     |   ^(THROW (ex0=expression { self.onThrow($ex0.value) }))
-
     |   ^(BREAK (id0=IDENT)? ) { self.onBreak($id0.text if $id0 else None) }
     |   ^(CONTINUE (id0=IDENT)? ) { self.onContinue($id0.text if $id0 else None) }
     |   ^(LABELED_STATEMENT IDENT statement)
@@ -492,21 +493,21 @@ expression returns [value]
     ;
 
 expr returns [value]
-    :   ^(ASSIGN lv0=expr rv0=expr) { self.onAssign("=", lv0, rv0) }
-    |   ^(PLUS_ASSIGN lv0=expr rv0=expr) { self.onAssign("+=", lv0, rv0) }
-    |   ^(MINUS_ASSIGN lv0=expr rv0=expr) { self.onAssign("-=", lv0, rv0) }
-    |   ^(STAR_ASSIGN lv0=expr rv0=expr) { self.onAssign("*=", lv0, rv0) }
-    |   ^(DIV_ASSIGN lv0=expr rv0=expr) { self.onAssign("/=", lv0, rv0) }
-    |   ^(AND_ASSIGN lv0=expr rv0=expr) { self.onAssign("&=", lv0, rv0) }
-    |   ^(OR_ASSIGN  lv0=expr rv0=expr) { self.onAssign("|=", lv0, rv0) }
-    |   ^(XOR_ASSIGN lv0=expr rv0=expr) { self.onAssign("^=", lv0, rv0) }
-    |   ^(MOD_ASSIGN lv0=expr rv0=expr) { self.onAssign("\%=", lv0, rv0) }
+    :   ^(ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("=", lv0, rv0) }
+    |   ^(PLUS_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("+=", lv0, rv0) }
+    |   ^(MINUS_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("-=", lv0, rv0) }
+    |   ^(STAR_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("*=", lv0, rv0) }
+    |   ^(DIV_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("/=", lv0, rv0) }
+    |   ^(AND_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("&=", lv0, rv0) }
+    |   ^(OR_ASSIGN  lv0=expr rv0=expr) { $value = self.makeAssign("|=", lv0, rv0) }
+    |   ^(XOR_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("^=", lv0, rv0) }
+    |   ^(MOD_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("\%=", lv0, rv0) }
     |   ^(BIT_SHIFT_RIGHT_ASSIGN lv0=expr rv0=expr)
           { $value = self.onBsrAssign(lv0, rv0) }
     |   ^(SHIFT_RIGHT_ASSIGN left=expr right=expr)
-          { self.onAssign(">>=", left, right) }
+          { $value = self.makeAssign(">>=", left, right) }
     |   ^(SHIFT_LEFT_ASSIGN left=expr right=expr)
-          { self.onAssign("<<=", left, right) }
+          { $value = self.makeAssign("<<=", left, right) }
     |   ^(QUESTION lv0=expr rv0=expr rv1=expr)
           { $value = ev(lv0, rv0, "(${right} if ${left} else ${rv1})", rv1=rv1) }
     |   ^(LOGICAL_OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} or ${right}") }
@@ -539,10 +540,10 @@ expr returns [value]
     |   ^(UNARY_PLUS lv0=expr) { $value = ev(lv0, format="+${left}") }
     |   ^(UNARY_MINUS lv0=expr) { $value = ev(lv0, format="-${left}") }
 
-    |   ^(PRE_INC lv0=expr)     { $value = ev(lv0, format="${left} += 1") }
-    |   ^(PRE_DEC lv0=expr)     { $value = ev(lv0, format="${left} -= 1") }
-    |   ^(POST_INC lv0=expr)    { $value = ev(lv0, format="${left} += 1") }
-    |   ^(POST_DEC lv0=expr)    { $value = ev(lv0, format="${left} -= 1") }
+    |   ^(PRE_INC lv0=expr)     { $value = ev(lv0, format="${left} += 1", pre=True, assign=True) }
+    |   ^(PRE_DEC lv0=expr)     { $value = ev(lv0, format="${left} -= 1", pre=True, assign=True) }
+    |   ^(POST_INC lv0=expr)    { $value = ev(lv0, format="${left} += 1", post=True, assign=True) }
+    |   ^(POST_DEC lv0=expr)    { $value = ev(lv0, format="${left} -= 1", post=True, assign=True) }
     |   ^(NOT lv0=expr)         { $value = ev(lv0, format="~${left}") }
     |   ^(LOGICAL_NOT lv0=expr) { $value = ev(lv0, format="not ${left}") }
     |   ^(CAST_EXPR lv0=type rv0=expr)   { $value = ev(lv0, rv0, "${left}(${right})") }

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from itertools import count
 from logging import debug
 from java2python import ev, marker
 
@@ -9,6 +10,38 @@ from java2python import ev, marker
 ## statements
 ## diff testing
 
+counter = count(0)
+
+def isdict(v):
+    return isinstance(v, (dict, ))
+
+
+def replaceAssign(e):
+    i = counter.next()
+    return ev('__x%s' % i, '', '$left')
+
+
+def fixAssigns(expr, l=0):
+    if not isdict(expr):
+        return
+    left = expr.get('left')
+    right = expr.get('right')
+    for k in fixAssigns(left, l+1):
+        yield k
+    for k in fixAssigns(right, l+1):
+        yield k
+    for leaf in (left, right):
+        if isdict(leaf) and leaf.get('assign'):
+            original = leaf.copy()
+            next = leaf.copy()
+            leaf['format'] = '$left'
+            next['left'] = leaf['left'] = x = replaceAssign(leaf)
+            next['format'] = '$left = $right'
+            next['right'] = original.get('left')
+            yield original
+            yield next
+
+
 class BlockStack:
     """ A simple stack of source blocks.
 
@@ -16,19 +49,13 @@ class BlockStack:
     def __init__(self, module):
 	self.stack = [module]
 
-    def bottom(self):return self.stack[0]
-    bottom = property(bottom)
+    @property
+    def top(self):
+        return self.stack[-1]
 
-    def top(self):return self.stack[-1]
-    top = property(top)
-
-    def onBsr(self, left, right):
-        handler = self.top.config.handler('bsrHandler')
-        return handler(self, left, right)
-
-    def onBsrAssign(self, left, right):
-        handler = self.top.config.handler('bsrHandlerAssign')
-        return handler(self, left, right)
+    @property
+    def bottom(self):
+        return self.stack[0]
 
     def altId(self, value):
 	alt = self.top.config.combined('identRenames')
@@ -38,10 +65,24 @@ class BlockStack:
         alt = self.top.config.combined('typeRenames')
         return alt.get(value, value)
 
+    def onBsr(self, left, right):
+        handler = self.top.config.handler('bsrHandler')
+        return handler(self, left, right)
+
+    def onBsrAssign(self, left, right):
+        handler = self.top.config.handler('bsrHandlerAssign')
+        v = handler(self, left, right)
+        v['assign'] = True
+        return v
+
     def makeArrayCreator(self, typ, ctor):
         ## it can't be this easy
         value = dict(left=typ, right=ctor, format='[$left() for _ in range($right)]')
         return value
+
+    def makeAssign(self, op, left, right):
+        src = ev(left, right, '$left %s $right' % op, assign=True)
+        return src
 
     def makeParamDecl(self, decl, typ, isVariadic=False):
         debug('%s %s %s', decl, typ, isVariadic)
@@ -78,10 +119,6 @@ class BlockStack:
         stat = self.top.makeStatement('assert')
         stat.setExpression(src)
 
-    def onAssign(self, op, left, right):
-        debug('%s %s %s', op, left, right)
-        src = ev(left, right, '$left %s $right' % op)
-        self.top.addSource(src)
 
     def onBreak(self, label):
         debug('%s', label)
@@ -180,6 +217,18 @@ class BlockStack:
         self.push(ifstat)
         return ifstat, elsestat
 
+    def onIfFinish(self):
+        import pprint
+        expr = self.top.expr
+        #pprint.pprint(expr)
+        replacements = list(fixAssigns(expr))
+        #debug('%s', replacements)
+        for item in replacements:
+            self.top.parent.addSource(item, self.top.parent.lines.index(self.top))
+
+        #pprint.pprint(expr)
+        #debug(expr)
+
     def onSwitch(self, expr):
         debug('%s', expr)
         switchstat, elsestat = self.top.makeIf()
@@ -270,7 +319,14 @@ class BlockStack:
 	self.top.addSource(src)
 
     def onStatementExpression(self, expr):
-        self.top.addSource(expr)
+        debug('%s', expr)
+        replacements = list(fixAssigns(expr))
+        if expr.get('pre'):
+            self.top.addSource(expr)
+        for item in replacements:
+            self.top.addSource(item)
+        if not expr.get('pre'):
+            self.top.addSource(expr)
 
     def onThrow(self, expr):
         stat = self.top.makeStatement('raise')
@@ -350,11 +406,11 @@ class BlockStack:
 
     def pop(self):
         value = self.stack.pop()
-        debug('%s', (value.name if hasattr(value, 'name') else value))
+        #debug('%s', (value.name if hasattr(value, 'name') else value))
 	return value
 
     def push(self, value):
-        debug('%s', (value.name if hasattr(value, 'name') else value))
+        #debug('%s', (value.name if hasattr(value, 'name') else value))
 	self.stack.append(value)
 
     def fixFloatLiteral(self, value):

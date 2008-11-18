@@ -16,6 +16,12 @@ class IfStatements {
         }
 	String sb = "after the ifs";
 
+
+	int x = 0;
+	if (++x > 0) { System.out.println("ok"); }
+
+	int y = 0;
+	if ((y+= (y+=(++y))) == 1) { System.out.println("nested expr"); }
     }
 
 
