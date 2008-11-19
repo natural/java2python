@@ -7,8 +7,7 @@ class DoAndWhileStatements {
 	} while (i < 3);
 
         int j = 3;
-        while (j > 0) {
-	    j--;
+        while (j-- > 0) {
 	    System.out.println(j);
 	};
 

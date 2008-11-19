@@ -45,6 +45,10 @@ def importval(name, reloaded=False):
     return getattr(mod, itemname)
 
 
+def isdict(v):
+    return isinstance(v, (dict, ))
+
+
 def maybeattr(obj, name, default=None):
     """ Returns named attribute or default.
 

@@ -145,11 +145,10 @@ outputSubs = [
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     (r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
-
     (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),
-
     (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),
+    (r'\.__class__\.getName\(\)', '.__class__.__name__'),
     ]
 
 ## mapping of java type names to python type names.  user-defined

@@ -290,6 +290,9 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
         for line in self.lines:
             yield line
 
+    def index(self, value):
+        return self.lines.index(value)
+
     def setConfigs(self, configs):
         ## always place it on the root class so all instances of all
         ## BasicBlock types get the same object.  also means any instance

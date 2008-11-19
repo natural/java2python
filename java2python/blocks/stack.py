@@ -1,69 +1,161 @@
 #!/usr/bin/env python
-from itertools import count
+""" java2python.blocks.stack -> a simple stack of source blocks.
+
+"""
+from itertools import chain, count
 from logging import debug
-from java2python import ev, marker
-
-## javadoc handler
-## enums
-## annos
-## arrays
-## statements
-## diff testing
-
-counter = count(0)
-
-def isdict(v):
-    return isinstance(v, (dict, ))
+from java2python import ev, isdict, marker
 
 
-def replaceAssign(e):
-    i = counter.next()
-    return ev('__x%s' % i, '', '$left')
-
-
-def fixAssigns(expr, l=0):
-    if not isdict(expr):
-        return
-    left = expr.get('left')
-    right = expr.get('right')
-    for k in fixAssigns(left, l+1):
-        yield k
-    for k in fixAssigns(right, l+1):
-        yield k
-    for leaf in (left, right):
-        if isdict(leaf) and leaf.get('assign'):
-            original = leaf.copy()
-            next = leaf.copy()
-            leaf['format'] = '$left'
-            next['left'] = leaf['left'] = x = replaceAssign(leaf)
-            next['format'] = '$left = $right'
-            next['right'] = original.get('left')
-            yield original
-            yield next
+nameCounter = count(0).next
 
 
 class BlockStack:
     """ A simple stack of source blocks.
 
+    This class is our facade around the rest of the java2python.blocks
+    subpackage.  Instead of dealing directly with objects from those
+    classes, the tree grammar uses an instance of this class to
+    construct and modify blocks during tree grammar actions.
+
+    Using a shim class this way also cuts down on the amount of python
+    code in the tree grammar, which is a very good thing.
     """
     def __init__(self, module):
+        """ Initializer.
+
+        @param module some kind of block instance
+        """
 	self.stack = [module]
 
     @property
     def top(self):
+        """ Returns item at the top of the stack.  The stack is unchanged.
+
+        """
         return self.stack[-1]
 
     @property
     def bottom(self):
+        """ Returns item at the bottom of the stack. The stack is unchanged.
+
+        """
         return self.stack[0]
 
-    def altId(self, value):
-	alt = self.top.config.combined('identRenames')
-        return alt.get(value, value)
+    def pop(self):
+        """ Removes item at the top of the stack and returns it.
 
-    def altType(self, value):
+        """
+        value = self.stack.pop()
+        debug('%s', (value.name if hasattr(value, 'name') else value))
+	return value
+
+    def push(self, value):
+        """ Puts a new item at the top of the stack.
+
+        @param value any object
+        """
+        debug('%s', (value.name if hasattr(value, 'name') else value))
+	self.stack.append(value)
+
+    def altId(self, name):
+        """ Returns replacement for given identifier.
+
+        """
+	alt = self.top.config.combined('identRenames')
+        return alt.get(name, name)
+
+    def altType(self, name):
+        """ Returns replacement type for given type.
+
+        """
         alt = self.top.config.combined('typeRenames')
-        return alt.get(value, value)
+        return alt.get(name, name)
+
+    def makeArrayCreator(self, typ, ctor):
+        """ Returns an expression value to use as an array constructor.
+
+        NB:  It's probably not this easy
+        """
+        format = '[$left() for __%s in range($right)]' % nameCounter()
+        return ev(typ, ctor, format)
+
+    def makeAssign(self, op, left, right):
+        """ Returns an expression value for an assignment statement.
+
+        """
+        return ev(left, right, '$left %s $right' % op, assign=True)
+
+    def makeFloatLiteral(self, value):
+        """ Turns a java float into a syntactically correct python float.
+
+        This could be a regular function, but having it here makes it
+        easily callable within the tree grammar.
+        """
+        if value.startswith('.'):
+            value = '0' + value
+        if value.endswith(('f', 'd')):
+            value = value[:-1]
+        elif value.endswith(('l', 'L')):
+            value = value[:-1] + 'L'
+        return value
+
+    def makeParamDecl(self, decl, typ, isVariadic=False):
+        """ Returns an expression for use as a method parameter.
+
+        """
+        debug('%s %s %s', decl, typ, isVariadic)
+        left = ev('*' if isVariadic else '', decl, '$left$right')
+        new = decl.copy()
+        new.update(type=typ, format='$left', left=left)
+        return new
+
+    def onAnnoMethod(self, name, decls, default):
+        """
+
+        """
+	meth = self.onMethod(name)
+	for decl in (decls or []):
+            meth.addModifier(decl[0])
+	if default:
+	    src = 'return %s' % (default, )
+	else:
+	    src = 'pass'
+        meth.addSource(src)
+	self.pop()
+	return meth
+
+    def onAnnoType(self, name, modifiers):
+        """
+
+        """
+	## lookup base class
+	bases = ['object', ]
+	klass = self.onClass(name, [], bases)
+	return klass
+
+    def onAssert(self, exp, arg=marker):
+        """
+
+        """
+        debug('%s %s', exp, arg)
+        if arg is not marker:
+            src = ev(exp, arg, '$left, $right')
+        else:
+            src = ev(exp, format='$left')
+        stat = self.top.makeStatement('assert')
+        stat.setExpression(src)
+
+    def onBreak(self, label):
+        """
+
+        """
+        debug('%s', label)
+        label = self.altId(label)
+        ## ident doesn't need expression formatting, so we add the
+        ## string directly.  same true below for the 'continue'
+        ## statement.
+        self.top.addSource('break' + (' #label:' + label if label else ''))
 
     def onBsr(self, left, right):
         handler = self.top.config.handler('bsrHandler')
@@ -74,59 +166,6 @@ class BlockStack:
         v = handler(self, left, right)
         v['assign'] = True
         return v
-
-    def makeArrayCreator(self, typ, ctor):
-        ## it can't be this easy
-        value = dict(left=typ, right=ctor, format='[$left() for _ in range($right)]')
-        return value
-
-    def makeAssign(self, op, left, right):
-        src = ev(left, right, '$left %s $right' % op, assign=True)
-        return src
-
-    def makeParamDecl(self, decl, typ, isVariadic=False):
-        debug('%s %s %s', decl, typ, isVariadic)
-        new = decl.copy()
-        new.update(type=typ, format='$left',
-                   left=ev('*' if isVariadic else '', decl, '$left$right'))
-        debug('%s', new)
-        return new
-
-    def onAnnoMethod(self, name, annodecls, default):
-	meth = self.onMethod(name)
-	for annodecl in (annodecls or []):
-            meth.addModifier(annodecl[0])
-	if default:
-	    src = 'return %s' % (default, )
-	else:
-	    src = 'pass'
-        meth.addSource(src)
-	self.pop()
-	return meth
-
-    def onAnnoType(self, name, modifiers):
-	## lookup base class
-	bases = ['object', ]
-	klass = self.onClass(name, [], bases)
-	return klass
-
-    def onAssert(self, exp, arg=marker):
-        debug('%s %s', exp, arg)
-        if arg is not marker:
-            src = dict(format='$left, $right', left=exp, right=arg)
-        else:
-            src = dict(format='$left', left=exp)
-        stat = self.top.makeStatement('assert')
-        stat.setExpression(src)
-
-
-    def onBreak(self, label):
-        debug('%s', label)
-        label = self.altId(label)
-        ## ident doesn't need expression formatting, so we add the
-        ## string directly.  same true below for the 'continue'
-        ## statement.
-        self.top.addSource('break' + (' #label:' + label if label else ''))
 
     def onClass(self, name, mods=None, extends=None, implements=None):
 	debug('%s %s %s %s', name, mods, extends, implements)
@@ -218,16 +257,10 @@ class BlockStack:
         return ifstat, elsestat
 
     def onIfFinish(self):
-        import pprint
         expr = self.top.expr
-        #pprint.pprint(expr)
-        replacements = list(fixAssigns(expr))
-        #debug('%s', replacements)
+        replacements = list(xformAssigns(expr))
         for item in replacements:
-            self.top.parent.addSource(item, self.top.parent.lines.index(self.top))
-
-        #pprint.pprint(expr)
-        #debug(expr)
+            self.top.parent.addSource(item, self.top.parent.index(self.top))
 
     def onSwitch(self, expr):
         debug('%s', expr)
@@ -319,14 +352,11 @@ class BlockStack:
 	self.top.addSource(src)
 
     def onStatementExpression(self, expr):
-        debug('%s', expr)
-        replacements = list(fixAssigns(expr))
-        if expr.get('pre'):
-            self.top.addSource(expr)
+        #debug('%s', expr)
+        replacements = list(xformAssigns(expr))
         for item in replacements:
             self.top.addSource(item)
-        if not expr.get('pre'):
-            self.top.addSource(expr)
+        self.top.addSource(expr)
 
     def onThrow(self, expr):
         stat = self.top.makeStatement('raise')
@@ -401,23 +431,45 @@ class BlockStack:
         return stat
 
     def onWhileFinish(self, stat, expr, pop=False):
+        replacements = list(xformAssigns(expr))
+        for index, item in enumerate(replacements):
+            if index % 2:
+                self.top.addSource(item, 0)
+            else:
+                self.top.parent.addSource(item, self.top.parent.index(self.top))
         stat.setExpression(expr)
         return (self.pop() if pop else None)
 
-    def pop(self):
-        value = self.stack.pop()
-        #debug('%s', (value.name if hasattr(value, 'name') else value))
-	return value
 
-    def push(self, value):
-        #debug('%s', (value.name if hasattr(value, 'name') else value))
-	self.stack.append(value)
+def xformAssigns(expr):
+    """ Yields statements to replace assignments within a Java
+        expression.  The original expressions are modified in place to
+        accomodate.
+    """
+    if not isdict(expr):
+        return
+    lft, rgt, ctr = expr.get('left'), expr.get('right'), expr.get('center')
+    for k in chain(xformAssigns(lft), xformAssigns(rgt), xformAssigns(ctr)):
+        yield k
+    for leaf in (lft, rgt):
+        if isdict(leaf) and leaf.get('assign'):
+            orig, next = leaf.copy(), leaf.copy()
+            leaf['format'] = '$left'
+            leaf['left'] = next['left'] = xformAssign(leaf)
+            next['format'] = '$left = $right'
+            next['right'] = orig.get('left')
+            if orig.get('post'):
+                yield next
+                yield orig
+            else:
+                yield orig
+                yield next
 
-    def fixFloatLiteral(self, value):
-        if value.startswith('.'):
-            value = '0' + value
-        if value.endswith(('f', 'd')):
-            value = value[:-1]
-        elif value.endswith(('l', 'L')):
-            value = value[:-1] + 'L'
-        return value
+
+def xformAssign(expr):
+    """ Creates replacement expression for given assignment.
+
+    """
+    left = expr.get('left', {}).get('left')
+    prefix = left if isinstance(left, (basestring, )) else 'x'
+    return ev('__%s%s' % (prefix, nameCounter()), format='$left')

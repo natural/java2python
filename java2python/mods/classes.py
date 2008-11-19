@@ -65,7 +65,7 @@ def fixCtor(block):
                             meth.formatExpression(dict(left=v.name, right=v.expr,
                                  format="self.$left = $right")),
                             stmt)
-                idx = meth.lines.index(stmt)
+                idx = meth.index(stmt)
                 meth.lines[idx] = "# end of instance variables"
 
 

@@ -126,7 +126,10 @@ enumTopLevelScope
 enumConstant returns [decl] @init { decl = dict() }
     :   ^(id0=IDENT an0=annotationList ag0=arguments?
           { $decl.update(id=$id0.text, annos=$an0.annos, args=$ag0.args) }
-          ({ $decl.update(klass=self.onClass($id0.text)) } classTopLevelScope { if 0:self.pop() })?
+          ({ $decl.update(klass=self.onClass($id0.text)) }
+           classTopLevelScope
+           { if 0:self.pop() }
+          )?
         )
     ;
 
@@ -194,7 +197,7 @@ variableDeclarator returns [decl] @init { $decl = ev() }
 
 variableDeclaratorId returns [decl] @init { $decl = ev(format="${left}") }
     :   ^(id0=IDENT { $decl["left"] = self.altId($id0.text) }
-              (ad0=arrayDeclaratorList { $decl["array"] = [$ad0.text] })?
+              (ad0=arrayDeclaratorList { $decl["array"] = True })?
         )
     ;
 
@@ -255,7 +258,8 @@ type returns [value] @init { $value = ev(format="${left}") }
           (pt0=primitiveType { $value["left"] = self.altType($pt0.text) } |
            qt0=qualifiedTypeIdent { $value["left"] = self.altType($qt0.value) })
           (arrayDeclaratorList
-           { $value["format"] += "list" #$arrayDeclaratorList.value
+           { $value["array"] = True
+             $value["format"] += "list" ##"array of \%s" \% $value["left"]
              $value["left"] = ""
            }
           )?
@@ -427,13 +431,11 @@ statement
           switchBlockLabels
           { self.pop() }
         )
-
     |   ^(SYNCHRONIZED pe0=parenthesizedExpression
           { ss = self.onSync($pe0.value) }
           block
           { self.pop() }
         )
-
     |   ^(RETURN (ex0=expression { self.onReturn($ex0.value) })?)
     |   ^(THROW (ex0=expression { self.onThrow($ex0.value) }))
     |   ^(BREAK (id0=IDENT)? ) { self.onBreak($id0.text if $id0 else None) }
@@ -493,60 +495,90 @@ expression returns [value]
     ;
 
 expr returns [value]
-    :   ^(ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("=", lv0, rv0) }
-    |   ^(PLUS_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("+=", lv0, rv0) }
-    |   ^(MINUS_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("-=", lv0, rv0) }
-    |   ^(STAR_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("*=", lv0, rv0) }
-    |   ^(DIV_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("/=", lv0, rv0) }
-    |   ^(AND_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("&=", lv0, rv0) }
-    |   ^(OR_ASSIGN  lv0=expr rv0=expr) { $value = self.makeAssign("|=", lv0, rv0) }
-    |   ^(XOR_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("^=", lv0, rv0) }
-    |   ^(MOD_ASSIGN lv0=expr rv0=expr) { $value = self.makeAssign("\%=", lv0, rv0) }
+    :   ^(ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("=", lv0, rv0) }
+    |   ^(PLUS_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("+=", lv0, rv0) }
+    |   ^(MINUS_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("-=", lv0, rv0) }
+    |   ^(STAR_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("*=", lv0, rv0) }
+    |   ^(DIV_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("/=", lv0, rv0) }
+    |   ^(AND_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("&=", lv0, rv0) }
+    |   ^(OR_ASSIGN  lv0=expr rv0=expr)
+          { $value = self.makeAssign("|=", lv0, rv0) }
+    |   ^(XOR_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("^=", lv0, rv0) }
+    |   ^(MOD_ASSIGN lv0=expr rv0=expr)
+          { $value = self.makeAssign("\%=", lv0, rv0) }
     |   ^(BIT_SHIFT_RIGHT_ASSIGN lv0=expr rv0=expr)
           { $value = self.onBsrAssign(lv0, rv0) }
     |   ^(SHIFT_RIGHT_ASSIGN left=expr right=expr)
           { $value = self.makeAssign(">>=", left, right) }
     |   ^(SHIFT_LEFT_ASSIGN left=expr right=expr)
           { $value = self.makeAssign("<<=", left, right) }
-    |   ^(QUESTION lv0=expr rv0=expr rv1=expr)
-          { $value = ev(lv0, rv0, "(${right} if ${left} else ${rv1})", rv1=rv1) }
-    |   ^(LOGICAL_OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} or ${right}") }
-    |   ^(LOGICAL_AND lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} and ${right}") }
-    |   ^(OR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} | ${right}") }
-    |   ^(XOR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} ^ ${right}") }
-    |   ^(AND lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} & ${right}") }
-    |   ^(EQUAL lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} == ${right}") }
-    |   ^(NOT_EQUAL lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} != ${right}") }
-
+    |   ^(QUESTION lv0=expr rv0=expr cv0=expr)
+          { $value = ev(lv0, rv0, "(${right} if ${left} else ${center})", center=cv0) }
+    |   ^(LOGICAL_OR lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} or ${right}") }
+    |   ^(LOGICAL_AND lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} and ${right}") }
+    |   ^(OR lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} | ${right}") }
+    |   ^(XOR lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} ^ ${right}") }
+    |   ^(AND lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} & ${right}") }
+    |   ^(EQUAL lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} == ${right}") }
+    |   ^(NOT_EQUAL lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} != ${right}") }
     |   ^(INSTANCEOF lv0=expr tp0=type)
           { $value = ev(lv0, $tp0.value, "isinstance(${left}, (${right}, ))") }
     |   ^(LESS_OR_EQUAL lv0=expr rv0=expr)
           { $value = ev(lv0, rv0, "${left} <= ${right}") }
     |   ^(GREATER_OR_EQUAL lv0=expr rv0=expr)
           { $value = ev(lv0, rv0, "${left} >= ${right}") }
-
-    |   ^(BIT_SHIFT_RIGHT lv0=expr rv0=expr) { $value = self.onBsr(lv0, rv0) }
-
-    |   ^(SHIFT_RIGHT lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} >> ${right}") }
-    |   ^(GREATER_THAN lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} > ${right}") }
-    |   ^(SHIFT_LEFT lv0=expr rv0=expr)  { $value = ev(lv0, rv0, "${left} << ${right}") }
-    |   ^(LESS_THAN lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} < ${right}") }
-
-    |   ^(PLUS lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} + ${right}") }
-    |   ^(MINUS lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} - ${right}") }
-    |   ^(STAR lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} * ${right}") }
-    |   ^(DIV lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} / ${right}") }
-    |   ^(MOD lv0=expr rv0=expr) { $value = ev(lv0, rv0, "${left} \% ${right}") }
-    |   ^(UNARY_PLUS lv0=expr) { $value = ev(lv0, format="+${left}") }
-    |   ^(UNARY_MINUS lv0=expr) { $value = ev(lv0, format="-${left}") }
-
-    |   ^(PRE_INC lv0=expr)     { $value = ev(lv0, format="${left} += 1", pre=True, assign=True) }
-    |   ^(PRE_DEC lv0=expr)     { $value = ev(lv0, format="${left} -= 1", pre=True, assign=True) }
-    |   ^(POST_INC lv0=expr)    { $value = ev(lv0, format="${left} += 1", post=True, assign=True) }
-    |   ^(POST_DEC lv0=expr)    { $value = ev(lv0, format="${left} -= 1", post=True, assign=True) }
-    |   ^(NOT lv0=expr)         { $value = ev(lv0, format="~${left}") }
-    |   ^(LOGICAL_NOT lv0=expr) { $value = ev(lv0, format="not ${left}") }
-    |   ^(CAST_EXPR lv0=type rv0=expr)   { $value = ev(lv0, rv0, "${left}(${right})") }
+    |   ^(BIT_SHIFT_RIGHT lv0=expr rv0=expr)
+          { $value = self.onBsr(lv0, rv0) }
+    |   ^(SHIFT_RIGHT lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} >> ${right}") }
+    |   ^(GREATER_THAN lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} > ${right}") }
+    |   ^(SHIFT_LEFT lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} << ${right}") }
+    |   ^(LESS_THAN lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} < ${right}") }
+    |   ^(PLUS lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} + ${right}") }
+    |   ^(MINUS lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} - ${right}") }
+    |   ^(STAR lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} * ${right}") }
+    |   ^(DIV lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} / ${right}") }
+    |   ^(MOD lv0=expr rv0=expr)
+          { $value = ev(lv0, rv0, "${left} \% ${right}") }
+    |   ^(UNARY_PLUS lv0=expr)
+          { $value = ev(lv0, format="+${left}") }
+    |   ^(UNARY_MINUS lv0=expr)
+          { $value = ev(lv0, format="-${left}") }
+    |   ^(PRE_INC lv0=expr)
+          { $value = ev(lv0, format="${left} += 1", pre=True, assign=True) }
+    |   ^(PRE_DEC lv0=expr)
+          { $value = ev(lv0, format="${left} -= 1", pre=True, assign=True) }
+    |   ^(POST_INC lv0=expr)
+          { $value = ev(lv0, format="${left} += 1", post=True, assign=True) }
+    |   ^(POST_DEC lv0=expr)
+          { $value = ev(lv0, format="${left} -= 1", post=True, assign=True) }
+    |   ^(NOT lv0=expr)
+          { $value = ev(lv0, format="~${left}") }
+    |   ^(LOGICAL_NOT lv0=expr)
+          { $value = ev(lv0, format="not ${left}") }
+    |   ^(CAST_EXPR lv0=type rv0=expr)
+          { $value = ev(lv0, rv0, "${left}(${right})") }
     |   p0=primaryExpression { $value = $p0.value }
     ;
 
@@ -554,14 +586,18 @@ primaryExpression returns [value] @init { $value = ev() }
     :   ^(  DOT
             (p0=primaryExpression
              { $value = ev($p0.value, format="${left}.${right}") }
-                (   i0=IDENT { $value["right"] = ev(self.altId($i0.text), format="${left}")}
+                (   i0=IDENT
+                    { $value["right"] = ev(self.altId($i0.text), format="${left}")}
                 |   THIS
                 |   SUPER
                 |   innerNewExpression
                 |   CLASS
+                    { $value["right"] = ev('__class__', format="${left}") }
                 )
-            |   primitiveType CLASS
+            |   pt0=primitiveType CLASS
+                { $value = ev($pt0.text, '__class__', format="${left}.${right}") }
             |   VOID CLASS
+                { $value = ev('None', '__class__', format="${left}.${right}") }
             )
         )
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
@@ -635,8 +671,8 @@ arguments returns [args] @init { $args, format = "", "${right}" }
 literal returns [value]
     :   HEX_LITERAL { $value = $text }
     |   OCTAL_LITERAL { $value = $text }
-    |   DECIMAL_LITERAL { $value = self.fixFloatLiteral($text) }
-    |   FLOATING_POINT_LITERAL { $value = self.fixFloatLiteral($text) }
+    |   DECIMAL_LITERAL { $value = self.makeFloatLiteral($text) }
+    |   FLOATING_POINT_LITERAL { $value = self.makeFloatLiteral($text) }
     |   CHARACTER_LITERAL { $value = $text }
     |   STRING_LITERAL { $value = $text }
     |   TRUE { $value = 'True' }
