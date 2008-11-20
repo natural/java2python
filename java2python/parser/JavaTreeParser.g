@@ -40,7 +40,7 @@ options { language=Python; backtrack=true; memoize=true; tokenVocab=Java;
           ASTLabelType=CommonTree; superClass=LocalTreeParser; }
 
 @treeparser::header {
-from java2python import ev
+from java2python import expressionvalue as ev
 from java2python.parser.local import LocalTreeParser
 }
 
@@ -155,7 +155,7 @@ classScopeDeclarations @after { self.commentHandler($start) }
             self.pop() }
         )
     |   ^(VAR_DECLARATION md2=modifierList tp2=type vd2=variableDeclaratorList)
-         { self.onVariables($vd2.decls, $tp2.value) }
+         { self.onVariables($vd2.decls, $tp2.value, $md2.mods) }
     |   ^(CONSTRUCTOR_DECL md3=modifierList genericTypeParameterList?
           fp3=formalParameterList throwsClause?
           { self.onMethod("__init__", $md3.mods, $fp3.params) }
@@ -180,8 +180,8 @@ interfaceScopeDeclarations
           fp1=formalParameterList throwsClause?
           { self.onMethod($id0.text, $md1.mods, $fp1.params, "void", pop=True) }
         )
-    |   ^(VAR_DECLARATION modifierList tp2=type vd0=variableDeclaratorList)
-          { self.onVariables($vd0.decls, $tp2.value) }
+    |   ^(VAR_DECLARATION md2=modifierList tp2=type vd0=variableDeclaratorList)
+          { self.onVariables($vd0.decls, $tp2.value, $md2.mods) }
     |   typeDeclaration
     ;
 
@@ -289,18 +289,18 @@ primitiveType
 // one idea to use them is in python 3 output.
 // see pep 3107 http://www.python.org/dev/peps/pep-3107/
 
-genericTypeArgumentList
-    :   ^(GENERIC_TYPE_ARG_LIST genericTypeArgument+)
+genericTypeArgumentList returns [value] @init { $value = [] }
+    :   ^(GENERIC_TYPE_ARG_LIST (ga0=genericTypeArgument { $value.append($ga0.value) })+)
     ;
 
-genericTypeArgument
-    :   type
-    |   ^(QUESTION genericWildcardBoundType?)
+genericTypeArgument returns [value] @init { $value = {} }
+    :   tp0=type { $value $tp0.value }
+    |   ^(QUESTION (gw0=genericWildcardBoundType { $value.update($gw0.value) })?)
     ;
 
-genericWildcardBoundType
-    :   ^(EXTENDS type)
-    |   ^(SUPER type)
+genericWildcardBoundType returns [value]
+    :   ^(EXTENDS tp0=type { $value = dict(extends=$tp0.value) })
+    |   ^(SUPER tp1=type { $value = dict(super=$tp1.value) })
     ;
 
 formalParameterList returns [params] @init { params = [] }
@@ -611,7 +611,7 @@ primaryExpression returns [value] @init { $value = ev() }
         )
     |   literal { $value = $literal.value }
     |   newExpression { $value = $newExpression.value }
-    |   THIS { $value = ev('self', format="${left}") }
+    |   THIS { $value = ev("self", format="${left}") }
     |   arrayTypeDeclarator
     |   SUPER
     ;
@@ -625,13 +625,15 @@ arrayTypeDeclarator
     :   ^(ARRAY_DECLARATOR (arrayTypeDeclarator | qualifiedIdentifier | primitiveType))
     ;
 
+
+// the static array creator rule is tested in tests/ArrayValues.java.
+//
 newExpression returns [value]
     :   ^(  STATIC_ARRAY_CREATOR
             (   tp0=primitiveType ac0=newArrayConstruction
                 { $value = self.makeArrayCreator($tp0.text, $ac0.value) }
-            // need test case:
-            |   genericTypeArgumentList? qt0=qualifiedTypeIdent ac1=newArrayConstruction
-                { $value = ev(right=ac1.value, format="${right}") }
+            |   gt1=genericTypeArgumentList? qt0=qualifiedTypeIdent ac1=newArrayConstruction
+                { $value = self.makeArrayCreator($qt0.value, $ac1.value, $gt1.value) }
             )
         )
 

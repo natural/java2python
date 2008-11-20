@@ -73,6 +73,13 @@ class BlockPropShard:
                 return obj.name
 
     @property
+    def outerMethod(self):
+        """ the closest outer method """
+        for obj in self.family:
+            if obj.isMethod:
+                return obj
+
+    @property
     def parents(self):
         """ generates each ancestor of this instance """
         previous = self.parent
@@ -151,7 +158,7 @@ class BlockAddingShard:
         @return None
         """
         from java2python.blocks import Variable
-        if isinstance(obj, Variable):
+        if isinstance(obj, (Variable, )):
             var = obj
         else:
             var = Variable(obj)
@@ -376,35 +383,6 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
                     return 'self.%s'
         return '%s ## ERROR'
 
-    def fixDecl(self, *args):
-        """ fixes variable names that are class members
-
-        @varparam args names to fix
-        @return fixed name or names
-        """
-        fixed = list(args)
-        methodvars = list(self.methodVars)
-        membervars = list(chain(self.instanceMembers, self.instanceMethods))
-        staticvars = list(chain(self.staticMembers, self.staticMethods))
-        mapping = self.config.combined('identRenames')
-        format = self.declFormat
-        for i, arg in enumerate(args):
-            if arg in methodvars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = arg
-            elif arg in staticvars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = "%s.%s" % (self.nameOrClassName, arg)
-            elif arg in membervars:
-                arg = mapping.get(arg, arg)
-                fixed[i] = format % (arg, )
-            else:
-                fixed[i] = mapping.get(arg, arg)
-        if len(fixed) == 1:
-            return fixed[0]
-        else:
-            return tuple(fixed)
-
     def formatExpression(self, obj):
         """ format an expression set by the tree walker
 
@@ -414,10 +392,9 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
         @param obj string or two-tuple
         @return interpolated, fixed expression as string
         """
-        if isinstance(obj, tuple):
-            raise Exception(str(obj))
-            expr = str(obj)
-        elif isinstance(obj, list):
+        if isinstance(obj, list):
+            ## still used????
+            debug('formatting list object %s', obj)
             expr = ', '.join(self.formatExpression(v) for v in obj)
         elif isinstance(obj, dict):
             inner = obj.copy()
@@ -428,117 +405,5 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
                 inner['left'] = self.formatExpression(obj['left'])
             expr = Template(format).substitute(inner)
         else:
-            #renames = self.config.combined('identRenames')
-            #expr = renames.get(obj, obj)
             expr = obj
         return expr
-
-    def alternateName(self, name, key='renameAnyMap'):
-        """ returns an alternate for given name
-
-        @param name any string
-        @return alternate for name if found; if not found, returns name
-        """
-        mapping = self.config.combined(key)
-        try:
-            return mapping[name]
-        except (KeyError, ):
-            return name
-
-
-class CruftiesFromPreviousImplementation:
-    def init():
-        ## ug.
-        self.postIncDecInExprFixed = False
-        self.postIncDecVars = []
-        self.postIncDecCount= 0
-
-
-
-    def fixAssignInExpr(self, needFix, expr, left):
-        if not needFix: return expr
-        if self.name == 'if':
-            self.parent.addSource(expr, self)
-        elif self.name == 'while':
-            self.addSource(expr)
-        elif isinstance(self, Method):
-            self.addSource(expr)
-        return left
-
-    def fixPostIncDecInExpr(self, needFix, expr, left, op):
-        if not needFix: return expr
-        if self.name == 'if':
-            avar = "_%s0" % left[1]
-            self.postIncDecVars.append((avar, left, op))
-            self.postIncDecInExprFixed = True
-            return '%s', avar
-        else:
-            self.postIncDecVars.append((left, op))
-            self.postIncDecInExprFixed = True
-            return '%s', left
-
-    def fixPostIncDecInExprAfter(self, expr):
-        if not self.postIncDecInExprFixed: return expr
-        if self.name == 'if':
-            for var in self.postIncDecVars:
-                self.parent.addSource((var[0] + ' = %s', var[1]), self)
-            for var in self.postIncDecVars:
-                self.parent.addSource(('%s ' + var[2] + '= 1', var[1]), self)
-        else:
-            for var in self.postIncDecVars:
-                left, op = var
-                self.addSource(('%s ' + op + "= 1", left))
-        self.postIncDecVars = []
-        self.postIncDecInExprFixed = False
-        return expr
-
-    def hasAssignInExpr(self, expr):
-        from lexer import ASSIGN, INC, DEC, POST_INC, POST_DEC, BAND_ASSIGN, SL_ASSIGN, BSR_ASSIGN, SR_ASSIGN, MOD_ASSIGN, DIV_ASSIGN, STAR_ASSIGN, MINUS_ASSIGN, PLUS_ASSIGN
-        if expr.getType() in (ASSIGN, INC, DEC, POST_INC, POST_DEC, BAND_ASSIGN, SL_ASSIGN, BSR_ASSIGN, SR_ASSIGN, MOD_ASSIGN, DIV_ASSIGN, STAR_ASSIGN, MINUS_ASSIGN, PLUS_ASSIGN):
-            return True
-        child = expr.getFirstChild()
-        while child:
-            ret = self.hasAssignInExpr(child)
-            if ret: return True
-            child = child.getNextSibling()
-        return False
-
-    def allVars(self):
-        """ all variables in this instance and its ancestors """
-        for obj in self.family:
-            for v in obj.variables:
-                yield v.name
-            for v in obj.methods:
-                yield v.name
-            for v in obj.extraVars:
-                yield v
-
-
-    def old_formatExpression(self, v):
-        fixdecl = self.fixDecl
-        fixdecl = lambda x:x
-        if isinstance(expr, basestring):
-            return expr # fixdecl(expr)
-        format = self.formatExpression
-        first, second = expr
-        debug("%s::%s %s::%s", type(first).__name__, first, type(second).__name__, second, )
-        try:
-            if isinstance(first, basestring) and isinstance(second, basestring):
-                debug("str+str")
-                return first % second
-                #return fixdecl(first) % fixdecl(second)
-            elif isinstance(first, basestring) and isinstance(second, tuple):
-                debug("str+tuple")
-                return first % format(second)
-                return fixdecl(first) % format(second)
-            elif isinstance(first, tuple) and isinstance(second, basestring):
-                debug("tuple+str")
-                return format(first) % fixdecl(second)
-            elif isinstance(first, tuple) and isinstance(second, tuple):
-                debug("tuple+tuple")
-                return (format(first), format(second))
-            else:
-                #return str(expr)
-                raise NotImplementedError('Unhandled expression type:  %s' % expr)
-        except (Exception, ):
-            exception("unhandled expression %s %s", first, second)

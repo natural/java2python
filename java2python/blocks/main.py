@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from logging import warn
 from java2python.blocks.base import BasicBlock
 
 
@@ -17,16 +18,32 @@ class Class(BasicBlock):
 
         @param output any writable file-like object
         @param indent indentation level of this block
-        @return None
         """
         for handler in self.config.handlers('classHandlers'):
             handler(self)
         offset = self.I(indent)
         for line in self.prefix:
             output.write('%s%s\n' % (offset, line))
-        output.write('%s%s\n' % (offset, self.formatDecl()))
+        output.write('%s%s\n' % (offset, self.classDecl()))
         BasicBlock.dump(self, output, indent+1)
 
+    def addBaseClass(self, expr):
+        """ add a base class by expr
+
+        @param expr base class expression
+        @return None
+        """
+        if expr not in self.bases:
+            self.bases.append(expr)
+
+    def addModifier(self, name):
+        """ add a modifier to this source block
+
+        @param name value of modifier, as a string
+        @return None
+        """
+	## check 2vs3 and adjust -- class decos not supported in 2.x.
+        self.modifiers.append(name)
 
     @property
     def extraVars(self):
@@ -40,41 +57,7 @@ class Class(BasicBlock):
             extras.extend(comb('baseClassMembers').get(base, []))
         return extras
 
-    def addBaseClass(self, name):
-        """ add a base class by name
-
-        @param name base class name as string
-        @return None
-        """
-        if name and (name not in self.bases):
-            #name = self.formatExpression(name) ## just for now -- fix me later!
-            self.bases.append(name)
-
-    def addModifier(self, name):
-        """ add a modifier to this source block
-
-        @param name value of modifier, as a string
-        @return None
-        """
-	## check 2vs3 and adjust -- class decos not supported in 2.x.
-        self.modifiers.append(name)
-
-    def fixDecl(self, *args):
-        """ fixes variable names that are class members
-
-        @varparam args names to fix
-        @return fixed name or names
-        """
-        ret = list(args)
-        for i, arg in enumerate(args):
-            if self.name != arg:
-                ret[i] = BasicBlock.fixDecl(self, arg)
-        if len(ret) > 1:
-            return ret
-        else:
-            return ret[0]
-
-    def formatDecl(self):
+    def classDecl(self):
         """ generates a class statement accounting for base types
 
         @return class declaration as string
@@ -134,7 +117,7 @@ class Method(BasicBlock):
         offset = self.I(indent)
         for line in self.prefix:
             output.write('%s%s\n' % (offset, line))
-        output.write('%s\n' % (self.formatDecl(indent), ))
+        output.write('%s\n' % (self.methodDecl(indent), ))
         BasicBlock.dump(self, output, indent+1)
         output.write('\n')
 
@@ -166,19 +149,16 @@ class Method(BasicBlock):
         @param name parameter name as string
         @return None
         """
-        name = self.alternateName(name)
-        typ = BasicBlock.alternateName(self, typ, 'typeRenames')
         self.parameters.append((typ, name))
-        #self.addVariable(Variable(self, name))
         self.addVariable(name)
 
-    def formatDecl(self, indent):
+    def methodDecl(self, indent):
         """ generates a class statement accounting for base types
 
         @param indent indentation level of this block
         @return class declaration as string
         """
-        name = self.alternateName(self.name)
+        name = self.name
         parameters = self.parameters
         minparam = self.config.last('minIndentParams', 0)
         if minparam and len(parameters) > minparam:
@@ -190,18 +170,6 @@ class Method(BasicBlock):
             params = str.join(', ', [p[1] for p in parameters])
             decl = '%sdef %s(%s):' % (self.I(indent), name, params)
         return decl
-
-    def alternateName(self, name):
-        """ returns an alternate for given name
-
-        @param name any string
-        @return alternate for name if found; if not found, returns name
-        """
-        mapping = self.config.combined('renameMethodMap')
-        try:
-            return mapping[name]
-        except (KeyError, ):
-            return BasicBlock.alternateName(self, name)
 
 
 class Module(BasicBlock):
@@ -243,6 +211,8 @@ class Statement(BasicBlock):
     def __init__(self, parent, name=None, expr=None):
         BasicBlock.__init__(self, parent=parent, name=name)
         self.expr = expr
+        if name not in ('break', 'continue', 'raise', 'assert'):
+            self.addSource('pass')
 
     def dump(self, output, indent):
         """ writes the string representation of this block
@@ -257,14 +227,12 @@ class Statement(BasicBlock):
             return
         offset = self.I(indent)
         output.write('%s%s' % (offset, name))
-        if self.expr is not None:
+        if self.expr:
             expr = self.formatExpression(self.expr)
             output.write(' %s' % (expr, ))
         if self.needsBlockIndicator:
             output.write(':')
         output.write('\n')
-        if (not lines) and not name.startswith(('break', 'continue', 'raise', 'assert')):
-            self.addSource('pass')
         BasicBlock.dump(self, output, indent+1)
 
     @property
@@ -274,16 +242,16 @@ class Statement(BasicBlock):
 
         """
         if self.name in ('break', 'continue'):
-            parent_names = [p.name for p in self.parents]
-            if 'while' not in parent_names and 'for' not in parent_names:
-                return True
+            names = [p.name for p in self.parents]
+            return 'while' not in names and 'for' not in names
 
     @property
     def isNoOp(self):
         """ True if this instance does nothing, e.g., else:pass.
 
         """
-        return self.name in ('else', 'finally') and (not self.lines)
+        empty = (not self.lines) or (self.lines == ['pass'])
+        return self.name in ('else', 'finally') and empty
 
     @property
     def needsBlockIndicator(self):

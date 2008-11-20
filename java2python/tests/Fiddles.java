@@ -1,4 +1,6 @@
 class Fiddles {
+    public static int x = 42;
+
     public static void main(String[] args) {
 	int a = 0, b = 0, c = 3;
 

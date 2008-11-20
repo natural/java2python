@@ -12,5 +12,12 @@ abstract class ColoredPoint extends Point {
 }
 
 class AbstractPoint extends Point {
+    public static void main(String[] args) {
+	Point p = new AbstractPoint();
+    }
+
     void alert() { }
 }
+
+
+

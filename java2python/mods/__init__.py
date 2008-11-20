@@ -3,12 +3,16 @@
 
 from functools import partial
 from logging import warn
-from java2python import ev
+from java2python import expressionvalue as ev
 from java2python.parser import JavaLexer
 
 
 def simpleComments(block, text, typ):
-    ## config prefix is used for comments via addComment
+    """ A very simple comment writer.
+
+    """
+    def simpleSingleFormat(raw):
+        yield raw[2:].strip()
 
     def simpleMultiFormat(raw):
         raw = raw.strip()[2:-2]
@@ -20,14 +24,12 @@ def simpleComments(block, text, typ):
                 line = line[:-1]
             yield line.strip()
 
-    def simpleSingleFormat(raw):
-        yield raw[2:].strip()
-
-    lines = ()
     if typ == JavaLexer.COMMENT:
         lines = simpleMultiFormat(text)
     elif typ == JavaLexer.LINE_COMMENT:
         lines = simpleSingleFormat(text)
+    else:
+        lines = ()
     for line in lines:
         block.addComment(line, 0)
 

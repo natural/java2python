@@ -55,8 +55,9 @@ def fixCtor(block):
         if meth.name == '__init__':
             if not (meth.calledSuperCtor or meth.calledOtherCtor):
                 meth.addSource("super(%s, self).__init__()" % meth.outerClassName, index=0)
-                meth.stmtAfterSuper = meth.makeStatementBefore("placeholder", 1) # wtf
-            if not meth.calledOtherCtor:
+                #meth.stmtAfterSuper = meth.makeStatementBefore("placeholder", 1) # wtf
+            
+            if 0: #not meth.calledOtherCtor:
                 stmt = meth.stmtAfterSuper
                 meth.addSource("# begin of instance variables", stmt)
                 for v in block.variables:

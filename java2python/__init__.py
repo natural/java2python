@@ -6,7 +6,7 @@ from operator import not_
 
 marker = object()
 
-def ev(left='', right='', format='', **kwds):
+def expressionvalue(left='', right='', format='', **kwds):
     """ Sugar for creating a formatting value dictionary.
 
     """

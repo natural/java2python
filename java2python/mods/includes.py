@@ -5,8 +5,13 @@
 def bsr(value, bits):
     """ bsr(value, bits) -> value shifted right by bits
 
-    Copyright 2003 Jeffrey Clement.
-    See ./pyrijnadel.py for license and original source.
+    This function is here because an expression in the original java
+    source contained the token '>>>' and/or '>>>=' (bit shift right
+    and/or bit shift right assign).  In place of these, the python
+    source code below contains calls to this function.
+
+    Copyright 2003 Jeffrey Clement.  See pyrijnadel.py for license and
+    original source.
     """
     minint = -2147483648
     if bits == 0:

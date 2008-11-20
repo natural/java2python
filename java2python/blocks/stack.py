@@ -4,7 +4,8 @@
 """
 from itertools import chain, count
 from logging import debug
-from java2python import ev, isdict, marker
+
+from java2python import expressionvalue as ev, isdict, marker
 
 
 nameCounter = count(0).next
@@ -59,26 +60,40 @@ class BlockStack:
 	self.stack.append(value)
 
     def altId(self, name):
-        """ Returns replacement for given identifier.
+        """ Returns replacement name for given identifier.
 
         """
 	alt = self.top.config.combined('identRenames')
-        return alt.get(name, name)
+        new = alt.get(name, name)
+        top = self.top
+        outer = top.outerMethod
+        if outer:
+            methargs = [v[1] for v in outer.parameters]
+            if new in top.instanceMembers and methargs:
+                if methargs[0] in ('cls', 'self'):
+                    fmt = methargs[0] + '.%s'
+                else:
+                    fmt = '%s'
+                new = fmt % new
+#        debug('name=%s new=%s outer=%s', name, new, '')
+        return new
 
     def altType(self, name):
-        """ Returns replacement type for given type.
+        """ Returns replacement name for given type.
 
         """
         alt = self.top.config.combined('typeRenames')
         return alt.get(name, name)
 
-    def makeArrayCreator(self, typ, ctor):
+    def makeArrayCreator(self, new, count, types=()):
         """ Returns an expression value to use as an array constructor.
 
-        NB:  It's probably not this easy
+        The optional types sequence is ignored for now.
+
+        NB:  It's probably not this easy.
         """
         format = '[$left() for __%s in range($right)]' % nameCounter()
-        return ev(typ, ctor, format)
+        return ev(self.altType(new), count, format)
 
     def makeAssign(self, op, left, right):
         """ Returns an expression value for an assignment statement.
@@ -104,11 +119,12 @@ class BlockStack:
         """ Returns an expression for use as a method parameter.
 
         """
-        debug('%s %s %s', decl, typ, isVariadic)
-        left = ev('*' if isVariadic else '', decl, '$left$right')
-        new = decl.copy()
-        new.update(type=typ, format='$left', left=left)
-        return new
+        debug('decl=%s type=%s isVariadic=%s', decl, typ, isVariadic)
+        return ev(
+            left=ev('*' if isVariadic else '', decl, '$left$right'),
+            format='$left',
+            type=typ,
+            )
 
     def onAnnoMethod(self, name, decls, default):
         """
@@ -400,30 +416,19 @@ class BlockStack:
             src = ev(name, right, '$left = $right')
             self.top.addSource(src)
 
-    def onVariables(self, decls, applyType=marker):
-	debug('%s %s', decls, applyType)
-        if applyType is not marker:
-            for decl in decls:
-                ## need to specify "type()" not just "type" ??
-                #decl['right'] = applyType
-                if not decl['right']:
-                    decl['right'] = applyType
-                decl['type'] = applyType
-	#renames = self.top.config.combined('identRenames')
-        renames = {}
-	for decl in decls:
-	    name = decl.get('left', '?')
-	    name = renames.get(name, name)
-	    var = self.top.addVariable(name, True)
-            src = {'format':'$left = $right', 'left':name, 'right':'', }
-	    if 'right' in decl:
-                src['right'] = decl['right']
-                var.expr = decl['right']
-	    else:
-                src['format'] += '()'
-                src['right'] = decl.get('type', 'MissingType')
-                var.expr = src['right']
-	    self.top.addSource(src)
+    def onVariables(self, decls, applyType, mods=()):
+	debug('%s %s', decls, mods)
+        for decl in decls:
+            ## need to specify "type()" not just "type" ??
+            #decl['right'] = applyType
+            if not decl['right']:
+                decl['right'] = applyType
+        for decl in decls:
+            decl['format'] = '$left = $right'
+            decl['mods'] = mods
+            decl['type'] = applyType
+            self.top.addSource(decl)
+            self.top.addVariable(decl['left'])
 
     def onWhile(self):
         stat = self.top.makeStatement('while')
@@ -451,7 +456,7 @@ def xformAssigns(expr):
     lft, rgt, ctr = expr.get('left'), expr.get('right'), expr.get('center')
     for k in chain(xformAssigns(lft), xformAssigns(rgt), xformAssigns(ctr)):
         yield k
-    for leaf in (lft, rgt):
+    for leaf in (lft, rgt, ctr):
         if isdict(leaf) and leaf.get('assign'):
             orig, next = leaf.copy(), leaf.copy()
             leaf['format'] = '$left'
