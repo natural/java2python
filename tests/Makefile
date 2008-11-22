@@ -1,5 +1,5 @@
-PYTHONPATH=../../:.
-CLASSPATH=/usr/share/java/junit.jar:.
+PYTHONPATH=..
+CLASSPATH=.
 
 java_sources := $(wildcard *.java)
 py_sources := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
@@ -12,18 +12,18 @@ all: $(java_sources)
 
 
 $(java_sources):
-	javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig
+	javac $@  && ../java2python/bin/j2py -i $@ -o $(basename $@).py -c testconfig
 	@chmod u+x $(basename $@).py
 	@bash ./compare_outputs.sh "java -ea $(basename $@)" "python $(basename $@).py" "$@"
 
 
 %.py: %.java testconfig.py
-	../bin/j2py -i $< -o $@ -c testconfig
+	../java2python/bin/j2py -i $< -o $@ -c testconfig
 	python $@
 
 %: %.java
 	javac $<
-	java junit.textui.TestRunner $@
+	java $@
 
 clean:
 	rm -f *.class *.pyc $(py_sources)

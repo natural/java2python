@@ -1,5 +1,3 @@
-import junit.framework.*;
-
 class Simple {
     public int a = 1;
     public int [] b = new int[10];
@@ -15,8 +13,7 @@ class Simple {
     }
 }
 
-public class ClassMember extends TestCase {
-    
+public class ClassMember  {
     public void testNonStaticMember() {
         Simple x = new Simple();
         Simple y = new Simple();

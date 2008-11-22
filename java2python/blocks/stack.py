@@ -353,10 +353,9 @@ class BlockStack:
 	for mod in (mods or []):
 	    meth.addModifier(mod)
 	for param in (params or []):
-	    #if len(param) == 2:
-	    #    param += [None]
 	    t, p, a = param.get('type', ''), param.get('left', ''), param.get('array')
             p = meth.formatExpression(p)
+            t = self.altType(t)
 	    meth.addParameter(t, p)
 	self.push(meth)
         return (self.pop() if pop else meth)

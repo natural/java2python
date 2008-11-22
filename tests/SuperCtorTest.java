@@ -1,11 +1,9 @@
-import junit.framework.*;
-
 class SuperClass {
-    public int x = 0;
+    public int x = 42;
     public String y = null;
 
     public SuperClass() {
-        x = 1;
+        x = 43;
     }
 
     public SuperClass(String arg) {
@@ -42,21 +40,20 @@ class SuperCtorTest4 extends SuperClass {
 	}
 }
 
-public class SuperCtorTest extends TestCase {
-    
-    public void testSuperCtor() {
+public class SuperCtorTest  {
+    public static void main(String[] args) {
         SuperCtorTest1 t1 = new SuperCtorTest1();
-        Assert.assertEquals(1, t1.x);
+        System.out.println(43 == t1.x ? 1 : 0);
 
         SuperCtorTest2 t2 = new SuperCtorTest2();
-        Assert.assertEquals(1, t2.x);
+        System.out.println(43 == t2.x ? 1 : 0);
 
         SuperCtorTest3 t3 = new SuperCtorTest3();
-        Assert.assertEquals("arg", t3.y);
-        Assert.assertEquals(0, t3.x);
+        System.out.println("arg" == t3.y ? 1 : 0);
+        System.out.println(42 == t3.x ? 1 : 0);
+        System.out.println(t3.x);
 
         SuperCtorTest4 t4 = new SuperCtorTest4(10);
-        Assert.assertEquals(10, t4.x);
+        System.out.println(10 == t4.x ? 1 :0);
     }
-
 }
