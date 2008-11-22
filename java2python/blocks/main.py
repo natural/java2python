@@ -42,7 +42,6 @@ class Class(BasicBlock):
         @param name value of modifier, as a string
         @return None
         """
-	## check 2vs3 and adjust -- class decos not supported in 2.x.
         self.modifiers.append(name)
 
     @property
@@ -62,8 +61,7 @@ class Class(BasicBlock):
 
         @return class declaration as string
         """
-        bases = self.bases
-        name = self.name
+        bases, name = self.bases, self.name
         if bases:
             bases = [self.formatExpression(b) for b in bases]
             decl = 'class %s(%s):' % (name, str.join(', ', bases))
@@ -116,6 +114,8 @@ class Method(BasicBlock):
             handler(self)
         offset = self.I(indent)
         for line in self.prefix:
+            output.write('%s%s\n' % (offset, line))
+        for line in self.preamble:
             output.write('%s%s\n' % (offset, line))
         output.write('%s\n' % (self.methodDecl(indent), ))
         BasicBlock.dump(self, output, indent+1)
@@ -272,7 +272,7 @@ class Statement(BasicBlock):
 
 class Variable(BasicBlock):
     """Variable is a defined class member variable or auto variable of the
-    method.
+       method.
 
     """
     def __init__(self, parent, name=None, expr=None):

@@ -9,6 +9,7 @@ clean:
 	rm -f *.pyo
 	rm -f *.pyc
 	cd parser && $(MAKE) clean
+	cd tests && $(MAKE) clean
 
 parser:
 	cd parser && $(MAKE)

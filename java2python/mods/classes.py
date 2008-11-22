@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from logging import debug
 from java2python import maybeattr
 
 

@@ -6,19 +6,11 @@
 ## is cumulative, so when user-defined configuration modules specify
 ## this value, those lines are written after these.
 modulePreamble = [
-    '#### from overloading import overloaded',
-    ]
-
-## lines written at the end of each generated module.  this value is
-## cumulative, so user-defined configuration modules may specify
-## additional values.
-moduleEpilogue = [
+    'from overloading import overloaded',
     ]
 
 
-identRenames = {
-    'Assert':'self',
-    }
+
 
 
 outputSubs = [
@@ -27,4 +19,9 @@ outputSubs = [
     ]
 
 
-commentHandlers = []
+
+enumConstantHandlers = [
+    'java2python.mods.enums.pyStrings',
+    #'java2python.mods.enums.minJava',
+
+]

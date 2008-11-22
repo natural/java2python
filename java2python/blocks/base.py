@@ -138,7 +138,8 @@ class BlockAddingShard:
         @return None
         """
         lines = self.lines
-        if lines == ['pass']:
+        val = self.formatExpression(src) if isinstance(src, dict) else src
+        if lines == ['pass'] and val:
             lines.pop()
         if index is None:
             lines.append(src)

@@ -128,7 +128,7 @@ enumConstant returns [decl] @init { decl = dict() }
           { $decl.update(id=$id0.text, annos=$an0.annos, args=$ag0.args) }
           ({ $decl.update(klass=self.onClass($id0.text)) }
            classTopLevelScope
-           { if 0:self.pop() }
+           { self.pop() }
           )?
         )
     ;
@@ -217,7 +217,7 @@ arrayDeclaratorList returns [value] @init { $value = [] }
 arrayInitializer returns [value] @init { $value, format = "", "${right}" }
     :   ^(ARRAY_INITIALIZER
             (v0=variableInitializer
-                { $value, format = ev($value, v0, format), "${left}, ${right}" }
+                { $value, format = ev($value, $v0.value, format), "${left}, ${right}" }
             )*
         )
     ;
@@ -284,10 +284,6 @@ primitiveType
     |   FLOAT
     |   DOUBLE
     ;
-
-// generic types and arguments aren't handled -- yet
-// one idea to use them is in python 3 output.
-// see pep 3107 http://www.python.org/dev/peps/pep-3107/
 
 genericTypeArgumentList returns [value] @init { $value = [] }
     :   ^(GENERIC_TYPE_ARG_LIST (ga0=genericTypeArgument { $value.append($ga0.value) })+)
@@ -368,7 +364,7 @@ annotationScopeDeclarations
     |   typeDeclaration
     ;
 
-annotationDefaultValue returns[value]
+annotationDefaultValue returns [value]
     :   ^(DEFAULT (av0=annotationElementValue { $value = $av0.text }))
     ;
 
@@ -586,82 +582,84 @@ primaryExpression returns [value] @init { $value = ev() }
     :   ^(  DOT
             (p0=primaryExpression
              { $value = ev($p0.value, format="${left}.${right}") }
-                (   i0=IDENT
-                    { $value["right"] = ev(self.altId($i0.text), format="${left}")}
-                |   THIS
-                |   SUPER
-                |   innerNewExpression
-                |   CLASS
-                    { $value["right"] = ev('__class__', format="${left}") }
+                (i0=IDENT { $value["right"] = ev($i0.text, format="${left}")}
+                |THIS { $value["format"] = "${left}" } // broken
+                |SUPER
+                 { $value["format"] = "${left}"
+                   $value["left"] = ev($value["left"], "", "super(${left}, self)")
+                 }
+                |ne0=innerNewExpression { $value = $ne0.value }
+                |CLASS { $value["right"] = ev("__class__", "", "${left}") }
                 )
-            |   pt0=primitiveType CLASS
-                { $value = ev($pt0.text, '__class__', format="${left}.${right}") }
-            |   VOID CLASS
-                { $value = ev('None', '__class__', format="${left}.${right}") }
+            |   pt0=primitiveType CLASS { $value = ev($pt0.text, "__class__", "${left}.${right}") }
+            |   VOID CLASS { $value = ev("None", "__class__", "${left}.${right}") }
             )
         )
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
-    |   IDENT { $value = ev(self.altId($text), format="${left}")  }
+    |   IDENT { $value = ev(self.altId($text), "", "${left}")  }
     |   ^(METHOD_CALL p0=primaryExpression genericTypeArgumentList? a0=arguments
             { $value = ev($p0.value, $a0.args, "${left}(${right})") }
         )
-    |   explicitConstructorCall
+    |   ec0=explicitConstructorCall { $value = $ec0.value }
     |   ^(ARRAY_ELEMENT_ACCESS p0=primaryExpression e0=expression
-            { $value = ev($p0.value, $e0.value, '${left}[${right}]') }
+            { $value = ev($p0.value, $e0.value, "${left}[${right}]") }
         )
     |   literal { $value = $literal.value }
     |   newExpression { $value = $newExpression.value }
-    |   THIS { $value = ev("self", format="${left}") }
+    |   THIS { $value = ev("self", "", "${left}") }
     |   arrayTypeDeclarator
-    |   SUPER
+    |   SUPER { $value = ev(self.topParentName, "", "super(${left}, self)") }
     ;
 
-explicitConstructorCall
-    :   ^(THIS_CONSTRUCTOR_CALL genericTypeArgumentList? arguments)
-    |   ^(SUPER_CONSTRUCTOR_CALL primaryExpression? genericTypeArgumentList? arguments)
+explicitConstructorCall returns [value]
+    :   ^(THIS_CONSTRUCTOR_CALL ga0=genericTypeArgumentList? ag0=arguments)
+        { $value = ev("self.__init__", $ag0.args, "${left}(${right})") }
+    |   ^(SUPER_CONSTRUCTOR_CALL pe1=primaryExpression? ga1=genericTypeArgumentList? ag1=arguments)
+        { $value = ev(self.topParentName, $ag1.args, "super(${left}, self).__init__(${right})") }
     ;
 
 arrayTypeDeclarator
     :   ^(ARRAY_DECLARATOR (arrayTypeDeclarator | qualifiedIdentifier | primitiveType))
     ;
 
-
-// the static array creator rule is tested in tests/ArrayValues.java.
-//
 newExpression returns [value]
-    :   ^(  STATIC_ARRAY_CREATOR
-            (   tp0=primitiveType ac0=newArrayConstruction
-                { $value = self.makeArrayCreator($tp0.text, $ac0.value) }
-            |   gt1=genericTypeArgumentList? qt0=qualifiedTypeIdent ac1=newArrayConstruction
-                { $value = self.makeArrayCreator($qt0.value, $ac1.value, $gt1.value) }
-            )
+    // the static array creator rule is tested in tests/ArrayValues.java.
+    :   ^(STATIC_ARRAY_CREATOR
+          ( tp0=primitiveType ac0=newArrayConstruction
+            { $value = self.makeArrayCreator($tp0.text, $ac0.value) }
+          | gt1=genericTypeArgumentList? tp1=qualifiedTypeIdent ac1=newArrayConstruction
+            { $value = self.makeArrayCreator($tp1.value, $ac1.value, $gt1.value) }
+          )
         )
-
     |   ^(CLASS_CONSTRUCTOR_CALL genericTypeArgumentList? q1=qualifiedTypeIdent
           a1=arguments classTopLevelScope?
           { $value = ev($q1.value, $a1.args, "${left}(${right})") }
         )
     ;
 
-innerNewExpression // something like 'InnerType innerType = outer.new InnerType();'
+innerNewExpression returns [value]
+     // something like 'InnerType innerType = outer.new InnerType();'  see the file
+     // tests/InnerNew.java for an example.
+     // oh, and wtf is with the classTopLevelScope???
     :   ^(CLASS_CONSTRUCTOR_CALL genericTypeArgumentList?
-          IDENT arguments classTopLevelScope?)
+          id0=IDENT ag0=arguments classTopLevelScope?)
+        { $value = ev($id0.text, $ag0.args, "${left}(${right})")
+          $value = {}
+          print "#####", $value, $id0.text, $innerNewExpression.text
+        }
     ;
 
 newArrayConstruction returns [value] @init { $value, format = "", "${right}" }
+    // matches statements like: new int[] {1, 2}
     :   ad0=arrayDeclaratorList ai0=arrayInitializer
-        { $value["right"] = ai0.value
-          print "### newArrayConstruction 0", $value
-        }
+        { $value = $ai0.value }
     |   (ex0=expression
         { $value = ev($value, ex0, format)
           format = "${left}, ${right}"
-          print "### newArrayConstruction 1", $value
         })+
         arrayDeclaratorList?
     ;
 
-//
 arguments returns [args] @init { $args, format = "", "${right}" }
     :   ^(ARGUMENT_LIST (ex0=expression
           { $args, format = ev($args, $ex0.value, format), "${left}, ${right}" })*

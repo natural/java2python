@@ -7,6 +7,7 @@ public class ArrayValues  {
 
     public static void main(String[] args) {
         Integer b[] = {4, 5, 6};
+
         System.out.println(a[0].toString());
         System.out.println(a[1].toString());
         System.out.println(a[2].toString());
@@ -14,7 +15,17 @@ public class ArrayValues  {
         System.out.println(b[1].toString());
         System.out.println(b[2].toString());
 
-	Integer[] c;
-	c = new Integer[10];
+	Integer[] d;
+	d = new Integer[10];
+
+        // ad0=arrayDeclaratorList ai0=arrayInitializer
+	int c[] = {1,2,3};
+
+	int[] e;
+
+	System.out.println( new int[] {1, 2} );
+
+
+
     }
 }

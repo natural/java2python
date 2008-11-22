@@ -31,7 +31,7 @@ def simpleComments(block, text, typ):
     else:
         lines = ()
     for line in lines:
-        block.addComment(line, 0)
+        block.addComment(line, index=0)
 
 
 def commentImport(block, decl, isStatic, isStar):
@@ -69,11 +69,13 @@ def commentPackage(block, decl):
 
 def simpleDocString(block):
     # for now, just put in something not very useful
-    block.lines = [
+    lines = [
         '""" generated source for %s\n' % (block.name, ),
         '',
         '"""',
-        ] + ([] if block.lines == ['pass'] else block.lines)
+        ]
+    for line in reversed(lines):
+        block.addSource(line, 0)
 
 
 def getBsrSrc():

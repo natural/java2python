@@ -4,6 +4,7 @@
 from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
+from java2python import maybeattr
 from java2python.blocks import BlockStack
 from java2python.parser import JavaLexer
 
@@ -13,15 +14,15 @@ class LocalTreeParser(TreeParser):
     """ Replacement tree parser base class.
 
     """
-    def __init__(self, *a, **b):
-	super(LocalTreeParser, self).__init__(*a, **b)
+    def __init__(self, input, state=None):
+	super(LocalTreeParser, self).__init__(input, state=state)
         self.commentHandler = self.sourceStack = None
 
     def onJavaSource(self, module):
         """ Called by the tree parser when walking begins.
 
         """
-        self.commentHandler = CommentFormatter(self)
+        self.commentHandler = makeCommentHandler(self)
         self.sourceStack = BlockStack(module)
 
     def __getattr__(self, name):
@@ -38,9 +39,12 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
         Check the Java.g grammar file to see how this class is used.
     """
     def createWithPayload(self, payload):
-	token = super(LocalTreeAdaptor, self).createWithPayload(payload)
-        token.comments = getattr(payload, 'comments', None)
-        return token
+        """ Creates tree node from token object and copies any comments.
+
+        """
+	node = super(LocalTreeAdaptor, self).createWithPayload(payload)
+        node.comments = maybeattr(payload, 'comments')
+        return node
 
 
 class LocalTokenStream(CommonTokenStream):
@@ -49,9 +53,14 @@ class LocalTokenStream(CommonTokenStream):
 
     """
     commentTargetTypes = [
-        JavaLexer.CLASS,
         JavaLexer.IDENT,
-        JavaLexer.EXPR,
+        JavaLexer.CLASS,
+        JavaLexer.FUNCTION_METHOD_DECL,
+        JavaLexer.CLASS_TOP_LEVEL_SCOPE,
+        JavaLexer.VOID_METHOD_DECL,
+        JavaLexer.FUNCTION_METHOD_DECL,
+#        JavaLexer.METHOD,
+#        JavaLexer.EXPR,
     ]
 
     def skipOffTokenChannels(self, start):
@@ -84,35 +93,36 @@ class LocalTokenStream(CommonTokenStream):
                 cursor += 1
         self.reallySaveComments(vals, cursor)
 
-
     def reallySaveComments(self, values, cursor):
         try:
-            comments = getattr(self.tokens[cursor], 'comments', None)
+            comments = maybeattr(self.tokens[cursor], 'comments')
         except (IndexError, ):
-            pass
+            return
+        if comments is None:
+            self.tokens[cursor].comments = values[:]
         else:
-            if comments is None:
-                self.tokens[cursor].comments = values[:]
-            else:
-                for comment in values:
-                    if comment not in comments:
-                        comments.append(comment)
+            for comment in values:
+                if comment not in comments:
+                    comments.append(comment)
 
 
-class CommentFormatter(object):
-    def __init__(self, parser):
-        self.parser = parser
 
-    def __call__(self, start):
-        input, source = self.parser.input, self.parser.sourceStack
+def makeCommentHandler(parser):
+    """ Makes and returns a function for handling comments.
+
+        The returned function defers actual comment handling to the
+        callables defined in the configuration modules.
+    """
+    def handler(start):
+        input, source = parser.input, parser.sourceStack
         start_idx = input.getTreeAdaptor().getTokenStartIndex(start)
         stop_idx = input.getTreeAdaptor().getTokenStopIndex(start)
         tokens = input.tokens.tokens[start_idx:stop_idx]
-        comments = [(t, getattr(t, 'comments', None)) for t in tokens]
+        comments = [(t, maybeattr(t, 'comments')) for t in tokens]
         comments = [(t, c) for t, c in comments if c]
-
         for token, comment_set in reversed(comments):
             token.comments = None
             for typ, val in reversed(comment_set):
-                for handler in source.top.config.handlers('commentHandlers'):
+                for handler in source.commentHandlers:
                     handler(source.top, val, typ)
+    return handler

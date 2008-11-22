@@ -3,7 +3,7 @@ enum Vowels {
 }
 
 enum LogLevel {
-    UNSET, DEBUG(10), INFO(20), WARN(30), ERROR(40), 
+    UNSET, DEBUG(10), INFO(20), WARN(30), ERROR(40),
     CRITICAL(50) {
         int extra = 42;
         public final int extra() { return extra; }
@@ -31,8 +31,6 @@ class EnumMixed {
 	System.out.println(Vowels.valueOf("O"));
 	System.out.println(Vowels.valueOf("U"));
 	System.out.println(Vowels.valueOf("someTimesY"));
-
 	System.out.println(LogLevel.DEBUG.level());
-
     }
 }

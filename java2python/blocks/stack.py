@@ -3,7 +3,7 @@
 
 """
 from itertools import chain, count
-from logging import debug
+from logging import debug, warn
 
 from java2python import expressionvalue as ev, isdict, marker
 
@@ -59,6 +59,20 @@ class BlockStack:
         debug('%s', (value.name if hasattr(value, 'name') else value))
 	self.stack.append(value)
 
+    @property
+    def topParentName(self):
+        """ Name of the parent of the top item.
+
+        """
+        return self.top.parent.name
+
+    @property
+    def commentHandlers(self):
+        """ Returns the comment handlers from the config.
+
+        """
+        return self.top.config.handlers('commentHandlers')
+
     def altId(self, name):
         """ Returns replacement name for given identifier.
 
@@ -75,7 +89,7 @@ class BlockStack:
                 else:
                     fmt = '%s'
                 new = fmt % new
-#        debug('name=%s new=%s outer=%s', name, new, '')
+        debug('name=%s new=%s outer=%s', name, new, '')
         return new
 
     def altType(self, name):
@@ -92,7 +106,12 @@ class BlockStack:
 
         NB:  It's probably not this easy.
         """
-        format = '[$left() for __%s in range($right)]' % nameCounter()
+        debug('%s %s %s right=%s', new, count, types, count.get('right'))
+
+        if count.get('format', None) == '${right}':
+            format = '[$left() for __%s in range($right)]' % nameCounter()
+        else:
+            format = '[$right]'
         return ev(self.altType(new), count, format)
 
     def makeAssign(self, op, left, right):
@@ -168,16 +187,19 @@ class BlockStack:
         """
         debug('%s', label)
         label = self.altId(label)
-        ## ident doesn't need expression formatting, so we add the
-        ## string directly.  same true below for the 'continue'
-        ## statement.
         self.top.addSource('break' + (' #label:' + label if label else ''))
 
     def onBsr(self, left, right):
+        """ Returns an expression value suitable for a bit shift right.
+
+        """
         handler = self.top.config.handler('bsrHandler')
         return handler(self, left, right)
 
     def onBsrAssign(self, left, right):
+        """ Returns an expression value suitable for a bit shift right assignment.
+
+        """
         handler = self.top.config.handler('bsrHandlerAssign')
         v = handler(self, left, right)
         v['assign'] = True
@@ -188,7 +210,7 @@ class BlockStack:
         name = self.altId(name)
 	klass = self.top.makeClass()
 	klass.name = name
-
+        # wtf?
 	def annoDecl(v):
 	    s = []
 	    for d in v:
@@ -248,20 +270,6 @@ class BlockStack:
             return
         for handler in self.top.config.handlers('enumConstantHandlers'):
             handler(self, decl)
-        if 0: # not name.startswith('<missing'):
-            ## use a simpler method
-            from java2python.config.enumhandlers import pystrings, pyints
-            pyints(self, decl)
-        if 0:
-            if 'klass' not in decl: # a new class for the enum constant was created
-                #klass = self.onClass(name)
-                #self.pop()
-                pass
-            else:
-                if not name.startswith('<missing'):
-                    ## use a simpler method
-                    from java2python.config.enumhandlers import pystrings, pyints
-                    pyints(self, decl)
 
     def onIf(self, expr):
         debug('%s', expr)
@@ -417,14 +425,14 @@ class BlockStack:
             self.top.addSource(src)
 
     def onVariables(self, decls, applyType, mods=()):
-	debug('%s %s', decls, mods)
+	debug('%s %s %s', decls, applyType, mods)
         for decl in decls:
             ## need to specify "type()" not just "type" ??
             #decl['right'] = applyType
             if not decl['right']:
                 decl['right'] = applyType
         for decl in decls:
-            decl['format'] = '$left = $right'
+            decl['format'] = '$left = $right' ## need to check type vs. value
             decl['mods'] = mods
             decl['type'] = applyType
             self.top.addSource(decl)
