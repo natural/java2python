@@ -1,0 +1,182 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import compiler
+import logging
+import optparse
+import os.path
+import sys
+from collections import defaultdict
+from time import time
+
+from antlr3 import ANTLRStringStream
+from antlr3.tree import CommonTreeNodeStream
+
+from java2python.blocks import Module
+from java2python.parser.local import LocalTokenStream
+from java2python.parser.JavaParser import JavaParser
+from java2python.parser.JavaLexer import JavaLexer
+from java2python.parser.JavaTreeParser import JavaTreeParser
+
+try:
+    import psyco
+except (ImportError, ):
+    pass
+else:
+    psyco.full()
+
+## 2.6 doesn't find the testconfig.py module in the tests dir.
+sys.path.insert(0, ".")
+
+version = '0.3'
+
+
+def bad_loglevel(name, value):
+    msg = 'option %s: invalid loglevel: %r'
+    raise optparse.OptionValueError(msg % (name, value))
+
+
+def check_loglevel(option, opt, value):
+    try:
+        lvl = int(value)
+    except (ValueError, ):
+        name = value.upper()
+        if name not in logging._levelNames:
+            bad_loglevel(opt, value)
+        lvl = logging._levelNames[name]
+    else:
+        if lvl not in logging._levelNames:
+            bad_loglevel(opt, value)
+    return lvl
+
+
+class LocalOption(optparse.Option):
+    TYPES = optparse.Option.TYPES + ('loglevel', )
+    TYPE_CHECKER = optparse.Option.TYPE_CHECKER.copy()
+    TYPE_CHECKER['loglevel'] = check_loglevel
+
+
+def transform(options):
+    timed = defaultdict(time)
+    timed['overall']
+
+    try:
+        source = open(options.inputfile).read()
+    except (TypeError, ):
+        source = options.inputfile.read()
+    except (IOError, ), exc:
+        code, msg = exc.args[0:2]
+        print 'IOError: %s.' % (msg, )
+        return code
+
+    stream = ANTLRStringStream(source)
+    lexer = JavaLexer(stream)
+    tokens = LocalTokenStream(lexer)
+    parser = JavaParser(tokens)
+
+    timed['comp']
+    try:
+	root = parser.javaSource().tree
+    except (Exception, ), exc:
+        logging.exception('exception while parsing')
+        return 1
+    timed['comp_finish']
+
+    timed['ast']
+    nodes = CommonTreeNodeStream(root)
+    nodes.setTokenStream(tokens)
+    walker = JavaTreeParser(nodes)
+    timed['ast_finish']
+#    if not ast:
+#       print '*** error: no AST generated.'
+#       return 2
+    filein = fileout = filedefault = '-'
+    if options.inputfile and not isinstance(options.inputfile, file):
+	filein = os.path.basename(options.inputfile)
+    if options.outputfile and not isinstance(options.outputfile, file):
+	fileout = os.path.basename(options.outputfile)
+    elif fileout != filedefault:
+	fileout = '%s.py' % (os.path.splitext(filein)[0])
+
+    if fileout == filedefault:
+	output = sys.stdout
+    else:
+	output = open(fileout, 'w')
+
+    configs = options.configs
+    if options.includedefaults:
+        configs.insert(0, 'java2python.config.default')
+    mod = Module(filein, fileout)
+    mod.setConfigs(configs)
+
+    timed['walk']
+    walker.javaSource(mod)
+    source = mod.asString()
+    print >> output, source
+    timed['walk_finish']
+
+    try:
+        compiler.parse(source)
+    except (SyntaxError, ), ex:
+        logging.warning('Generated source has invalid syntax.')
+    else:
+        logging.info('Generated source has valid syntax.')
+
+    timed['overall_finish']
+    info, ts = logging.info, timed
+    info('Parser comp unit time: %.4f', ts['comp_finish'] - ts['comp'])
+    info('AST get time: %.4f', ts['ast_finish'] - ts['ast'])
+    info('Walk and generate time: %.4f', ts['walk_finish'] - ts['walk'])
+    info('Total time: %.4f', ts['overall_finish'] - ts['overall'])
+    return 0
+
+
+def cli_options(argv):
+    parser = optparse.OptionParser(option_class=LocalOption,
+                                   version='%prog ' + version)
+    parser.add_option('-a', '--interactive', dest='interactive',
+                      help='Start in interactive mode.', default=False,
+                      action='store_true')
+    parser.add_option('-i', '--input', dest='inputfile',
+		      help='Read from INPUTFILE.  May use - for stdin.',
+		      metavar='INPUTFILE', default=None)
+    parser.add_option('-o', '--output', dest='outputfile',
+		      help='Write to OUTPUTFILE.  May use - for stdout.',
+		      metavar='OUTPUTFILE', default=None)
+    parser.add_option('-c', '--config', dest='configs',
+		      help='Use CONFIG module (not file).  May be repeated.',
+		      metavar='CONFIG', default=[],
+		      action='append')
+    parser.add_option('-n', '--nodefaults', dest='includedefaults',
+		      help='Ignore default configuration module.',
+		      default=True, action='store_false')
+    parser.add_option('-l', '--loglevel', dest='loglevel',
+		      help='Set log level by name or value.',
+		      default='INFO', type='loglevel')
+    options, args = parser.parse_args(argv)
+    if len(args) > 2:
+	parser.error('Only one input file supported.')
+    elif len(args) == 2:
+	options.inputfile = args[1]
+    if options.inputfile == '-':
+        options.inputfile = sys.stdin
+    if options.outputfile == '-':
+        options.outputfile = sys.stdout
+    return options, args
+
+
+def interact(opts):
+    from java2python.parser.cli import ExprShell
+    shell = ExprShell(options=opts, version=version)
+    return shell.cmdloop()
+
+
+if __name__ == '__main__':
+    options, args = cli_options(sys.argv)
+    fmt = '# %(levelname)s %(funcName)s: %(message)s'
+    logging.basicConfig(level=options.loglevel, format=fmt)
+    if options.interactive:
+        interact(options)
+        ret = 0
+    else:
+        ret = transform(options)
+    sys.exit(ret)

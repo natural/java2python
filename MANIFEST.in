@@ -1,0 +1,3 @@
+recursive-include java2python/lib *.txt *.g
+include LICENSE
+

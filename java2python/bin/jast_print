@@ -1,0 +1,86 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+
+"""
+import copy
+import optparse
+import sys
+
+from antlr3 import FileStream, StringStream
+from antlr3.dottreegen import DOTTreeGenerator
+
+from java2python.parser.local import LocalTokenStream
+from java2python.parser.JavaLexer import JavaLexer
+from java2python.parser.JavaParser import JavaParser
+
+try:
+    import psyco
+except (ImportError, ):
+    pass
+else:
+    pass # psyco.full()
+
+
+tokenMap = JavaParser.tokenMap()
+
+
+def load_trees((stream_type, source)):
+    stream = stream_type(source)
+    lexer = JavaLexer(stream)
+    tokens = LocalTokenStream(lexer)
+    parser = JavaParser(tokens)
+    comp = parser.javaSource()
+    yield comp.tree, parser, lexer, tokens, stream
+
+
+def show_trees(trees):
+    for tree, p, l, t, s in trees:
+        show(tree)
+
+
+def show(node, level=0):
+    txt = node.getText()
+    typ = tokenMap.get(node.getType(), '?')
+
+    args = ('    '*level,
+            typ,
+            (' : ' if txt != typ else ''),
+            (txt if txt != typ else ''))
+    print '%s%s%s%s' % args
+    comments = getattr(node, 'comments', None)
+    if comments:
+        print '%s%s' % ('    '*(level+1), 'COMMENTS_SEQ')
+        for cs in node.comments:
+            print '%sCOMMENT : %s' % ('    '*(level+2), cs)
+
+    for i in range(node.getChildCount()):
+        show(node.getChild(i), level+1)
+    return 0
+
+
+def cli_options(argv):
+    parser = optparse.OptionParser(version='%prog 0.3')
+    parser.add_option('-i', '--input', dest='inputfile',
+		      help='read INPUTFILE',
+		      metavar='INPUTFILE', default=None)
+    options, args = parser.parse_args(argv)
+    if len(args) == 2:
+	options.inputfile = args[1]
+    return options, args
+
+
+if __name__ == '__main__':
+    options, args = cli_options(sys.argv)
+    src = options.inputfile
+    try:
+        locs = ((StringStream, sys.stdin.read())
+                if src == '-' else (FileStream, src))
+        trees = load_trees(locs)
+        sys.exit(show_trees(trees))
+    except (IOError, ):
+        print >> sys.stderr, 'Could not open input file.'
+        sys.exit(1)
+    except (Exception, ), exc:
+        print >> sys.stderr,  exc
+        sys.exit(2)

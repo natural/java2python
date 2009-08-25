@@ -1,0 +1,47 @@
+About
+-----
+This package provides tools to (imperfectly) translate Java source
+code to python source code.
+
+
+Install
+-------
+Before you install the package, make sure you have Python_ 2.5 or
+newer, and that you have PyAntlr_.
+
+To install the package and the scripts into your system, then as the
+super user, run:
+
+    $ python setup.py install
+
+
+Use
+---
+Run the script like so:
+
+    $ j2py -i input_file.java
+
+Or:
+
+    $ j2py -i input_file.java -o output_file.py
+
+The script will read from stdin when no input files are given:
+
+    $ j2py < some_file.java
+
+The script has configuration options that you can view:
+
+    $ j2py -h
+
+You can customize the code generation via configuration modules.  Read
+more about them on the wiki_.
+
+
+Feedback
+--------
+Drop me a note if you're so inclined:  troy@gci.net.
+
+
+.. _Python: http://www.python.org/
+.. _PyAntlr: http://www.antlr.org/
+.. _wiki:  http://code.google.com/p/java2python/w/list
