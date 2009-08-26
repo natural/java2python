@@ -16,13 +16,13 @@ def findMainClass(module):
     """ Given a list of source objects, locate a class name that
         matches the block.
     """
-    lines = module.lines
+    bs = module.blocks
     try:
-        classes = [c for c in lines if maybeAttr(c, 'name')==module.name]
+        classes = [b for b in bs if maybeAttr(b, 'name')==module.name]
         if classes:
             cls = classes[0]
         else:
-            cls = [c for c in lines if maybeAttr(c, 'isClass')][0]
+            cls = [b for b in bs if maybeAttr(b, 'isClass')][0]
     except (IndexError, ):
         cls = None
     return cls
@@ -36,7 +36,7 @@ def ifMainScript(module, output):
     """
     try:
         cls = findMainClass(module)
-        methods = [m for m in cls.lines if maybeAttr(m, 'isMethod')]
+        methods = [b for b in cls.blocks if maybeAttr(b, 'isMethod')]
         main = [m for m in methods if m.name == 'main'][0]
     except (AttributeError, IndexError, ):
         pass

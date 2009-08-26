@@ -76,12 +76,12 @@ def commentPackage(block, decl):
 
 def simpleDocString(block):
     # for now, just put in something not very useful
-    lines = [
+    doc = [
         '""" generated source for %s\n' % (block.name, ),
         '',
         '"""',
         ]
-    for line in reversed(lines):
+    for line in reversed(doc):
         block.insert(0, line)
 
 

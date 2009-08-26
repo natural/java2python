@@ -51,3 +51,14 @@ class Class(Block):
             if meth.name == '__init__':
                 return meth
 
+    @property
+    def methods(self):
+        """ returns all of the methods in this block
+
+        """
+        for block in self:
+            if maybeAttr(block, 'isMethod'):
+                yield block
+
+    def addBases(self, bases):
+        self.bases.extend(bases)

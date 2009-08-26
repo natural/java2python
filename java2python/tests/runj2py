@@ -1,0 +1,5 @@
+#!/bin/bash
+
+
+../bin/j2py -c testconfig "$@"
+

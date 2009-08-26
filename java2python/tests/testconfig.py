@@ -18,6 +18,9 @@ outputSubs = [
     (r'(.*)(\w+)\.length(.*)', r'\1len(\2)\3'),
     (r'assertEquals', 'self.assertEquals'),
     (r'## import junit.framework', 'from unittest import *'),
+    (r'(.*?)\.getClass\(\)', r'\1.__class__'),
+    (r'(.*?)\.getName\(\)', r'\1.__name__'),
+    (r'(.*?)\.getInterfaces\(\)', r'\1.__bases__'),
     ]
 
 
@@ -27,7 +30,3 @@ enumConstantHandlers = [
     'java2python.mods.enums.minJava',
 
 ]
-
-
-
-

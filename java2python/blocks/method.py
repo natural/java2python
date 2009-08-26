@@ -29,7 +29,6 @@ class Method(Block):
         comment = self.config.last('commentPrefix', '#')
         if mods:
             output.write('%s%s%s\n' % (offset, comment, ', '.join(mods)))
-
         if decos:
             for deco in decos:
                 output.write('%s@%s\n' % (offset, deco))
@@ -45,6 +44,9 @@ class Method(Block):
         parameters, name = self.parameters, self.name
         parameters = [self.formatExpression(p) for p in parameters]
         return 'def %s(%s):' % (name, str.join(', ', parameters))
+
+    def setType(self, value):
+        self.type = value
 
     @property
     def handlers(self):
@@ -62,13 +64,14 @@ class Method(Block):
     def isVoid(self):
         return self.type in ('void', None)
 
-    def setModifiers(self, modifiers):
-        Block.setModifiers(self, modifiers)
+    def addModifiers(self, modifiers):
+        Block.addModifiers(self, modifiers)
         if self.isStatic:
             self.decorators.append('classmethod')
 
-    def setParameters(self, params):
+    def addParameters(self, params):
         first = parameter('cls') if self.isStatic else parameter('self')
+        first['type'] = 'object'
         params.insert(0, first)
         self.parameters.extend(params)
 

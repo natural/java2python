@@ -151,7 +151,7 @@ def cli_options(argv):
 		      default=True, action='store_false')
     parser.add_option('-l', '--loglevel', dest='loglevel',
 		      help='Set log level by name or value.',
-		      default='INFO', type='loglevel')
+		      default='WARN', type='loglevel')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
 	parser.error('Only one input file supported.')

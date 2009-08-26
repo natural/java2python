@@ -29,3 +29,6 @@ class Module(Block):
             output.write('\n%s' % line)
         Block.dump(self, output, indent)
         doWriters('moduleEpilogueWriters')
+
+    def addPackage(self, value):
+        self.addComment(value)

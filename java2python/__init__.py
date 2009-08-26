@@ -12,12 +12,14 @@ def expression(left='', right='', format='', **kwds):
 
 
 def parameter(ident='', typ='', modifiers='', variadic='', format='$id', **kwds):
+    if variadic:
+        format = '*' + format
     return dict(
         id=ident,
         type=typ,
         modifiers=modifiers,
         variadic=variadic,
-        format='$id',
+        format=format,
     )
 
 
@@ -80,5 +82,14 @@ def trimStrings(strings):
     return list(reversed(list(dropwhile(not_, reversed(strings)))))
 
 
+def formatFloatLiteral(value):
+    """ Turns a java float into a syntactically correct python float.
 
-
+    """
+    if value.startswith('.'):
+        value = '0' + value
+    if value.endswith(('f', 'd')):
+        value = value[:-1]
+    elif value.endswith(('l', 'L')):
+        value = value[:-1] + 'L'
+    return value

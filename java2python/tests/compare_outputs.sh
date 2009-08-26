@@ -11,6 +11,8 @@ let "e = $r2 | $r1"
 if [[ "$o1" == "$o2" && $e == 0 ]]
 then
     echo "[OKAY]" $3
+    exit 0
 else
     echo "[FAIL]" $3
+    exit 1
 fi

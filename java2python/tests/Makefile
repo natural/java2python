@@ -12,10 +12,9 @@ all: $(java_sources)
 
 
 $(java_sources):
-	javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig
+	@javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig
 	@chmod u+x $(basename $@).py
-	@bash ./compare_outputs.sh "java -ea $(basename $@)" "python $(basename $@).py" "$@"
-	@rm "$(basename $@).py" "$(basename $@).class"
+	@bash ./compare_outputs.sh "java -ea $(basename $@)" "python $(basename $@).py" "$@" && rm "$(basename $@).py" "$(basename $@).class"
 
 
 %.py: %.java testconfig.py
@@ -28,3 +27,6 @@ $(java_sources):
 
 clean:
 	rm -f *.class *.pyc $(py_sources)
+
+parser:
+	cd ../parser && make

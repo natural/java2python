@@ -26,15 +26,15 @@ def convertProperties(block):
             methmap = propmap[name]
             methmap[argc] = meth
             meth.name = ('get_%s' if argc==1 else 'set_%s') % name
-    lines = block.lines
+    blocks = block.blocks
     for name, meths in propmap.items():
-        lines.remove(meths[1])
-        lines.remove(meths[2])
+        blocks.remove(meths[1])
+        blocks.remove(meths[2])
     format = '%s = property(%s, %s)'
     for name, meths in propmap.items():
-        lines.append(meths[1])
-        lines.append(meths[2])
-        lines.append(format % (name, meths[1].name, meths[2].name))
+        blocks.append(meths[1])
+        blocks.append(meths[2])
+        blocks.append(format % (name, meths[1].name, meths[2].name))
 
 
 def insertModifiersAsComments(block):
@@ -42,12 +42,8 @@ def insertModifiersAsComments(block):
 
     """
     comment = block.config.last('commentPrefix', '#')
+    fs = '%s modifier: %s\n'
     for mod in block.modifiers:
-        ## why does this check for decorators?  and then of all
-        ## things, makes them comments?  actual decorators are not
-        ## handled as comments, and they're handled elsewhere.  fix
-        ## this.
-        fs = '%s %s\n' if isDeco(mod) else '%s modifier: %s\n'
         block.preamble.append(fs % (comment, mod, ))
 
 
@@ -66,16 +62,16 @@ def overloadMethods(block):
     """
     overloads = defaultdict(lambda:0)
     for method in block.methods:
-        name = method.name
-        overloads[name] += 1
+        overloads[method.name] += 1
     for name in [n for n, c in overloads.items() if c>1]:
-        renames = [m for m in block.methods if m.name == name]
+        renames = [m for m in block.methods if m.name==name]
         first, remainder = renames[0], renames[1:]
-        first.preamble.append('@overloaded')
+        first.decorators.append('overloaded')
         firstname = first.name
         for index, method in enumerate(remainder):
-            params = str.join(', ', [p[0] for p in method.parameters])
-            method.preamble.append('@%s.register(%s)' % (firstname, params))
+            params = [block.altType(p.get('type')) for p in method.parameters]
+            params = str.join(', ', params)
+            method.decorators.append('%s.register(%s)' % (firstname, params))
             method.name = '%s_%s' % (method.name, index)
 
 
@@ -86,7 +82,7 @@ def sortMethodsKey(item):
 
 def sortMethods(block, key=sortMethodsKey):
     """ sorts methods using given key; default key sorts by method name """
-    block.lines.sort(key=key)
+    block.blocks.sort(key=key)
 
 
 def updateBases(block, bases=['object']):
@@ -110,7 +106,7 @@ def updateConstructor(block):
 
     if not meth.hasSuperCall:
         meth.append("super(%s, self).__init__()" % meth.outerClassName, index=0)
-    stmt = meth.lines[-1]
+    stmt = meth.blocks[-1]
     if variables:
         meth.addComment("begin instance variables")
         for v in variables:
