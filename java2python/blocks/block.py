@@ -5,15 +5,12 @@ from logging import debug, info, warn
 from re import sub as rxsub
 from string import Template
 
-from java2python import expression, maybeAttr
+from java2python import expression, maybeAttr, variable
 from java2python.config import Config
 
 
-passLine = [expression(left='pass', right='', format='$left')]
-
-
 class Block:
-    """ Base class for blocks of (soon-to-be) Python source code.
+    """ Base class for blocks of Python source code.
 
     """
     config = None
@@ -26,30 +23,62 @@ class Block:
         self.preamble = []
         self.epilogue = []
         self.variables = []
-
     def __iter__(self):
-        """ to iterate over a block is to iterate over it's blocks """
+        """ to iterate over a block is to iterate over it's blocks
+
+        """
         for item in self.blocks:
             yield item
 
     def __len__(self):
-        """ returns the length of this block """
+        """ returns the length of this block
+
+        """
         return len(self.blocks)
 
     def append(self, value):
-        """ adds given value to the end of this block """
+        """ adds given value to the end of this block
+
+        """
         self.insert(len(self), value)
 
     def insert(self, index, value):
-        """ inserts the given value into this block at the specified index """
+        """ inserts the given value into this block at the specified index
+
+        """
         if self.containsOnlyPass:
             self.blocks.pop()
         if isinstance(value, (basestring, )):
-            value = expression(left=value, right='', format='$left')
+            value = expression(left=value, format='$left')
         self.blocks.insert(index, value)
 
+    passLine = [expression(left='pass', right='', format='$left')]
+
+    @property
+    def commentHandlers(self):
+        """ Returns the comment handlers from the config.
+
+        """
+        return self.config.handlers('commentHandlers')
+
+    @property
+    def containsOnlyPass(self):
+        return self.blocks == self.passLine
+
+    @property
+    def isStatic(self):
+        return 'static' in self.modifiers
+
+    @property
+    def isPublic(self):
+        return 'public' in self.modifiers
+
+    @property
+    def isVoid(self):
+        return self.type in ('void', None)
+
     def asString(self):
-        """ asString() -> source code defined in obj
+        """ asString() -> python source code representation of this block
 
         """
         out = StringIO()
@@ -64,13 +93,18 @@ class Block:
         """ dump(output, indent) -> write the contents of this block to output
 
         """
+        debug('%s %s : %s', self.__class__.__name__, self.name, self.variables)
         offset = self.offset(indent)
         for item in self:
             if hasattr(item, 'dump'):
                 item.dump(output, indent)
             else:
                 item = self.formatExpression(item)
-                output.write('%s%s\n' % (offset, item))
+                if item.strip():
+                    item = '%s%s\n' % (offset, item)
+                else:
+                    item = '\n'
+                output.write(item)
 
     def dumpConfigValues(self, output, name):
         """ writes a sequence of lines given a config attribute name
@@ -86,36 +120,68 @@ class Block:
     def offset(self, indent):
         """ calculated indentation string
 
-        @param indent integer indentation level
-        @return string of spaces
         """
         return self.config.last('leadingIndent', '    ') * indent
 
     def formatExpression(self, value, rename=False):
+        """ formats nested dictionaries, substituting as necessary
+
+        """
         if isinstance(value, (dict, )):
             inner = value.copy()
             for key in (k for k in ('right', 'left', 'center', 'id') if k in value):
                 inner[key] = self.formatExpression(value[key])
-                #debug('%s', inner)
                 if isinstance(inner[key], (basestring, )):
-                    if inner[key] in self.classVariables and maybeAttr(self, 'isMethod'):
-                        inner['format'] = 'self.%s' % inner['format']
                     if inner.get('rename'):
-                        inner[key] = self.altId(inner[key])
+                        debug('%s %s rename: %s', self.__class__.__name__, self.name, inner[key])
+                        inner[key] = self.renameIdent(inner[key])
             value = Template(inner['format']).substitute(inner)
         return value
 
     def addComment(self, value, index=0, prefix='#'):
-        prefix = self.config.last('commentPrefix', prefix)
-        ## don't use self.insert so that empty blocks don't have
-        ## their pass statement popped
-        self.blocks.insert(index, expression(left=prefix, right=value, format='$left$right'))
+        """ adds a comment to this block
 
-    def altId(self, value):
-        """ Returns replacement value for given identifier. """
+        this methods doesn't use self.insert so that empty blocks
+        don't have their pass statement popped
+        """
+        prefix = self.config.last('commentPrefix', prefix)
+        comment = expression(prefix, value, '$left$right')
+        self.blocks.insert(index, comment)
+
+    def getVariable(self, ident):
+        while self:
+            for v in self.variables:
+                if v.get('ident') == ident:
+                    return v
+            self = self.parent
+        return {}
+
+    def altIdent(self, value):
+        var = self.getVariable(value)
+        fmt = None
+        if var:
+            if var.get('cls'):
+                fmt = 'self.%s' if not maybeAttr(self, 'isStatic') else 'cls.%s'
+        value = self.renameIdent(value)
+        if fmt:
+            value = fmt % value
+        return value
+
+    def renameIdent(self, value):
+        """ Returns a simple replacement value for the given identifier
+
+        """
 	alt = self.config.combined('identRenames')
-        new = alt.get(value, value)
-        return new
+        return alt.get(value, value)
+
+    def renameType(self, name):
+        """ Returns replacement name for the given type
+
+        """
+        alt = self.config.combined('typeRenames')
+        return alt.get(name, name)
+
+    def oldAltIdFragment(self):
         top = self.top
         outer = top.outerMethod
         if outer or (new in top.instanceMembers):
@@ -128,17 +194,16 @@ class Block:
                 new = fmt % new
         return new
 
-    def altType(self, name):
-        """ Returns replacement name for given type """
-        alt = self.config.combined('typeRenames')
-        return alt.get(name, name)
-
     def setConfigs(self, configs):
-        """ sets the config on the root class so all instances share it """
+        """ sets the config on the root class so all instances share it
+
+        """
         Block.config = Config(configs)
 
     def setIdent(self, ident):
-        """ sets the name of this block """
+        """ sets the name of this block
+
+        """
         self.name = ident
 
     def addModifiers(self, modifiers):
@@ -146,52 +211,19 @@ class Block:
 
     def addClassVariables(self, decls, typ, modifiers):
         for decl in decls:
-            self.variables.append(dict(ident=findIdent(decl), local=False))
+            self.variables.append(variable(self.findIdent(decl), cls=True))
             self.append(decl)
 
     def addLocalVariables(self, decls, typ, modifiers):
         for decl in decls:
-            self.variables.append(dict(ident=findIdent(decl), local=True))
+            self.variables.append(variable(self.findIdent(decl), local=True))
             self.append(decl)
 
-    @property
-    def commentHandlers(self):
-        """ Returns the comment handlers from the config.
-
-        """
-        return self.config.handlers('commentHandlers')
-
-    @property
-    def containsOnlyPass(self):
-        return self.blocks == passLine
-
-    @property
-    def classVariables(self):
-        if maybeAttr(self, 'isMethod'):
-            self = self.parent
-        for item in self.variables:
-            if not item.get('local'):
-                yield item['ident']
-
-    @property
-    def localVariables(self):
-        if maybeAttr(self, 'isMethod'):
-            self = self.parent
-        for item in self.variables:
-            if item.get('local'):
-                yield item['ident']
-
-
-
-
-def findIdent(d):
-    if isinstance(d, (basestring, )):
-        return
-    elif isinstance(d, (dict, )):
-        if 'ident' in d:
-            return d['ident']
-        else:
-            for key in d:
-                v = findIdent(d[key])
+    def findIdent(self, mapping):
+        if isinstance(mapping, (dict, )):
+            if 'ident' in mapping:
+                return mapping['ident']
+            for key in mapping:
+                v = self.findIdent(mapping[key])
                 if v is not None:
                     return v

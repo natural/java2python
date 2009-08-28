@@ -21,6 +21,10 @@ outputSubs = [
     (r'(.*?)\.getClass\(\)', r'\1.__class__'),
     (r'(.*?)\.getName\(\)', r'\1.__name__'),
     (r'(.*?)\.getInterfaces\(\)', r'\1.__bases__'),
+
+    ## these two fudge something that should be handled in parsing
+    (r'(.*?)StaticInner\(\)', r'\1cls.StaticInner()'),
+    (r'(.*?)outer\.cls', r'\1outer'),
     ]
 
 

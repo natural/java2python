@@ -23,6 +23,13 @@ def parameter(ident='', typ='', modifiers='', variadic='', format='$id', **kwds)
     )
 
 
+def variable(ident='', cls=False, local=False, **kwds):
+    """ Sugar for creating a property dictionary representing a
+        variable
+    """
+    return dict(ident=ident, cls=cls, local=local, **kwds)
+
+
 def importModule(name, reloaded=False):
     """ importModule(name) -> import and return a module by name in dotted form
 

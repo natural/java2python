@@ -69,19 +69,23 @@ def overloadMethods(block):
         first.decorators.append('overloaded')
         firstname = first.name
         for index, method in enumerate(remainder):
-            params = [block.altType(p.get('type')) for p in method.parameters]
+            params = [block.renameType(p.get('type')) for p in method.parameters]
             params = str.join(', ', params)
             method.decorators.append('%s.register(%s)' % (firstname, params))
             method.name = '%s_%s' % (method.name, index)
 
 
 def sortMethodsKey(item):
-    """ sort key for methods:  returns method name if possible """
+    """ sort key for methods:  returns method name if possible
+
+    """
     return item.name if maybeAttr(item, 'isMethod') else item
 
 
 def sortMethods(block, key=sortMethodsKey):
-    """ sorts methods using given key; default key sorts by method name """
+    """ sorts methods using given key; default key sorts by method name
+
+    """
     block.blocks.sort(key=key)
 
 
@@ -99,7 +103,7 @@ def updateConstructor(block):
     """
     variables = block.variables
     meth = block.initMethod
-    if not meth and variables:
+    if not meth and variables and maybeAttr(block, 'isMethod'):
         meth = block.makeMethod('__init__')
     else:
         return

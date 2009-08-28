@@ -27,6 +27,7 @@ class Module(Block):
         doWriters('modulePreambleWriters')
         for line in self.preamble:
             output.write('\n%s' % line)
+        output.write('\n')
         Block.dump(self, output, indent)
         doWriters('moduleEpilogueWriters')
 

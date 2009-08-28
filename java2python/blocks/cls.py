@@ -26,6 +26,8 @@ class Class(Block):
         if decl:
             output.write('%s%s\n' % (offset, decl))
         Block.dump(self, output, indent+1)
+        output.write('\n')
+
 
     def decl(self):
         """ generates a class statement accounting for base types
@@ -62,3 +64,7 @@ class Class(Block):
 
     def addBases(self, bases):
         self.bases.extend(bases)
+
+    @property
+    def classVariables(self):
+        return self.variables

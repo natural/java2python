@@ -42,7 +42,7 @@ class Test4 extends Base {
 }
 
 
-public class Ctor  {
+public class Ctor2  {
     public static void main(String[] args) {
         Test1 t1 = new Test1();
         System.out.println(43 == t1.x ? 1 : 0);
@@ -53,7 +53,6 @@ public class Ctor  {
         Test3 t3 = new Test3();
         System.out.println("arg" == t3.y ? 1 : 0);
         System.out.println(42 == t3.x ? 1 : 0);
-        System.out.println(t3.x);
 
         Test4 t4 = new Test4(10);
         System.out.println(10 == t4.x ? 1 :0);

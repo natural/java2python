@@ -1,5 +1,14 @@
 #!/bin/bash
 
 
-../bin/j2py -c testconfig "$@"
+make parser &>/dev/null
+
+if [ $? -eq 0 ]
+then
+    ../bin/j2py -c testconfig "$@"
+else
+    echo make failed
+fi
+
+
 

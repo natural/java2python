@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from logging import warn
-from java2python import parameter
+from java2python import parameter, expression, maybeAttr
 from java2python.blocks.block import Block
 
 
@@ -52,17 +52,7 @@ class Method(Block):
     def handlers(self):
         return self.config.handlers('methodHandlers')
 
-    @property
-    def isStatic(self):
-        return 'static' in self.modifiers
 
-    @property
-    def isPublic(self):
-        return 'public' in self.modifiers
-
-    @property
-    def isVoid(self):
-        return self.type in ('void', None)
 
     def addModifiers(self, modifiers):
         Block.addModifiers(self, modifiers)
@@ -75,3 +65,17 @@ class Method(Block):
         params.insert(0, first)
         self.parameters.extend(params)
 
+
+    def addSuperCall(self, expr):
+        expr.update(format="super(${left}, self).__init__(${right})",
+                    left=self.parent.name, super=True)
+        self.insert(0, expr)
+
+    def maybeAddSuperCall(self):
+        supers = [block.get('super') for block in self if maybeAttr(block, 'get')]
+        if not any(supers):
+            self.addSuperCall(expression())
+
+    @property
+    def classVariables(self):
+        return self.parent.classVariables

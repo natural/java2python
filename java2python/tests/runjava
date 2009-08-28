@@ -8,7 +8,7 @@ fi
 
 if [ -e "$1" ]
 then
-    javac "$1" && java `echo $1 | sed s/\.java//` && rm `echo $1 | sed s/\.java/\.class/`
+    javac "$1" && java -ea `echo $1 | sed s/\.java//` && rm `echo $1 | sed s/\.java/\.class/`
     exit 0
 else
     echo File \""$1"\" does not exist.

@@ -10,7 +10,8 @@ class Statement(Block):
 
     def __init__(self, parent, name):
         Block.__init__(self, parent, name)
-        self.append('pass')
+        if name not in ('assert', 'break'):
+            self.append('pass')
         self.expr = None
         self.type = None
 
@@ -28,8 +29,8 @@ class Statement(Block):
             expr = self.formatExpression(self.expr)
             output.write(' %s' % (expr, ))
         if self.needsBlockIndicator:
-            output.write(':')
-        output.write('\n')
+            output.write(':\n')
+        #output.write('\n')
         Block.dump(self, output, indent+1)
 
     @property
@@ -66,4 +67,5 @@ class Statement(Block):
         """
         self.expr = value
 
-
+    def getExpression(self):
+        return self.expr
