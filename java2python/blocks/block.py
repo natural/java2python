@@ -14,6 +14,7 @@ class Block:
 
     """
     config = None
+    passLine = [expression(left='pass', right='', format='$left')]
 
     def __init__(self, parent, name):
         self.parent = parent
@@ -23,6 +24,13 @@ class Block:
         self.preamble = []
         self.epilogue = []
         self.variables = []
+
+    def getVars(self):
+        while self:
+            for v in self.variables:
+                yield v
+            self = self.parent
+
     def __iter__(self):
         """ to iterate over a block is to iterate over it's blocks
 
@@ -52,8 +60,6 @@ class Block:
             value = expression(left=value, format='$left')
         self.blocks.insert(index, value)
 
-    passLine = [expression(left='pass', right='', format='$left')]
-
     @property
     def commentHandlers(self):
         """ Returns the comment handlers from the config.
@@ -63,18 +69,30 @@ class Block:
 
     @property
     def containsOnlyPass(self):
+        """ Returns True if this block contains only a pass expression.
+
+        """
         return self.blocks == self.passLine
 
     @property
     def isStatic(self):
+        """ Returns True if this block is static, i.e., a static method
+
+        """
         return 'static' in self.modifiers
 
     @property
     def isPublic(self):
+        """ Returns True if this block is public
+
+        """
         return 'public' in self.modifiers
 
     @property
     def isVoid(self):
+        """ Returns True if this block is void
+
+        """
         return self.type in ('void', None)
 
     def asString(self):
@@ -129,7 +147,7 @@ class Block:
         """
         if isinstance(value, (dict, )):
             inner = value.copy()
-            for key in (k for k in ('right', 'left', 'center', 'id') if k in value):
+            for key in (k for k in ('right', 'left', 'center', 'ident') if k in value):
                 inner[key] = self.formatExpression(value[key])
                 if isinstance(inner[key], (basestring, )):
                     if inner.get('rename'):
@@ -159,8 +177,9 @@ class Block:
     def altIdent(self, value):
         var = self.getVariable(value)
         fmt = None
+        params = getattr(self, 'parameterIdents', [])
         if var:
-            if var.get('cls'):
+            if var.get('cls') and var.get('ident') not in params:
                 fmt = 'self.%s' if not maybeAttr(self, 'isStatic') else 'cls.%s'
         value = self.renameIdent(value)
         if fmt:
@@ -209,14 +228,11 @@ class Block:
     def addModifiers(self, modifiers):
         self.modifiers.extend(modifiers)
 
-    def addClassVariables(self, decls, typ, modifiers):
+    def addVariables(self, decls, typ, modifiers, local=False, cls=False):
         for decl in decls:
-            self.variables.append(variable(self.findIdent(decl), cls=True))
-            self.append(decl)
-
-    def addLocalVariables(self, decls, typ, modifiers):
-        for decl in decls:
-            self.variables.append(variable(self.findIdent(decl), local=True))
+            if typ.get('array'):
+                decl['format'] = '$left = []'
+            self.variables.append(variable(self.findIdent(decl), local=local, cls=cls))
             self.append(decl)
 
     def findIdent(self, mapping):

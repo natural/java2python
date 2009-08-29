@@ -8,12 +8,10 @@ from java2python.blocks.block import Block
 class Statement(Block):
     isStatement = True
 
-    def __init__(self, parent, name):
+    def __init__(self, parent, name, expr=None):
         Block.__init__(self, parent, name)
-        if name not in ('assert', 'break'):
-            self.append('pass')
-        self.expr = None
-        self.type = None
+        self.append('pass')
+        self.setExpression(expr)
 
     def dump(self, output, indent):
         """ writes the string representation of this block
@@ -30,7 +28,6 @@ class Statement(Block):
             output.write(' %s' % (expr, ))
         if self.needsBlockIndicator:
             output.write(':\n')
-        #output.write('\n')
         Block.dump(self, output, indent+1)
 
     @property
@@ -59,6 +56,9 @@ class Statement(Block):
         return self.name in ('if', 'while', 'for', 'else', 'elif',
                              'try', 'except', 'finally', 'with')
 
+    def getExpression(self):
+        return self.expr
+
     def setExpression(self, value):
         """ sets the value of the expression for this Statement
 
@@ -67,5 +67,16 @@ class Statement(Block):
         """
         self.expr = value
 
-    def getExpression(self):
-        return self.expr
+
+class AssertStatement(Statement):
+    def __init__(self, parent, name, expr=None):
+        Statement.__init__(self, parent, name, expr)
+        self.blocks.pop()
+
+
+class ExceptStatement(Statement):
+    def setExpression(self, expr):
+        renames = self.config.combined('exceptionRenames')
+        expr['type'] = renames.get(expr['type'], expr['type'])
+        expr['format'] = '(${type}, ), ${ident}'
+        Statement.setExpression(self, expr)

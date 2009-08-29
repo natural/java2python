@@ -4,8 +4,8 @@
 
 """
 from logging import info, debug, warn
-from java2python import maybeAttr, expression, variable
-from java2python.blocks import Class, Method, Statement
+from java2python import *
+from java2python.blocks import *
 
 
 class BlockStack:
@@ -96,11 +96,9 @@ class BlockStack:
     def endFor(self):
         return self.pop()
 
-
     def beginWhile(self, expr):
         parent = self.top
-        whileblock = Statement(parent=parent, name='while')
-        whileblock.setExpression(expr)
+        whileblock = Statement(parent=parent, name='while', expr=expr)
         parent.append(self.push(whileblock))
         return whileblock
 
@@ -109,15 +107,14 @@ class BlockStack:
 
     def beginDo(self):
         parent = self.top
-        doblock = Statement(parent=parent, name='while')
-        doblock.setExpression('True')
+        doblock = Statement(parent=parent, name='while', expr='True')
         parent.append(self.push(doblock))
         return doblock
 
     def endDo(self, expr, pop=True):
         doblock = self.top
-        ifbreak = Statement(parent=doblock, name='if')
-        ifbreak.setExpression(expression(expr, format="not $left"))
+        expr = expression(expr, format="not $left")
+        ifbreak = Statement(parent=doblock, name='if', expr=expr)
         ifbreak.append('break')
         doblock.append(ifbreak)
         return self.maybePop(pop)
@@ -125,8 +122,7 @@ class BlockStack:
 
     def beginIf(self, expr):
         parent = self.top
-        ifstat = Statement(parent=parent, name='if')
-        ifstat.setExpression(expr)
+        ifstat = Statement(parent=parent, name='if', expr=expr)
         parent.append(self.push(ifstat))
         elsestat = Statement(parent=parent, name='else')
         return ifstat, elsestat
@@ -142,14 +138,12 @@ class BlockStack:
 
     def makeAssert(self, expr):
         parent = self.top
-        assertstat = Statement(parent=parent, name='assert')
-        assertstat.setExpression(expr)
+        assertstat = AssertStatement(parent=parent, name='assert', expr=expr)
         parent.append(assertstat)
         return assertstat
 
     def extendAssert(self, stat, expr):
         stat.setExpression(expression(stat.getExpression(), expr, "$left, $right"))
-
 
     def beginTry(self):
         parent = self.top
@@ -161,10 +155,8 @@ class BlockStack:
         return self.maybePop(pop)
 
     def beginCatch(self, expr):
-        expr['format'] = '(${type}, ), ${id}'
         parent = self.top
-        exceptstat = Statement(parent=parent, name='except')
-        exceptstat.setExpression(expr)
+        exceptstat = ExceptStatement(parent=parent, name='except', expr=expr)
         parent.append(self.push(exceptstat))
         return exceptstat
 
@@ -177,3 +169,20 @@ class BlockStack:
     def endTryFinally(self):
         pass
 
+
+    def makeArrayCreator(self, new, count, types=()):
+        """ Returns an expression value to use as an array constructor.
+
+        The optional types sequence is ignored for now.
+
+        NB:  It's probably not this easy.
+        """
+        debug('%s %s %s right=%s', new, count, types, count.get('right'))
+
+        if count.get('format', None) == '${right}':
+            fmt = '[$left() for __%s in range($right)]' % nameCounter()
+        else:
+            fmt = '[$right]'
+        expr = expression(self.renameType(new), count, fmt)
+        #warn('%s', expr)
+        return expr

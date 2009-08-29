@@ -64,10 +64,10 @@ javaSource[module]
     @init  { self.beginJavaSource(module) }
     @after { self.endJavaSource() }
     :   ^(JAVA_SOURCE
-            annotationList
-            packageDeclaration?
-            importDeclaration*
-            typeDeclaration*
+          annotationList
+          packageDeclaration?
+          importDeclaration*
+          typeDeclaration*
         )
     ;
 
@@ -156,6 +156,7 @@ classTopLevelScope
     :   ^(CLASS_TOP_LEVEL_SCOPE classScopeDeclarations*)
     ;
 
+
 classScopeDeclarations
     @init  { self.beginClassScopeDecls() }
     @after { self.endClassScopeDecls() }
@@ -195,7 +196,7 @@ classScopeDeclarations
           md0=modifierList
           tp0=type
           vd0=variableDeclaratorList
-          { self.addClassVariables($vd0.values, $tp0.value, $md0.values) }
+          { self.addVariables($vd0.values, $tp0.value, $md0.values, cls=True) }
         )
 
     |   ^(CONSTRUCTOR_DECL
@@ -219,10 +220,9 @@ interfaceTopLevelScope
     :   ^(INTERFACE_TOP_LEVEL_SCOPE interfaceScopeDeclarations*)
     ;
 
+
 interfaceScopeDeclarations
-    @after {
-        self.commentHandler($start)
-    }
+    @after { self.commentHandler($start) }
     :   ^(FUNCTION_METHOD_DECL
           { self.beginMethodDecl() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -266,49 +266,62 @@ variableDeclaratorList returns [values]
 
 
 variableDeclarator returns [value]
-    @init { $value = ex(format="${left} = ${right}") }
     :   ^(VAR_DECLARATOR
-          vd0=variableDeclaratorId { $value["left"] = ex(left=$vd0.value, format="${left}") }
-          (vi0=variableInitializer { $value["right"] = ex(right=$vi0.value, format="${right}") })?
-         )
+          (vd0=variableDeclaratorId
+           { $value = ex(left=$vd0.value, format="${left}") })
+          (vi0=variableInitializer
+           { $value.update(right=$vi0.value, format="${left} = ${right}") })?
+        )
     ;
+
 
 variableDeclaratorId returns [value]
     @init { $value = ex(format="${left}") }
     :   ^(IDENT
-           { $value.update(ex(self.altIdent($IDENT.text), format="${left}", rename=True, ident=$IDENT.text)) }
-
-          (arrayDeclaratorList { $value.update(right="[]", format="${left} = ${right}", array=True) })?
+           {
+            expr = ex(self.altIdent($IDENT.text), format="${left}", rename=True, ident=$IDENT.text)
+            $value.update(expr)
+            }
+          (arrayDeclaratorList { $value.update(format="${left}", array=True) })?
         )
     ;
 
+
 variableInitializer returns [value]
-    @init { $value = ex(format="${left}") }
-    :   ai0=arrayInitializer { $value.update(left=$ai0.value) }
-    |   ex0=expression       { $value.update(left=$ex0.value) }
+    :   ai0=arrayInitializer { $value = ex($ai0.value, format="[${left}]") }
+    |   ex0=expression       { $value = $ex0.value }
     ;
+
 
 arrayDeclarator
     :   LBRACK RBRACK
     ;
 
-arrayDeclaratorList
-    :   ^(ARRAY_DECLARATOR_LIST ARRAY_DECLARATOR*)
+
+arrayDeclaratorList returns [values] @init { $values = [] }
+    :   ^(ARRAY_DECLARATOR_LIST (ARRAY_DECLARATOR { $values.append($text) })*)
     ;
 
-arrayInitializer returns [value]
-    @init { $value = ex() }
-    :   ^(ARRAY_INITIALIZER variableInitializer*)
+
+arrayInitializer returns [value] @init { $value, format = "", "${right}" }
+    :   ^(ARRAY_INITIALIZER
+            (v0=variableInitializer
+            { $value, format = ex($value, $v0.value, format), "${left}, ${right}" }
+            )*
+        )
     ;
+
 
 throwsClause
     :   ^(THROWS_CLAUSE qualifiedIdentifier+)
     ;
 
+
 modifierList returns [values]
     @init { $values = [] }
     :   ^(MODIFIER_LIST (md0=modifier { values.append($md0.text) })*)
     ;
+
 
 modifier
     :   PUBLIC
@@ -324,15 +337,18 @@ modifier
     |   localModifier
     ;
 
+
 localModifierList returns [values]
     @init { $values = [] }
     :   ^(LOCAL_MODIFIER_LIST (md0=localModifier { values.append($md0.value) })*)
     ;
 
+
 localModifier returns [value]
     :   FINAL { $value = "final" }
     |   an0=annotation { $value = $an0.value }
     ;
+
 
 type returns [value]
     @init { $value = ex(format="${left}") }
@@ -340,9 +356,7 @@ type returns [value]
           (pt0=primitiveType { $value.update(left=self.renameType($pt0.text)) } |
            qt0=qualifiedTypeIdent { $value.update(left=self.renameType($qt0.value)) })
           (arrayDeclaratorList
-           { $value["format"] += "list" ##"array of \%s" \% $value["left"]
-             $value.update(array=True, left="")
-           }
+           { $value["array"] = True }
           )?
         )
     ;
@@ -390,8 +404,8 @@ genericWildcardBoundType
 formalParameterList returns [values]
     @init { $values = [] }
     :   ^(FORMAL_PARAM_LIST
-          (fp0=formalParameterStandardDecl { values.append($fp0.value) })*
-          (vd0=formalParameterVarargDecl   { values.append($vd0.value) })?
+          (fp0=formalParameterStandardDecl { $values.append($fp0.value) })*
+          (vd0=formalParameterVarargDecl   { $values.append($vd0.value) })?
         )
     ;
 
@@ -401,7 +415,7 @@ formalParameterStandardDecl returns [value]
           lm0=localModifierList
           tp0=type
           vd0=variableDeclaratorId
-        ) { $value = px($vd0.value, $tp0.text, $lm0.values, variadic=False) }
+        ) { $value = px($vd0.value["ident"], $tp0.text, $lm0.values, variadic=False) }
     ;
 
 
@@ -410,7 +424,7 @@ formalParameterVarargDecl returns [value]
           lm0=localModifierList
           tp0=type
           vd0=variableDeclaratorId
-        ) { $value = px($vd0.value, $tp0.text, $lm0.values, variadic=True) }
+        ) { $value = px($vd0.value["ident"], $tp0.text, $lm0.values, variadic=True) }
     ;
 
 
@@ -429,11 +443,10 @@ qualifiedIdentifier returns [value]
     ;
 
 
-// ANNOTATIONS
-
 annotationList
     :   ^(ANNOTATION_LIST annotation*)
     ;
+
 
 annotation returns [value]
     :   ^(AT
@@ -442,18 +455,22 @@ annotation returns [value]
         )
     ;
 
+
 annotationInit
     :   ^(ANNOTATION_INIT_BLOCK annotationInitializers)
     ;
+
 
 annotationInitializers
     :   ^(ANNOTATION_INIT_KEY_LIST annotationInitializer+)
     |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue)
     ;
 
+
 annotationInitializer
     :   ^(IDENT annotationElementValue)
     ;
+
 
 annotationElementValue
     :   ^(ANNOTATION_INIT_ARRAY_ELEMENT annotationElementValue*)
@@ -461,9 +478,11 @@ annotationElementValue
     |   expression
     ;
 
+
 annotationTopLevelScope
     :   ^(ANNOTATION_TOP_LEVEL_SCOPE annotationScopeDeclarations*)
     ;
+
 
 annotationScopeDeclarations
     :   ^(ANNOTATION_METHOD_DECL modifierList type IDENT annotationDefaultValue?)
@@ -471,15 +490,16 @@ annotationScopeDeclarations
     |   typeDeclaration
     ;
 
+
 annotationDefaultValue
     :   ^(DEFAULT annotationElementValue)
     ;
 
-// STATEMENTS / BLOCKS
 
 block
     :   ^(BLOCK_SCOPE blockStatement*)
     ;
+
 
 blockStatement
     :   localVariableDeclaration
@@ -487,12 +507,13 @@ blockStatement
     |   st0=statement { self.append($st0.value) }
     ;
 
+
 localVariableDeclaration
     :   ^(VAR_DECLARATION
           md1=localModifierList
           tp1=type
           vd1=variableDeclaratorList
-          { self.addLocalVariables($vd1.values, $tp1.value, $md1.values) }
+          { self.addVariables($vd1.values, $tp1.value, $md1.values, local=True) }
         )
 
      ;
@@ -552,8 +573,10 @@ statement returns [value]
 
     |   ^(SWITCH parenthesizedExpression switchBlockLabels)
     |   ^(SYNCHRONIZED parenthesizedExpression block)
-    |   ^(RETURN (ex0=expression { $value.update(right=$ex0.value) })?
-         { $value.update(format="return ${right}") }
+    |   ^(RETURN
+          { $value.update(format="return") }
+          (ex0=expression { $value.update(right=$ex0.value) })?
+          { $value.update(format="return ${right}") }
         )
     |   ^(THROW expression)
     |   ^(BREAK IDENT?)
@@ -733,9 +756,11 @@ explicitConstructorCall returns [value]
         )
     ;
 
+
 arrayTypeDeclarator
     :   ^(ARRAY_DECLARATOR (arrayTypeDeclarator | qualifiedIdentifier | primitiveType))
     ;
+
 
 newExpression returns [value]
     :   ^(STATIC_ARRAY_CREATOR
@@ -756,8 +781,7 @@ newExpression returns [value]
     ;
 
 
-
-// something like 'InnerType innerType = outer.new InnerType();'
+//something like 'InnerType innerType = outer.new InnerType();'
 innerNewExpression returns [value]
     :   ^(CLASS_CONSTRUCTOR_CALL
           genericTypeArgumentList?
@@ -770,8 +794,14 @@ innerNewExpression returns [value]
 
 
 newArrayConstruction returns [value]
-    :   arrayDeclaratorList arrayInitializer
-    |   expression+ arrayDeclaratorList?
+    @init { $value, format = "", "${right}" }
+    :   ad0=arrayDeclaratorList ai0=arrayInitializer
+        { $value = $ai0.value }
+    |   (ex0=expression
+        { $value = ex($value, ex0, format)
+          format = "${left}, ${right}"
+        })+
+        arrayDeclaratorList?
     ;
 
 

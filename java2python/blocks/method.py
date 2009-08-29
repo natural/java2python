@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from logging import warn
+from string import Template
 from java2python import parameter, expression, maybeAttr
 from java2python.blocks.block import Block
 
@@ -18,41 +19,34 @@ class Method(Block):
     def dump(self, output, indent):
         """ writes the string representation of this block
 
-        @param output any writable file-like object
-        @param indent indentation level of this block
         """
-        for handler in self.handlers:
-            handler(self)
         offset = self.offset(indent)
-        decos = self.decorators
-        mods = self.modifiers
-        comment = self.config.last('commentPrefix', '#')
-        if mods:
-            output.write('%s%s%s\n' % (offset, comment, ', '.join(mods)))
-        if decos:
-            for deco in decos:
-                output.write('%s@%s\n' % (offset, deco))
-        output.write('%s%s\n' % (offset, self.decl()))
+        for handler in self.config.handlers('methodHandlers'):
+            handler(self)
+        for fmt, seq in (('\n%s%s', self.preamble), ('\n%s@%s', self.decorators)):
+            if seq:
+                for item in seq:
+                    output.write(fmt % (offset, item))
+        output.write('\n%s%s\n' % (offset, self.decl()))
         Block.dump(self, output, indent+1)
-
 
     def decl(self):
         """ generates a class statement accounting for base types
 
         @return class declaration as string
         """
-        parameters, name = self.parameters, self.name
-        parameters = [self.formatExpression(p) for p in parameters]
-        return 'def %s(%s):' % (name, str.join(', ', parameters))
+        parameters = self.parameterIdents
+        return 'def %s(%s):' % (self.name, str.join(', ', parameters))
+
+    @property
+    def parameterIdents(self):
+        return [self.formatParameter(p) for p in self.parameters]
+
+    def formatParameter(self, p):
+        return Template(p['format']).substitute(p)
 
     def setType(self, value):
         self.type = value
-
-    @property
-    def handlers(self):
-        return self.config.handlers('methodHandlers')
-
-
 
     def addModifiers(self, modifiers):
         Block.addModifiers(self, modifiers)
@@ -60,11 +54,11 @@ class Method(Block):
             self.decorators.append('classmethod')
 
     def addParameters(self, params):
-        first = parameter('cls') if self.isStatic else parameter('self')
-        first['type'] = 'object'
-        params.insert(0, first)
-        self.parameters.extend(params)
-
+        if self.isStatic:
+            first = parameter('cls', 'object')
+        else:
+            first = parameter('self', 'object')
+        self.parameters.extend([first] + params)
 
     def addSuperCall(self, expr):
         expr.update(format="super(${left}, self).__init__(${right})",

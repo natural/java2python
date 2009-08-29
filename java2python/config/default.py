@@ -98,11 +98,11 @@ methodHandlers = [
 
     ## this function adds a comment with the original function's
     ## return type.
-    'java2python.mods.methods.insertReturnComment',
+    #'java2python.mods.methods.insertReturnComment',
 
     ## this function adds a comment with the original function's
     ## modifiers.
-    'java2python.mods.methods.insertModifiersAsComments',
+    #'java2python.mods.methods.insertModifiersAsComments',
 ]
 
 
@@ -214,6 +214,13 @@ methodRenames = {
 }
 
 
+exceptionRenames = {
+    'IndexOutOfBoundsException' : 'IndexError',
+    'NoSuchFieldError'          : 'AttributeError',
+    'NoSuchMethodException'     : 'AttributeError',
+    }
+
+
 ## method type modifier mapping.  when input methods have modifiers
 ## with matching names, those names are replaced with their
 ## corresponding statements from this mapping.  this value can be
@@ -239,21 +246,14 @@ baseClassMembers = {
 }
 
 
-def makeIdentifierMap():
+def makeIdentifierRenames():
+    """ returns a dictionary that maps python keywords and builtins to
+        valid identifiers (by appending '_' to each).
+    """
     from keyword import kwlist as keywords
     from __builtin__ import __dict__ as builtins
     identifiers = keywords + builtins.keys()
-    mapping = dict((ident, '%s_' % ident) for ident in identifiers)
-    return mapping
+    return dict((ident, '%s_' % ident) for ident in identifiers)
 
 
-identRenames = makeIdentifierMap()
-
-
-## use this again.
-exceptionTypeMapping = {
-    'NoSuchFieldError'      : 'AttributeError',
-    'NoSuchMethodException' : 'AttributeError',
-}
-
-
+identRenames = makeIdentifierRenames()

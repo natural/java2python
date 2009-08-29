@@ -19,7 +19,7 @@ class Class(Block):
         @param output any writable file-like object
         @param indent indentation level of this block
         """
-        for handler in self.handlers:
+        for handler in self.config.handlers('classHandlers'):
             handler(self)
         offset = self.offset(indent)
         decl = self.decl()
@@ -41,10 +41,6 @@ class Class(Block):
         else:
             decl = 'class %s:' % (name, )
         return decl
-
-    @property
-    def handlers(self):
-        return self.config.handlers('classHandlers')
 
     @property
     def initMethod(self):

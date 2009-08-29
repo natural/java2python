@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from itertools import dropwhile
+from itertools import count, dropwhile
 from operator import not_
 
 
@@ -11,15 +11,16 @@ def expression(left='', right='', format='', **kwds):
     return dict(left=left, right=right, format=format, **kwds)
 
 
-def parameter(ident='', typ='', modifiers='', variadic='', format='$id', **kwds):
+def parameter(ident='', typ='', modifiers='', variadic='', format='$ident', **kwds):
     if variadic:
         format = '*' + format
     return dict(
-        id=ident,
+        ident=ident,
         type=typ,
         modifiers=modifiers,
         variadic=variadic,
         format=format,
+        param=True,
     )
 
 
@@ -100,3 +101,6 @@ def formatFloatLiteral(value):
     elif value.endswith(('l', 'L')):
         value = value[:-1] + 'L'
     return value
+
+
+nameCounter = count(0).next

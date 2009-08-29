@@ -9,6 +9,8 @@ class Assert1 {
 	    assert x == 0: y;
 	} catch (AssertionError e) {
 	    System.out.println(y);
-	}
+	} catch (IndexOutOfBoundsException e) {
+	    System.out.println(y);
+        }
     }
 }

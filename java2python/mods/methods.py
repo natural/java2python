@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python import isDeco
 
 
 def insertModifiersAsComments(block):
     comment = block.config.last('commentPrefix', '#')
-    mods = [m for m in block.modifiers if not isDeco(m)]
-    if mods:
-        mods = [block.formatExpression(m) for m in mods]
-        block.preamble.insert(0, '%s mods: %s' % (comment, str.join(', ', mods)))
+    mcomment = '%s modsifiers: %s' % (comment, str.join(', ', block.modifiers))
+    block.preamble.insert(0, mcomment)
 
 
 def insertReturnComment(block):

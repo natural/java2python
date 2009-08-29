@@ -23,7 +23,6 @@ class Module(Block):
         def doWriters(key):
             for writer in self.config.handlers(key):
                 writer(self, output)
-
         doWriters('modulePreambleWriters')
         for line in self.preamble:
             output.write('\n%s' % line)
