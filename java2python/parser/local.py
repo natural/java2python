@@ -4,7 +4,7 @@
 from antlr3 import CommonTokenStream
 from antlr3.tree import CommonTreeAdaptor, TreeParser
 
-from java2python import maybeattr
+from java2python import maybeAttr
 from java2python.blocks import BlockStack
 from java2python.parser import JavaLexer
 
@@ -22,8 +22,28 @@ class LocalTreeParser(TreeParser):
         """ Called by the tree parser when walking begins.
 
         """
-        self.commentHandler = makeCommentHandler(self)
+        self.commentHandler = self.makeCommentHandler()
         self.sourceStack = BlockStack(module)
+
+    def makeCommentHandler(self):
+        """ Makes and returns a function for handling comments.
+
+            The returned function defers actual comment handling to the
+            callables defined in the configuration modules.
+        """
+        def handler(start):
+            input, source = self.input, self.sourceStack
+            start_idx = input.getTreeAdaptor().getTokenStartIndex(start)
+            stop_idx = input.getTreeAdaptor().getTokenStopIndex(start)
+            tokens = input.tokens.tokens[start_idx:stop_idx]
+            comments = [(t, maybeAttr(t, 'comments')) for t in tokens]
+            comments = [(t, c) for t, c in comments if c]
+            for token, comment_set in reversed(comments):
+                token.comments = None
+                for typ, val in reversed(comment_set):
+                    for handler in source.commentHandlers:
+                        handler(source.top, val, typ)
+        return handler
 
     def __getattr__(self, name):
         """ Defer failed attribute lookups to the source stack object.
@@ -43,7 +63,7 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
 
         """
 	node = super(LocalTreeAdaptor, self).createWithPayload(payload)
-        node.comments = maybeattr(payload, 'comments')
+        node.comments = maybeAttr(payload, 'comments')
         return node
 
 
@@ -59,8 +79,7 @@ class LocalTokenStream(CommonTokenStream):
         JavaLexer.CLASS_TOP_LEVEL_SCOPE,
         JavaLexer.VOID_METHOD_DECL,
         JavaLexer.FUNCTION_METHOD_DECL,
-#        JavaLexer.METHOD,
-#        JavaLexer.EXPR,
+        JavaLexer.EXPR,
     ]
 
     def skipOffTokenChannels(self, start):
@@ -95,7 +114,7 @@ class LocalTokenStream(CommonTokenStream):
 
     def reallySaveComments(self, values, cursor):
         try:
-            comments = maybeattr(self.tokens[cursor], 'comments')
+            comments = maybeAttr(self.tokens[cursor], 'comments')
         except (IndexError, ):
             return
         if comments is None:
@@ -104,25 +123,3 @@ class LocalTokenStream(CommonTokenStream):
             for comment in values:
                 if comment not in comments:
                     comments.append(comment)
-
-
-
-def makeCommentHandler(parser):
-    """ Makes and returns a function for handling comments.
-
-        The returned function defers actual comment handling to the
-        callables defined in the configuration modules.
-    """
-    def handler(start):
-        input, source = parser.input, parser.sourceStack
-        start_idx = input.getTreeAdaptor().getTokenStartIndex(start)
-        stop_idx = input.getTreeAdaptor().getTokenStopIndex(start)
-        tokens = input.tokens.tokens[start_idx:stop_idx]
-        comments = [(t, maybeattr(t, 'comments')) for t in tokens]
-        comments = [(t, c) for t, c in comments if c]
-        for token, comment_set in reversed(comments):
-            token.comments = None
-            for typ, val in reversed(comment_set):
-                for handler in source.commentHandlers:
-                    handler(source.top, val, typ)
-    return handler

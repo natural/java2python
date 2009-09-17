@@ -3,34 +3,41 @@
 
 from functools import partial
 from logging import warn
-from java2python import expressionvalue as ev
+from java2python import expressionValue as ev
 from java2python.parser import JavaLexer
+
+
+def simpleCommentLineFormatter(raw):
+    yield raw[2:].strip()
+
+
+def simpleCommentMultiLineFormatter(raw):
+    raw = raw.strip()[2:-2]
+    for line in raw.split('\n'):
+        line = line.strip()
+        if line.startswith('*'):
+            line = line[1:]
+        if line.endswith('*'):
+            line = line[:-1]
+        yield line.strip()
+
+
+def simpleCommentUnknownFormatter(raw):
+    return ()
+
+simpleCommentFormatters = {
+    JavaLexer.LINE_COMMENT : simpleCommentLineFormatter,
+    JavaLexer.COMMENT      : simpleCommentMultiLineFormatter,
+    None                   : simpleCommentUnknownFormatter,
+}
 
 
 def simpleComments(block, text, typ):
     """ A very simple comment writer.
 
     """
-    def simpleSingleFormat(raw):
-        yield raw[2:].strip()
-
-    def simpleMultiFormat(raw):
-        raw = raw.strip()[2:-2]
-        for line in raw.split('\n'):
-            line = line.strip()
-            if line.startswith('*'):
-                line = line[1:]
-            if line.endswith('*'):
-                line = line[:-1]
-            yield line.strip()
-
-    if typ == JavaLexer.COMMENT:
-        lines = simpleMultiFormat(text)
-    elif typ == JavaLexer.LINE_COMMENT:
-        lines = simpleSingleFormat(text)
-    else:
-        lines = ()
-    for line in lines:
+    formatter = simpleCommentFormatters.get(typ, simpleCommentFormatters[None])
+    for line in reversed(list(formatter(text))):
         block.addComment(line, index=0)
 
 

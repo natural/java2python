@@ -9,15 +9,18 @@ from logging import debug, warn, exception
 from re import sub as rxsub
 from string import Template
 
-from java2python import maybeattr
+from java2python import maybeAttr
 from java2python.config import Config
 
 
 class BlockPropShard:
+    """ Block properties, sharded for easy reading.
+
+    """
     @property
     def blockMethods(self):
         """ all source objects that are methods """
-        return (m for m in self.lines if maybeattr(m, 'isMethod'))
+        return (m for m in self.lines if maybeAttr(m, 'isMethod'))
 
     @property
     def family(self):
@@ -105,11 +108,18 @@ class BlockPropShard:
                     if v.isStatic:
                         yield v.name
 
+    @property
+    def initMethod(self):
+        """ returns the __init__ method from this block """
+        for meth in self.methods:
+            if meth.name == '__init__':
+                return meth
+
 
 class BlockAddingShard:
-    # The next set of functions are for configuring and filling the
-    # block.
+    """ Block methods for adding content.
 
+    """
     def addComment(self, text, prefix='# ', index=None):
         """ add a comment to this source block
 
@@ -275,7 +285,6 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
     creation in this base type is strictly from laziness.
 
     """
-    ## anonymousClassCount = 0 # what did this provide?
     classmethodLiteral, staticmethodLiteral = '@classmethod', '@staticmethod'
     config = None
     isClass = isMethod = isVariable = False
@@ -288,7 +297,6 @@ class BasicBlock(BlockAddingShard, BlockMakerShard, BlockPropShard, ):
         self.preamble = []
         self.epilogue = []
         self.lines = []
-        self.prefix = []
         self.type = None
         self.variables = []
         self.methods = []

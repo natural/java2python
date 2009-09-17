@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python import importmod, maybeimport
+from java2python import importModule, maybeImport
 
 
 class Config:
@@ -8,7 +8,7 @@ class Config:
 
     """
     def __init__(self, names):
-        self.configs = [importmod(name) for name in names]
+        self.configs = [importModule(name) for name in names]
 
     def all(self, name, missing=None):
         """ value of name in each config module
@@ -51,7 +51,7 @@ class Config:
         """
         item = self.last(name, default)
         if item is not default:
-            item = maybeimport(item)
+            item = maybeImport(item)
         return item
 
     def handlers(self, name):
@@ -62,4 +62,4 @@ class Config:
         """
         handlers = self.last(name, ())
         for handler in handlers:
-            yield maybeimport(handler)
+            yield maybeImport(handler)

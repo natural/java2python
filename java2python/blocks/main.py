@@ -22,8 +22,6 @@ class Class(BasicBlock):
         for handler in self.config.handlers('classHandlers'):
             handler(self)
         offset = self.I(indent)
-        for line in self.prefix:
-            output.write('%s%s\n' % (offset, line))
         output.write('%s%s\n' % (offset, self.classDecl()))
         BasicBlock.dump(self, output, indent+1)
 
@@ -113,8 +111,6 @@ class Method(BasicBlock):
         for handler in self.config.handlers('methodHandlers'):
             handler(self)
         offset = self.I(indent)
-        for line in self.prefix:
-            output.write('%s%s\n' % (offset, line))
         for line in self.preamble:
             output.write('%s%s\n' % (offset, line))
         output.write('%s\n' % (self.methodDecl(indent), ))
@@ -134,9 +130,12 @@ class Method(BasicBlock):
             deco = self.config.combined('modifierDecoratorMap')[name]
         except (KeyError, ):
             pass
+        except (TypeError, ):
+            ## name may not be a string.
+            pass
         else:
             if deco not in self.preamble:
-                self.prefix.append(deco)
+                self.preamble.append(deco)
                 if (deco == self.classmethodLiteral) and (self.parameters) \
                        and (self.parameters[0] == self.instanceFirstParam):
                     self.parameters[0] = self.classFirstParam
@@ -171,6 +170,11 @@ class Method(BasicBlock):
             decl = '%sdef %s(%s):' % (self.I(indent), name, params)
         return decl
 
+    @property
+    def hasSuperCall(self):
+        return any(line for line in self.lines if hasattr(line, 'get') and line.get('superCall'))
+
+
 
 class Module(BasicBlock):
     """ Module -> specialized block type
@@ -197,7 +201,10 @@ class Module(BasicBlock):
         def doWriters(key):
             for writer in self.config.handlers(key):
                 writer(self, output)
+
         doWriters('modulePreambleWriters')
+        for line in self.preamble:
+            output.write('\n%s' % line)
         BasicBlock.dump(self, output, indent)
         doWriters('moduleEpilogueWriters')
 

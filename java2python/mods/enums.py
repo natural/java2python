@@ -10,6 +10,14 @@ intmap = defaultdict(lambda: count(0).next)
 
 
 def minJava(self, decl):
+    if 'klass' in decl:
+        #self.top.parent.lines.remove(self.top)
+        #del(decl['klass'])
+        decl['klass'].parent.lines.remove(decl['klass'])
+        #print decl['klass'].name
+
+    print decl
+    return
     vf = self.top.makeMethod('values')
     vf.addModifier('static')
     vf.addSource('return [v for v in cls.__dict__.values() if isinstance(v, type)]')

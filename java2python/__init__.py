@@ -4,19 +4,15 @@ from itertools import dropwhile
 from operator import not_
 
 
-marker = object()
-
-def expressionvalue(left='', right='', format='', **kwds):
+def expressionValue(left='', right='', format='', **kwds):
     """ Sugar for creating a formatting value dictionary.
 
     """
-    d = dict(left=left, right=right, format=format, )
-    d.update(kwds)
-    return d
+    return dict(left=left, right=right, format=format, **kwds)
 
 
-def importmod(name, reloaded=False):
-    """ importmod(name) -> import and return a module by name in dotted form
+def importModule(name, reloaded=False):
+    """ importModule(name) -> import and return a module by name in dotted form
 
     Copied from the Python lib docs.
 
@@ -33,7 +29,7 @@ def importmod(name, reloaded=False):
     return mod
 
 
-def importval(name, reloaded=False):
+def importValue(name, reloaded=False):
     """ import an item from a module by dotted name
 
     @param name module and attribute string, i.e., foo.bar.baz
@@ -41,31 +37,38 @@ def importval(name, reloaded=False):
     """
     names = name.split('.')
     modname, itemname = names[0:-1], names[-1]
-    mod = importmod(str.join('.', modname), reloaded=reloaded)
+    mod = importModule(str.join('.', modname), reloaded=reloaded)
     return getattr(mod, itemname)
 
 
-def isdict(v):
+def isDeco(s):
+    return s.startswith('@') if isinstance(s, basestring) else False
+
+
+def isDict(v):
     return isinstance(v, (dict, ))
 
 
-def maybeattr(obj, name, default=None):
+def maybeAttr(obj, name, default=None):
     """ Returns named attribute or default.
 
     """
     return getattr(obj, name, default)
 
 
-def maybeimport(obj):
+def maybeImport(obj):
     if isinstance(obj, (basestring, )):
-        return importval(obj)
+        return importValue(obj)
     return obj
 
-def trimlines(lines):
-    """ Removes empty lines from the end of given sequence.
 
-    @return lines without trailing empty lines
+def trimStrings(strings):
+    """ Removes empty strings from the end of given sequence.
+
+    @return list of strings without trailing empty strings
     """
-    return list(reversed(list(dropwhile(not_, reversed(lines)))))
+    return list(reversed(list(dropwhile(not_, reversed(strings)))))
+
+
 
 

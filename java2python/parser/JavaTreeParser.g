@@ -40,7 +40,7 @@ options { language=Python; backtrack=true; memoize=true; tokenVocab=Java;
           ASTLabelType=CommonTree; superClass=LocalTreeParser; }
 
 @treeparser::header {
-from java2python import expressionvalue as ev
+from java2python import expressionValue as ev
 from java2python.parser.local import LocalTreeParser
 }
 
@@ -118,7 +118,7 @@ bound
 enumTopLevelScope
     :   ^(ENUM_TOP_LEVEL_SCOPE
             (ec0=enumConstant { self.onEnumConstant($ec0.decl) })+
-            classTopLevelScope?
+            (classTopLevelScope { print "####### enum class" } )?
         )
     ;
 
@@ -368,22 +368,22 @@ annotationDefaultValue returns [value]
     :   ^(DEFAULT (av0=annotationElementValue { $value = $av0.text }))
     ;
 
-block
-    :   ^(BLOCK_SCOPE blockStatement*)
+block  returns [values] @init { $values = [] }
+    :   ^(BLOCK_SCOPE (bs0=blockStatement { $values.append($bs0.value)})*)
     ;
 
-blockStatement
-    :   localVariableDeclaration
-    |   typeDeclaration
-    |   statement
+blockStatement returns [value]
+    :   lv0=localVariableDeclaration { $value = $lv0.value }
+    |   typeDeclaration { $value = '' }
+    |   statement { $value = '' }
     ;
 
-localVariableDeclaration
+localVariableDeclaration returns [value] @init { $value='' }
     :   ^(VAR_DECLARATION md0=localModifierList tp0=type vd0=variableDeclaratorList)
          { self.onLocalDecls($vd0.decls, $tp0.value) }
     ;
 
-statement
+statement returns [value] @init { $value='' }
     :   block
     |   ^(ASSERT (ex0=expression { args=[$ex0.value] }
                  (ex1=expression { args.append($ex1.value) })?)
@@ -582,7 +582,7 @@ primaryExpression returns [value] @init { $value = ev() }
     :   ^(  DOT
             (p0=primaryExpression
              { $value = ev($p0.value, format="${left}.${right}") }
-                (i0=IDENT { $value["right"] = ev($i0.text, format="${left}")}
+                (i0=IDENT { $value["right"] = ev(self.altId($i0.text), format="${left}")}
                 |THIS { $value["format"] = "${left}" } // broken
                 |SUPER
                  { $value["format"] = "${left}"
@@ -615,7 +615,7 @@ explicitConstructorCall returns [value]
     :   ^(THIS_CONSTRUCTOR_CALL ga0=genericTypeArgumentList? ag0=arguments)
         { $value = ev("self.__init__", $ag0.args, "${left}(${right})") }
     |   ^(SUPER_CONSTRUCTOR_CALL pe1=primaryExpression? ga1=genericTypeArgumentList? ag1=arguments)
-        { $value = ev(self.topParentName, $ag1.args, "super(${left}, self).__init__(${right})") }
+        { $value = ev(self.topParentName, $ag1.args, "super(${left}, self).__init__(${right})", superCall=True) }
     ;
 
 arrayTypeDeclarator

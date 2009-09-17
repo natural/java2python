@@ -4,10 +4,10 @@
 """
 from itertools import chain, count
 from logging import debug, warn
+from java2python import expressionValue as ev, isDict
 
-from java2python import expressionvalue as ev, isdict, marker
 
-
+marker = object()
 nameCounter = count(0).next
 
 
@@ -81,15 +81,15 @@ class BlockStack:
         new = alt.get(name, name)
         top = self.top
         outer = top.outerMethod
-        if outer:
+        if outer or (new in top.instanceMembers):
             methargs = [v[1] for v in outer.parameters]
-            if new in top.instanceMembers and methargs:
+            if new in top.instanceMembers: # and methargs:
                 if methargs[0] in ('cls', 'self'):
                     fmt = methargs[0] + '.%s'
                 else:
                     fmt = '%s'
                 new = fmt % new
-        debug('name=%s new=%s outer=%s', name, new, '')
+        debug('name=%s new=%s outer=%s instancemembers=%s', name, new, '', top.instanceMembers)
         return new
 
     def altType(self, name):
@@ -109,10 +109,10 @@ class BlockStack:
         debug('%s %s %s right=%s', new, count, types, count.get('right'))
 
         if count.get('format', None) == '${right}':
-            format = '[$left() for __%s in range($right)]' % nameCounter()
+            fmt = '[$left() for __%s in range($right)]' % nameCounter()
         else:
-            format = '[$right]'
-        return ev(self.altType(new), count, format)
+            fmt = '[$right]'
+        return ev(self.altType(new), count, fmt)
 
     def makeAssign(self, op, left, right):
         """ Returns an expression value for an assignment statement.
@@ -143,7 +143,7 @@ class BlockStack:
             left=ev('*' if isVariadic else '', decl, '$left$right'),
             format='$left',
             type=typ,
-            )
+        )
 
     def onAnnoMethod(self, name, decls, default):
         """
@@ -259,17 +259,17 @@ class BlockStack:
         return (self.pop() if pop else None)
 
     def onEnum(self, name, mods=None, implements=None):
-        debug('%s', name)
 	klass = self.onClass(name)
 	return klass
 
     def onEnumConstant(self, decl):
         name = decl['id']
         debug('%s', name)
-        if name.startswith('<missing'):
-            return
-        for handler in self.top.config.handlers('enumConstantHandlers'):
+        handlers = list(self.top.config.handlers('enumConstantHandlers'))
+        for handler in handlers:
             handler(self, decl)
+        else:
+            warn('No handlers for enum: %s.%s', self.top.name, name)
 
     def onIf(self, expr):
         debug('%s', expr)
@@ -425,17 +425,17 @@ class BlockStack:
 
     def onVariables(self, decls, applyType, mods=()):
 	debug('%s %s %s', decls, applyType, mods)
+        typmap = self.top.config.combined('typeValueMap')
+        for decl in [d for d in decls if not d['right']]:
+            typval = self.top.formatExpression(applyType)
+            decl['right'] = typmap.get(typval, typval)
         for decl in decls:
-            ## need to specify "type()" not just "type" ??
-            #decl['right'] = applyType
-            if not decl['right']:
-                decl['right'] = applyType
-        for decl in decls:
-            decl['format'] = '$left = $right' ## need to check type vs. value
+            decl['format'] = '$left = $right'
             decl['mods'] = mods
             decl['type'] = applyType
             self.top.addSource(decl)
-            self.top.addVariable(decl['left'])
+            #self.top.addVariable(decl['left'])
+            self.top.addVariable(decl)
 
     def onWhile(self):
         stat = self.top.makeStatement('while')
@@ -443,31 +443,35 @@ class BlockStack:
         return stat
 
     def onWhileFinish(self, stat, expr, pop=False):
-        replacements = list(xformAssigns(expr))
+        replacements = list(xformAssigns(expr, stat))
+        warn('replacements: %s', replacements)
         for index, item in enumerate(replacements):
             if index % 2:
                 self.top.addSource(item, 0)
             else:
                 self.top.parent.addSource(item, self.top.parent.index(self.top))
         stat.setExpression(expr)
+
         return (self.pop() if pop else None)
 
 
-def xformAssigns(expr):
+def xformAssigns(expr, stat=None):
     """ Yields statements to replace assignments within a Java
         expression.  The original expressions are modified in place to
         accomodate.
     """
-    if not isdict(expr):
+    if not isDict(expr):
         return
     lft, rgt, ctr = expr.get('left'), expr.get('right'), expr.get('center')
-    for k in chain(xformAssigns(lft), xformAssigns(rgt), xformAssigns(ctr)):
+    for k in chain(xformAssigns(lft, stat), xformAssigns(rgt, stat), xformAssigns(ctr, stat)):
         yield k
     for leaf in (lft, rgt, ctr):
-        if isdict(leaf) and leaf.get('assign'):
+        if isDict(leaf) and leaf.get('assign'):
             orig, next = leaf.copy(), leaf.copy()
             leaf['format'] = '$left'
             leaf['left'] = next['left'] = xformAssign(leaf)
+            if stat:
+                stat.addSource(ev(leaf['left'], orig.get('left'), '$left = $right'))
             next['format'] = '$left = $right'
             next['right'] = orig.get('left')
             if orig.get('post'):
