@@ -4,7 +4,7 @@ import compiler
 import logging
 import optparse
 import os.path
-import sys
+from sys import argv, exit, path, stdin, stdout
 from collections import defaultdict
 from time import time
 
@@ -24,10 +24,9 @@ except (ImportError, ):
 else:
     psyco.full()
 
-## 2.6 doesn't find the testconfig.py module in the tests dir.
-sys.path.insert(0, ".")
 
 version = '0.3'
+path.insert(0, '.')
 
 
 def bad_loglevel(name, value):
@@ -98,7 +97,7 @@ def transform(options):
 	fileout = '%s.py' % (os.path.splitext(filein)[0])
 
     if fileout == filedefault:
-	output = sys.stdout
+	output = stdout
     else:
 	output = open(fileout, 'w')
 
@@ -151,16 +150,16 @@ def cli_options(argv):
 		      default=True, action='store_false')
     parser.add_option('-l', '--loglevel', dest='loglevel',
 		      help='Set log level by name or value.',
-		      default='INFO', type='loglevel')
+		      default='WARN', type='loglevel')
     options, args = parser.parse_args(argv)
     if len(args) > 2:
 	parser.error('Only one input file supported.')
     elif len(args) == 2:
 	options.inputfile = args[1]
     if options.inputfile == '-':
-        options.inputfile = sys.stdin
+        options.inputfile = stdin
     if options.outputfile == '-':
-        options.outputfile = sys.stdout
+        options.outputfile = stdout
     return options, args
 
 
@@ -171,7 +170,7 @@ def interact(opts):
 
 
 if __name__ == '__main__':
-    options, args = cli_options(sys.argv)
+    options, args = cli_options(argv)
     fmt = '# %(levelname)s %(funcName)s: %(message)s'
     logging.basicConfig(level=options.loglevel, format=fmt)
     if options.interactive:
@@ -179,4 +178,4 @@ if __name__ == '__main__':
         ret = 0
     else:
         ret = transform(options)
-    sys.exit(ret)
+    exit(ret)
