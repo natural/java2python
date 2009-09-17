@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from logging import warn
-from java2python import maybeAttr
+from java2python import maybeAttr, expression, formatParameter
 from java2python.blocks.block import Block
 
 
 class Class(Block):
+    defaultBases = []
     isClass = True
 
     def __init__(self, parent, name):
         Block.__init__(self, parent, name)
-        self.bases = []
+        self.bases = self.defaultBases[:]
         self.append('pass')
 
     def dump(self, output, indent):
@@ -61,6 +62,34 @@ class Class(Block):
     def addBases(self, bases):
         self.bases.extend(bases)
 
-    @property
-    def classVariables(self):
-        return self.variables
+
+
+class AnnotationClass(Class):
+    defaultBases = ['Annotation']
+
+
+class EnumerationClass(Class):
+    defaultBases = ['Enum']
+
+    def __init__(self, parent, name):
+        Class.__init__(self, parent, name)
+        self.values = []
+
+    def addEnumValue(self, ident, arguments):
+        self.values.append((ident, arguments))
+
+    def endDecl(self):
+        values = self.values
+        if all(args==None for ident, args in values):
+            ## simple enum
+            for ident, args in values:
+                self.append(expression(ident, "'%s'" % ident, "$left = $right"))
+        else:
+            ## constructor-based enum
+            append = self.parent.append
+            cls = self.name
+            fs = '$left.$center = $left($right)'
+            for ident, args in values:
+                ex = expression(cls, args, fs, center=ident, rename=True)
+                append(ex)
+

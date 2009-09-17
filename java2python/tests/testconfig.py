@@ -7,6 +7,7 @@
 ## this value, those lines are written after these.
 modulePreamble = [
     'from overloading import overloaded',
+    'from java2python.config.examples import Annotation, Enum',
     ]
 
 
@@ -22,6 +23,9 @@ outputSubs = [
     (r'(.*?)\.getName\(\)', r'\1.__name__'),
     (r'(.*?)\.getInterfaces\(\)', r'\1.__bases__'),
 
+    (r'(.*?)\.fooProp\(\)', r'\1.fooProp'),
+    (r'(.*?)\.fooProp\((.+)\)', r'\1.fooProp = \2'),
+
     ## these two fudge something that should be handled in parsing
     (r'(.*?)StaticInner\(\)', r'\1cls.StaticInner()'),
     (r'(.*?)outer\.cls', r'\1outer'),
@@ -32,5 +36,17 @@ outputSubs = [
 enumConstantHandlers = [
 #    'java2python.mods.enums.pyStrings',
     'java2python.mods.enums.minJava',
+
+]
+
+classHandlers = [
+    #'java2python.mods.classes.sortMethods',
+    'java2python.mods.classes.updateConstructor',
+
+    'java2python.mods.classes.convertProperties',
+    'java2python.mods.classes.overloadMethods',
+    'java2python.mods.simpleDocString',
+    'java2python.mods.classes.insertModifiersAsComments',
+    'java2python.mods.classes.updateBases',
 
 ]

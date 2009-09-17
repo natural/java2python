@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import pprint
 from collections import defaultdict
 from logging import debug, warn
-from java2python import maybeAttr, isDeco
+from java2python import maybeAttr, isDict
 
 
 def convertProperties(block):
@@ -14,27 +15,31 @@ def convertProperties(block):
 
     @return None
     """
-    blockPredicates = [lambda x:x.name!='__init__', lambda x:'@overloaded' not in x.preamble, ]
     namesArgCounts = [(m.name, len(m.parameters)) for m in block.methods]
-    propmap = defaultdict(lambda:{1:None, 2:None})
+    blockPredicates = [
+        lambda x:x.name!='__init__',
+        lambda x:len([n for n, argc in namesArgCounts if n==x.name]) == 2,
+    ]
+
+    propMethods = defaultdict(lambda:{1:None, 2:None})
+    gettr, settr = 1, 2
 
     for meth in block.methods:
         name = meth.name
         tests = [predicate(meth) for predicate in blockPredicates]
-        if all(tests) and (name, 1) in namesArgCounts and (name, 2) in namesArgCounts:
+        if all(tests) and (name, gettr) in namesArgCounts and (name, settr) in namesArgCounts:
             argc = len(meth.parameters)
-            methmap = propmap[name]
+            methmap = propMethods[name]
             methmap[argc] = meth
-            meth.name = ('get_%s' if argc==1 else 'set_%s') % name
+            meth.name = ('get_%s' if argc==gettr else 'set_%s') % name
+    fs = '%s = property(%s, %s)'
     blocks = block.blocks
-    for name, meths in propmap.items():
-        blocks.remove(meths[1])
-        blocks.remove(meths[2])
-    format = '%s = property(%s, %s)'
-    for name, meths in propmap.items():
-        blocks.append(meths[1])
-        blocks.append(meths[2])
-        blocks.append(format % (name, meths[1].name, meths[2].name))
+    for name, meths in propMethods.items():
+        blocks.remove(meths[gettr])
+        blocks.remove(meths[settr])
+        blocks.append(meths[gettr])
+        blocks.append(meths[settr])
+        blocks.append(fs % (name, meths[gettr].name, meths[settr].name))
 
 
 def insertModifiersAsComments(block):

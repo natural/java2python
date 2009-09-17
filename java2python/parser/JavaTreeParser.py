@@ -1,11 +1,11 @@
-# $ANTLR 3.1.1 JavaTreeParser.g 2009-08-29 02:30:26
+# $ANTLR 3.1.1 JavaTreeParser.g 2009-09-09 12:05:51
 
 import sys
 from antlr3 import *
 from antlr3.tree import *
 from antlr3.compat import set, frozenset
                      
-## from logging import warn
+from logging import warn
 from java2python import expression as ex, parameter as px, formatFloatLiteral
 from java2python.parser.local import LocalTreeParser
 
@@ -504,7 +504,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "typeDeclaration"
-    # JavaTreeParser.g:85:1: typeDeclaration : ( ^( CLASS md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? (ic0= implementsClause )? classTopLevelScope ) | ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope ) | ^( ENUM modifierList IDENT ( implementsClause )? enumTopLevelScope ) | ^( AT modifierList IDENT annotationTopLevelScope ) );
+    # JavaTreeParser.g:85:1: typeDeclaration : ( ^( CLASS md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? (ic0= implementsClause )? classTopLevelScope ) | ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope ) | ^( ENUM md0= modifierList id0= IDENT (ic0= implementsClause )? enumTopLevelScope ) | ^( AT md0= modifierList id0= IDENT annotationTopLevelScope ) );
     def typeDeclaration(self, ):
 
         retval = self.typeDeclaration_return()
@@ -526,7 +526,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:87:5: ( ^( CLASS md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? (ic0= implementsClause )? classTopLevelScope ) | ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope ) | ^( ENUM modifierList IDENT ( implementsClause )? enumTopLevelScope ) | ^( AT modifierList IDENT annotationTopLevelScope ) )
+                # JavaTreeParser.g:87:5: ( ^( CLASS md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? (ic0= implementsClause )? classTopLevelScope ) | ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope ) | ^( ENUM md0= modifierList id0= IDENT (ic0= implementsClause )? enumTopLevelScope ) | ^( AT md0= modifierList id0= IDENT annotationTopLevelScope ) )
                 alt12 = 4
                 LA12 = self.input.LA(1)
                 if LA12 == CLASS:
@@ -625,14 +625,17 @@ class JavaTreeParser(LocalTreeParser):
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self.endClassDeclaration() 
+                                   
+                        self.commentHandler(retval.start)
+                        self.endClassDeclaration()
+                                  
 
 
                     self.match(self.input, UP, None)
 
 
                 elif alt12 == 2:
-                    # JavaTreeParser.g:98:9: ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope )
+                    # JavaTreeParser.g:101:9: ^( INTERFACE md0= modifierList id0= IDENT ( genericTypeParameterList )? (ec0= extendsClause )? interfaceTopLevelScope )
                     pass 
                     self.match(self.input, INTERFACE, self.FOLLOW_INTERFACE_in_typeDeclaration388)
 
@@ -652,7 +655,7 @@ class JavaTreeParser(LocalTreeParser):
                     if self._state.backtracking == 0:
                         self.setIdent(ident=id0.text) 
 
-                    # JavaTreeParser.g:102:11: ( genericTypeParameterList )?
+                    # JavaTreeParser.g:105:11: ( genericTypeParameterList )?
                     alt9 = 2
                     LA9_0 = self.input.LA(1)
 
@@ -668,14 +671,14 @@ class JavaTreeParser(LocalTreeParser):
 
 
 
-                    # JavaTreeParser.g:103:11: (ec0= extendsClause )?
+                    # JavaTreeParser.g:106:11: (ec0= extendsClause )?
                     alt10 = 2
                     LA10_0 = self.input.LA(1)
 
                     if (LA10_0 == EXTENDS_CLAUSE) :
                         alt10 = 1
                     if alt10 == 1:
-                        # JavaTreeParser.g:103:12: ec0= extendsClause
+                        # JavaTreeParser.g:106:12: ec0= extendsClause
                         pass 
                         self._state.following.append(self.FOLLOW_extendsClause_in_typeDeclaration460)
                         ec0 = self.extendsClause()
@@ -692,68 +695,103 @@ class JavaTreeParser(LocalTreeParser):
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self.endInterfaceDeclaration() 
+                                   
+                        self.commentHandler(retval.start)
+                        self.endInterfaceDeclaration()
+                                  
 
 
                     self.match(self.input, UP, None)
 
 
                 elif alt12 == 3:
-                    # JavaTreeParser.g:108:9: ^( ENUM modifierList IDENT ( implementsClause )? enumTopLevelScope )
+                    # JavaTreeParser.g:114:9: ^( ENUM md0= modifierList id0= IDENT (ic0= implementsClause )? enumTopLevelScope )
                     pass 
                     self.match(self.input, ENUM, self.FOLLOW_ENUM_in_typeDeclaration510)
 
+                    if self._state.backtracking == 0:
+                        self.beginEnumerationDeclaration() 
+
+
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_typeDeclaration522)
-                    self.modifierList()
+                    self._state.following.append(self.FOLLOW_modifierList_in_typeDeclaration536)
+                    md0 = self.modifierList()
 
                     self._state.following.pop()
-                    self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeDeclaration534)
-                    # JavaTreeParser.g:111:11: ( implementsClause )?
+                    if self._state.backtracking == 0:
+                        self.addModifiers(md0) 
+
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeDeclaration552)
+                    if self._state.backtracking == 0:
+                        self.setIdent(ident=id0.text) 
+
+                    # JavaTreeParser.g:118:11: (ic0= implementsClause )?
                     alt11 = 2
                     LA11_0 = self.input.LA(1)
 
                     if (LA11_0 == IMPLEMENTS_CLAUSE) :
                         alt11 = 1
                     if alt11 == 1:
-                        # JavaTreeParser.g:0:0: implementsClause
+                        # JavaTreeParser.g:118:12: ic0= implementsClause
                         pass 
-                        self._state.following.append(self.FOLLOW_implementsClause_in_typeDeclaration546)
-                        self.implementsClause()
+                        self._state.following.append(self.FOLLOW_implementsClause_in_typeDeclaration569)
+                        ic0 = self.implementsClause()
 
                         self._state.following.pop()
+                        if self._state.backtracking == 0:
+                            self.addBases(ic0) 
 
 
 
-                    self._state.following.append(self.FOLLOW_enumTopLevelScope_in_typeDeclaration559)
+
+                    self._state.following.append(self.FOLLOW_enumTopLevelScope_in_typeDeclaration585)
                     self.enumTopLevelScope()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                                   
+                        self.commentHandler(retval.start)
+                        self.endEnumerationDeclaration()
+                                  
+
 
                     self.match(self.input, UP, None)
 
 
                 elif alt12 == 4:
-                    # JavaTreeParser.g:115:9: ^( AT modifierList IDENT annotationTopLevelScope )
+                    # JavaTreeParser.g:126:9: ^( AT md0= modifierList id0= IDENT annotationTopLevelScope )
                     pass 
-                    self.match(self.input, AT, self.FOLLOW_AT_in_typeDeclaration581)
+                    self.match(self.input, AT, self.FOLLOW_AT_in_typeDeclaration619)
+
+                    if self._state.backtracking == 0:
+                        self.beginAnnotationDeclaration() 
+
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_typeDeclaration593)
-                    self.modifierList()
+                    self._state.following.append(self.FOLLOW_modifierList_in_typeDeclaration645)
+                    md0 = self.modifierList()
 
                     self._state.following.pop()
-                    self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeDeclaration605)
-                    self._state.following.append(self.FOLLOW_annotationTopLevelScope_in_typeDeclaration617)
+                    if self._state.backtracking == 0:
+                        self.addModifiers(md0) 
+
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeDeclaration661)
+                    if self._state.backtracking == 0:
+                        self.setIdent(ident=id0.text) 
+
+                    self._state.following.append(self.FOLLOW_annotationTopLevelScope_in_typeDeclaration675)
                     self.annotationTopLevelScope()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                                   
+                        self.commentHandler(retval.start)
+                        self.endAnnotationDeclration()
+                                  
+
 
                     self.match(self.input, UP, None)
 
-
-                if self._state.backtracking == 0:
-                    self.commentHandler(retval.start) 
 
 
                 success = True
@@ -772,7 +810,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "extendsClause"
-    # JavaTreeParser.g:123:1: extendsClause returns [values] : ^( EXTENDS_CLAUSE (tp0= type )+ ) ;
+    # JavaTreeParser.g:139:1: extendsClause returns [values] : ^( EXTENDS_CLAUSE (tp0= type )+ ) ;
     def extendsClause(self, ):
 
         values = None
@@ -789,13 +827,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:125:5: ( ^( EXTENDS_CLAUSE (tp0= type )+ ) )
-                # JavaTreeParser.g:125:9: ^( EXTENDS_CLAUSE (tp0= type )+ )
+                # JavaTreeParser.g:141:5: ( ^( EXTENDS_CLAUSE (tp0= type )+ ) )
+                # JavaTreeParser.g:141:9: ^( EXTENDS_CLAUSE (tp0= type )+ )
                 pass 
-                self.match(self.input, EXTENDS_CLAUSE, self.FOLLOW_EXTENDS_CLAUSE_in_extendsClause661)
+                self.match(self.input, EXTENDS_CLAUSE, self.FOLLOW_EXTENDS_CLAUSE_in_extendsClause731)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:125:26: (tp0= type )+
+                # JavaTreeParser.g:141:26: (tp0= type )+
                 cnt13 = 0
                 while True: #loop13
                     alt13 = 2
@@ -806,9 +844,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     if alt13 == 1:
-                        # JavaTreeParser.g:125:27: tp0= type
+                        # JavaTreeParser.g:141:27: tp0= type
                         pass 
-                        self._state.following.append(self.FOLLOW_type_in_extendsClause666)
+                        self._state.following.append(self.FOLLOW_type_in_extendsClause736)
                         tp0 = self.type()
 
                         self._state.following.pop()
@@ -852,7 +890,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "implementsClause"
-    # JavaTreeParser.g:129:1: implementsClause returns [values] : ^( IMPLEMENTS_CLAUSE (tp0= type )+ ) ;
+    # JavaTreeParser.g:145:1: implementsClause returns [values] : ^( IMPLEMENTS_CLAUSE (tp0= type )+ ) ;
     def implementsClause(self, ):
 
         values = None
@@ -869,13 +907,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:131:5: ( ^( IMPLEMENTS_CLAUSE (tp0= type )+ ) )
-                # JavaTreeParser.g:131:9: ^( IMPLEMENTS_CLAUSE (tp0= type )+ )
+                # JavaTreeParser.g:147:5: ( ^( IMPLEMENTS_CLAUSE (tp0= type )+ ) )
+                # JavaTreeParser.g:147:9: ^( IMPLEMENTS_CLAUSE (tp0= type )+ )
                 pass 
-                self.match(self.input, IMPLEMENTS_CLAUSE, self.FOLLOW_IMPLEMENTS_CLAUSE_in_implementsClause705)
+                self.match(self.input, IMPLEMENTS_CLAUSE, self.FOLLOW_IMPLEMENTS_CLAUSE_in_implementsClause775)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:131:29: (tp0= type )+
+                # JavaTreeParser.g:147:29: (tp0= type )+
                 cnt14 = 0
                 while True: #loop14
                     alt14 = 2
@@ -886,9 +924,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     if alt14 == 1:
-                        # JavaTreeParser.g:131:30: tp0= type
+                        # JavaTreeParser.g:147:30: tp0= type
                         pass 
-                        self._state.following.append(self.FOLLOW_type_in_implementsClause710)
+                        self._state.following.append(self.FOLLOW_type_in_implementsClause780)
                         tp0 = self.type()
 
                         self._state.following.pop()
@@ -932,7 +970,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "genericTypeParameterList"
-    # JavaTreeParser.g:134:1: genericTypeParameterList : ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ ) ;
+    # JavaTreeParser.g:150:1: genericTypeParameterList : ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ ) ;
     def genericTypeParameterList(self, ):
 
         genericTypeParameterList_StartIndex = self.input.index()
@@ -944,13 +982,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:135:5: ( ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ ) )
-                # JavaTreeParser.g:135:9: ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ )
+                # JavaTreeParser.g:151:5: ( ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ ) )
+                # JavaTreeParser.g:151:9: ^( GENERIC_TYPE_PARAM_LIST ( genericTypeParameter )+ )
                 pass 
-                self.match(self.input, GENERIC_TYPE_PARAM_LIST, self.FOLLOW_GENERIC_TYPE_PARAM_LIST_in_genericTypeParameterList735)
+                self.match(self.input, GENERIC_TYPE_PARAM_LIST, self.FOLLOW_GENERIC_TYPE_PARAM_LIST_in_genericTypeParameterList805)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:135:35: ( genericTypeParameter )+
+                # JavaTreeParser.g:151:35: ( genericTypeParameter )+
                 cnt15 = 0
                 while True: #loop15
                     alt15 = 2
@@ -963,7 +1001,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt15 == 1:
                         # JavaTreeParser.g:0:0: genericTypeParameter
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameter_in_genericTypeParameterList737)
+                        self._state.following.append(self.FOLLOW_genericTypeParameter_in_genericTypeParameterList807)
                         self.genericTypeParameter()
 
                         self._state.following.pop()
@@ -1004,7 +1042,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "genericTypeParameter"
-    # JavaTreeParser.g:138:1: genericTypeParameter : ^( IDENT ( bound )? ) ;
+    # JavaTreeParser.g:154:1: genericTypeParameter : ^( IDENT ( bound )? ) ;
     def genericTypeParameter(self, ):
 
         genericTypeParameter_StartIndex = self.input.index()
@@ -1016,14 +1054,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:139:5: ( ^( IDENT ( bound )? ) )
-                # JavaTreeParser.g:139:9: ^( IDENT ( bound )? )
+                # JavaTreeParser.g:155:5: ( ^( IDENT ( bound )? ) )
+                # JavaTreeParser.g:155:9: ^( IDENT ( bound )? )
                 pass 
-                self.match(self.input, IDENT, self.FOLLOW_IDENT_in_genericTypeParameter759)
+                self.match(self.input, IDENT, self.FOLLOW_IDENT_in_genericTypeParameter829)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:139:17: ( bound )?
+                    # JavaTreeParser.g:155:17: ( bound )?
                     alt16 = 2
                     LA16_0 = self.input.LA(1)
 
@@ -1032,7 +1070,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt16 == 1:
                         # JavaTreeParser.g:0:0: bound
                         pass 
-                        self._state.following.append(self.FOLLOW_bound_in_genericTypeParameter761)
+                        self._state.following.append(self.FOLLOW_bound_in_genericTypeParameter831)
                         self.bound()
 
                         self._state.following.pop()
@@ -1062,7 +1100,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "bound"
-    # JavaTreeParser.g:142:1: bound : ^( EXTENDS_BOUND_LIST ( type )+ ) ;
+    # JavaTreeParser.g:158:1: bound : ^( EXTENDS_BOUND_LIST ( type )+ ) ;
     def bound(self, ):
 
         bound_StartIndex = self.input.index()
@@ -1074,13 +1112,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:143:5: ( ^( EXTENDS_BOUND_LIST ( type )+ ) )
-                # JavaTreeParser.g:143:9: ^( EXTENDS_BOUND_LIST ( type )+ )
+                # JavaTreeParser.g:159:5: ( ^( EXTENDS_BOUND_LIST ( type )+ ) )
+                # JavaTreeParser.g:159:9: ^( EXTENDS_BOUND_LIST ( type )+ )
                 pass 
-                self.match(self.input, EXTENDS_BOUND_LIST, self.FOLLOW_EXTENDS_BOUND_LIST_in_bound783)
+                self.match(self.input, EXTENDS_BOUND_LIST, self.FOLLOW_EXTENDS_BOUND_LIST_in_bound853)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:143:30: ( type )+
+                # JavaTreeParser.g:159:30: ( type )+
                 cnt17 = 0
                 while True: #loop17
                     alt17 = 2
@@ -1093,7 +1131,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt17 == 1:
                         # JavaTreeParser.g:0:0: type
                         pass 
-                        self._state.following.append(self.FOLLOW_type_in_bound785)
+                        self._state.following.append(self.FOLLOW_type_in_bound855)
                         self.type()
 
                         self._state.following.pop()
@@ -1134,7 +1172,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "enumTopLevelScope"
-    # JavaTreeParser.g:146:1: enumTopLevelScope : ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? ) ;
+    # JavaTreeParser.g:162:1: enumTopLevelScope : ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? ) ;
     def enumTopLevelScope(self, ):
 
         enumTopLevelScope_StartIndex = self.input.index()
@@ -1146,13 +1184,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:147:5: ( ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? ) )
-                # JavaTreeParser.g:147:9: ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? )
+                # JavaTreeParser.g:163:5: ( ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? ) )
+                # JavaTreeParser.g:163:9: ^( ENUM_TOP_LEVEL_SCOPE ( enumConstant )+ ( classTopLevelScope )? )
                 pass 
-                self.match(self.input, ENUM_TOP_LEVEL_SCOPE, self.FOLLOW_ENUM_TOP_LEVEL_SCOPE_in_enumTopLevelScope807)
+                self.match(self.input, ENUM_TOP_LEVEL_SCOPE, self.FOLLOW_ENUM_TOP_LEVEL_SCOPE_in_enumTopLevelScope877)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:147:32: ( enumConstant )+
+                # JavaTreeParser.g:163:32: ( enumConstant )+
                 cnt18 = 0
                 while True: #loop18
                     alt18 = 2
@@ -1165,7 +1203,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt18 == 1:
                         # JavaTreeParser.g:0:0: enumConstant
                         pass 
-                        self._state.following.append(self.FOLLOW_enumConstant_in_enumTopLevelScope809)
+                        self._state.following.append(self.FOLLOW_enumConstant_in_enumTopLevelScope879)
                         self.enumConstant()
 
                         self._state.following.pop()
@@ -1184,7 +1222,7 @@ class JavaTreeParser(LocalTreeParser):
                     cnt18 += 1
 
 
-                # JavaTreeParser.g:147:46: ( classTopLevelScope )?
+                # JavaTreeParser.g:163:46: ( classTopLevelScope )?
                 alt19 = 2
                 LA19_0 = self.input.LA(1)
 
@@ -1193,7 +1231,7 @@ class JavaTreeParser(LocalTreeParser):
                 if alt19 == 1:
                     # JavaTreeParser.g:0:0: classTopLevelScope
                     pass 
-                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_enumTopLevelScope812)
+                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_enumTopLevelScope882)
                     self.classTopLevelScope()
 
                     self._state.following.pop()
@@ -1222,10 +1260,15 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "enumConstant"
-    # JavaTreeParser.g:150:1: enumConstant : ^( IDENT annotationList ( arguments )? ( classTopLevelScope )? ) ;
+    # JavaTreeParser.g:166:1: enumConstant : ^(id0= IDENT annotationList (ag0= arguments )? ( classTopLevelScope )? ) ;
     def enumConstant(self, ):
 
         enumConstant_StartIndex = self.input.index()
+        id0 = None
+        ag0 = None
+
+
+        args = None 
         success = False
         try:
             try:
@@ -1234,33 +1277,36 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:151:5: ( ^( IDENT annotationList ( arguments )? ( classTopLevelScope )? ) )
-                # JavaTreeParser.g:151:9: ^( IDENT annotationList ( arguments )? ( classTopLevelScope )? )
+                # JavaTreeParser.g:168:5: ( ^(id0= IDENT annotationList (ag0= arguments )? ( classTopLevelScope )? ) )
+                # JavaTreeParser.g:168:9: ^(id0= IDENT annotationList (ag0= arguments )? ( classTopLevelScope )? )
                 pass 
-                self.match(self.input, IDENT, self.FOLLOW_IDENT_in_enumConstant834)
+                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_enumConstant915)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_annotationList_in_enumConstant836)
+                self._state.following.append(self.FOLLOW_annotationList_in_enumConstant927)
                 self.annotationList()
 
                 self._state.following.pop()
-                # JavaTreeParser.g:151:32: ( arguments )?
+                # JavaTreeParser.g:170:11: (ag0= arguments )?
                 alt20 = 2
                 LA20_0 = self.input.LA(1)
 
                 if (LA20_0 == ARGUMENT_LIST) :
                     alt20 = 1
                 if alt20 == 1:
-                    # JavaTreeParser.g:0:0: arguments
+                    # JavaTreeParser.g:170:12: ag0= arguments
                     pass 
-                    self._state.following.append(self.FOLLOW_arguments_in_enumConstant838)
-                    self.arguments()
+                    self._state.following.append(self.FOLLOW_arguments_in_enumConstant942)
+                    ag0 = self.arguments()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        args = ag0 
 
 
 
-                # JavaTreeParser.g:151:43: ( classTopLevelScope )?
+
+                # JavaTreeParser.g:171:11: ( classTopLevelScope )?
                 alt21 = 2
                 LA21_0 = self.input.LA(1)
 
@@ -1269,7 +1315,7 @@ class JavaTreeParser(LocalTreeParser):
                 if alt21 == 1:
                     # JavaTreeParser.g:0:0: classTopLevelScope
                     pass 
-                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_enumConstant841)
+                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_enumConstant958)
                     self.classTopLevelScope()
 
                     self._state.following.pop()
@@ -1278,6 +1324,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 self.match(self.input, UP, None)
+                if self._state.backtracking == 0:
+                    self.addEnumValue(id0.text, args) 
+
 
 
 
@@ -1298,7 +1347,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "classTopLevelScope"
-    # JavaTreeParser.g:155:1: classTopLevelScope : ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* ) ;
+    # JavaTreeParser.g:177:1: classTopLevelScope : ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* ) ;
     def classTopLevelScope(self, ):
 
         classTopLevelScope_StartIndex = self.input.index()
@@ -1310,14 +1359,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:156:5: ( ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* ) )
-                # JavaTreeParser.g:156:9: ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* )
+                # JavaTreeParser.g:178:5: ( ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* ) )
+                # JavaTreeParser.g:178:9: ^( CLASS_TOP_LEVEL_SCOPE ( classScopeDeclarations )* )
                 pass 
-                self.match(self.input, CLASS_TOP_LEVEL_SCOPE, self.FOLLOW_CLASS_TOP_LEVEL_SCOPE_in_classTopLevelScope864)
+                self.match(self.input, CLASS_TOP_LEVEL_SCOPE, self.FOLLOW_CLASS_TOP_LEVEL_SCOPE_in_classTopLevelScope1000)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:156:33: ( classScopeDeclarations )*
+                    # JavaTreeParser.g:178:33: ( classScopeDeclarations )*
                     while True: #loop22
                         alt22 = 2
                         LA22_0 = self.input.LA(1)
@@ -1329,7 +1378,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt22 == 1:
                             # JavaTreeParser.g:0:0: classScopeDeclarations
                             pass 
-                            self._state.following.append(self.FOLLOW_classScopeDeclarations_in_classTopLevelScope866)
+                            self._state.following.append(self.FOLLOW_classScopeDeclarations_in_classTopLevelScope1002)
                             self.classScopeDeclarations()
 
                             self._state.following.pop()
@@ -1360,11 +1409,20 @@ class JavaTreeParser(LocalTreeParser):
 
     # $ANTLR end "classTopLevelScope"
 
+    class classScopeDeclarations_return(TreeRuleReturnScope):
+        def __init__(self):
+            TreeRuleReturnScope.__init__(self)
+
+
+
+
 
     # $ANTLR start "classScopeDeclarations"
-    # JavaTreeParser.g:160:1: classScopeDeclarations : ( ^( CLASS_INSTANCE_INITIALIZER block ) | ^( CLASS_STATIC_INITIALIZER block ) | ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? ) | ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList ) | ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block ) | typeDeclaration );
+    # JavaTreeParser.g:182:1: classScopeDeclarations : ( ^( CLASS_INSTANCE_INITIALIZER block ) | ^( CLASS_STATIC_INITIALIZER block ) | ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? ) | ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList ) | ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block ) | typeDeclaration );
     def classScopeDeclarations(self, ):
 
+        retval = self.classScopeDeclarations_return()
+        retval.start = self.input.LT(1)
         classScopeDeclarations_StartIndex = self.input.index()
         id0 = None
         md0 = None
@@ -1383,9 +1441,9 @@ class JavaTreeParser(LocalTreeParser):
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 13):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return retval
 
-                # JavaTreeParser.g:164:5: ( ^( CLASS_INSTANCE_INITIALIZER block ) | ^( CLASS_STATIC_INITIALIZER block ) | ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? ) | ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList ) | ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block ) | typeDeclaration )
+                # JavaTreeParser.g:186:5: ( ^( CLASS_INSTANCE_INITIALIZER block ) | ^( CLASS_STATIC_INITIALIZER block ) | ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? ) | ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList ) | ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block ) | typeDeclaration )
                 alt32 = 7
                 LA32 = self.input.LA(1)
                 if LA32 == CLASS_INSTANCE_INITIALIZER:
@@ -1411,12 +1469,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt32 == 1:
-                    # JavaTreeParser.g:164:9: ^( CLASS_INSTANCE_INITIALIZER block )
+                    # JavaTreeParser.g:186:9: ^( CLASS_INSTANCE_INITIALIZER block )
                     pass 
-                    self.match(self.input, CLASS_INSTANCE_INITIALIZER, self.FOLLOW_CLASS_INSTANCE_INITIALIZER_in_classScopeDeclarations909)
+                    self.match(self.input, CLASS_INSTANCE_INITIALIZER, self.FOLLOW_CLASS_INSTANCE_INITIALIZER_in_classScopeDeclarations1045)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations911)
+                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1047)
                     self.block()
 
                     self._state.following.pop()
@@ -1425,12 +1483,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt32 == 2:
-                    # JavaTreeParser.g:166:9: ^( CLASS_STATIC_INITIALIZER block )
+                    # JavaTreeParser.g:188:9: ^( CLASS_STATIC_INITIALIZER block )
                     pass 
-                    self.match(self.input, CLASS_STATIC_INITIALIZER, self.FOLLOW_CLASS_STATIC_INITIALIZER_in_classScopeDeclarations924)
+                    self.match(self.input, CLASS_STATIC_INITIALIZER, self.FOLLOW_CLASS_STATIC_INITIALIZER_in_classScopeDeclarations1060)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations926)
+                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1062)
                     self.block()
 
                     self._state.following.pop()
@@ -1439,23 +1497,23 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt32 == 3:
-                    # JavaTreeParser.g:168:9: ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? )
+                    # JavaTreeParser.g:190:9: ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ( block )? )
                     pass 
-                    self.match(self.input, FUNCTION_METHOD_DECL, self.FOLLOW_FUNCTION_METHOD_DECL_in_classScopeDeclarations939)
+                    self.match(self.input, FUNCTION_METHOD_DECL, self.FOLLOW_FUNCTION_METHOD_DECL_in_classScopeDeclarations1075)
 
                     if self._state.backtracking == 0:
                         self.beginMethodDecl() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations965)
+                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1102)
                     md0 = self.modifierList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addModifiers(md0) 
 
-                    # JavaTreeParser.g:171:11: ( genericTypeParameterList )?
+                    # JavaTreeParser.g:194:11: ( genericTypeParameterList )?
                     alt23 = 2
                     LA23_0 = self.input.LA(1)
 
@@ -1464,32 +1522,32 @@ class JavaTreeParser(LocalTreeParser):
                     if alt23 == 1:
                         # JavaTreeParser.g:0:0: genericTypeParameterList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations979)
+                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations1116)
                         self.genericTypeParameterList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_type_in_classScopeDeclarations994)
+                    self._state.following.append(self.FOLLOW_type_in_classScopeDeclarations1131)
                     tp0 = self.type()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.setType(((tp0 is not None) and [tp0.value] or [None])[0]) 
 
-                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_classScopeDeclarations1010)
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_classScopeDeclarations1147)
                     if self._state.backtracking == 0:
                         self.setIdent(ident=id0.text) 
 
-                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1026)
+                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1163)
                     fp0 = self.formalParameterList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addParameters(fp0) 
 
-                    # JavaTreeParser.g:175:11: ( arrayDeclaratorList )?
+                    # JavaTreeParser.g:198:11: ( arrayDeclaratorList )?
                     alt24 = 2
                     LA24_0 = self.input.LA(1)
 
@@ -1498,14 +1556,14 @@ class JavaTreeParser(LocalTreeParser):
                     if alt24 == 1:
                         # JavaTreeParser.g:0:0: arrayDeclaratorList
                         pass 
-                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_classScopeDeclarations1040)
+                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_classScopeDeclarations1177)
                         self.arrayDeclaratorList()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:176:11: ( throwsClause )?
+                    # JavaTreeParser.g:199:11: ( throwsClause )?
                     alt25 = 2
                     LA25_0 = self.input.LA(1)
 
@@ -1514,14 +1572,14 @@ class JavaTreeParser(LocalTreeParser):
                     if alt25 == 1:
                         # JavaTreeParser.g:0:0: throwsClause
                         pass 
-                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1053)
+                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1190)
                         self.throwsClause()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:177:11: ( block )?
+                    # JavaTreeParser.g:200:11: ( block )?
                     alt26 = 2
                     LA26_0 = self.input.LA(1)
 
@@ -1530,90 +1588,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt26 == 1:
                         # JavaTreeParser.g:0:0: block
                         pass 
-                        self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1066)
-                        self.block()
-
-                        self._state.following.pop()
-
-
-
-                    if self._state.backtracking == 0:
-                        self.endMethodDecl() 
-
-
-                    self.match(self.input, UP, None)
-
-
-                elif alt32 == 4:
-                    # JavaTreeParser.g:181:9: ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? )
-                    pass 
-                    self.match(self.input, VOID_METHOD_DECL, self.FOLLOW_VOID_METHOD_DECL_in_classScopeDeclarations1101)
-
-                    if self._state.backtracking == 0:
-                        self.beginMethodDecl() 
-
-
-                    self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1127)
-                    md0 = self.modifierList()
-
-                    self._state.following.pop()
-                    if self._state.backtracking == 0:
-                        self.addModifiers(md0) 
-
-                    # JavaTreeParser.g:184:11: ( genericTypeParameterList )?
-                    alt27 = 2
-                    LA27_0 = self.input.LA(1)
-
-                    if (LA27_0 == GENERIC_TYPE_PARAM_LIST) :
-                        alt27 = 1
-                    if alt27 == 1:
-                        # JavaTreeParser.g:0:0: genericTypeParameterList
-                        pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations1141)
-                        self.genericTypeParameterList()
-
-                        self._state.following.pop()
-
-
-
-                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_classScopeDeclarations1156)
-                    if self._state.backtracking == 0:
-                        self.setIdent(ident=id0.text) 
-
-                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1172)
-                    fp0 = self.formalParameterList()
-
-                    self._state.following.pop()
-                    if self._state.backtracking == 0:
-                        self.addParameters(fp0) 
-
-                    # JavaTreeParser.g:187:11: ( throwsClause )?
-                    alt28 = 2
-                    LA28_0 = self.input.LA(1)
-
-                    if (LA28_0 == THROWS_CLAUSE) :
-                        alt28 = 1
-                    if alt28 == 1:
-                        # JavaTreeParser.g:0:0: throwsClause
-                        pass 
-                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1186)
-                        self.throwsClause()
-
-                        self._state.following.pop()
-
-
-
-                    # JavaTreeParser.g:188:11: ( block )?
-                    alt29 = 2
-                    LA29_0 = self.input.LA(1)
-
-                    if (LA29_0 == BLOCK_SCOPE) :
-                        alt29 = 1
-                    if alt29 == 1:
-                        # JavaTreeParser.g:0:0: block
-                        pass 
-                        self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1199)
+                        self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1203)
                         self.block()
 
                         self._state.following.pop()
@@ -1622,6 +1597,93 @@ class JavaTreeParser(LocalTreeParser):
 
                     if self._state.backtracking == 0:
                                    
+                        self.commentHandler(retval.start)
+                        self.endMethodDecl()
+                                  
+
+
+                    self.match(self.input, UP, None)
+
+
+                elif alt32 == 4:
+                    # JavaTreeParser.g:207:9: ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ( block )? )
+                    pass 
+                    self.match(self.input, VOID_METHOD_DECL, self.FOLLOW_VOID_METHOD_DECL_in_classScopeDeclarations1238)
+
+                    if self._state.backtracking == 0:
+                        self.beginMethodDecl() 
+
+
+                    self.match(self.input, DOWN, None)
+                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1264)
+                    md0 = self.modifierList()
+
+                    self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self.addModifiers(md0) 
+
+                    # JavaTreeParser.g:210:11: ( genericTypeParameterList )?
+                    alt27 = 2
+                    LA27_0 = self.input.LA(1)
+
+                    if (LA27_0 == GENERIC_TYPE_PARAM_LIST) :
+                        alt27 = 1
+                    if alt27 == 1:
+                        # JavaTreeParser.g:0:0: genericTypeParameterList
+                        pass 
+                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations1278)
+                        self.genericTypeParameterList()
+
+                        self._state.following.pop()
+
+
+
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_classScopeDeclarations1293)
+                    if self._state.backtracking == 0:
+                        self.setIdent(ident=id0.text) 
+
+                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1309)
+                    fp0 = self.formalParameterList()
+
+                    self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self.addParameters(fp0) 
+
+                    # JavaTreeParser.g:213:11: ( throwsClause )?
+                    alt28 = 2
+                    LA28_0 = self.input.LA(1)
+
+                    if (LA28_0 == THROWS_CLAUSE) :
+                        alt28 = 1
+                    if alt28 == 1:
+                        # JavaTreeParser.g:0:0: throwsClause
+                        pass 
+                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1323)
+                        self.throwsClause()
+
+                        self._state.following.pop()
+
+
+
+                    # JavaTreeParser.g:214:11: ( block )?
+                    alt29 = 2
+                    LA29_0 = self.input.LA(1)
+
+                    if (LA29_0 == BLOCK_SCOPE) :
+                        alt29 = 1
+                    if alt29 == 1:
+                        # JavaTreeParser.g:0:0: block
+                        pass 
+                        self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1336)
+                        self.block()
+
+                        self._state.following.pop()
+
+
+
+                    if self._state.backtracking == 0:
+                                   
+                        self.commentHandler(retval.start)
                         self.setType("void")
                         self.endMethodDecl()
                                   
@@ -1631,20 +1693,20 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt32 == 5:
-                    # JavaTreeParser.g:195:9: ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList )
+                    # JavaTreeParser.g:222:9: ^( VAR_DECLARATION md0= modifierList tp0= type vd0= variableDeclaratorList )
                     pass 
-                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_classScopeDeclarations1235)
+                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_classScopeDeclarations1372)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1249)
+                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1386)
                     md0 = self.modifierList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_classScopeDeclarations1263)
+                    self._state.following.append(self.FOLLOW_type_in_classScopeDeclarations1400)
                     tp0 = self.type()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_classScopeDeclarations1277)
+                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_classScopeDeclarations1414)
                     vd0 = self.variableDeclaratorList()
 
                     self._state.following.pop()
@@ -1656,23 +1718,23 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt32 == 6:
-                    # JavaTreeParser.g:202:9: ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block )
+                    # JavaTreeParser.g:229:9: ^( CONSTRUCTOR_DECL md0= modifierList ( genericTypeParameterList )? fp0= formalParameterList ( throwsClause )? block )
                     pass 
-                    self.match(self.input, CONSTRUCTOR_DECL, self.FOLLOW_CONSTRUCTOR_DECL_in_classScopeDeclarations1311)
+                    self.match(self.input, CONSTRUCTOR_DECL, self.FOLLOW_CONSTRUCTOR_DECL_in_classScopeDeclarations1448)
 
                     if self._state.backtracking == 0:
                         self.beginMethodDecl() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1337)
+                    self._state.following.append(self.FOLLOW_modifierList_in_classScopeDeclarations1474)
                     md0 = self.modifierList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addModifiers(md0) 
 
-                    # JavaTreeParser.g:205:11: ( genericTypeParameterList )?
+                    # JavaTreeParser.g:232:11: ( genericTypeParameterList )?
                     alt30 = 2
                     LA30_0 = self.input.LA(1)
 
@@ -1681,21 +1743,21 @@ class JavaTreeParser(LocalTreeParser):
                     if alt30 == 1:
                         # JavaTreeParser.g:0:0: genericTypeParameterList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations1351)
+                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_classScopeDeclarations1488)
                         self.genericTypeParameterList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1366)
+                    self._state.following.append(self.FOLLOW_formalParameterList_in_classScopeDeclarations1503)
                     fp0 = self.formalParameterList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addParameters(fp0) 
 
-                    # JavaTreeParser.g:207:11: ( throwsClause )?
+                    # JavaTreeParser.g:234:11: ( throwsClause )?
                     alt31 = 2
                     LA31_0 = self.input.LA(1)
 
@@ -1704,19 +1766,20 @@ class JavaTreeParser(LocalTreeParser):
                     if alt31 == 1:
                         # JavaTreeParser.g:0:0: throwsClause
                         pass 
-                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1380)
+                        self._state.following.append(self.FOLLOW_throwsClause_in_classScopeDeclarations1517)
                         self.throwsClause()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1393)
+                    self._state.following.append(self.FOLLOW_block_in_classScopeDeclarations1530)
                     self.block()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                                    
+                        self.commentHandler(retval.start)
                         self.setIdent("__init__")
                         self.endMethodDecl()
                                   
@@ -1726,9 +1789,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt32 == 7:
-                    # JavaTreeParser.g:215:9: typeDeclaration
+                    # JavaTreeParser.g:243:9: typeDeclaration
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDeclaration_in_classScopeDeclarations1426)
+                    self._state.following.append(self.FOLLOW_typeDeclaration_in_classScopeDeclarations1563)
                     self.typeDeclaration()
 
                     self._state.following.pop()
@@ -1748,13 +1811,13 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return retval
 
     # $ANTLR end "classScopeDeclarations"
 
 
     # $ANTLR start "interfaceTopLevelScope"
-    # JavaTreeParser.g:219:1: interfaceTopLevelScope : ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* ) ;
+    # JavaTreeParser.g:247:1: interfaceTopLevelScope : ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* ) ;
     def interfaceTopLevelScope(self, ):
 
         interfaceTopLevelScope_StartIndex = self.input.index()
@@ -1766,14 +1829,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:220:5: ( ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* ) )
-                # JavaTreeParser.g:220:9: ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* )
+                # JavaTreeParser.g:248:5: ( ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* ) )
+                # JavaTreeParser.g:248:9: ^( INTERFACE_TOP_LEVEL_SCOPE ( interfaceScopeDeclarations )* )
                 pass 
-                self.match(self.input, INTERFACE_TOP_LEVEL_SCOPE, self.FOLLOW_INTERFACE_TOP_LEVEL_SCOPE_in_interfaceTopLevelScope1447)
+                self.match(self.input, INTERFACE_TOP_LEVEL_SCOPE, self.FOLLOW_INTERFACE_TOP_LEVEL_SCOPE_in_interfaceTopLevelScope1584)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:220:37: ( interfaceScopeDeclarations )*
+                    # JavaTreeParser.g:248:37: ( interfaceScopeDeclarations )*
                     while True: #loop33
                         alt33 = 2
                         LA33_0 = self.input.LA(1)
@@ -1785,7 +1848,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt33 == 1:
                             # JavaTreeParser.g:0:0: interfaceScopeDeclarations
                             pass 
-                            self._state.following.append(self.FOLLOW_interfaceScopeDeclarations_in_interfaceTopLevelScope1449)
+                            self._state.following.append(self.FOLLOW_interfaceScopeDeclarations_in_interfaceTopLevelScope1586)
                             self.interfaceScopeDeclarations()
 
                             self._state.following.pop()
@@ -1825,7 +1888,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "interfaceScopeDeclarations"
-    # JavaTreeParser.g:224:1: interfaceScopeDeclarations : ( ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration );
+    # JavaTreeParser.g:252:1: interfaceScopeDeclarations : ( ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration );
     def interfaceScopeDeclarations(self, ):
 
         retval = self.interfaceScopeDeclarations_return()
@@ -1853,7 +1916,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:226:5: ( ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration )
+                # JavaTreeParser.g:254:5: ( ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? ) | ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration )
                 alt39 = 4
                 LA39 = self.input.LA(1)
                 if LA39 == FUNCTION_METHOD_DECL:
@@ -1873,23 +1936,23 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt39 == 1:
-                    # JavaTreeParser.g:226:9: ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? )
+                    # JavaTreeParser.g:254:9: ^( FUNCTION_METHOD_DECL md0= modifierList ( genericTypeParameterList )? tp0= type id0= IDENT fp0= formalParameterList ( arrayDeclaratorList )? ( throwsClause )? )
                     pass 
-                    self.match(self.input, FUNCTION_METHOD_DECL, self.FOLLOW_FUNCTION_METHOD_DECL_in_interfaceScopeDeclarations1481)
+                    self.match(self.input, FUNCTION_METHOD_DECL, self.FOLLOW_FUNCTION_METHOD_DECL_in_interfaceScopeDeclarations1618)
 
                     if self._state.backtracking == 0:
                         self.beginMethodDecl() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1507)
+                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1644)
                     md0 = self.modifierList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addModifiers(md0) 
 
-                    # JavaTreeParser.g:229:11: ( genericTypeParameterList )?
+                    # JavaTreeParser.g:257:11: ( genericTypeParameterList )?
                     alt34 = 2
                     LA34_0 = self.input.LA(1)
 
@@ -1898,32 +1961,32 @@ class JavaTreeParser(LocalTreeParser):
                     if alt34 == 1:
                         # JavaTreeParser.g:0:0: genericTypeParameterList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1521)
+                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1658)
                         self.genericTypeParameterList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_type_in_interfaceScopeDeclarations1536)
+                    self._state.following.append(self.FOLLOW_type_in_interfaceScopeDeclarations1673)
                     tp0 = self.type()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.setType(((tp0 is not None) and [tp0.value] or [None])[0]) 
 
-                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_interfaceScopeDeclarations1552)
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_interfaceScopeDeclarations1689)
                     if self._state.backtracking == 0:
                         self.setIdent(ident=id0.text) 
 
-                    self._state.following.append(self.FOLLOW_formalParameterList_in_interfaceScopeDeclarations1568)
+                    self._state.following.append(self.FOLLOW_formalParameterList_in_interfaceScopeDeclarations1705)
                     fp0 = self.formalParameterList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addParameters(fp0) 
 
-                    # JavaTreeParser.g:233:11: ( arrayDeclaratorList )?
+                    # JavaTreeParser.g:261:11: ( arrayDeclaratorList )?
                     alt35 = 2
                     LA35_0 = self.input.LA(1)
 
@@ -1932,14 +1995,14 @@ class JavaTreeParser(LocalTreeParser):
                     if alt35 == 1:
                         # JavaTreeParser.g:0:0: arrayDeclaratorList
                         pass 
-                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_interfaceScopeDeclarations1582)
+                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_interfaceScopeDeclarations1719)
                         self.arrayDeclaratorList()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:234:11: ( throwsClause )?
+                    # JavaTreeParser.g:262:11: ( throwsClause )?
                     alt36 = 2
                     LA36_0 = self.input.LA(1)
 
@@ -1948,7 +2011,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt36 == 1:
                         # JavaTreeParser.g:0:0: throwsClause
                         pass 
-                        self._state.following.append(self.FOLLOW_throwsClause_in_interfaceScopeDeclarations1595)
+                        self._state.following.append(self.FOLLOW_throwsClause_in_interfaceScopeDeclarations1732)
                         self.throwsClause()
 
                         self._state.following.pop()
@@ -1963,23 +2026,23 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt39 == 2:
-                    # JavaTreeParser.g:238:9: ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? )
+                    # JavaTreeParser.g:266:9: ^( VOID_METHOD_DECL md0= modifierList ( genericTypeParameterList )? id0= IDENT fp0= formalParameterList ( throwsClause )? )
                     pass 
-                    self.match(self.input, VOID_METHOD_DECL, self.FOLLOW_VOID_METHOD_DECL_in_interfaceScopeDeclarations1630)
+                    self.match(self.input, VOID_METHOD_DECL, self.FOLLOW_VOID_METHOD_DECL_in_interfaceScopeDeclarations1767)
 
                     if self._state.backtracking == 0:
                         self.beginMethodDecl() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1656)
+                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1793)
                     md0 = self.modifierList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addModifiers(md0) 
 
-                    # JavaTreeParser.g:241:11: ( genericTypeParameterList )?
+                    # JavaTreeParser.g:269:11: ( genericTypeParameterList )?
                     alt37 = 2
                     LA37_0 = self.input.LA(1)
 
@@ -1988,25 +2051,25 @@ class JavaTreeParser(LocalTreeParser):
                     if alt37 == 1:
                         # JavaTreeParser.g:0:0: genericTypeParameterList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1670)
+                        self._state.following.append(self.FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1807)
                         self.genericTypeParameterList()
 
                         self._state.following.pop()
 
 
 
-                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_interfaceScopeDeclarations1685)
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_interfaceScopeDeclarations1822)
                     if self._state.backtracking == 0:
                         self.setIdent(ident=id0.text) 
 
-                    self._state.following.append(self.FOLLOW_formalParameterList_in_interfaceScopeDeclarations1701)
+                    self._state.following.append(self.FOLLOW_formalParameterList_in_interfaceScopeDeclarations1838)
                     fp0 = self.formalParameterList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.addParameters(fp0) 
 
-                    # JavaTreeParser.g:244:11: ( throwsClause )?
+                    # JavaTreeParser.g:272:11: ( throwsClause )?
                     alt38 = 2
                     LA38_0 = self.input.LA(1)
 
@@ -2015,7 +2078,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt38 == 1:
                         # JavaTreeParser.g:0:0: throwsClause
                         pass 
-                        self._state.following.append(self.FOLLOW_throwsClause_in_interfaceScopeDeclarations1715)
+                        self._state.following.append(self.FOLLOW_throwsClause_in_interfaceScopeDeclarations1852)
                         self.throwsClause()
 
                         self._state.following.pop()
@@ -2033,20 +2096,20 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt39 == 3:
-                    # JavaTreeParser.g:251:9: ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList )
+                    # JavaTreeParser.g:279:9: ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList )
                     pass 
-                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_interfaceScopeDeclarations1750)
+                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_interfaceScopeDeclarations1887)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1764)
+                    self._state.following.append(self.FOLLOW_modifierList_in_interfaceScopeDeclarations1901)
                     md1 = self.modifierList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_interfaceScopeDeclarations1778)
+                    self._state.following.append(self.FOLLOW_type_in_interfaceScopeDeclarations1915)
                     tp1 = self.type()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_interfaceScopeDeclarations1792)
+                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_interfaceScopeDeclarations1929)
                     vd1 = self.variableDeclaratorList()
 
                     self._state.following.pop()
@@ -2058,9 +2121,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt39 == 4:
-                    # JavaTreeParser.g:258:9: typeDeclaration
+                    # JavaTreeParser.g:286:9: typeDeclaration
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDeclaration_in_interfaceScopeDeclarations1825)
+                    self._state.following.append(self.FOLLOW_typeDeclaration_in_interfaceScopeDeclarations1962)
                     self.typeDeclaration()
 
                     self._state.following.pop()
@@ -2086,7 +2149,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "variableDeclaratorList"
-    # JavaTreeParser.g:262:1: variableDeclaratorList returns [values] : ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ ) ;
+    # JavaTreeParser.g:290:1: variableDeclaratorList returns [values] : ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ ) ;
     def variableDeclaratorList(self, ):
 
         values = None
@@ -2103,13 +2166,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:264:5: ( ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ ) )
-                # JavaTreeParser.g:264:9: ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ )
+                # JavaTreeParser.g:292:5: ( ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ ) )
+                # JavaTreeParser.g:292:9: ^( VAR_DECLARATOR_LIST (vd0= variableDeclarator )+ )
                 pass 
-                self.match(self.input, VAR_DECLARATOR_LIST, self.FOLLOW_VAR_DECLARATOR_LIST_in_variableDeclaratorList1859)
+                self.match(self.input, VAR_DECLARATOR_LIST, self.FOLLOW_VAR_DECLARATOR_LIST_in_variableDeclaratorList1996)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:264:31: (vd0= variableDeclarator )+
+                # JavaTreeParser.g:292:31: (vd0= variableDeclarator )+
                 cnt40 = 0
                 while True: #loop40
                     alt40 = 2
@@ -2120,9 +2183,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     if alt40 == 1:
-                        # JavaTreeParser.g:264:32: vd0= variableDeclarator
+                        # JavaTreeParser.g:292:32: vd0= variableDeclarator
                         pass 
-                        self._state.following.append(self.FOLLOW_variableDeclarator_in_variableDeclaratorList1864)
+                        self._state.following.append(self.FOLLOW_variableDeclarator_in_variableDeclaratorList2001)
                         vd0 = self.variableDeclarator()
 
                         self._state.following.pop()
@@ -2166,7 +2229,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "variableDeclarator"
-    # JavaTreeParser.g:268:1: variableDeclarator returns [value] : ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? ) ;
+    # JavaTreeParser.g:296:1: variableDeclarator returns [value] : ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? ) ;
     def variableDeclarator(self, ):
 
         value = None
@@ -2184,16 +2247,16 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:269:5: ( ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? ) )
-                # JavaTreeParser.g:269:9: ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? )
+                # JavaTreeParser.g:297:5: ( ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? ) )
+                # JavaTreeParser.g:297:9: ^( VAR_DECLARATOR (vd0= variableDeclaratorId ) (vi0= variableInitializer )? )
                 pass 
-                self.match(self.input, VAR_DECLARATOR, self.FOLLOW_VAR_DECLARATOR_in_variableDeclarator1895)
+                self.match(self.input, VAR_DECLARATOR, self.FOLLOW_VAR_DECLARATOR_in_variableDeclarator2032)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:270:11: (vd0= variableDeclaratorId )
-                # JavaTreeParser.g:270:12: vd0= variableDeclaratorId
+                # JavaTreeParser.g:298:11: (vd0= variableDeclaratorId )
+                # JavaTreeParser.g:298:12: vd0= variableDeclaratorId
                 pass 
-                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_variableDeclarator1910)
+                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_variableDeclarator2047)
                 vd0 = self.variableDeclaratorId()
 
                 self._state.following.pop()
@@ -2203,16 +2266,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
 
-                # JavaTreeParser.g:272:11: (vi0= variableInitializer )?
+                # JavaTreeParser.g:300:11: (vi0= variableInitializer )?
                 alt41 = 2
                 LA41_0 = self.input.LA(1)
 
                 if (LA41_0 == ARRAY_INITIALIZER or LA41_0 == EXPR) :
                     alt41 = 1
                 if alt41 == 1:
-                    # JavaTreeParser.g:272:12: vi0= variableInitializer
+                    # JavaTreeParser.g:300:12: vi0= variableInitializer
                     pass 
-                    self._state.following.append(self.FOLLOW_variableInitializer_in_variableDeclarator1939)
+                    self._state.following.append(self.FOLLOW_variableInitializer_in_variableDeclarator2076)
                     vi0 = self.variableInitializer()
 
                     self._state.following.pop()
@@ -2244,7 +2307,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "variableDeclaratorId"
-    # JavaTreeParser.g:278:1: variableDeclaratorId returns [value] : ^( IDENT ( arrayDeclaratorList )? ) ;
+    # JavaTreeParser.g:306:1: variableDeclaratorId returns [value] : ^( IDENT ( arrayDeclaratorList )? ) ;
     def variableDeclaratorId(self, ):
 
         value = None
@@ -2260,10 +2323,10 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:280:5: ( ^( IDENT ( arrayDeclaratorList )? ) )
-                # JavaTreeParser.g:280:9: ^( IDENT ( arrayDeclaratorList )? )
+                # JavaTreeParser.g:308:5: ( ^( IDENT ( arrayDeclaratorList )? ) )
+                # JavaTreeParser.g:308:9: ^( IDENT ( arrayDeclaratorList )? )
                 pass 
-                IDENT1=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_variableDeclaratorId1998)
+                IDENT1=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_variableDeclaratorId2135)
 
                 if self._state.backtracking == 0:
                                 
@@ -2274,16 +2337,16 @@ class JavaTreeParser(LocalTreeParser):
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:285:11: ( arrayDeclaratorList )?
+                    # JavaTreeParser.g:313:11: ( arrayDeclaratorList )?
                     alt42 = 2
                     LA42_0 = self.input.LA(1)
 
                     if (LA42_0 == ARRAY_DECLARATOR_LIST) :
                         alt42 = 1
                     if alt42 == 1:
-                        # JavaTreeParser.g:285:12: arrayDeclaratorList
+                        # JavaTreeParser.g:313:12: arrayDeclaratorList
                         pass 
-                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_variableDeclaratorId2024)
+                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_variableDeclaratorId2161)
                         self.arrayDeclaratorList()
 
                         self._state.following.pop()
@@ -2316,7 +2379,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "variableInitializer"
-    # JavaTreeParser.g:290:1: variableInitializer returns [value] : (ai0= arrayInitializer | ex0= expression );
+    # JavaTreeParser.g:318:1: variableInitializer returns [value] : (ai0= arrayInitializer | ex0= expression );
     def variableInitializer(self, ):
 
         value = None
@@ -2334,7 +2397,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:291:5: (ai0= arrayInitializer | ex0= expression )
+                # JavaTreeParser.g:319:5: (ai0= arrayInitializer | ex0= expression )
                 alt43 = 2
                 LA43_0 = self.input.LA(1)
 
@@ -2351,9 +2414,9 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt43 == 1:
-                    # JavaTreeParser.g:291:9: ai0= arrayInitializer
+                    # JavaTreeParser.g:319:9: ai0= arrayInitializer
                     pass 
-                    self._state.following.append(self.FOLLOW_arrayInitializer_in_variableInitializer2064)
+                    self._state.following.append(self.FOLLOW_arrayInitializer_in_variableInitializer2201)
                     ai0 = self.arrayInitializer()
 
                     self._state.following.pop()
@@ -2363,9 +2426,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt43 == 2:
-                    # JavaTreeParser.g:292:9: ex0= expression
+                    # JavaTreeParser.g:320:9: ex0= expression
                     pass 
-                    self._state.following.append(self.FOLLOW_expression_in_variableInitializer2078)
+                    self._state.following.append(self.FOLLOW_expression_in_variableInitializer2215)
                     ex0 = self.expression()
 
                     self._state.following.pop()
@@ -2391,7 +2454,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "arrayDeclarator"
-    # JavaTreeParser.g:296:1: arrayDeclarator : LBRACK RBRACK ;
+    # JavaTreeParser.g:324:1: arrayDeclarator : LBRACK RBRACK ;
     def arrayDeclarator(self, ):
 
         arrayDeclarator_StartIndex = self.input.index()
@@ -2403,11 +2466,11 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:297:5: ( LBRACK RBRACK )
-                # JavaTreeParser.g:297:9: LBRACK RBRACK
+                # JavaTreeParser.g:325:5: ( LBRACK RBRACK )
+                # JavaTreeParser.g:325:9: LBRACK RBRACK
                 pass 
-                self.match(self.input, LBRACK, self.FOLLOW_LBRACK_in_arrayDeclarator2106)
-                self.match(self.input, RBRACK, self.FOLLOW_RBRACK_in_arrayDeclarator2108)
+                self.match(self.input, LBRACK, self.FOLLOW_LBRACK_in_arrayDeclarator2243)
+                self.match(self.input, RBRACK, self.FOLLOW_RBRACK_in_arrayDeclarator2245)
 
 
 
@@ -2436,7 +2499,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "arrayDeclaratorList"
-    # JavaTreeParser.g:301:1: arrayDeclaratorList returns [values] : ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* ) ;
+    # JavaTreeParser.g:329:1: arrayDeclaratorList returns [values] : ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* ) ;
     def arrayDeclaratorList(self, ):
 
         retval = self.arrayDeclaratorList_return()
@@ -2451,14 +2514,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:302:5: ( ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* ) )
-                # JavaTreeParser.g:302:9: ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* )
+                # JavaTreeParser.g:330:5: ( ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* ) )
+                # JavaTreeParser.g:330:9: ^( ARRAY_DECLARATOR_LIST ( ARRAY_DECLARATOR )* )
                 pass 
-                self.match(self.input, ARRAY_DECLARATOR_LIST, self.FOLLOW_ARRAY_DECLARATOR_LIST_in_arrayDeclaratorList2138)
+                self.match(self.input, ARRAY_DECLARATOR_LIST, self.FOLLOW_ARRAY_DECLARATOR_LIST_in_arrayDeclaratorList2275)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:302:33: ( ARRAY_DECLARATOR )*
+                    # JavaTreeParser.g:330:33: ( ARRAY_DECLARATOR )*
                     while True: #loop44
                         alt44 = 2
                         LA44_0 = self.input.LA(1)
@@ -2468,9 +2531,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt44 == 1:
-                            # JavaTreeParser.g:302:34: ARRAY_DECLARATOR
+                            # JavaTreeParser.g:330:34: ARRAY_DECLARATOR
                             pass 
-                            self.match(self.input, ARRAY_DECLARATOR, self.FOLLOW_ARRAY_DECLARATOR_in_arrayDeclaratorList2141)
+                            self.match(self.input, ARRAY_DECLARATOR, self.FOLLOW_ARRAY_DECLARATOR_in_arrayDeclaratorList2278)
                             if self._state.backtracking == 0:
                                 retval.values.append(self.input.toString(retval.start, self.input.LT(-1))) 
 
@@ -2503,7 +2566,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "arrayInitializer"
-    # JavaTreeParser.g:306:1: arrayInitializer returns [value] : ^( ARRAY_INITIALIZER (v0= variableInitializer )* ) ;
+    # JavaTreeParser.g:334:1: arrayInitializer returns [value] : ^( ARRAY_INITIALIZER (v0= variableInitializer )* ) ;
     def arrayInitializer(self, ):
 
         value = None
@@ -2520,14 +2583,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:307:5: ( ^( ARRAY_INITIALIZER (v0= variableInitializer )* ) )
-                # JavaTreeParser.g:307:9: ^( ARRAY_INITIALIZER (v0= variableInitializer )* )
+                # JavaTreeParser.g:335:5: ( ^( ARRAY_INITIALIZER (v0= variableInitializer )* ) )
+                # JavaTreeParser.g:335:9: ^( ARRAY_INITIALIZER (v0= variableInitializer )* )
                 pass 
-                self.match(self.input, ARRAY_INITIALIZER, self.FOLLOW_ARRAY_INITIALIZER_in_arrayInitializer2176)
+                self.match(self.input, ARRAY_INITIALIZER, self.FOLLOW_ARRAY_INITIALIZER_in_arrayInitializer2313)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:308:13: (v0= variableInitializer )*
+                    # JavaTreeParser.g:336:13: (v0= variableInitializer )*
                     while True: #loop45
                         alt45 = 2
                         LA45_0 = self.input.LA(1)
@@ -2537,9 +2600,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt45 == 1:
-                            # JavaTreeParser.g:308:14: v0= variableInitializer
+                            # JavaTreeParser.g:336:14: v0= variableInitializer
                             pass 
-                            self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2193)
+                            self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2330)
                             v0 = self.variableInitializer()
 
                             self._state.following.pop()
@@ -2575,7 +2638,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "throwsClause"
-    # JavaTreeParser.g:315:1: throwsClause : ^( THROWS_CLAUSE ( qualifiedIdentifier )+ ) ;
+    # JavaTreeParser.g:343:1: throwsClause : ^( THROWS_CLAUSE ( qualifiedIdentifier )+ ) ;
     def throwsClause(self, ):
 
         throwsClause_StartIndex = self.input.index()
@@ -2587,13 +2650,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:316:5: ( ^( THROWS_CLAUSE ( qualifiedIdentifier )+ ) )
-                # JavaTreeParser.g:316:9: ^( THROWS_CLAUSE ( qualifiedIdentifier )+ )
+                # JavaTreeParser.g:344:5: ( ^( THROWS_CLAUSE ( qualifiedIdentifier )+ ) )
+                # JavaTreeParser.g:344:9: ^( THROWS_CLAUSE ( qualifiedIdentifier )+ )
                 pass 
-                self.match(self.input, THROWS_CLAUSE, self.FOLLOW_THROWS_CLAUSE_in_throwsClause2253)
+                self.match(self.input, THROWS_CLAUSE, self.FOLLOW_THROWS_CLAUSE_in_throwsClause2390)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:316:25: ( qualifiedIdentifier )+
+                # JavaTreeParser.g:344:25: ( qualifiedIdentifier )+
                 cnt46 = 0
                 while True: #loop46
                     alt46 = 2
@@ -2606,7 +2669,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt46 == 1:
                         # JavaTreeParser.g:0:0: qualifiedIdentifier
                         pass 
-                        self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_throwsClause2255)
+                        self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_throwsClause2392)
                         self.qualifiedIdentifier()
 
                         self._state.following.pop()
@@ -2647,7 +2710,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "modifierList"
-    # JavaTreeParser.g:320:1: modifierList returns [values] : ^( MODIFIER_LIST (md0= modifier )* ) ;
+    # JavaTreeParser.g:348:1: modifierList returns [values] : ^( MODIFIER_LIST (md0= modifier )* ) ;
     def modifierList(self, ):
 
         values = None
@@ -2664,14 +2727,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:322:5: ( ^( MODIFIER_LIST (md0= modifier )* ) )
-                # JavaTreeParser.g:322:9: ^( MODIFIER_LIST (md0= modifier )* )
+                # JavaTreeParser.g:350:5: ( ^( MODIFIER_LIST (md0= modifier )* ) )
+                # JavaTreeParser.g:350:9: ^( MODIFIER_LIST (md0= modifier )* )
                 pass 
-                self.match(self.input, MODIFIER_LIST, self.FOLLOW_MODIFIER_LIST_in_modifierList2291)
+                self.match(self.input, MODIFIER_LIST, self.FOLLOW_MODIFIER_LIST_in_modifierList2428)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:322:25: (md0= modifier )*
+                    # JavaTreeParser.g:350:25: (md0= modifier )*
                     while True: #loop47
                         alt47 = 2
                         LA47_0 = self.input.LA(1)
@@ -2681,17 +2744,14 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt47 == 1:
-                            # JavaTreeParser.g:322:26: md0= modifier
+                            # JavaTreeParser.g:350:26: md0= modifier
                             pass 
-                            self._state.following.append(self.FOLLOW_modifier_in_modifierList2296)
+                            self._state.following.append(self.FOLLOW_modifier_in_modifierList2433)
                             md0 = self.modifier()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                values.append(((md0 is not None) and [self.input.getTokenStream().toString(
-                                    self.input.getTreeAdaptor().getTokenStartIndex(md0.start),
-                                    self.input.getTreeAdaptor().getTokenStopIndex(md0.start)
-                                    )] or [None])[0]) 
+                                values.append(((md0 is not None) and [md0.value] or [None])[0]) 
 
 
 
@@ -2724,17 +2784,22 @@ class JavaTreeParser(LocalTreeParser):
         def __init__(self):
             TreeRuleReturnScope.__init__(self)
 
+            self.value = None
 
 
 
 
     # $ANTLR start "modifier"
-    # JavaTreeParser.g:326:1: modifier : ( PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | STRICTFP | localModifier );
+    # JavaTreeParser.g:354:1: modifier returns [value] : ( PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | STRICTFP | lm0= localModifier );
     def modifier(self, ):
 
         retval = self.modifier_return()
         retval.start = self.input.LT(1)
         modifier_StartIndex = self.input.index()
+        lm0 = None
+
+
+        retval.value = ex(format="${left}") 
         success = False
         try:
             try:
@@ -2743,7 +2808,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:327:5: ( PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | STRICTFP | localModifier )
+                # JavaTreeParser.g:356:5: ( PUBLIC | PROTECTED | PRIVATE | STATIC | ABSTRACT | NATIVE | SYNCHRONIZED | TRANSIENT | VOLATILE | STRICTFP | lm0= localModifier )
                 alt48 = 11
                 LA48 = self.input.LA(1)
                 if LA48 == PUBLIC:
@@ -2777,72 +2842,105 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt48 == 1:
-                    # JavaTreeParser.g:327:9: PUBLIC
+                    # JavaTreeParser.g:356:9: PUBLIC
                     pass 
-                    self.match(self.input, PUBLIC, self.FOLLOW_PUBLIC_in_modifier2321)
+                    self.match(self.input, PUBLIC, self.FOLLOW_PUBLIC_in_modifier2471)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 2:
-                    # JavaTreeParser.g:328:9: PROTECTED
+                    # JavaTreeParser.g:357:9: PROTECTED
                     pass 
-                    self.match(self.input, PROTECTED, self.FOLLOW_PROTECTED_in_modifier2331)
+                    self.match(self.input, PROTECTED, self.FOLLOW_PROTECTED_in_modifier2494)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 3:
-                    # JavaTreeParser.g:329:9: PRIVATE
+                    # JavaTreeParser.g:358:9: PRIVATE
                     pass 
-                    self.match(self.input, PRIVATE, self.FOLLOW_PRIVATE_in_modifier2341)
+                    self.match(self.input, PRIVATE, self.FOLLOW_PRIVATE_in_modifier2514)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 4:
-                    # JavaTreeParser.g:330:9: STATIC
+                    # JavaTreeParser.g:359:9: STATIC
                     pass 
-                    self.match(self.input, STATIC, self.FOLLOW_STATIC_in_modifier2351)
+                    self.match(self.input, STATIC, self.FOLLOW_STATIC_in_modifier2536)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 5:
-                    # JavaTreeParser.g:331:9: ABSTRACT
+                    # JavaTreeParser.g:360:9: ABSTRACT
                     pass 
-                    self.match(self.input, ABSTRACT, self.FOLLOW_ABSTRACT_in_modifier2361)
+                    self.match(self.input, ABSTRACT, self.FOLLOW_ABSTRACT_in_modifier2559)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 6:
-                    # JavaTreeParser.g:332:9: NATIVE
+                    # JavaTreeParser.g:361:9: NATIVE
                     pass 
-                    self.match(self.input, NATIVE, self.FOLLOW_NATIVE_in_modifier2371)
+                    self.match(self.input, NATIVE, self.FOLLOW_NATIVE_in_modifier2580)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 7:
-                    # JavaTreeParser.g:333:9: SYNCHRONIZED
+                    # JavaTreeParser.g:362:9: SYNCHRONIZED
                     pass 
-                    self.match(self.input, SYNCHRONIZED, self.FOLLOW_SYNCHRONIZED_in_modifier2381)
+                    self.match(self.input, SYNCHRONIZED, self.FOLLOW_SYNCHRONIZED_in_modifier2603)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 8:
-                    # JavaTreeParser.g:334:9: TRANSIENT
+                    # JavaTreeParser.g:363:9: TRANSIENT
                     pass 
-                    self.match(self.input, TRANSIENT, self.FOLLOW_TRANSIENT_in_modifier2391)
+                    self.match(self.input, TRANSIENT, self.FOLLOW_TRANSIENT_in_modifier2620)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 9:
-                    # JavaTreeParser.g:335:9: VOLATILE
+                    # JavaTreeParser.g:364:9: VOLATILE
                     pass 
-                    self.match(self.input, VOLATILE, self.FOLLOW_VOLATILE_in_modifier2401)
+                    self.match(self.input, VOLATILE, self.FOLLOW_VOLATILE_in_modifier2640)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 10:
-                    # JavaTreeParser.g:336:9: STRICTFP
+                    # JavaTreeParser.g:365:9: STRICTFP
                     pass 
-                    self.match(self.input, STRICTFP, self.FOLLOW_STRICTFP_in_modifier2411)
+                    self.match(self.input, STRICTFP, self.FOLLOW_STRICTFP_in_modifier2661)
+                    if self._state.backtracking == 0:
+                        retval.value.update(left=self.input.toString(retval.start, self.input.LT(-1))) 
+
 
 
                 elif alt48 == 11:
-                    # JavaTreeParser.g:337:9: localModifier
+                    # JavaTreeParser.g:366:9: lm0= localModifier
                     pass 
-                    self._state.following.append(self.FOLLOW_localModifier_in_modifier2421)
-                    self.localModifier()
+                    self._state.following.append(self.FOLLOW_localModifier_in_modifier2684)
+                    lm0 = self.localModifier()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        retval.value = lm0 
+
 
 
 
@@ -2862,7 +2960,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "localModifierList"
-    # JavaTreeParser.g:341:1: localModifierList returns [values] : ^( LOCAL_MODIFIER_LIST (md0= localModifier )* ) ;
+    # JavaTreeParser.g:370:1: localModifierList returns [values] : ^( LOCAL_MODIFIER_LIST (md0= localModifier )* ) ;
     def localModifierList(self, ):
 
         values = None
@@ -2879,14 +2977,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:343:5: ( ^( LOCAL_MODIFIER_LIST (md0= localModifier )* ) )
-                # JavaTreeParser.g:343:9: ^( LOCAL_MODIFIER_LIST (md0= localModifier )* )
+                # JavaTreeParser.g:372:5: ( ^( LOCAL_MODIFIER_LIST (md0= localModifier )* ) )
+                # JavaTreeParser.g:372:9: ^( LOCAL_MODIFIER_LIST (md0= localModifier )* )
                 pass 
-                self.match(self.input, LOCAL_MODIFIER_LIST, self.FOLLOW_LOCAL_MODIFIER_LIST_in_localModifierList2455)
+                self.match(self.input, LOCAL_MODIFIER_LIST, self.FOLLOW_LOCAL_MODIFIER_LIST_in_localModifierList2720)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:343:31: (md0= localModifier )*
+                    # JavaTreeParser.g:372:31: (md0= localModifier )*
                     while True: #loop49
                         alt49 = 2
                         LA49_0 = self.input.LA(1)
@@ -2896,9 +2994,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt49 == 1:
-                            # JavaTreeParser.g:343:32: md0= localModifier
+                            # JavaTreeParser.g:372:32: md0= localModifier
                             pass 
-                            self._state.following.append(self.FOLLOW_localModifier_in_localModifierList2460)
+                            self._state.following.append(self.FOLLOW_localModifier_in_localModifierList2725)
                             md0 = self.localModifier()
 
                             self._state.following.pop()
@@ -2934,7 +3032,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "localModifier"
-    # JavaTreeParser.g:347:1: localModifier returns [value] : ( FINAL | an0= annotation );
+    # JavaTreeParser.g:376:1: localModifier returns [value] : ( FINAL | an0= annotation );
     def localModifier(self, ):
 
         value = None
@@ -2950,7 +3048,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:348:5: ( FINAL | an0= annotation )
+                # JavaTreeParser.g:377:5: ( FINAL | an0= annotation )
                 alt50 = 2
                 LA50_0 = self.input.LA(1)
 
@@ -2967,18 +3065,18 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt50 == 1:
-                    # JavaTreeParser.g:348:9: FINAL
+                    # JavaTreeParser.g:377:9: FINAL
                     pass 
-                    self.match(self.input, FINAL, self.FOLLOW_FINAL_in_localModifier2489)
+                    self.match(self.input, FINAL, self.FOLLOW_FINAL_in_localModifier2754)
                     if self._state.backtracking == 0:
                         value = "final" 
 
 
 
                 elif alt50 == 2:
-                    # JavaTreeParser.g:349:9: an0= annotation
+                    # JavaTreeParser.g:378:9: an0= annotation
                     pass 
-                    self._state.following.append(self.FOLLOW_annotation_in_localModifier2503)
+                    self._state.following.append(self.FOLLOW_annotation_in_localModifier2768)
                     an0 = self.annotation()
 
                     self._state.following.pop()
@@ -3012,7 +3110,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "type"
-    # JavaTreeParser.g:353:1: type returns [value] : ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? ) ;
+    # JavaTreeParser.g:382:1: type returns [value] : ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? ) ;
     def type(self, ):
 
         retval = self.type_return()
@@ -3032,13 +3130,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:355:5: ( ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? ) )
-                # JavaTreeParser.g:355:9: ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? )
+                # JavaTreeParser.g:384:5: ( ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? ) )
+                # JavaTreeParser.g:384:9: ^( TYPE (pt0= primitiveType | qt0= qualifiedTypeIdent ) ( arrayDeclaratorList )? )
                 pass 
-                self.match(self.input, TYPE, self.FOLLOW_TYPE_in_type2539)
+                self.match(self.input, TYPE, self.FOLLOW_TYPE_in_type2804)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:356:11: (pt0= primitiveType | qt0= qualifiedTypeIdent )
+                # JavaTreeParser.g:385:11: (pt0= primitiveType | qt0= qualifiedTypeIdent )
                 alt51 = 2
                 LA51_0 = self.input.LA(1)
 
@@ -3055,9 +3153,9 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt51 == 1:
-                    # JavaTreeParser.g:356:12: pt0= primitiveType
+                    # JavaTreeParser.g:385:12: pt0= primitiveType
                     pass 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_type2554)
+                    self._state.following.append(self.FOLLOW_primitiveType_in_type2819)
                     pt0 = self.primitiveType()
 
                     self._state.following.pop()
@@ -3070,9 +3168,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt51 == 2:
-                    # JavaTreeParser.g:357:12: qt0= qualifiedTypeIdent
+                    # JavaTreeParser.g:386:12: qt0= qualifiedTypeIdent
                     pass 
-                    self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_type2573)
+                    self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_type2838)
                     qt0 = self.qualifiedTypeIdent()
 
                     self._state.following.pop()
@@ -3082,16 +3180,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
 
-                # JavaTreeParser.g:358:11: ( arrayDeclaratorList )?
+                # JavaTreeParser.g:387:11: ( arrayDeclaratorList )?
                 alt52 = 2
                 LA52_0 = self.input.LA(1)
 
                 if (LA52_0 == ARRAY_DECLARATOR_LIST) :
                     alt52 = 1
                 if alt52 == 1:
-                    # JavaTreeParser.g:358:12: arrayDeclaratorList
+                    # JavaTreeParser.g:387:12: arrayDeclaratorList
                     pass 
-                    self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_type2589)
+                    self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_type2854)
                     self.arrayDeclaratorList()
 
                     self._state.following.pop()
@@ -3123,7 +3221,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "qualifiedTypeIdent"
-    # JavaTreeParser.g:365:1: qualifiedTypeIdent returns [value] : ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ ) ;
+    # JavaTreeParser.g:394:1: qualifiedTypeIdent returns [value] : ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ ) ;
     def qualifiedTypeIdent(self, ):
 
         value = None
@@ -3139,13 +3237,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:366:5: ( ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ ) )
-                # JavaTreeParser.g:366:9: ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ )
+                # JavaTreeParser.g:395:5: ( ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ ) )
+                # JavaTreeParser.g:395:9: ^( QUALIFIED_TYPE_IDENT (ti0= typeIdent )+ )
                 pass 
-                self.match(self.input, QUALIFIED_TYPE_IDENT, self.FOLLOW_QUALIFIED_TYPE_IDENT_in_qualifiedTypeIdent2650)
+                self.match(self.input, QUALIFIED_TYPE_IDENT, self.FOLLOW_QUALIFIED_TYPE_IDENT_in_qualifiedTypeIdent2915)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:366:32: (ti0= typeIdent )+
+                # JavaTreeParser.g:395:32: (ti0= typeIdent )+
                 cnt53 = 0
                 while True: #loop53
                     alt53 = 2
@@ -3156,9 +3254,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     if alt53 == 1:
-                        # JavaTreeParser.g:366:33: ti0= typeIdent
+                        # JavaTreeParser.g:395:33: ti0= typeIdent
                         pass 
-                        self._state.following.append(self.FOLLOW_typeIdent_in_qualifiedTypeIdent2655)
+                        self._state.following.append(self.FOLLOW_typeIdent_in_qualifiedTypeIdent2920)
                         ti0 = self.typeIdent()
 
                         self._state.following.pop()
@@ -3202,7 +3300,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "typeIdent"
-    # JavaTreeParser.g:370:1: typeIdent returns [value] : ^(id0= IDENT ( genericTypeArgumentList )? ) ;
+    # JavaTreeParser.g:399:1: typeIdent returns [value] : ^(id0= IDENT ( genericTypeArgumentList )? ) ;
     def typeIdent(self, ):
 
         value = None
@@ -3217,14 +3315,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:371:5: ( ^(id0= IDENT ( genericTypeArgumentList )? ) )
-                # JavaTreeParser.g:371:9: ^(id0= IDENT ( genericTypeArgumentList )? )
+                # JavaTreeParser.g:400:5: ( ^(id0= IDENT ( genericTypeArgumentList )? ) )
+                # JavaTreeParser.g:400:9: ^(id0= IDENT ( genericTypeArgumentList )? )
                 pass 
-                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeIdent2687)
+                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_typeIdent2952)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:371:21: ( genericTypeArgumentList )?
+                    # JavaTreeParser.g:400:21: ( genericTypeArgumentList )?
                     alt54 = 2
                     LA54_0 = self.input.LA(1)
 
@@ -3233,7 +3331,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt54 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgumentList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_typeIdent2689)
+                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_typeIdent2954)
                         self.genericTypeArgumentList()
 
                         self._state.following.pop()
@@ -3273,7 +3371,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "primitiveType"
-    # JavaTreeParser.g:375:1: primitiveType : ( BOOLEAN | CHAR | BYTE | SHORT | INT | LONG | FLOAT | DOUBLE );
+    # JavaTreeParser.g:404:1: primitiveType : ( BOOLEAN | CHAR | BYTE | SHORT | INT | LONG | FLOAT | DOUBLE );
     def primitiveType(self, ):
 
         retval = self.primitiveType_return()
@@ -3287,7 +3385,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:376:5: ( BOOLEAN | CHAR | BYTE | SHORT | INT | LONG | FLOAT | DOUBLE )
+                # JavaTreeParser.g:405:5: ( BOOLEAN | CHAR | BYTE | SHORT | INT | LONG | FLOAT | DOUBLE )
                 # JavaTreeParser.g:
                 pass 
                 if self.input.LA(1) == BOOLEAN or self.input.LA(1) == BYTE or self.input.LA(1) == CHAR or self.input.LA(1) == DOUBLE or self.input.LA(1) == FLOAT or (INT <= self.input.LA(1) <= LONG) or self.input.LA(1) == SHORT:
@@ -3322,7 +3420,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "genericTypeArgumentList"
-    # JavaTreeParser.g:387:1: genericTypeArgumentList returns [values] : ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ ) ;
+    # JavaTreeParser.g:416:1: genericTypeArgumentList returns [values] : ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ ) ;
     def genericTypeArgumentList(self, ):
 
         values = None
@@ -3335,13 +3433,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:388:5: ( ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ ) )
-                # JavaTreeParser.g:388:9: ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ )
+                # JavaTreeParser.g:417:5: ( ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ ) )
+                # JavaTreeParser.g:417:9: ^( GENERIC_TYPE_ARG_LIST ( genericTypeArgument )+ )
                 pass 
-                self.match(self.input, GENERIC_TYPE_ARG_LIST, self.FOLLOW_GENERIC_TYPE_ARG_LIST_in_genericTypeArgumentList2808)
+                self.match(self.input, GENERIC_TYPE_ARG_LIST, self.FOLLOW_GENERIC_TYPE_ARG_LIST_in_genericTypeArgumentList3073)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:388:33: ( genericTypeArgument )+
+                # JavaTreeParser.g:417:33: ( genericTypeArgument )+
                 cnt55 = 0
                 while True: #loop55
                     alt55 = 2
@@ -3354,7 +3452,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt55 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgument
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgument_in_genericTypeArgumentList2810)
+                        self._state.following.append(self.FOLLOW_genericTypeArgument_in_genericTypeArgumentList3075)
                         self.genericTypeArgument()
 
                         self._state.following.pop()
@@ -3395,7 +3493,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "genericTypeArgument"
-    # JavaTreeParser.g:392:1: genericTypeArgument : ( type | ^( QUESTION ( genericWildcardBoundType )? ) );
+    # JavaTreeParser.g:421:1: genericTypeArgument : ( type | ^( QUESTION ( genericWildcardBoundType )? ) );
     def genericTypeArgument(self, ):
 
         genericTypeArgument_StartIndex = self.input.index()
@@ -3407,7 +3505,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:393:5: ( type | ^( QUESTION ( genericWildcardBoundType )? ) )
+                # JavaTreeParser.g:422:5: ( type | ^( QUESTION ( genericWildcardBoundType )? ) )
                 alt57 = 2
                 LA57_0 = self.input.LA(1)
 
@@ -3424,22 +3522,22 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt57 == 1:
-                    # JavaTreeParser.g:393:9: type
+                    # JavaTreeParser.g:422:9: type
                     pass 
-                    self._state.following.append(self.FOLLOW_type_in_genericTypeArgument2832)
+                    self._state.following.append(self.FOLLOW_type_in_genericTypeArgument3097)
                     self.type()
 
                     self._state.following.pop()
 
 
                 elif alt57 == 2:
-                    # JavaTreeParser.g:394:9: ^( QUESTION ( genericWildcardBoundType )? )
+                    # JavaTreeParser.g:423:9: ^( QUESTION ( genericWildcardBoundType )? )
                     pass 
-                    self.match(self.input, QUESTION, self.FOLLOW_QUESTION_in_genericTypeArgument2843)
+                    self.match(self.input, QUESTION, self.FOLLOW_QUESTION_in_genericTypeArgument3108)
 
                     if self.input.LA(1) == DOWN:
                         self.match(self.input, DOWN, None)
-                        # JavaTreeParser.g:394:20: ( genericWildcardBoundType )?
+                        # JavaTreeParser.g:423:20: ( genericWildcardBoundType )?
                         alt56 = 2
                         LA56_0 = self.input.LA(1)
 
@@ -3448,7 +3546,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt56 == 1:
                             # JavaTreeParser.g:0:0: genericWildcardBoundType
                             pass 
-                            self._state.following.append(self.FOLLOW_genericWildcardBoundType_in_genericTypeArgument2845)
+                            self._state.following.append(self.FOLLOW_genericWildcardBoundType_in_genericTypeArgument3110)
                             self.genericWildcardBoundType()
 
                             self._state.following.pop()
@@ -3477,7 +3575,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "genericWildcardBoundType"
-    # JavaTreeParser.g:398:1: genericWildcardBoundType : ( ^( EXTENDS type ) | ^( SUPER type ) );
+    # JavaTreeParser.g:427:1: genericWildcardBoundType : ( ^( EXTENDS type ) | ^( SUPER type ) );
     def genericWildcardBoundType(self, ):
 
         genericWildcardBoundType_StartIndex = self.input.index()
@@ -3489,7 +3587,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:399:5: ( ^( EXTENDS type ) | ^( SUPER type ) )
+                # JavaTreeParser.g:428:5: ( ^( EXTENDS type ) | ^( SUPER type ) )
                 alt58 = 2
                 LA58_0 = self.input.LA(1)
 
@@ -3506,12 +3604,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt58 == 1:
-                    # JavaTreeParser.g:399:9: ^( EXTENDS type )
+                    # JavaTreeParser.g:428:9: ^( EXTENDS type )
                     pass 
-                    self.match(self.input, EXTENDS, self.FOLLOW_EXTENDS_in_genericWildcardBoundType2868)
+                    self.match(self.input, EXTENDS, self.FOLLOW_EXTENDS_in_genericWildcardBoundType3133)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_type_in_genericWildcardBoundType2870)
+                    self._state.following.append(self.FOLLOW_type_in_genericWildcardBoundType3135)
                     self.type()
 
                     self._state.following.pop()
@@ -3520,12 +3618,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt58 == 2:
-                    # JavaTreeParser.g:400:9: ^( SUPER type )
+                    # JavaTreeParser.g:429:9: ^( SUPER type )
                     pass 
-                    self.match(self.input, SUPER, self.FOLLOW_SUPER_in_genericWildcardBoundType2882)
+                    self.match(self.input, SUPER, self.FOLLOW_SUPER_in_genericWildcardBoundType3147)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_type_in_genericWildcardBoundType2884)
+                    self._state.following.append(self.FOLLOW_type_in_genericWildcardBoundType3149)
                     self.type()
 
                     self._state.following.pop()
@@ -3550,7 +3648,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "formalParameterList"
-    # JavaTreeParser.g:404:1: formalParameterList returns [values] : ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? ) ;
+    # JavaTreeParser.g:433:1: formalParameterList returns [values] : ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? ) ;
     def formalParameterList(self, ):
 
         values = None
@@ -3569,14 +3667,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:406:5: ( ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? ) )
-                # JavaTreeParser.g:406:9: ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? )
+                # JavaTreeParser.g:435:5: ( ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? ) )
+                # JavaTreeParser.g:435:9: ^( FORMAL_PARAM_LIST (fp0= formalParameterStandardDecl )* (vd0= formalParameterVarargDecl )? )
                 pass 
-                self.match(self.input, FORMAL_PARAM_LIST, self.FOLLOW_FORMAL_PARAM_LIST_in_formalParameterList2919)
+                self.match(self.input, FORMAL_PARAM_LIST, self.FOLLOW_FORMAL_PARAM_LIST_in_formalParameterList3184)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:407:11: (fp0= formalParameterStandardDecl )*
+                    # JavaTreeParser.g:436:11: (fp0= formalParameterStandardDecl )*
                     while True: #loop59
                         alt59 = 2
                         LA59_0 = self.input.LA(1)
@@ -3586,9 +3684,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt59 == 1:
-                            # JavaTreeParser.g:407:12: fp0= formalParameterStandardDecl
+                            # JavaTreeParser.g:436:12: fp0= formalParameterStandardDecl
                             pass 
-                            self._state.following.append(self.FOLLOW_formalParameterStandardDecl_in_formalParameterList2934)
+                            self._state.following.append(self.FOLLOW_formalParameterStandardDecl_in_formalParameterList3199)
                             fp0 = self.formalParameterStandardDecl()
 
                             self._state.following.pop()
@@ -3601,16 +3699,16 @@ class JavaTreeParser(LocalTreeParser):
                             break #loop59
 
 
-                    # JavaTreeParser.g:408:11: (vd0= formalParameterVarargDecl )?
+                    # JavaTreeParser.g:437:11: (vd0= formalParameterVarargDecl )?
                     alt60 = 2
                     LA60_0 = self.input.LA(1)
 
                     if (LA60_0 == FORMAL_PARAM_VARARG_DECL) :
                         alt60 = 1
                     if alt60 == 1:
-                        # JavaTreeParser.g:408:12: vd0= formalParameterVarargDecl
+                        # JavaTreeParser.g:437:12: vd0= formalParameterVarargDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_formalParameterVarargDecl_in_formalParameterList2953)
+                        self._state.following.append(self.FOLLOW_formalParameterVarargDecl_in_formalParameterList3218)
                         vd0 = self.formalParameterVarargDecl()
 
                         self._state.following.pop()
@@ -3643,7 +3741,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "formalParameterStandardDecl"
-    # JavaTreeParser.g:413:1: formalParameterStandardDecl returns [value] : ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) ;
+    # JavaTreeParser.g:442:1: formalParameterStandardDecl returns [value] : ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) ;
     def formalParameterStandardDecl(self, ):
 
         value = None
@@ -3663,21 +3761,21 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:414:5: ( ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) )
-                # JavaTreeParser.g:414:9: ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId )
+                # JavaTreeParser.g:443:5: ( ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) )
+                # JavaTreeParser.g:443:9: ^( FORMAL_PARAM_STD_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId )
                 pass 
-                self.match(self.input, FORMAL_PARAM_STD_DECL, self.FOLLOW_FORMAL_PARAM_STD_DECL_in_formalParameterStandardDecl2994)
+                self.match(self.input, FORMAL_PARAM_STD_DECL, self.FOLLOW_FORMAL_PARAM_STD_DECL_in_formalParameterStandardDecl3259)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_localModifierList_in_formalParameterStandardDecl3008)
+                self._state.following.append(self.FOLLOW_localModifierList_in_formalParameterStandardDecl3273)
                 lm0 = self.localModifierList()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_type_in_formalParameterStandardDecl3022)
+                self._state.following.append(self.FOLLOW_type_in_formalParameterStandardDecl3287)
                 tp0 = self.type()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_formalParameterStandardDecl3036)
+                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_formalParameterStandardDecl3301)
                 vd0 = self.variableDeclaratorId()
 
                 self._state.following.pop()
@@ -3709,7 +3807,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "formalParameterVarargDecl"
-    # JavaTreeParser.g:422:1: formalParameterVarargDecl returns [value] : ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) ;
+    # JavaTreeParser.g:451:1: formalParameterVarargDecl returns [value] : ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) ;
     def formalParameterVarargDecl(self, ):
 
         value = None
@@ -3729,21 +3827,21 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:423:5: ( ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) )
-                # JavaTreeParser.g:423:9: ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId )
+                # JavaTreeParser.g:452:5: ( ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId ) )
+                # JavaTreeParser.g:452:9: ^( FORMAL_PARAM_VARARG_DECL lm0= localModifierList tp0= type vd0= variableDeclaratorId )
                 pass 
-                self.match(self.input, FORMAL_PARAM_VARARG_DECL, self.FOLLOW_FORMAL_PARAM_VARARG_DECL_in_formalParameterVarargDecl3073)
+                self.match(self.input, FORMAL_PARAM_VARARG_DECL, self.FOLLOW_FORMAL_PARAM_VARARG_DECL_in_formalParameterVarargDecl3338)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_localModifierList_in_formalParameterVarargDecl3087)
+                self._state.following.append(self.FOLLOW_localModifierList_in_formalParameterVarargDecl3352)
                 lm0 = self.localModifierList()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_type_in_formalParameterVarargDecl3101)
+                self._state.following.append(self.FOLLOW_type_in_formalParameterVarargDecl3366)
                 tp0 = self.type()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_formalParameterVarargDecl3115)
+                self._state.following.append(self.FOLLOW_variableDeclaratorId_in_formalParameterVarargDecl3380)
                 vd0 = self.variableDeclaratorId()
 
                 self._state.following.pop()
@@ -3775,7 +3873,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "qualifiedIdentifier"
-    # JavaTreeParser.g:431:1: qualifiedIdentifier returns [value] : ( IDENT | ^( DOT qi0= qualifiedIdentifier IDENT ) );
+    # JavaTreeParser.g:460:1: qualifiedIdentifier returns [value] : ( IDENT | ^( DOT qi0= qualifiedIdentifier IDENT ) );
     def qualifiedIdentifier(self, ):
 
         value = None
@@ -3793,7 +3891,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:432:5: ( IDENT | ^( DOT qi0= qualifiedIdentifier IDENT ) )
+                # JavaTreeParser.g:461:5: ( IDENT | ^( DOT qi0= qualifiedIdentifier IDENT ) )
                 alt61 = 2
                 LA61_0 = self.input.LA(1)
 
@@ -3810,25 +3908,25 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt61 == 1:
-                    # JavaTreeParser.g:432:9: IDENT
+                    # JavaTreeParser.g:461:9: IDENT
                     pass 
-                    IDENT2=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_qualifiedIdentifier3151)
+                    IDENT2=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_qualifiedIdentifier3416)
                     if self._state.backtracking == 0:
                         value = ex(IDENT2.text, format="${left}", rename=True) 
 
 
 
                 elif alt61 == 2:
-                    # JavaTreeParser.g:434:9: ^( DOT qi0= qualifiedIdentifier IDENT )
+                    # JavaTreeParser.g:463:9: ^( DOT qi0= qualifiedIdentifier IDENT )
                     pass 
-                    self.match(self.input, DOT, self.FOLLOW_DOT_in_qualifiedIdentifier3172)
+                    self.match(self.input, DOT, self.FOLLOW_DOT_in_qualifiedIdentifier3437)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_qualifiedIdentifier3186)
+                    self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_qualifiedIdentifier3451)
                     qi0 = self.qualifiedIdentifier()
 
                     self._state.following.pop()
-                    IDENT3=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_qualifiedIdentifier3198)
+                    IDENT3=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_qualifiedIdentifier3463)
                     if self._state.backtracking == 0:
                         value = ex(qi0,
                                     IDENT3.text,
@@ -3857,7 +3955,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "annotationList"
-    # JavaTreeParser.g:446:1: annotationList : ^( ANNOTATION_LIST ( annotation )* ) ;
+    # JavaTreeParser.g:475:1: annotationList : ^( ANNOTATION_LIST ( annotation )* ) ;
     def annotationList(self, ):
 
         annotationList_StartIndex = self.input.index()
@@ -3869,14 +3967,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:447:5: ( ^( ANNOTATION_LIST ( annotation )* ) )
-                # JavaTreeParser.g:447:9: ^( ANNOTATION_LIST ( annotation )* )
+                # JavaTreeParser.g:476:5: ( ^( ANNOTATION_LIST ( annotation )* ) )
+                # JavaTreeParser.g:476:9: ^( ANNOTATION_LIST ( annotation )* )
                 pass 
-                self.match(self.input, ANNOTATION_LIST, self.FOLLOW_ANNOTATION_LIST_in_annotationList3241)
+                self.match(self.input, ANNOTATION_LIST, self.FOLLOW_ANNOTATION_LIST_in_annotationList3506)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:447:27: ( annotation )*
+                    # JavaTreeParser.g:476:27: ( annotation )*
                     while True: #loop62
                         alt62 = 2
                         LA62_0 = self.input.LA(1)
@@ -3888,7 +3986,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt62 == 1:
                             # JavaTreeParser.g:0:0: annotation
                             pass 
-                            self._state.following.append(self.FOLLOW_annotation_in_annotationList3243)
+                            self._state.following.append(self.FOLLOW_annotation_in_annotationList3508)
                             self.annotation()
 
                             self._state.following.pop()
@@ -3921,14 +4019,17 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "annotation"
-    # JavaTreeParser.g:451:1: annotation returns [value] : ^( AT qi0= qualifiedIdentifier ( annotationInit )? ) ;
+    # JavaTreeParser.g:480:1: annotation returns [value] : ^( AT qi0= qualifiedIdentifier (ai0= annotationInit )? ) ;
     def annotation(self, ):
 
         value = None
         annotation_StartIndex = self.input.index()
         qi0 = None
 
+        ai0 = None
 
+
+        value = ex(format="${left}()") 
         success = False
         try:
             try:
@@ -3937,32 +4038,36 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:452:5: ( ^( AT qi0= qualifiedIdentifier ( annotationInit )? ) )
-                # JavaTreeParser.g:452:9: ^( AT qi0= qualifiedIdentifier ( annotationInit )? )
+                # JavaTreeParser.g:482:5: ( ^( AT qi0= qualifiedIdentifier (ai0= annotationInit )? ) )
+                # JavaTreeParser.g:482:9: ^( AT qi0= qualifiedIdentifier (ai0= annotationInit )? )
                 pass 
-                self.match(self.input, AT, self.FOLLOW_AT_in_annotation3270)
+                self.match(self.input, AT, self.FOLLOW_AT_in_annotation3544)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_annotation3284)
+                self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_annotation3558)
                 qi0 = self.qualifiedIdentifier()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    value = qi0.value 
+                    value.update(left=qi0, annotation=True) 
 
-                # JavaTreeParser.g:454:11: ( annotationInit )?
+                # JavaTreeParser.g:484:11: (ai0= annotationInit )?
                 alt63 = 2
                 LA63_0 = self.input.LA(1)
 
                 if (LA63_0 == ANNOTATION_INIT_BLOCK) :
                     alt63 = 1
                 if alt63 == 1:
-                    # JavaTreeParser.g:0:0: annotationInit
+                    # JavaTreeParser.g:484:12: ai0= annotationInit
                     pass 
-                    self._state.following.append(self.FOLLOW_annotationInit_in_annotation3298)
-                    self.annotationInit()
+                    self._state.following.append(self.FOLLOW_annotationInit_in_annotation3575)
+                    ai0 = self.annotationInit()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        right = ", ".join(self.formatExpression(v) for v in ai0)
+                        value.update(right=right, format="${left}(${right})") 
+
 
 
 
@@ -3988,28 +4093,35 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "annotationInit"
-    # JavaTreeParser.g:459:1: annotationInit : ^( ANNOTATION_INIT_BLOCK annotationInitializers ) ;
+    # JavaTreeParser.g:492:1: annotationInit returns [values] : ^( ANNOTATION_INIT_BLOCK ai0= annotationInitializers ) ;
     def annotationInit(self, ):
 
+        values = None
         annotationInit_StartIndex = self.input.index()
+        ai0 = None
+
+
         success = False
         try:
             try:
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 41):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return values
 
-                # JavaTreeParser.g:460:5: ( ^( ANNOTATION_INIT_BLOCK annotationInitializers ) )
-                # JavaTreeParser.g:460:9: ^( ANNOTATION_INIT_BLOCK annotationInitializers )
+                # JavaTreeParser.g:493:5: ( ^( ANNOTATION_INIT_BLOCK ai0= annotationInitializers ) )
+                # JavaTreeParser.g:493:9: ^( ANNOTATION_INIT_BLOCK ai0= annotationInitializers )
                 pass 
-                self.match(self.input, ANNOTATION_INIT_BLOCK, self.FOLLOW_ANNOTATION_INIT_BLOCK_in_annotationInit3330)
+                self.match(self.input, ANNOTATION_INIT_BLOCK, self.FOLLOW_ANNOTATION_INIT_BLOCK_in_annotationInit3636)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_annotationInitializers_in_annotationInit3332)
-                self.annotationInitializers()
+                self._state.following.append(self.FOLLOW_annotationInitializers_in_annotationInit3640)
+                ai0 = self.annotationInitializers()
 
                 self._state.following.pop()
+                if self._state.backtracking == 0:
+                    values = ai0 
+
 
                 self.match(self.input, UP, None)
 
@@ -4026,25 +4138,30 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return values
 
     # $ANTLR end "annotationInit"
 
 
     # $ANTLR start "annotationInitializers"
-    # JavaTreeParser.g:464:1: annotationInitializers : ( ^( ANNOTATION_INIT_KEY_LIST ( annotationInitializer )+ ) | ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue ) );
+    # JavaTreeParser.g:497:1: annotationInitializers returns [values] : ( ^( ANNOTATION_INIT_KEY_LIST (ai0= annotationInitializer )+ ) | ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue ) );
     def annotationInitializers(self, ):
 
+        values = None
         annotationInitializers_StartIndex = self.input.index()
+        ai0 = None
+
+
+        values = [] 
         success = False
         try:
             try:
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 42):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return values
 
-                # JavaTreeParser.g:465:5: ( ^( ANNOTATION_INIT_KEY_LIST ( annotationInitializer )+ ) | ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue ) )
+                # JavaTreeParser.g:499:5: ( ^( ANNOTATION_INIT_KEY_LIST (ai0= annotationInitializer )+ ) | ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue ) )
                 alt65 = 2
                 LA65_0 = self.input.LA(1)
 
@@ -4061,12 +4178,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt65 == 1:
-                    # JavaTreeParser.g:465:9: ^( ANNOTATION_INIT_KEY_LIST ( annotationInitializer )+ )
+                    # JavaTreeParser.g:499:9: ^( ANNOTATION_INIT_KEY_LIST (ai0= annotationInitializer )+ )
                     pass 
-                    self.match(self.input, ANNOTATION_INIT_KEY_LIST, self.FOLLOW_ANNOTATION_INIT_KEY_LIST_in_annotationInitializers3354)
+                    self.match(self.input, ANNOTATION_INIT_KEY_LIST, self.FOLLOW_ANNOTATION_INIT_KEY_LIST_in_annotationInitializers3677)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:465:36: ( annotationInitializer )+
+                    # JavaTreeParser.g:499:36: (ai0= annotationInitializer )+
                     cnt64 = 0
                     while True: #loop64
                         alt64 = 2
@@ -4077,12 +4194,15 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt64 == 1:
-                            # JavaTreeParser.g:0:0: annotationInitializer
+                            # JavaTreeParser.g:499:37: ai0= annotationInitializer
                             pass 
-                            self._state.following.append(self.FOLLOW_annotationInitializer_in_annotationInitializers3356)
-                            self.annotationInitializer()
+                            self._state.following.append(self.FOLLOW_annotationInitializer_in_annotationInitializers3682)
+                            ai0 = self.annotationInitializer()
 
                             self._state.following.pop()
+                            if self._state.backtracking == 0:
+                                values.append(ai0) 
+
 
 
                         else:
@@ -4103,12 +4223,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt65 == 2:
-                    # JavaTreeParser.g:466:9: ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue )
+                    # JavaTreeParser.g:500:9: ^( ANNOTATION_INIT_DEFAULT_KEY annotationElementValue )
                     pass 
-                    self.match(self.input, ANNOTATION_INIT_DEFAULT_KEY, self.FOLLOW_ANNOTATION_INIT_DEFAULT_KEY_in_annotationInitializers3369)
+                    self.match(self.input, ANNOTATION_INIT_DEFAULT_KEY, self.FOLLOW_ANNOTATION_INIT_DEFAULT_KEY_in_annotationInitializers3698)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationInitializers3371)
+                    self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationInitializers3700)
                     self.annotationElementValue()
 
                     self._state.following.pop()
@@ -4127,34 +4247,44 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return values
 
     # $ANTLR end "annotationInitializers"
 
 
     # $ANTLR start "annotationInitializer"
-    # JavaTreeParser.g:470:1: annotationInitializer : ^( IDENT annotationElementValue ) ;
+    # JavaTreeParser.g:504:1: annotationInitializer returns [value] : ^(id0= IDENT ae0= annotationElementValue ) ;
     def annotationInitializer(self, ):
 
+        value = None
         annotationInitializer_StartIndex = self.input.index()
+        id0 = None
+        ae0 = None
+
+
         success = False
         try:
             try:
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 43):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return value
 
-                # JavaTreeParser.g:471:5: ( ^( IDENT annotationElementValue ) )
-                # JavaTreeParser.g:471:9: ^( IDENT annotationElementValue )
+                # JavaTreeParser.g:505:5: ( ^(id0= IDENT ae0= annotationElementValue ) )
+                # JavaTreeParser.g:505:9: ^(id0= IDENT ae0= annotationElementValue )
                 pass 
-                self.match(self.input, IDENT, self.FOLLOW_IDENT_in_annotationInitializer3393)
+                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_annotationInitializer3728)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationInitializer3395)
-                self.annotationElementValue()
+                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationInitializer3732)
+                ae0 = self.annotationElementValue()
 
                 self._state.following.pop()
+                if self._state.backtracking == 0:
+                    value = ex(left=self.renameIdent(id0.text),
+                                right=ae0,
+                                format="${left}=${right}") 
+
 
                 self.match(self.input, UP, None)
 
@@ -4171,25 +4301,29 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return value
 
     # $ANTLR end "annotationInitializer"
 
 
     # $ANTLR start "annotationElementValue"
-    # JavaTreeParser.g:475:1: annotationElementValue : ( ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* ) | annotation | expression );
+    # JavaTreeParser.g:512:1: annotationElementValue returns [value] : ( ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* ) | annotation | ex0= expression );
     def annotationElementValue(self, ):
 
+        value = None
         annotationElementValue_StartIndex = self.input.index()
+        ex0 = None
+
+
         success = False
         try:
             try:
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 44):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return value
 
-                # JavaTreeParser.g:476:5: ( ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* ) | annotation | expression )
+                # JavaTreeParser.g:513:5: ( ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* ) | annotation | ex0= expression )
                 alt67 = 3
                 LA67 = self.input.LA(1)
                 if LA67 == ANNOTATION_INIT_ARRAY_ELEMENT:
@@ -4207,13 +4341,13 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt67 == 1:
-                    # JavaTreeParser.g:476:9: ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* )
+                    # JavaTreeParser.g:513:9: ^( ANNOTATION_INIT_ARRAY_ELEMENT ( annotationElementValue )* )
                     pass 
-                    self.match(self.input, ANNOTATION_INIT_ARRAY_ELEMENT, self.FOLLOW_ANNOTATION_INIT_ARRAY_ELEMENT_in_annotationElementValue3417)
+                    self.match(self.input, ANNOTATION_INIT_ARRAY_ELEMENT, self.FOLLOW_ANNOTATION_INIT_ARRAY_ELEMENT_in_annotationElementValue3770)
 
                     if self.input.LA(1) == DOWN:
                         self.match(self.input, DOWN, None)
-                        # JavaTreeParser.g:476:41: ( annotationElementValue )*
+                        # JavaTreeParser.g:513:41: ( annotationElementValue )*
                         while True: #loop66
                             alt66 = 2
                             LA66_0 = self.input.LA(1)
@@ -4225,7 +4359,7 @@ class JavaTreeParser(LocalTreeParser):
                             if alt66 == 1:
                                 # JavaTreeParser.g:0:0: annotationElementValue
                                 pass 
-                                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationElementValue3419)
+                                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationElementValue3772)
                                 self.annotationElementValue()
 
                                 self._state.following.pop()
@@ -4241,21 +4375,24 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt67 == 2:
-                    # JavaTreeParser.g:477:9: annotation
+                    # JavaTreeParser.g:514:9: annotation
                     pass 
-                    self._state.following.append(self.FOLLOW_annotation_in_annotationElementValue3431)
+                    self._state.following.append(self.FOLLOW_annotation_in_annotationElementValue3784)
                     self.annotation()
 
                     self._state.following.pop()
 
 
                 elif alt67 == 3:
-                    # JavaTreeParser.g:478:9: expression
+                    # JavaTreeParser.g:515:9: ex0= expression
                     pass 
-                    self._state.following.append(self.FOLLOW_expression_in_annotationElementValue3441)
-                    self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_annotationElementValue3796)
+                    ex0 = self.expression()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        value = ex0 
+
 
 
 
@@ -4269,13 +4406,13 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return value
 
     # $ANTLR end "annotationElementValue"
 
 
     # $ANTLR start "annotationTopLevelScope"
-    # JavaTreeParser.g:482:1: annotationTopLevelScope : ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* ) ;
+    # JavaTreeParser.g:519:1: annotationTopLevelScope : ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* ) ;
     def annotationTopLevelScope(self, ):
 
         annotationTopLevelScope_StartIndex = self.input.index()
@@ -4287,14 +4424,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:483:5: ( ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* ) )
-                # JavaTreeParser.g:483:9: ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* )
+                # JavaTreeParser.g:520:5: ( ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* ) )
+                # JavaTreeParser.g:520:9: ^( ANNOTATION_TOP_LEVEL_SCOPE ( annotationScopeDeclarations )* )
                 pass 
-                self.match(self.input, ANNOTATION_TOP_LEVEL_SCOPE, self.FOLLOW_ANNOTATION_TOP_LEVEL_SCOPE_in_annotationTopLevelScope3462)
+                self.match(self.input, ANNOTATION_TOP_LEVEL_SCOPE, self.FOLLOW_ANNOTATION_TOP_LEVEL_SCOPE_in_annotationTopLevelScope3819)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:483:38: ( annotationScopeDeclarations )*
+                    # JavaTreeParser.g:520:38: ( annotationScopeDeclarations )*
                     while True: #loop68
                         alt68 = 2
                         LA68_0 = self.input.LA(1)
@@ -4306,7 +4443,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt68 == 1:
                             # JavaTreeParser.g:0:0: annotationScopeDeclarations
                             pass 
-                            self._state.following.append(self.FOLLOW_annotationScopeDeclarations_in_annotationTopLevelScope3464)
+                            self._state.following.append(self.FOLLOW_annotationScopeDeclarations_in_annotationTopLevelScope3821)
                             self.annotationScopeDeclarations()
 
                             self._state.following.pop()
@@ -4339,10 +4476,25 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "annotationScopeDeclarations"
-    # JavaTreeParser.g:487:1: annotationScopeDeclarations : ( ^( ANNOTATION_METHOD_DECL modifierList type IDENT ( annotationDefaultValue )? ) | ^( VAR_DECLARATION modifierList type variableDeclaratorList ) | typeDeclaration );
+    # JavaTreeParser.g:524:1: annotationScopeDeclarations : ( ^( ANNOTATION_METHOD_DECL md0= modifierList tp0= type id0= IDENT (ad0= annotationDefaultValue )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration );
     def annotationScopeDeclarations(self, ):
 
         annotationScopeDeclarations_StartIndex = self.input.index()
+        id0 = None
+        md0 = None
+
+        tp0 = None
+
+        ad0 = None
+
+        md1 = None
+
+        tp1 = None
+
+        vd1 = None
+
+
+        default = None 
         success = False
         try:
             try:
@@ -4351,7 +4503,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:488:5: ( ^( ANNOTATION_METHOD_DECL modifierList type IDENT ( annotationDefaultValue )? ) | ^( VAR_DECLARATION modifierList type variableDeclaratorList ) | typeDeclaration )
+                # JavaTreeParser.g:526:5: ( ^( ANNOTATION_METHOD_DECL md0= modifierList tp0= type id0= IDENT (ad0= annotationDefaultValue )? ) | ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList ) | typeDeclaration )
                 alt70 = 3
                 LA70 = self.input.LA(1)
                 if LA70 == ANNOTATION_METHOD_DECL:
@@ -4369,66 +4521,75 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt70 == 1:
-                    # JavaTreeParser.g:488:9: ^( ANNOTATION_METHOD_DECL modifierList type IDENT ( annotationDefaultValue )? )
+                    # JavaTreeParser.g:526:9: ^( ANNOTATION_METHOD_DECL md0= modifierList tp0= type id0= IDENT (ad0= annotationDefaultValue )? )
                     pass 
-                    self.match(self.input, ANNOTATION_METHOD_DECL, self.FOLLOW_ANNOTATION_METHOD_DECL_in_annotationScopeDeclarations3487)
+                    self.match(self.input, ANNOTATION_METHOD_DECL, self.FOLLOW_ANNOTATION_METHOD_DECL_in_annotationScopeDeclarations3853)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_annotationScopeDeclarations3489)
-                    self.modifierList()
+                    self._state.following.append(self.FOLLOW_modifierList_in_annotationScopeDeclarations3867)
+                    md0 = self.modifierList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_annotationScopeDeclarations3491)
-                    self.type()
+                    self._state.following.append(self.FOLLOW_type_in_annotationScopeDeclarations3881)
+                    tp0 = self.type()
 
                     self._state.following.pop()
-                    self.match(self.input, IDENT, self.FOLLOW_IDENT_in_annotationScopeDeclarations3493)
-                    # JavaTreeParser.g:488:58: ( annotationDefaultValue )?
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_annotationScopeDeclarations3895)
+                    # JavaTreeParser.g:530:11: (ad0= annotationDefaultValue )?
                     alt69 = 2
                     LA69_0 = self.input.LA(1)
 
                     if (LA69_0 == DEFAULT) :
                         alt69 = 1
                     if alt69 == 1:
-                        # JavaTreeParser.g:0:0: annotationDefaultValue
+                        # JavaTreeParser.g:530:12: ad0= annotationDefaultValue
                         pass 
-                        self._state.following.append(self.FOLLOW_annotationDefaultValue_in_annotationScopeDeclarations3495)
-                        self.annotationDefaultValue()
+                        self._state.following.append(self.FOLLOW_annotationDefaultValue_in_annotationScopeDeclarations3910)
+                        ad0 = self.annotationDefaultValue()
 
                         self._state.following.pop()
+                        if self._state.backtracking == 0:
+                            default = ad0 
 
 
+
+
+                    if self._state.backtracking == 0:
+                        self.addAnnotationMethod(md0, ((tp0 is not None) and [tp0.value] or [None])[0], id0.text, default) 
 
 
                     self.match(self.input, UP, None)
 
 
                 elif alt70 == 2:
-                    # JavaTreeParser.g:489:9: ^( VAR_DECLARATION modifierList type variableDeclaratorList )
+                    # JavaTreeParser.g:533:9: ^( VAR_DECLARATION md1= modifierList tp1= type vd1= variableDeclaratorList )
                     pass 
-                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_annotationScopeDeclarations3508)
+                    self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_annotationScopeDeclarations3947)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_modifierList_in_annotationScopeDeclarations3510)
-                    self.modifierList()
+                    self._state.following.append(self.FOLLOW_modifierList_in_annotationScopeDeclarations3951)
+                    md1 = self.modifierList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_annotationScopeDeclarations3512)
-                    self.type()
+                    self._state.following.append(self.FOLLOW_type_in_annotationScopeDeclarations3955)
+                    tp1 = self.type()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_annotationScopeDeclarations3514)
-                    self.variableDeclaratorList()
+                    self._state.following.append(self.FOLLOW_variableDeclaratorList_in_annotationScopeDeclarations3959)
+                    vd1 = self.variableDeclaratorList()
 
                     self._state.following.pop()
 
                     self.match(self.input, UP, None)
+                    if self._state.backtracking == 0:
+                        self.addVariables(vd1, ((tp1 is not None) and [tp1.value] or [None])[0], md1, local=True) 
+
 
 
                 elif alt70 == 3:
-                    # JavaTreeParser.g:490:9: typeDeclaration
+                    # JavaTreeParser.g:535:9: typeDeclaration
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDeclaration_in_annotationScopeDeclarations3525)
+                    self._state.following.append(self.FOLLOW_typeDeclaration_in_annotationScopeDeclarations3981)
                     self.typeDeclaration()
 
                     self._state.following.pop()
@@ -4451,28 +4612,35 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "annotationDefaultValue"
-    # JavaTreeParser.g:494:1: annotationDefaultValue : ^( DEFAULT annotationElementValue ) ;
+    # JavaTreeParser.g:539:1: annotationDefaultValue returns [value] : ^( DEFAULT ae0= annotationElementValue ) ;
     def annotationDefaultValue(self, ):
 
+        value = None
         annotationDefaultValue_StartIndex = self.input.index()
+        ae0 = None
+
+
         success = False
         try:
             try:
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 47):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return value
 
-                # JavaTreeParser.g:495:5: ( ^( DEFAULT annotationElementValue ) )
-                # JavaTreeParser.g:495:9: ^( DEFAULT annotationElementValue )
+                # JavaTreeParser.g:540:5: ( ^( DEFAULT ae0= annotationElementValue ) )
+                # JavaTreeParser.g:540:9: ^( DEFAULT ae0= annotationElementValue )
                 pass 
-                self.match(self.input, DEFAULT, self.FOLLOW_DEFAULT_in_annotationDefaultValue3546)
+                self.match(self.input, DEFAULT, self.FOLLOW_DEFAULT_in_annotationDefaultValue4006)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationDefaultValue3548)
-                self.annotationElementValue()
+                self._state.following.append(self.FOLLOW_annotationElementValue_in_annotationDefaultValue4010)
+                ae0 = self.annotationElementValue()
 
                 self._state.following.pop()
+                if self._state.backtracking == 0:
+                    value = ae0 
+
 
                 self.match(self.input, UP, None)
 
@@ -4489,13 +4657,13 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return value
 
     # $ANTLR end "annotationDefaultValue"
 
 
     # $ANTLR start "block"
-    # JavaTreeParser.g:499:1: block : ^( BLOCK_SCOPE ( blockStatement )* ) ;
+    # JavaTreeParser.g:544:1: block : ^( BLOCK_SCOPE ( blockStatement )* ) ;
     def block(self, ):
 
         block_StartIndex = self.input.index()
@@ -4507,14 +4675,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:500:5: ( ^( BLOCK_SCOPE ( blockStatement )* ) )
-                # JavaTreeParser.g:500:9: ^( BLOCK_SCOPE ( blockStatement )* )
+                # JavaTreeParser.g:545:5: ( ^( BLOCK_SCOPE ( blockStatement )* ) )
+                # JavaTreeParser.g:545:9: ^( BLOCK_SCOPE ( blockStatement )* )
                 pass 
-                self.match(self.input, BLOCK_SCOPE, self.FOLLOW_BLOCK_SCOPE_in_block3570)
+                self.match(self.input, BLOCK_SCOPE, self.FOLLOW_BLOCK_SCOPE_in_block4034)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:500:23: ( blockStatement )*
+                    # JavaTreeParser.g:545:23: ( blockStatement )*
                     while True: #loop71
                         alt71 = 2
                         LA71_0 = self.input.LA(1)
@@ -4526,7 +4694,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt71 == 1:
                             # JavaTreeParser.g:0:0: blockStatement
                             pass 
-                            self._state.following.append(self.FOLLOW_blockStatement_in_block3572)
+                            self._state.following.append(self.FOLLOW_blockStatement_in_block4036)
                             self.blockStatement()
 
                             self._state.following.pop()
@@ -4557,11 +4725,20 @@ class JavaTreeParser(LocalTreeParser):
 
     # $ANTLR end "block"
 
+    class blockStatement_return(TreeRuleReturnScope):
+        def __init__(self):
+            TreeRuleReturnScope.__init__(self)
+
+
+
+
 
     # $ANTLR start "blockStatement"
-    # JavaTreeParser.g:504:1: blockStatement : ( localVariableDeclaration | typeDeclaration | st0= statement );
+    # JavaTreeParser.g:549:1: blockStatement : ( localVariableDeclaration | typeDeclaration | st0= statement );
     def blockStatement(self, ):
 
+        retval = self.blockStatement_return()
+        retval.start = self.input.LT(1)
         blockStatement_StartIndex = self.input.index()
         st0 = None
 
@@ -4572,9 +4749,9 @@ class JavaTreeParser(LocalTreeParser):
                 if self._state.backtracking > 0 and self.alreadyParsedRule(self.input, 49):
                     # for cached failed rules, alreadyParsedRule will raise an exception
                     success = True
-                    return 
+                    return retval
 
-                # JavaTreeParser.g:505:5: ( localVariableDeclaration | typeDeclaration | st0= statement )
+                # JavaTreeParser.g:551:5: ( localVariableDeclaration | typeDeclaration | st0= statement )
                 alt72 = 3
                 LA72 = self.input.LA(1)
                 if LA72 == VAR_DECLARATION:
@@ -4592,27 +4769,27 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt72 == 1:
-                    # JavaTreeParser.g:505:9: localVariableDeclaration
+                    # JavaTreeParser.g:551:9: localVariableDeclaration
                     pass 
-                    self._state.following.append(self.FOLLOW_localVariableDeclaration_in_blockStatement3594)
+                    self._state.following.append(self.FOLLOW_localVariableDeclaration_in_blockStatement4067)
                     self.localVariableDeclaration()
 
                     self._state.following.pop()
 
 
                 elif alt72 == 2:
-                    # JavaTreeParser.g:506:9: typeDeclaration
+                    # JavaTreeParser.g:552:9: typeDeclaration
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDeclaration_in_blockStatement3604)
+                    self._state.following.append(self.FOLLOW_typeDeclaration_in_blockStatement4077)
                     self.typeDeclaration()
 
                     self._state.following.pop()
 
 
                 elif alt72 == 3:
-                    # JavaTreeParser.g:507:9: st0= statement
+                    # JavaTreeParser.g:553:9: st0= statement
                     pass 
-                    self._state.following.append(self.FOLLOW_statement_in_blockStatement3616)
+                    self._state.following.append(self.FOLLOW_statement_in_blockStatement4089)
                     st0 = self.statement()
 
                     self._state.following.pop()
@@ -4620,6 +4797,9 @@ class JavaTreeParser(LocalTreeParser):
                         self.append(st0) 
 
 
+
+                if self._state.backtracking == 0:
+                    self.commentHandler(retval.start) 
 
 
                 success = True
@@ -4632,21 +4812,21 @@ class JavaTreeParser(LocalTreeParser):
 
             pass
 
-        return 
+        return retval
 
     # $ANTLR end "blockStatement"
 
 
     # $ANTLR start "localVariableDeclaration"
-    # JavaTreeParser.g:511:1: localVariableDeclaration : ^( VAR_DECLARATION md1= localModifierList tp1= type vd1= variableDeclaratorList ) ;
+    # JavaTreeParser.g:557:1: localVariableDeclaration : ^( VAR_DECLARATION md0= localModifierList tp0= type vd0= variableDeclaratorList ) ;
     def localVariableDeclaration(self, ):
 
         localVariableDeclaration_StartIndex = self.input.index()
-        md1 = None
+        md0 = None
 
-        tp1 = None
+        tp0 = None
 
-        vd1 = None
+        vd0 = None
 
 
         success = False
@@ -4657,26 +4837,26 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:512:5: ( ^( VAR_DECLARATION md1= localModifierList tp1= type vd1= variableDeclaratorList ) )
-                # JavaTreeParser.g:512:9: ^( VAR_DECLARATION md1= localModifierList tp1= type vd1= variableDeclaratorList )
+                # JavaTreeParser.g:558:5: ( ^( VAR_DECLARATION md0= localModifierList tp0= type vd0= variableDeclaratorList ) )
+                # JavaTreeParser.g:558:9: ^( VAR_DECLARATION md0= localModifierList tp0= type vd0= variableDeclaratorList )
                 pass 
-                self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_localVariableDeclaration3639)
+                self.match(self.input, VAR_DECLARATION, self.FOLLOW_VAR_DECLARATION_in_localVariableDeclaration4112)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_localModifierList_in_localVariableDeclaration3653)
-                md1 = self.localModifierList()
+                self._state.following.append(self.FOLLOW_localModifierList_in_localVariableDeclaration4116)
+                md0 = self.localModifierList()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_type_in_localVariableDeclaration3667)
-                tp1 = self.type()
+                self._state.following.append(self.FOLLOW_type_in_localVariableDeclaration4120)
+                tp0 = self.type()
 
                 self._state.following.pop()
-                self._state.following.append(self.FOLLOW_variableDeclaratorList_in_localVariableDeclaration3681)
-                vd1 = self.variableDeclaratorList()
+                self._state.following.append(self.FOLLOW_variableDeclaratorList_in_localVariableDeclaration4124)
+                vd0 = self.variableDeclaratorList()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self.addVariables(vd1, ((tp1 is not None) and [tp1.value] or [None])[0], md1, local=True) 
+                    self.addVariables(vd0, ((tp0 is not None) and [tp0.value] or [None])[0], md0, local=True) 
 
 
                 self.match(self.input, UP, None)
@@ -4700,7 +4880,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "statement"
-    # JavaTreeParser.g:522:1: statement returns [value] : ( block | ^( ASSERT (ex0= expression ) (ex1= expression )? ) | ^( IF pe0= parenthesizedExpression statement ( statement )? ) | ^( FOR forInit forCondition forUpdater statement ) | ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement ) | ^( WHILE pe0= parenthesizedExpression statement ) | ^( DO statement pe0= parenthesizedExpression ) | ^( TRY block ( catches )? ( block )? ) | ^( SWITCH parenthesizedExpression switchBlockLabels ) | ^( SYNCHRONIZED parenthesizedExpression block ) | ^( RETURN (ex0= expression )? ) | ^( THROW expression ) | ^( BREAK ( IDENT )? ) | ^( CONTINUE ( IDENT )? ) | ^( LABELED_STATEMENT IDENT statement ) | ex0= expression | SEMI );
+    # JavaTreeParser.g:564:1: statement returns [value] : ( block | ^( ASSERT (ex0= expression ) (ex1= expression )? ) | ^( IF pe0= parenthesizedExpression statement ( statement )? ) | ^( FOR forInit forCondition forUpdater statement ) | ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement ) | ^( WHILE pe0= parenthesizedExpression statement ) | ^( DO statement pe0= parenthesizedExpression ) | ^( TRY block ( catches )? ( block )? ) | ^( SWITCH (pe0= parenthesizedExpression ) switchBlockLabels ) | ^( SYNCHRONIZED parenthesizedExpression block ) | ^( RETURN (ex0= expression )? ) | ^( THROW expression ) | ^( BREAK (id0= IDENT )? ) | ^( CONTINUE (id0= IDENT )? ) | ^( LABELED_STATEMENT id0= IDENT lb0= statement ) | ex0= expression | SEMI );
     def statement(self, ):
 
         value = None
@@ -4714,8 +4894,13 @@ class JavaTreeParser(LocalTreeParser):
 
         st0 = None
 
+        lb0 = None
 
-        value = ex() 
+
+                   
+        label = None
+        value = ex()
+            
         success = False
         try:
             try:
@@ -4724,7 +4909,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:524:5: ( block | ^( ASSERT (ex0= expression ) (ex1= expression )? ) | ^( IF pe0= parenthesizedExpression statement ( statement )? ) | ^( FOR forInit forCondition forUpdater statement ) | ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement ) | ^( WHILE pe0= parenthesizedExpression statement ) | ^( DO statement pe0= parenthesizedExpression ) | ^( TRY block ( catches )? ( block )? ) | ^( SWITCH parenthesizedExpression switchBlockLabels ) | ^( SYNCHRONIZED parenthesizedExpression block ) | ^( RETURN (ex0= expression )? ) | ^( THROW expression ) | ^( BREAK ( IDENT )? ) | ^( CONTINUE ( IDENT )? ) | ^( LABELED_STATEMENT IDENT statement ) | ex0= expression | SEMI )
+                # JavaTreeParser.g:569:5: ( block | ^( ASSERT (ex0= expression ) (ex1= expression )? ) | ^( IF pe0= parenthesizedExpression statement ( statement )? ) | ^( FOR forInit forCondition forUpdater statement ) | ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement ) | ^( WHILE pe0= parenthesizedExpression statement ) | ^( DO statement pe0= parenthesizedExpression ) | ^( TRY block ( catches )? ( block )? ) | ^( SWITCH (pe0= parenthesizedExpression ) switchBlockLabels ) | ^( SYNCHRONIZED parenthesizedExpression block ) | ^( RETURN (ex0= expression )? ) | ^( THROW expression ) | ^( BREAK (id0= IDENT )? ) | ^( CONTINUE (id0= IDENT )? ) | ^( LABELED_STATEMENT id0= IDENT lb0= statement ) | ex0= expression | SEMI )
                 alt80 = 17
                 LA80 = self.input.LA(1)
                 if LA80 == BLOCK_SCOPE:
@@ -4770,24 +4955,24 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt80 == 1:
-                    # JavaTreeParser.g:524:9: block
+                    # JavaTreeParser.g:569:9: block
                     pass 
-                    self._state.following.append(self.FOLLOW_block_in_statement3738)
+                    self._state.following.append(self.FOLLOW_block_in_statement4180)
                     self.block()
 
                     self._state.following.pop()
 
 
                 elif alt80 == 2:
-                    # JavaTreeParser.g:525:9: ^( ASSERT (ex0= expression ) (ex1= expression )? )
+                    # JavaTreeParser.g:570:9: ^( ASSERT (ex0= expression ) (ex1= expression )? )
                     pass 
-                    self.match(self.input, ASSERT, self.FOLLOW_ASSERT_in_statement3749)
+                    self.match(self.input, ASSERT, self.FOLLOW_ASSERT_in_statement4191)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:526:11: (ex0= expression )
-                    # JavaTreeParser.g:526:12: ex0= expression
+                    # JavaTreeParser.g:571:11: (ex0= expression )
+                    # JavaTreeParser.g:571:12: ex0= expression
                     pass 
-                    self._state.following.append(self.FOLLOW_expression_in_statement3764)
+                    self._state.following.append(self.FOLLOW_expression_in_statement4206)
                     ex0 = self.expression()
 
                     self._state.following.pop()
@@ -4797,16 +4982,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
 
-                    # JavaTreeParser.g:527:11: (ex1= expression )?
+                    # JavaTreeParser.g:572:11: (ex1= expression )?
                     alt73 = 2
                     LA73_0 = self.input.LA(1)
 
                     if (LA73_0 == EXPR) :
                         alt73 = 1
                     if alt73 == 1:
-                        # JavaTreeParser.g:527:12: ex1= expression
+                        # JavaTreeParser.g:572:12: ex1= expression
                         pass 
-                        self._state.following.append(self.FOLLOW_expression_in_statement3782)
+                        self._state.following.append(self.FOLLOW_expression_in_statement4224)
                         ex1 = self.expression()
 
                         self._state.following.pop()
@@ -4821,38 +5006,38 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 3:
-                    # JavaTreeParser.g:530:9: ^( IF pe0= parenthesizedExpression statement ( statement )? )
+                    # JavaTreeParser.g:574:9: ^( IF pe0= parenthesizedExpression statement ( statement )? )
                     pass 
-                    self.match(self.input, IF, self.FOLLOW_IF_in_statement3808)
+                    self.match(self.input, IF, self.FOLLOW_IF_in_statement4249)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement3822)
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4263)
                     pe0 = self.parenthesizedExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         ifstat, elsestat = self.beginIf(pe0) 
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement3846)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4277)
                     self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.endIf() 
 
-                    # JavaTreeParser.g:535:11: ( statement )?
+                    # JavaTreeParser.g:577:11: ( statement )?
                     alt74 = 2
                     LA74_0 = self.input.LA(1)
 
                     if (LA74_0 == SEMI or LA74_0 == ASSERT or LA74_0 == BREAK or LA74_0 == CONTINUE or LA74_0 == DO or (FOR <= LA74_0 <= IF) or LA74_0 == RETURN or (SWITCH <= LA74_0 <= SYNCHRONIZED) or LA74_0 == THROW or LA74_0 == TRY or LA74_0 == WHILE or LA74_0 == BLOCK_SCOPE or LA74_0 == EXPR or LA74_0 == FOR_EACH or LA74_0 == LABELED_STATEMENT) :
                         alt74 = 1
                     if alt74 == 1:
-                        # JavaTreeParser.g:535:12: statement
+                        # JavaTreeParser.g:577:12: statement
                         pass 
                         if self._state.backtracking == 0:
                             self.beginElse(elsestat) 
 
-                        self._state.following.append(self.FOLLOW_statement_in_statement3873)
+                        self._state.following.append(self.FOLLOW_statement_in_statement4294)
                         self.statement()
 
                         self._state.following.pop()
@@ -4867,24 +5052,24 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 4:
-                    # JavaTreeParser.g:538:9: ^( FOR forInit forCondition forUpdater statement )
+                    # JavaTreeParser.g:579:9: ^( FOR forInit forCondition forUpdater statement )
                     pass 
-                    self.match(self.input, FOR, self.FOLLOW_FOR_in_statement3899)
+                    self.match(self.input, FOR, self.FOLLOW_FOR_in_statement4319)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_forInit_in_statement3901)
+                    self._state.following.append(self.FOLLOW_forInit_in_statement4321)
                     self.forInit()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_forCondition_in_statement3903)
+                    self._state.following.append(self.FOLLOW_forCondition_in_statement4323)
                     self.forCondition()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_forUpdater_in_statement3905)
+                    self._state.following.append(self.FOLLOW_forUpdater_in_statement4325)
                     self.forUpdater()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_statement_in_statement3907)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4327)
                     self.statement()
 
                     self._state.following.pop()
@@ -4893,32 +5078,32 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 5:
-                    # JavaTreeParser.g:540:9: ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement )
+                    # JavaTreeParser.g:580:9: ^( FOR_EACH localModifierList type id0= IDENT ex0= expression st0= statement )
                     pass 
-                    self.match(self.input, FOR_EACH, self.FOLLOW_FOR_EACH_in_statement3920)
+                    self.match(self.input, FOR_EACH, self.FOLLOW_FOR_EACH_in_statement4339)
 
                     if self._state.backtracking == 0:
                         self.beginFor() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_localModifierList_in_statement3944)
+                    self._state.following.append(self.FOLLOW_localModifierList_in_statement4363)
                     self.localModifierList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_statement3956)
+                    self._state.following.append(self.FOLLOW_type_in_statement4375)
                     self.type()
 
                     self._state.following.pop()
-                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement3970)
-                    self._state.following.append(self.FOLLOW_expression_in_statement3984)
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4389)
+                    self._state.following.append(self.FOLLOW_expression_in_statement4403)
                     ex0 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.setExpression(ex(id0.text, ex0, format="${left} in ${right}")) 
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement4010)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4429)
                     st0 = self.statement()
 
                     self._state.following.pop()
@@ -4933,19 +5118,19 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 6:
-                    # JavaTreeParser.g:551:9: ^( WHILE pe0= parenthesizedExpression statement )
+                    # JavaTreeParser.g:590:9: ^( WHILE pe0= parenthesizedExpression statement )
                     pass 
-                    self.match(self.input, WHILE, self.FOLLOW_WHILE_in_statement4046)
+                    self.match(self.input, WHILE, self.FOLLOW_WHILE_in_statement4464)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4060)
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4478)
                     pe0 = self.parenthesizedExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.beginWhile(pe0) 
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement4084)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4502)
                     self.statement()
 
                     self._state.following.pop()
@@ -4957,20 +5142,20 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 7:
-                    # JavaTreeParser.g:558:9: ^( DO statement pe0= parenthesizedExpression )
+                    # JavaTreeParser.g:596:9: ^( DO statement pe0= parenthesizedExpression )
                     pass 
-                    self.match(self.input, DO, self.FOLLOW_DO_in_statement4118)
+                    self.match(self.input, DO, self.FOLLOW_DO_in_statement4535)
 
                     if self._state.backtracking == 0:
                         self.beginDo() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_statement_in_statement4142)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4559)
                     self.statement()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4156)
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4573)
                     pe0 = self.parenthesizedExpression()
 
                     self._state.following.pop()
@@ -4982,23 +5167,23 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 8:
-                    # JavaTreeParser.g:566:9: ^( TRY block ( catches )? ( block )? )
+                    # JavaTreeParser.g:602:9: ^( TRY block ( catches )? ( block )? )
                     pass 
-                    self.match(self.input, TRY, self.FOLLOW_TRY_in_statement4195)
+                    self.match(self.input, TRY, self.FOLLOW_TRY_in_statement4606)
 
                     if self._state.backtracking == 0:
                         self.beginTry() 
 
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_block_in_statement4217)
+                    self._state.following.append(self.FOLLOW_block_in_statement4628)
                     self.block()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self.endTry() 
 
-                    # JavaTreeParser.g:570:10: ( catches )?
+                    # JavaTreeParser.g:606:10: ( catches )?
                     alt75 = 2
                     LA75_0 = self.input.LA(1)
 
@@ -5007,26 +5192,26 @@ class JavaTreeParser(LocalTreeParser):
                     if alt75 == 1:
                         # JavaTreeParser.g:0:0: catches
                         pass 
-                        self._state.following.append(self.FOLLOW_catches_in_statement4239)
+                        self._state.following.append(self.FOLLOW_catches_in_statement4650)
                         self.catches()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:571:10: ( block )?
+                    # JavaTreeParser.g:607:10: ( block )?
                     alt76 = 2
                     LA76_0 = self.input.LA(1)
 
                     if (LA76_0 == BLOCK_SCOPE) :
                         alt76 = 1
                     if alt76 == 1:
-                        # JavaTreeParser.g:571:11: block
+                        # JavaTreeParser.g:607:11: block
                         pass 
                         if self._state.backtracking == 0:
                             self.beginTryFinally() 
 
-                        self._state.following.append(self.FOLLOW_block_in_statement4254)
+                        self._state.following.append(self.FOLLOW_block_in_statement4665)
                         self.block()
 
                         self._state.following.pop()
@@ -5041,34 +5226,50 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 9:
-                    # JavaTreeParser.g:574:9: ^( SWITCH parenthesizedExpression switchBlockLabels )
+                    # JavaTreeParser.g:609:9: ^( SWITCH (pe0= parenthesizedExpression ) switchBlockLabels )
                     pass 
-                    self.match(self.input, SWITCH, self.FOLLOW_SWITCH_in_statement4280)
+                    self.match(self.input, SWITCH, self.FOLLOW_SWITCH_in_statement4690)
+
+                    if self._state.backtracking == 0:
+                        self.beginSwitch() 
+
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4282)
-                    self.parenthesizedExpression()
+                    # JavaTreeParser.g:611:11: (pe0= parenthesizedExpression )
+                    # JavaTreeParser.g:611:12: pe0= parenthesizedExpression
+                    pass 
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4717)
+                    pe0 = self.parenthesizedExpression()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_switchBlockLabels_in_statement4284)
+                    if self._state.backtracking == 0:
+                        self.setExpression(pe0) 
+
+
+
+
+                    self._state.following.append(self.FOLLOW_switchBlockLabels_in_statement4732)
                     self.switchBlockLabels()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self.endSwitch() 
+
 
                     self.match(self.input, UP, None)
 
 
                 elif alt80 == 10:
-                    # JavaTreeParser.g:575:9: ^( SYNCHRONIZED parenthesizedExpression block )
+                    # JavaTreeParser.g:615:9: ^( SYNCHRONIZED parenthesizedExpression block )
                     pass 
-                    self.match(self.input, SYNCHRONIZED, self.FOLLOW_SYNCHRONIZED_in_statement4296)
+                    self.match(self.input, SYNCHRONIZED, self.FOLLOW_SYNCHRONIZED_in_statement4765)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4298)
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_statement4767)
                     self.parenthesizedExpression()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_block_in_statement4300)
+                    self._state.following.append(self.FOLLOW_block_in_statement4769)
                     self.block()
 
                     self._state.following.pop()
@@ -5077,9 +5278,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 11:
-                    # JavaTreeParser.g:576:9: ^( RETURN (ex0= expression )? )
+                    # JavaTreeParser.g:616:9: ^( RETURN (ex0= expression )? )
                     pass 
-                    self.match(self.input, RETURN, self.FOLLOW_RETURN_in_statement4312)
+                    self.match(self.input, RETURN, self.FOLLOW_RETURN_in_statement4781)
 
                     if self._state.backtracking == 0:
                         value.update(format="return") 
@@ -5087,16 +5288,16 @@ class JavaTreeParser(LocalTreeParser):
 
                     if self.input.LA(1) == DOWN:
                         self.match(self.input, DOWN, None)
-                        # JavaTreeParser.g:578:11: (ex0= expression )?
+                        # JavaTreeParser.g:618:11: (ex0= expression )?
                         alt77 = 2
                         LA77_0 = self.input.LA(1)
 
                         if (LA77_0 == EXPR) :
                             alt77 = 1
                         if alt77 == 1:
-                            # JavaTreeParser.g:578:12: ex0= expression
+                            # JavaTreeParser.g:618:12: ex0= expression
                             pass 
-                            self._state.following.append(self.FOLLOW_expression_in_statement4339)
+                            self._state.following.append(self.FOLLOW_expression_in_statement4808)
                             ex0 = self.expression()
 
                             self._state.following.pop()
@@ -5115,12 +5316,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 12:
-                    # JavaTreeParser.g:581:9: ^( THROW expression )
+                    # JavaTreeParser.g:621:9: ^( THROW expression )
                     pass 
-                    self.match(self.input, THROW, self.FOLLOW_THROW_in_statement4376)
+                    self.match(self.input, THROW, self.FOLLOW_THROW_in_statement4845)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expression_in_statement4378)
+                    self._state.following.append(self.FOLLOW_expression_in_statement4847)
                     self.expression()
 
                     self._state.following.pop()
@@ -5129,74 +5330,89 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 13:
-                    # JavaTreeParser.g:582:9: ^( BREAK ( IDENT )? )
+                    # JavaTreeParser.g:622:9: ^( BREAK (id0= IDENT )? )
                     pass 
-                    self.match(self.input, BREAK, self.FOLLOW_BREAK_in_statement4390)
+                    self.match(self.input, BREAK, self.FOLLOW_BREAK_in_statement4859)
 
                     if self.input.LA(1) == DOWN:
                         self.match(self.input, DOWN, None)
-                        # JavaTreeParser.g:582:17: ( IDENT )?
+                        # JavaTreeParser.g:622:17: (id0= IDENT )?
                         alt78 = 2
                         LA78_0 = self.input.LA(1)
 
                         if (LA78_0 == IDENT) :
                             alt78 = 1
                         if alt78 == 1:
-                            # JavaTreeParser.g:0:0: IDENT
+                            # JavaTreeParser.g:622:18: id0= IDENT
                             pass 
-                            self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4392)
+                            id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4864)
+                            if self._state.backtracking == 0:
+                                label = id0.text 
+
 
 
 
 
                         self.match(self.input, UP, None)
 
+                    if self._state.backtracking == 0:
+                        self.addBreak(label=label) 
+
 
 
                 elif alt80 == 14:
-                    # JavaTreeParser.g:583:9: ^( CONTINUE ( IDENT )? )
+                    # JavaTreeParser.g:623:9: ^( CONTINUE (id0= IDENT )? )
                     pass 
-                    self.match(self.input, CONTINUE, self.FOLLOW_CONTINUE_in_statement4405)
+                    self.match(self.input, CONTINUE, self.FOLLOW_CONTINUE_in_statement4883)
 
                     if self.input.LA(1) == DOWN:
                         self.match(self.input, DOWN, None)
-                        # JavaTreeParser.g:583:20: ( IDENT )?
+                        # JavaTreeParser.g:623:20: (id0= IDENT )?
                         alt79 = 2
                         LA79_0 = self.input.LA(1)
 
                         if (LA79_0 == IDENT) :
                             alt79 = 1
                         if alt79 == 1:
-                            # JavaTreeParser.g:0:0: IDENT
+                            # JavaTreeParser.g:623:21: id0= IDENT
                             pass 
-                            self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4407)
+                            id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4888)
+                            if self._state.backtracking == 0:
+                                label = id0.text 
+
 
 
 
 
                         self.match(self.input, UP, None)
 
+                    if self._state.backtracking == 0:
+                        self.addContinue(label=label) 
+
 
 
                 elif alt80 == 15:
-                    # JavaTreeParser.g:584:9: ^( LABELED_STATEMENT IDENT statement )
+                    # JavaTreeParser.g:624:9: ^( LABELED_STATEMENT id0= IDENT lb0= statement )
                     pass 
-                    self.match(self.input, LABELED_STATEMENT, self.FOLLOW_LABELED_STATEMENT_in_statement4420)
+                    self.match(self.input, LABELED_STATEMENT, self.FOLLOW_LABELED_STATEMENT_in_statement4906)
 
                     self.match(self.input, DOWN, None)
-                    self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4422)
-                    self._state.following.append(self.FOLLOW_statement_in_statement4424)
-                    self.statement()
+                    id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_statement4910)
+                    self._state.following.append(self.FOLLOW_statement_in_statement4914)
+                    lb0 = self.statement()
 
                     self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self.addLabel(id0.text) 
+
 
                     self.match(self.input, UP, None)
 
 
                 elif alt80 == 16:
-                    # JavaTreeParser.g:585:9: ex0= expression
+                    # JavaTreeParser.g:625:9: ex0= expression
                     pass 
-                    self._state.following.append(self.FOLLOW_expression_in_statement4437)
+                    self._state.following.append(self.FOLLOW_expression_in_statement4929)
                     ex0 = self.expression()
 
                     self._state.following.pop()
@@ -5206,9 +5422,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt80 == 17:
-                    # JavaTreeParser.g:586:9: SEMI
+                    # JavaTreeParser.g:626:9: SEMI
                     pass 
-                    self.match(self.input, SEMI, self.FOLLOW_SEMI_in_statement4449)
+                    self.match(self.input, SEMI, self.FOLLOW_SEMI_in_statement4941)
 
 
 
@@ -5228,7 +5444,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "catches"
-    # JavaTreeParser.g:590:1: catches : ^( CATCH_CLAUSE_LIST ( catchClause )+ ) ;
+    # JavaTreeParser.g:630:1: catches : ^( CATCH_CLAUSE_LIST ( catchClause )+ ) ;
     def catches(self, ):
 
         catches_StartIndex = self.input.index()
@@ -5240,13 +5456,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:591:5: ( ^( CATCH_CLAUSE_LIST ( catchClause )+ ) )
-                # JavaTreeParser.g:591:9: ^( CATCH_CLAUSE_LIST ( catchClause )+ )
+                # JavaTreeParser.g:631:5: ( ^( CATCH_CLAUSE_LIST ( catchClause )+ ) )
+                # JavaTreeParser.g:631:9: ^( CATCH_CLAUSE_LIST ( catchClause )+ )
                 pass 
-                self.match(self.input, CATCH_CLAUSE_LIST, self.FOLLOW_CATCH_CLAUSE_LIST_in_catches4471)
+                self.match(self.input, CATCH_CLAUSE_LIST, self.FOLLOW_CATCH_CLAUSE_LIST_in_catches4963)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:591:29: ( catchClause )+
+                # JavaTreeParser.g:631:29: ( catchClause )+
                 cnt81 = 0
                 while True: #loop81
                     alt81 = 2
@@ -5259,7 +5475,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt81 == 1:
                         # JavaTreeParser.g:0:0: catchClause
                         pass 
-                        self._state.following.append(self.FOLLOW_catchClause_in_catches4473)
+                        self._state.following.append(self.FOLLOW_catchClause_in_catches4965)
                         self.catchClause()
 
                         self._state.following.pop()
@@ -5300,7 +5516,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "catchClause"
-    # JavaTreeParser.g:595:1: catchClause : ^( CATCH fp0= formalParameterStandardDecl block ) ;
+    # JavaTreeParser.g:635:1: catchClause : ^( CATCH fp0= formalParameterStandardDecl block ) ;
     def catchClause(self, ):
 
         catchClause_StartIndex = self.input.index()
@@ -5315,20 +5531,20 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:596:5: ( ^( CATCH fp0= formalParameterStandardDecl block ) )
-                # JavaTreeParser.g:596:9: ^( CATCH fp0= formalParameterStandardDecl block )
+                # JavaTreeParser.g:636:5: ( ^( CATCH fp0= formalParameterStandardDecl block ) )
+                # JavaTreeParser.g:636:9: ^( CATCH fp0= formalParameterStandardDecl block )
                 pass 
-                self.match(self.input, CATCH, self.FOLLOW_CATCH_in_catchClause4496)
+                self.match(self.input, CATCH, self.FOLLOW_CATCH_in_catchClause4988)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_formalParameterStandardDecl_in_catchClause4510)
+                self._state.following.append(self.FOLLOW_formalParameterStandardDecl_in_catchClause5002)
                 fp0 = self.formalParameterStandardDecl()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self.beginCatch(fp0) 
 
-                self._state.following.append(self.FOLLOW_block_in_catchClause4524)
+                self._state.following.append(self.FOLLOW_block_in_catchClause5016)
                 self.block()
 
                 self._state.following.pop()
@@ -5357,7 +5573,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "switchBlockLabels"
-    # JavaTreeParser.g:603:1: switchBlockLabels : ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* ) ;
+    # JavaTreeParser.g:643:1: switchBlockLabels : ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* ) ;
     def switchBlockLabels(self, ):
 
         switchBlockLabels_StartIndex = self.input.index()
@@ -5369,14 +5585,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:604:5: ( ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* ) )
-                # JavaTreeParser.g:604:9: ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* )
+                # JavaTreeParser.g:644:5: ( ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* ) )
+                # JavaTreeParser.g:644:9: ^( SWITCH_BLOCK_LABEL_LIST ( switchCaseLabel )* ( switchDefaultLabel )? ( switchCaseLabel )* )
                 pass 
-                self.match(self.input, SWITCH_BLOCK_LABEL_LIST, self.FOLLOW_SWITCH_BLOCK_LABEL_LIST_in_switchBlockLabels4557)
+                self.match(self.input, SWITCH_BLOCK_LABEL_LIST, self.FOLLOW_SWITCH_BLOCK_LABEL_LIST_in_switchBlockLabels5049)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:604:35: ( switchCaseLabel )*
+                    # JavaTreeParser.g:644:35: ( switchCaseLabel )*
                     while True: #loop82
                         alt82 = 2
                         LA82_0 = self.input.LA(1)
@@ -5393,7 +5609,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt82 == 1:
                             # JavaTreeParser.g:0:0: switchCaseLabel
                             pass 
-                            self._state.following.append(self.FOLLOW_switchCaseLabel_in_switchBlockLabels4559)
+                            self._state.following.append(self.FOLLOW_switchCaseLabel_in_switchBlockLabels5051)
                             self.switchCaseLabel()
 
                             self._state.following.pop()
@@ -5403,7 +5619,7 @@ class JavaTreeParser(LocalTreeParser):
                             break #loop82
 
 
-                    # JavaTreeParser.g:604:52: ( switchDefaultLabel )?
+                    # JavaTreeParser.g:644:52: ( switchDefaultLabel )?
                     alt83 = 2
                     LA83_0 = self.input.LA(1)
 
@@ -5412,14 +5628,14 @@ class JavaTreeParser(LocalTreeParser):
                     if alt83 == 1:
                         # JavaTreeParser.g:0:0: switchDefaultLabel
                         pass 
-                        self._state.following.append(self.FOLLOW_switchDefaultLabel_in_switchBlockLabels4562)
+                        self._state.following.append(self.FOLLOW_switchDefaultLabel_in_switchBlockLabels5054)
                         self.switchDefaultLabel()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:604:72: ( switchCaseLabel )*
+                    # JavaTreeParser.g:644:72: ( switchCaseLabel )*
                     while True: #loop84
                         alt84 = 2
                         LA84_0 = self.input.LA(1)
@@ -5431,7 +5647,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt84 == 1:
                             # JavaTreeParser.g:0:0: switchCaseLabel
                             pass 
-                            self._state.following.append(self.FOLLOW_switchCaseLabel_in_switchBlockLabels4565)
+                            self._state.following.append(self.FOLLOW_switchCaseLabel_in_switchBlockLabels5057)
                             self.switchCaseLabel()
 
                             self._state.following.pop()
@@ -5464,10 +5680,13 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "switchCaseLabel"
-    # JavaTreeParser.g:607:1: switchCaseLabel : ^( CASE expression ( blockStatement )* ) ;
+    # JavaTreeParser.g:648:1: switchCaseLabel : ^( CASE ex0= expression ( blockStatement )* ) ;
     def switchCaseLabel(self, ):
 
         switchCaseLabel_StartIndex = self.input.index()
+        ex0 = None
+
+
         success = False
         try:
             try:
@@ -5476,17 +5695,20 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:608:5: ( ^( CASE expression ( blockStatement )* ) )
-                # JavaTreeParser.g:608:9: ^( CASE expression ( blockStatement )* )
+                # JavaTreeParser.g:649:5: ( ^( CASE ex0= expression ( blockStatement )* ) )
+                # JavaTreeParser.g:649:9: ^( CASE ex0= expression ( blockStatement )* )
                 pass 
-                self.match(self.input, CASE, self.FOLLOW_CASE_in_switchCaseLabel4587)
+                self.match(self.input, CASE, self.FOLLOW_CASE_in_switchCaseLabel5080)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_expression_in_switchCaseLabel4589)
-                self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_switchCaseLabel5094)
+                ex0 = self.expression()
 
                 self._state.following.pop()
-                # JavaTreeParser.g:608:27: ( blockStatement )*
+                if self._state.backtracking == 0:
+                    self.addSwitchCase(ex0) 
+
+                # JavaTreeParser.g:651:11: ( blockStatement )*
                 while True: #loop85
                     alt85 = 2
                     LA85_0 = self.input.LA(1)
@@ -5498,7 +5720,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt85 == 1:
                         # JavaTreeParser.g:0:0: blockStatement
                         pass 
-                        self._state.following.append(self.FOLLOW_blockStatement_in_switchCaseLabel4591)
+                        self._state.following.append(self.FOLLOW_blockStatement_in_switchCaseLabel5108)
                         self.blockStatement()
 
                         self._state.following.pop()
@@ -5510,6 +5732,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 self.match(self.input, UP, None)
+                if self._state.backtracking == 0:
+                    self.maybePop(True) 
+
 
 
 
@@ -5530,7 +5755,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "switchDefaultLabel"
-    # JavaTreeParser.g:611:1: switchDefaultLabel : ^( DEFAULT ( blockStatement )* ) ;
+    # JavaTreeParser.g:657:1: switchDefaultLabel : ^( DEFAULT ( blockStatement )* ) ;
     def switchDefaultLabel(self, ):
 
         switchDefaultLabel_StartIndex = self.input.index()
@@ -5542,14 +5767,18 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:612:5: ( ^( DEFAULT ( blockStatement )* ) )
-                # JavaTreeParser.g:612:9: ^( DEFAULT ( blockStatement )* )
+                # JavaTreeParser.g:658:5: ( ^( DEFAULT ( blockStatement )* ) )
+                # JavaTreeParser.g:658:9: ^( DEFAULT ( blockStatement )* )
                 pass 
-                self.match(self.input, DEFAULT, self.FOLLOW_DEFAULT_in_switchDefaultLabel4613)
+                self.match(self.input, DEFAULT, self.FOLLOW_DEFAULT_in_switchDefaultLabel5150)
+
+                if self._state.backtracking == 0:
+                    self.addSwitchCaseDefault() 
+
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:612:19: ( blockStatement )*
+                    # JavaTreeParser.g:660:11: ( blockStatement )*
                     while True: #loop86
                         alt86 = 2
                         LA86_0 = self.input.LA(1)
@@ -5561,7 +5790,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt86 == 1:
                             # JavaTreeParser.g:0:0: blockStatement
                             pass 
-                            self._state.following.append(self.FOLLOW_blockStatement_in_switchDefaultLabel4615)
+                            self._state.following.append(self.FOLLOW_blockStatement_in_switchDefaultLabel5174)
                             self.blockStatement()
 
                             self._state.following.pop()
@@ -5573,6 +5802,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     self.match(self.input, UP, None)
+
+                if self._state.backtracking == 0:
+                    self.maybePop(True) 
 
 
 
@@ -5594,7 +5826,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "forInit"
-    # JavaTreeParser.g:615:1: forInit : ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? ) ;
+    # JavaTreeParser.g:666:1: forInit : ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? ) ;
     def forInit(self, ):
 
         forInit_StartIndex = self.input.index()
@@ -5606,14 +5838,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:616:5: ( ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? ) )
-                # JavaTreeParser.g:616:9: ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? )
+                # JavaTreeParser.g:667:5: ( ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? ) )
+                # JavaTreeParser.g:667:9: ^( FOR_INIT ( localVariableDeclaration | ( expression )* )? )
                 pass 
-                self.match(self.input, FOR_INIT, self.FOLLOW_FOR_INIT_in_forInit4637)
+                self.match(self.input, FOR_INIT, self.FOLLOW_FOR_INIT_in_forInit5216)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:616:20: ( localVariableDeclaration | ( expression )* )?
+                    # JavaTreeParser.g:667:20: ( localVariableDeclaration | ( expression )* )?
                     alt88 = 3
                     LA88 = self.input.LA(1)
                     if LA88 == VAR_DECLARATION:
@@ -5626,18 +5858,18 @@ class JavaTreeParser(LocalTreeParser):
                         if (self.synpred132_JavaTreeParser()) :
                             alt88 = 2
                     if alt88 == 1:
-                        # JavaTreeParser.g:616:21: localVariableDeclaration
+                        # JavaTreeParser.g:667:21: localVariableDeclaration
                         pass 
-                        self._state.following.append(self.FOLLOW_localVariableDeclaration_in_forInit4640)
+                        self._state.following.append(self.FOLLOW_localVariableDeclaration_in_forInit5219)
                         self.localVariableDeclaration()
 
                         self._state.following.pop()
 
 
                     elif alt88 == 2:
-                        # JavaTreeParser.g:616:48: ( expression )*
+                        # JavaTreeParser.g:667:48: ( expression )*
                         pass 
-                        # JavaTreeParser.g:616:48: ( expression )*
+                        # JavaTreeParser.g:667:48: ( expression )*
                         while True: #loop87
                             alt87 = 2
                             LA87_0 = self.input.LA(1)
@@ -5649,7 +5881,7 @@ class JavaTreeParser(LocalTreeParser):
                             if alt87 == 1:
                                 # JavaTreeParser.g:0:0: expression
                                 pass 
-                                self._state.following.append(self.FOLLOW_expression_in_forInit4644)
+                                self._state.following.append(self.FOLLOW_expression_in_forInit5223)
                                 self.expression()
 
                                 self._state.following.pop()
@@ -5685,7 +5917,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "forCondition"
-    # JavaTreeParser.g:619:1: forCondition : ^( FOR_CONDITION ( expression )? ) ;
+    # JavaTreeParser.g:670:1: forCondition : ^( FOR_CONDITION ( expression )? ) ;
     def forCondition(self, ):
 
         forCondition_StartIndex = self.input.index()
@@ -5697,14 +5929,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:620:5: ( ^( FOR_CONDITION ( expression )? ) )
-                # JavaTreeParser.g:620:9: ^( FOR_CONDITION ( expression )? )
+                # JavaTreeParser.g:671:5: ( ^( FOR_CONDITION ( expression )? ) )
+                # JavaTreeParser.g:671:9: ^( FOR_CONDITION ( expression )? )
                 pass 
-                self.match(self.input, FOR_CONDITION, self.FOLLOW_FOR_CONDITION_in_forCondition4668)
+                self.match(self.input, FOR_CONDITION, self.FOLLOW_FOR_CONDITION_in_forCondition5247)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:620:25: ( expression )?
+                    # JavaTreeParser.g:671:25: ( expression )?
                     alt89 = 2
                     LA89_0 = self.input.LA(1)
 
@@ -5713,7 +5945,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt89 == 1:
                         # JavaTreeParser.g:0:0: expression
                         pass 
-                        self._state.following.append(self.FOLLOW_expression_in_forCondition4670)
+                        self._state.following.append(self.FOLLOW_expression_in_forCondition5249)
                         self.expression()
 
                         self._state.following.pop()
@@ -5743,7 +5975,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "forUpdater"
-    # JavaTreeParser.g:623:1: forUpdater : ^( FOR_UPDATE ( expression )* ) ;
+    # JavaTreeParser.g:674:1: forUpdater : ^( FOR_UPDATE ( expression )* ) ;
     def forUpdater(self, ):
 
         forUpdater_StartIndex = self.input.index()
@@ -5755,14 +5987,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:624:5: ( ^( FOR_UPDATE ( expression )* ) )
-                # JavaTreeParser.g:624:9: ^( FOR_UPDATE ( expression )* )
+                # JavaTreeParser.g:675:5: ( ^( FOR_UPDATE ( expression )* ) )
+                # JavaTreeParser.g:675:9: ^( FOR_UPDATE ( expression )* )
                 pass 
-                self.match(self.input, FOR_UPDATE, self.FOLLOW_FOR_UPDATE_in_forUpdater4692)
+                self.match(self.input, FOR_UPDATE, self.FOLLOW_FOR_UPDATE_in_forUpdater5271)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:624:22: ( expression )*
+                    # JavaTreeParser.g:675:22: ( expression )*
                     while True: #loop90
                         alt90 = 2
                         LA90_0 = self.input.LA(1)
@@ -5774,7 +6006,7 @@ class JavaTreeParser(LocalTreeParser):
                         if alt90 == 1:
                             # JavaTreeParser.g:0:0: expression
                             pass 
-                            self._state.following.append(self.FOLLOW_expression_in_forUpdater4694)
+                            self._state.following.append(self.FOLLOW_expression_in_forUpdater5273)
                             self.expression()
 
                             self._state.following.pop()
@@ -5807,7 +6039,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "parenthesizedExpression"
-    # JavaTreeParser.g:629:1: parenthesizedExpression returns [value] : ^( PARENTESIZED_EXPR ex0= expression ) ;
+    # JavaTreeParser.g:680:1: parenthesizedExpression returns [value] : ^( PARENTESIZED_EXPR ex0= expression ) ;
     def parenthesizedExpression(self, ):
 
         value = None
@@ -5823,13 +6055,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:630:5: ( ^( PARENTESIZED_EXPR ex0= expression ) )
-                # JavaTreeParser.g:630:9: ^( PARENTESIZED_EXPR ex0= expression )
+                # JavaTreeParser.g:681:5: ( ^( PARENTESIZED_EXPR ex0= expression ) )
+                # JavaTreeParser.g:681:9: ^( PARENTESIZED_EXPR ex0= expression )
                 pass 
-                self.match(self.input, PARENTESIZED_EXPR, self.FOLLOW_PARENTESIZED_EXPR_in_parenthesizedExpression4722)
+                self.match(self.input, PARENTESIZED_EXPR, self.FOLLOW_PARENTESIZED_EXPR_in_parenthesizedExpression5301)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_expression_in_parenthesizedExpression4726)
+                self._state.following.append(self.FOLLOW_expression_in_parenthesizedExpression5305)
                 ex0 = self.expression()
 
                 self._state.following.pop()
@@ -5858,7 +6090,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "expression"
-    # JavaTreeParser.g:633:1: expression returns [value] : ^( EXPR ex0= expr ) ;
+    # JavaTreeParser.g:684:1: expression returns [value] : ^( EXPR ex0= expr ) ;
     def expression(self, ):
 
         value = None
@@ -5874,13 +6106,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:634:5: ( ^( EXPR ex0= expr ) )
-                # JavaTreeParser.g:634:9: ^( EXPR ex0= expr )
+                # JavaTreeParser.g:685:5: ( ^( EXPR ex0= expr ) )
+                # JavaTreeParser.g:685:9: ^( EXPR ex0= expr )
                 pass 
-                self.match(self.input, EXPR, self.FOLLOW_EXPR_in_expression4753)
+                self.match(self.input, EXPR, self.FOLLOW_EXPR_in_expression5332)
 
                 self.match(self.input, DOWN, None)
-                self._state.following.append(self.FOLLOW_expr_in_expression4757)
+                self._state.following.append(self.FOLLOW_expr_in_expression5336)
                 ex0 = self.expr()
 
                 self._state.following.pop()
@@ -5909,7 +6141,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "expr"
-    # JavaTreeParser.g:637:1: expr returns [value] : ( ^( ASSIGN lv0= expr rv0= expr ) | ^( PLUS_ASSIGN lv0= expr rv0= expr ) | ^( MINUS_ASSIGN lv0= expr rv0= expr ) | ^( STAR_ASSIGN lv0= expr rv0= expr ) | ^( DIV_ASSIGN lv0= expr rv0= expr ) | ^( AND_ASSIGN lv0= expr rv0= expr ) | ^( OR_ASSIGN lv0= expr rv0= expr ) | ^( XOR_ASSIGN lv0= expr rv0= expr ) | ^( MOD_ASSIGN lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_LEFT_ASSIGN expr expr ) | ^( QUESTION lv0= expr rv0= expr cv0= expr ) | ^( LOGICAL_OR expr expr ) | ^( LOGICAL_AND expr expr ) | ^( OR expr expr ) | ^( XOR expr expr ) | ^( AND expr expr ) | ^( EQUAL lv0= expr rv0= expr ) | ^( NOT_EQUAL lv0= expr rv0= expr ) | ^( INSTANCEOF lv0= expr tp0= type ) | ^( LESS_OR_EQUAL lv0= expr rv0= expr ) | ^( GREATER_OR_EQUAL lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr ) | ^( SHIFT_RIGHT lv0= expr rv0= expr ) | ^( GREATER_THAN lv0= expr rv0= expr ) | ^( SHIFT_LEFT lv0= expr rv0= expr ) | ^( LESS_THAN lv0= expr rv0= expr ) | ^( PLUS lv0= expr rv0= expr ) | ^( MINUS lv0= expr rv0= expr ) | ^( STAR lv0= expr rv0= expr ) | ^( DIV lv0= expr rv0= expr ) | ^( MOD lv0= expr rv0= expr ) | ^( UNARY_PLUS lv0= expr ) | ^( UNARY_MINUS lv0= expr ) | ^( PRE_INC lv0= expr ) | ^( PRE_DEC lv0= expr ) | ^( POST_INC lv0= expr ) | ^( POST_DEC lv0= expr ) | ^( NOT lv0= expr ) | ^( LOGICAL_NOT lv0= expr ) | ^( CAST_EXPR tp0= type rv0= expr ) | pe0= primaryExpression );
+    # JavaTreeParser.g:688:1: expr returns [value] : ( ^( ASSIGN lv0= expr rv0= expr ) | ^( PLUS_ASSIGN lv0= expr rv0= expr ) | ^( MINUS_ASSIGN lv0= expr rv0= expr ) | ^( STAR_ASSIGN lv0= expr rv0= expr ) | ^( DIV_ASSIGN lv0= expr rv0= expr ) | ^( AND_ASSIGN lv0= expr rv0= expr ) | ^( OR_ASSIGN lv0= expr rv0= expr ) | ^( XOR_ASSIGN lv0= expr rv0= expr ) | ^( MOD_ASSIGN lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_LEFT_ASSIGN expr expr ) | ^( QUESTION lv0= expr rv0= expr cv0= expr ) | ^( LOGICAL_OR expr expr ) | ^( LOGICAL_AND expr expr ) | ^( OR expr expr ) | ^( XOR expr expr ) | ^( AND expr expr ) | ^( EQUAL lv0= expr rv0= expr ) | ^( NOT_EQUAL lv0= expr rv0= expr ) | ^( INSTANCEOF lv0= expr tp0= type ) | ^( LESS_OR_EQUAL lv0= expr rv0= expr ) | ^( GREATER_OR_EQUAL lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr ) | ^( SHIFT_RIGHT lv0= expr rv0= expr ) | ^( GREATER_THAN lv0= expr rv0= expr ) | ^( SHIFT_LEFT lv0= expr rv0= expr ) | ^( LESS_THAN lv0= expr rv0= expr ) | ^( PLUS lv0= expr rv0= expr ) | ^( MINUS lv0= expr rv0= expr ) | ^( STAR lv0= expr rv0= expr ) | ^( DIV lv0= expr rv0= expr ) | ^( MOD lv0= expr rv0= expr ) | ^( UNARY_PLUS lv0= expr ) | ^( UNARY_MINUS lv0= expr ) | ^( PRE_INC lv0= expr ) | ^( PRE_DEC lv0= expr ) | ^( POST_INC lv0= expr ) | ^( POST_DEC lv0= expr ) | ^( NOT lv0= expr ) | ^( LOGICAL_NOT lv0= expr ) | ^( CAST_EXPR tp0= type rv0= expr ) | pe0= primaryExpression );
     def expr(self, ):
 
         value = None
@@ -5940,7 +6172,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:645:5: ( ^( ASSIGN lv0= expr rv0= expr ) | ^( PLUS_ASSIGN lv0= expr rv0= expr ) | ^( MINUS_ASSIGN lv0= expr rv0= expr ) | ^( STAR_ASSIGN lv0= expr rv0= expr ) | ^( DIV_ASSIGN lv0= expr rv0= expr ) | ^( AND_ASSIGN lv0= expr rv0= expr ) | ^( OR_ASSIGN lv0= expr rv0= expr ) | ^( XOR_ASSIGN lv0= expr rv0= expr ) | ^( MOD_ASSIGN lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_LEFT_ASSIGN expr expr ) | ^( QUESTION lv0= expr rv0= expr cv0= expr ) | ^( LOGICAL_OR expr expr ) | ^( LOGICAL_AND expr expr ) | ^( OR expr expr ) | ^( XOR expr expr ) | ^( AND expr expr ) | ^( EQUAL lv0= expr rv0= expr ) | ^( NOT_EQUAL lv0= expr rv0= expr ) | ^( INSTANCEOF lv0= expr tp0= type ) | ^( LESS_OR_EQUAL lv0= expr rv0= expr ) | ^( GREATER_OR_EQUAL lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr ) | ^( SHIFT_RIGHT lv0= expr rv0= expr ) | ^( GREATER_THAN lv0= expr rv0= expr ) | ^( SHIFT_LEFT lv0= expr rv0= expr ) | ^( LESS_THAN lv0= expr rv0= expr ) | ^( PLUS lv0= expr rv0= expr ) | ^( MINUS lv0= expr rv0= expr ) | ^( STAR lv0= expr rv0= expr ) | ^( DIV lv0= expr rv0= expr ) | ^( MOD lv0= expr rv0= expr ) | ^( UNARY_PLUS lv0= expr ) | ^( UNARY_MINUS lv0= expr ) | ^( PRE_INC lv0= expr ) | ^( PRE_DEC lv0= expr ) | ^( POST_INC lv0= expr ) | ^( POST_DEC lv0= expr ) | ^( NOT lv0= expr ) | ^( LOGICAL_NOT lv0= expr ) | ^( CAST_EXPR tp0= type rv0= expr ) | pe0= primaryExpression )
+                # JavaTreeParser.g:696:5: ( ^( ASSIGN lv0= expr rv0= expr ) | ^( PLUS_ASSIGN lv0= expr rv0= expr ) | ^( MINUS_ASSIGN lv0= expr rv0= expr ) | ^( STAR_ASSIGN lv0= expr rv0= expr ) | ^( DIV_ASSIGN lv0= expr rv0= expr ) | ^( AND_ASSIGN lv0= expr rv0= expr ) | ^( OR_ASSIGN lv0= expr rv0= expr ) | ^( XOR_ASSIGN lv0= expr rv0= expr ) | ^( MOD_ASSIGN lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_RIGHT_ASSIGN expr expr ) | ^( SHIFT_LEFT_ASSIGN expr expr ) | ^( QUESTION lv0= expr rv0= expr cv0= expr ) | ^( LOGICAL_OR expr expr ) | ^( LOGICAL_AND expr expr ) | ^( OR expr expr ) | ^( XOR expr expr ) | ^( AND expr expr ) | ^( EQUAL lv0= expr rv0= expr ) | ^( NOT_EQUAL lv0= expr rv0= expr ) | ^( INSTANCEOF lv0= expr tp0= type ) | ^( LESS_OR_EQUAL lv0= expr rv0= expr ) | ^( GREATER_OR_EQUAL lv0= expr rv0= expr ) | ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr ) | ^( SHIFT_RIGHT lv0= expr rv0= expr ) | ^( GREATER_THAN lv0= expr rv0= expr ) | ^( SHIFT_LEFT lv0= expr rv0= expr ) | ^( LESS_THAN lv0= expr rv0= expr ) | ^( PLUS lv0= expr rv0= expr ) | ^( MINUS lv0= expr rv0= expr ) | ^( STAR lv0= expr rv0= expr ) | ^( DIV lv0= expr rv0= expr ) | ^( MOD lv0= expr rv0= expr ) | ^( UNARY_PLUS lv0= expr ) | ^( UNARY_MINUS lv0= expr ) | ^( PRE_INC lv0= expr ) | ^( PRE_DEC lv0= expr ) | ^( POST_INC lv0= expr ) | ^( POST_DEC lv0= expr ) | ^( NOT lv0= expr ) | ^( LOGICAL_NOT lv0= expr ) | ^( CAST_EXPR tp0= type rv0= expr ) | pe0= primaryExpression )
                 alt91 = 43
                 LA91 = self.input.LA(1)
                 if LA91 == ASSIGN:
@@ -6038,16 +6270,16 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt91 == 1:
-                    # JavaTreeParser.g:645:9: ^( ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:696:9: ^( ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, ASSIGN, self.FOLLOW_ASSIGN_in_expr4793)
+                    self.match(self.input, ASSIGN, self.FOLLOW_ASSIGN_in_expr5372)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4797)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5376)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4801)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5380)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6059,16 +6291,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 2:
-                    # JavaTreeParser.g:646:9: ^( PLUS_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:697:9: ^( PLUS_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, PLUS_ASSIGN, self.FOLLOW_PLUS_ASSIGN_in_expr4821)
+                    self.match(self.input, PLUS_ASSIGN, self.FOLLOW_PLUS_ASSIGN_in_expr5400)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4825)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5404)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4829)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5408)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6080,16 +6312,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 3:
-                    # JavaTreeParser.g:647:9: ^( MINUS_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:698:9: ^( MINUS_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, MINUS_ASSIGN, self.FOLLOW_MINUS_ASSIGN_in_expr4844)
+                    self.match(self.input, MINUS_ASSIGN, self.FOLLOW_MINUS_ASSIGN_in_expr5423)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4848)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5427)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4852)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5431)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6101,16 +6333,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 4:
-                    # JavaTreeParser.g:648:9: ^( STAR_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:699:9: ^( STAR_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, STAR_ASSIGN, self.FOLLOW_STAR_ASSIGN_in_expr4866)
+                    self.match(self.input, STAR_ASSIGN, self.FOLLOW_STAR_ASSIGN_in_expr5445)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4870)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5449)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4874)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5453)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6122,16 +6354,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 5:
-                    # JavaTreeParser.g:649:9: ^( DIV_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:700:9: ^( DIV_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, DIV_ASSIGN, self.FOLLOW_DIV_ASSIGN_in_expr4889)
+                    self.match(self.input, DIV_ASSIGN, self.FOLLOW_DIV_ASSIGN_in_expr5468)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4893)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5472)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4897)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5476)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6143,16 +6375,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 6:
-                    # JavaTreeParser.g:650:9: ^( AND_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:701:9: ^( AND_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, AND_ASSIGN, self.FOLLOW_AND_ASSIGN_in_expr4913)
+                    self.match(self.input, AND_ASSIGN, self.FOLLOW_AND_ASSIGN_in_expr5492)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4917)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5496)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4921)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5500)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6164,16 +6396,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 7:
-                    # JavaTreeParser.g:651:9: ^( OR_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:702:9: ^( OR_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, OR_ASSIGN, self.FOLLOW_OR_ASSIGN_in_expr4937)
+                    self.match(self.input, OR_ASSIGN, self.FOLLOW_OR_ASSIGN_in_expr5516)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4941)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5520)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4945)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5524)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6185,16 +6417,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 8:
-                    # JavaTreeParser.g:652:9: ^( XOR_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:703:9: ^( XOR_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, XOR_ASSIGN, self.FOLLOW_XOR_ASSIGN_in_expr4962)
+                    self.match(self.input, XOR_ASSIGN, self.FOLLOW_XOR_ASSIGN_in_expr5541)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4966)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5545)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4970)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5549)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6206,16 +6438,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 9:
-                    # JavaTreeParser.g:653:9: ^( MOD_ASSIGN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:704:9: ^( MOD_ASSIGN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, MOD_ASSIGN, self.FOLLOW_MOD_ASSIGN_in_expr4986)
+                    self.match(self.input, MOD_ASSIGN, self.FOLLOW_MOD_ASSIGN_in_expr5565)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr4990)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5569)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr4994)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5573)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6227,16 +6459,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 10:
-                    # JavaTreeParser.g:654:9: ^( BIT_SHIFT_RIGHT_ASSIGN expr expr )
+                    # JavaTreeParser.g:705:9: ^( BIT_SHIFT_RIGHT_ASSIGN expr expr )
                     pass 
-                    self.match(self.input, BIT_SHIFT_RIGHT_ASSIGN, self.FOLLOW_BIT_SHIFT_RIGHT_ASSIGN_in_expr5010)
+                    self.match(self.input, BIT_SHIFT_RIGHT_ASSIGN, self.FOLLOW_BIT_SHIFT_RIGHT_ASSIGN_in_expr5589)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5012)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5591)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5014)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5593)
                     self.expr()
 
                     self._state.following.pop()
@@ -6245,16 +6477,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 11:
-                    # JavaTreeParser.g:655:9: ^( SHIFT_RIGHT_ASSIGN expr expr )
+                    # JavaTreeParser.g:706:9: ^( SHIFT_RIGHT_ASSIGN expr expr )
                     pass 
-                    self.match(self.input, SHIFT_RIGHT_ASSIGN, self.FOLLOW_SHIFT_RIGHT_ASSIGN_in_expr5026)
+                    self.match(self.input, SHIFT_RIGHT_ASSIGN, self.FOLLOW_SHIFT_RIGHT_ASSIGN_in_expr5605)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5028)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5607)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5030)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5609)
                     self.expr()
 
                     self._state.following.pop()
@@ -6263,16 +6495,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 12:
-                    # JavaTreeParser.g:656:9: ^( SHIFT_LEFT_ASSIGN expr expr )
+                    # JavaTreeParser.g:707:9: ^( SHIFT_LEFT_ASSIGN expr expr )
                     pass 
-                    self.match(self.input, SHIFT_LEFT_ASSIGN, self.FOLLOW_SHIFT_LEFT_ASSIGN_in_expr5042)
+                    self.match(self.input, SHIFT_LEFT_ASSIGN, self.FOLLOW_SHIFT_LEFT_ASSIGN_in_expr5621)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5044)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5623)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5046)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5625)
                     self.expr()
 
                     self._state.following.pop()
@@ -6281,20 +6513,20 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 13:
-                    # JavaTreeParser.g:657:9: ^( QUESTION lv0= expr rv0= expr cv0= expr )
+                    # JavaTreeParser.g:708:9: ^( QUESTION lv0= expr rv0= expr cv0= expr )
                     pass 
-                    self.match(self.input, QUESTION, self.FOLLOW_QUESTION_in_expr5058)
+                    self.match(self.input, QUESTION, self.FOLLOW_QUESTION_in_expr5637)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5062)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5641)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5066)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5645)
                     rv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5070)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5649)
                     cv0 = self.expr()
 
                     self._state.following.pop()
@@ -6307,16 +6539,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 14:
-                    # JavaTreeParser.g:660:9: ^( LOGICAL_OR expr expr )
+                    # JavaTreeParser.g:711:9: ^( LOGICAL_OR expr expr )
                     pass 
-                    self.match(self.input, LOGICAL_OR, self.FOLLOW_LOGICAL_OR_in_expr5094)
+                    self.match(self.input, LOGICAL_OR, self.FOLLOW_LOGICAL_OR_in_expr5673)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5096)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5675)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5098)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5677)
                     self.expr()
 
                     self._state.following.pop()
@@ -6325,16 +6557,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 15:
-                    # JavaTreeParser.g:661:9: ^( LOGICAL_AND expr expr )
+                    # JavaTreeParser.g:712:9: ^( LOGICAL_AND expr expr )
                     pass 
-                    self.match(self.input, LOGICAL_AND, self.FOLLOW_LOGICAL_AND_in_expr5110)
+                    self.match(self.input, LOGICAL_AND, self.FOLLOW_LOGICAL_AND_in_expr5689)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5112)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5691)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5114)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5693)
                     self.expr()
 
                     self._state.following.pop()
@@ -6343,16 +6575,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 16:
-                    # JavaTreeParser.g:662:9: ^( OR expr expr )
+                    # JavaTreeParser.g:713:9: ^( OR expr expr )
                     pass 
-                    self.match(self.input, OR, self.FOLLOW_OR_in_expr5126)
+                    self.match(self.input, OR, self.FOLLOW_OR_in_expr5705)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5128)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5707)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5130)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5709)
                     self.expr()
 
                     self._state.following.pop()
@@ -6361,16 +6593,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 17:
-                    # JavaTreeParser.g:663:9: ^( XOR expr expr )
+                    # JavaTreeParser.g:714:9: ^( XOR expr expr )
                     pass 
-                    self.match(self.input, XOR, self.FOLLOW_XOR_in_expr5142)
+                    self.match(self.input, XOR, self.FOLLOW_XOR_in_expr5721)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5144)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5723)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5146)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5725)
                     self.expr()
 
                     self._state.following.pop()
@@ -6379,16 +6611,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 18:
-                    # JavaTreeParser.g:664:9: ^( AND expr expr )
+                    # JavaTreeParser.g:715:9: ^( AND expr expr )
                     pass 
-                    self.match(self.input, AND, self.FOLLOW_AND_in_expr5158)
+                    self.match(self.input, AND, self.FOLLOW_AND_in_expr5737)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5160)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5739)
                     self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5162)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5741)
                     self.expr()
 
                     self._state.following.pop()
@@ -6397,16 +6629,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 19:
-                    # JavaTreeParser.g:665:9: ^( EQUAL lv0= expr rv0= expr )
+                    # JavaTreeParser.g:716:9: ^( EQUAL lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, EQUAL, self.FOLLOW_EQUAL_in_expr5174)
+                    self.match(self.input, EQUAL, self.FOLLOW_EQUAL_in_expr5753)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5178)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5757)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5182)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5761)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6418,16 +6650,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 20:
-                    # JavaTreeParser.g:666:9: ^( NOT_EQUAL lv0= expr rv0= expr )
+                    # JavaTreeParser.g:717:9: ^( NOT_EQUAL lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, NOT_EQUAL, self.FOLLOW_NOT_EQUAL_in_expr5200)
+                    self.match(self.input, NOT_EQUAL, self.FOLLOW_NOT_EQUAL_in_expr5779)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5204)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5783)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5208)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5787)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6439,16 +6671,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 21:
-                    # JavaTreeParser.g:667:9: ^( INSTANCEOF lv0= expr tp0= type )
+                    # JavaTreeParser.g:718:9: ^( INSTANCEOF lv0= expr tp0= type )
                     pass 
-                    self.match(self.input, INSTANCEOF, self.FOLLOW_INSTANCEOF_in_expr5222)
+                    self.match(self.input, INSTANCEOF, self.FOLLOW_INSTANCEOF_in_expr5801)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5226)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5805)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_type_in_expr5230)
+                    self._state.following.append(self.FOLLOW_type_in_expr5809)
                     tp0 = self.type()
 
                     self._state.following.pop()
@@ -6460,16 +6692,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 22:
-                    # JavaTreeParser.g:669:9: ^( LESS_OR_EQUAL lv0= expr rv0= expr )
+                    # JavaTreeParser.g:720:9: ^( LESS_OR_EQUAL lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, LESS_OR_EQUAL, self.FOLLOW_LESS_OR_EQUAL_in_expr5254)
+                    self.match(self.input, LESS_OR_EQUAL, self.FOLLOW_LESS_OR_EQUAL_in_expr5833)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5258)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5837)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5262)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5841)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6481,16 +6713,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 23:
-                    # JavaTreeParser.g:670:9: ^( GREATER_OR_EQUAL lv0= expr rv0= expr )
+                    # JavaTreeParser.g:721:9: ^( GREATER_OR_EQUAL lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, GREATER_OR_EQUAL, self.FOLLOW_GREATER_OR_EQUAL_in_expr5279)
+                    self.match(self.input, GREATER_OR_EQUAL, self.FOLLOW_GREATER_OR_EQUAL_in_expr5858)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5283)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5862)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5287)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5866)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6502,16 +6734,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 24:
-                    # JavaTreeParser.g:671:9: ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr )
+                    # JavaTreeParser.g:722:9: ^( BIT_SHIFT_RIGHT lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, BIT_SHIFT_RIGHT, self.FOLLOW_BIT_SHIFT_RIGHT_in_expr5301)
+                    self.match(self.input, BIT_SHIFT_RIGHT, self.FOLLOW_BIT_SHIFT_RIGHT_in_expr5880)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5305)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5884)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5309)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5888)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6520,16 +6752,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 25:
-                    # JavaTreeParser.g:672:9: ^( SHIFT_RIGHT lv0= expr rv0= expr )
+                    # JavaTreeParser.g:723:9: ^( SHIFT_RIGHT lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, SHIFT_RIGHT, self.FOLLOW_SHIFT_RIGHT_in_expr5323)
+                    self.match(self.input, SHIFT_RIGHT, self.FOLLOW_SHIFT_RIGHT_in_expr5902)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5327)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5906)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5331)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5910)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6541,16 +6773,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 26:
-                    # JavaTreeParser.g:673:9: ^( GREATER_THAN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:724:9: ^( GREATER_THAN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, GREATER_THAN, self.FOLLOW_GREATER_THAN_in_expr5350)
+                    self.match(self.input, GREATER_THAN, self.FOLLOW_GREATER_THAN_in_expr5929)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5354)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5933)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5358)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5937)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6562,16 +6794,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 27:
-                    # JavaTreeParser.g:674:9: ^( SHIFT_LEFT lv0= expr rv0= expr )
+                    # JavaTreeParser.g:725:9: ^( SHIFT_LEFT lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, SHIFT_LEFT, self.FOLLOW_SHIFT_LEFT_in_expr5376)
+                    self.match(self.input, SHIFT_LEFT, self.FOLLOW_SHIFT_LEFT_in_expr5955)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5380)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5959)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5384)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5963)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6583,16 +6815,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 28:
-                    # JavaTreeParser.g:675:9: ^( LESS_THAN lv0= expr rv0= expr )
+                    # JavaTreeParser.g:726:9: ^( LESS_THAN lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, LESS_THAN, self.FOLLOW_LESS_THAN_in_expr5404)
+                    self.match(self.input, LESS_THAN, self.FOLLOW_LESS_THAN_in_expr5983)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5408)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5987)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5412)
+                    self._state.following.append(self.FOLLOW_expr_in_expr5991)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6604,16 +6836,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 29:
-                    # JavaTreeParser.g:676:9: ^( PLUS lv0= expr rv0= expr )
+                    # JavaTreeParser.g:727:9: ^( PLUS lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, PLUS, self.FOLLOW_PLUS_in_expr5433)
+                    self.match(self.input, PLUS, self.FOLLOW_PLUS_in_expr6012)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5437)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6016)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5441)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6020)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6625,16 +6857,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 30:
-                    # JavaTreeParser.g:677:9: ^( MINUS lv0= expr rv0= expr )
+                    # JavaTreeParser.g:728:9: ^( MINUS lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, MINUS, self.FOLLOW_MINUS_in_expr5467)
+                    self.match(self.input, MINUS, self.FOLLOW_MINUS_in_expr6046)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5471)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6050)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5475)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6054)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6646,16 +6878,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 31:
-                    # JavaTreeParser.g:678:9: ^( STAR lv0= expr rv0= expr )
+                    # JavaTreeParser.g:729:9: ^( STAR lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, STAR, self.FOLLOW_STAR_in_expr5500)
+                    self.match(self.input, STAR, self.FOLLOW_STAR_in_expr6079)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5504)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6083)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5508)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6087)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6667,16 +6899,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 32:
-                    # JavaTreeParser.g:679:9: ^( DIV lv0= expr rv0= expr )
+                    # JavaTreeParser.g:730:9: ^( DIV lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, DIV, self.FOLLOW_DIV_in_expr5534)
+                    self.match(self.input, DIV, self.FOLLOW_DIV_in_expr6113)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5538)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6117)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5542)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6121)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6688,16 +6920,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 33:
-                    # JavaTreeParser.g:680:9: ^( MOD lv0= expr rv0= expr )
+                    # JavaTreeParser.g:731:9: ^( MOD lv0= expr rv0= expr )
                     pass 
-                    self.match(self.input, MOD, self.FOLLOW_MOD_in_expr5569)
+                    self.match(self.input, MOD, self.FOLLOW_MOD_in_expr6148)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5573)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6152)
                     lv0 = self.expr()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5577)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6156)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6709,12 +6941,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 34:
-                    # JavaTreeParser.g:681:9: ^( UNARY_PLUS lv0= expr )
+                    # JavaTreeParser.g:732:9: ^( UNARY_PLUS lv0= expr )
                     pass 
-                    self.match(self.input, UNARY_PLUS, self.FOLLOW_UNARY_PLUS_in_expr5604)
+                    self.match(self.input, UNARY_PLUS, self.FOLLOW_UNARY_PLUS_in_expr6183)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5608)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6187)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6726,12 +6958,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 35:
-                    # JavaTreeParser.g:682:9: ^( UNARY_MINUS lv0= expr )
+                    # JavaTreeParser.g:733:9: ^( UNARY_MINUS lv0= expr )
                     pass 
-                    self.match(self.input, UNARY_MINUS, self.FOLLOW_UNARY_MINUS_in_expr5637)
+                    self.match(self.input, UNARY_MINUS, self.FOLLOW_UNARY_MINUS_in_expr6216)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5641)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6220)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6743,12 +6975,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 36:
-                    # JavaTreeParser.g:683:9: ^( PRE_INC lv0= expr )
+                    # JavaTreeParser.g:734:9: ^( PRE_INC lv0= expr )
                     pass 
-                    self.match(self.input, PRE_INC, self.FOLLOW_PRE_INC_in_expr5669)
+                    self.match(self.input, PRE_INC, self.FOLLOW_PRE_INC_in_expr6248)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5673)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6252)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6760,12 +6992,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 37:
-                    # JavaTreeParser.g:684:9: ^( PRE_DEC lv0= expr )
+                    # JavaTreeParser.g:735:9: ^( PRE_DEC lv0= expr )
                     pass 
-                    self.match(self.input, PRE_DEC, self.FOLLOW_PRE_DEC_in_expr5705)
+                    self.match(self.input, PRE_DEC, self.FOLLOW_PRE_DEC_in_expr6284)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5709)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6288)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6777,12 +7009,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 38:
-                    # JavaTreeParser.g:685:9: ^( POST_INC lv0= expr )
+                    # JavaTreeParser.g:736:9: ^( POST_INC lv0= expr )
                     pass 
-                    self.match(self.input, POST_INC, self.FOLLOW_POST_INC_in_expr5741)
+                    self.match(self.input, POST_INC, self.FOLLOW_POST_INC_in_expr6320)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5745)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6324)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6794,12 +7026,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 39:
-                    # JavaTreeParser.g:686:9: ^( POST_DEC lv0= expr )
+                    # JavaTreeParser.g:737:9: ^( POST_DEC lv0= expr )
                     pass 
-                    self.match(self.input, POST_DEC, self.FOLLOW_POST_DEC_in_expr5776)
+                    self.match(self.input, POST_DEC, self.FOLLOW_POST_DEC_in_expr6355)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5780)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6359)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6811,12 +7043,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 40:
-                    # JavaTreeParser.g:687:9: ^( NOT lv0= expr )
+                    # JavaTreeParser.g:738:9: ^( NOT lv0= expr )
                     pass 
-                    self.match(self.input, NOT, self.FOLLOW_NOT_in_expr5811)
+                    self.match(self.input, NOT, self.FOLLOW_NOT_in_expr6390)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5815)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6394)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6828,12 +7060,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 41:
-                    # JavaTreeParser.g:688:9: ^( LOGICAL_NOT lv0= expr )
+                    # JavaTreeParser.g:739:9: ^( LOGICAL_NOT lv0= expr )
                     pass 
-                    self.match(self.input, LOGICAL_NOT, self.FOLLOW_LOGICAL_NOT_in_expr5851)
+                    self.match(self.input, LOGICAL_NOT, self.FOLLOW_LOGICAL_NOT_in_expr6430)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_expr_in_expr5855)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6434)
                     lv0 = self.expr()
 
                     self._state.following.pop()
@@ -6845,16 +7077,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 42:
-                    # JavaTreeParser.g:689:9: ^( CAST_EXPR tp0= type rv0= expr )
+                    # JavaTreeParser.g:740:9: ^( CAST_EXPR tp0= type rv0= expr )
                     pass 
-                    self.match(self.input, CAST_EXPR, self.FOLLOW_CAST_EXPR_in_expr5883)
+                    self.match(self.input, CAST_EXPR, self.FOLLOW_CAST_EXPR_in_expr6462)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_type_in_expr5887)
+                    self._state.following.append(self.FOLLOW_type_in_expr6466)
                     tp0 = self.type()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expr_in_expr5891)
+                    self._state.following.append(self.FOLLOW_expr_in_expr6470)
                     rv0 = self.expr()
 
                     self._state.following.pop()
@@ -6866,9 +7098,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt91 == 43:
-                    # JavaTreeParser.g:690:9: pe0= primaryExpression
+                    # JavaTreeParser.g:741:9: pe0= primaryExpression
                     pass 
-                    self._state.following.append(self.FOLLOW_primaryExpression_in_expr5913)
+                    self._state.following.append(self.FOLLOW_primaryExpression_in_expr6492)
                     pe0 = self.primaryExpression()
 
                     self._state.following.pop()
@@ -6896,7 +7128,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "primaryExpression"
-    # JavaTreeParser.g:696:1: primaryExpression returns [value] : ( ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) ) | parenthesizedExpression | IDENT | ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments ) | ec0= explicitConstructorCall | ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression ) | literal | newExpression | THIS | arrayTypeDeclarator | SUPER );
+    # JavaTreeParser.g:747:1: primaryExpression returns [value] : ( ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) ) | parenthesizedExpression | IDENT | ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments ) | ec0= explicitConstructorCall | ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression ) | literal | newExpression | THIS | arrayTypeDeclarator | SUPER );
     def primaryExpression(self, ):
 
         value = None
@@ -6931,7 +7163,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:698:5: ( ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) ) | parenthesizedExpression | IDENT | ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments ) | ec0= explicitConstructorCall | ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression ) | literal | newExpression | THIS | arrayTypeDeclarator | SUPER )
+                # JavaTreeParser.g:749:5: ( ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) ) | parenthesizedExpression | IDENT | ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments ) | ec0= explicitConstructorCall | ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression ) | literal | newExpression | THIS | arrayTypeDeclarator | SUPER )
                 alt95 = 11
                 LA95 = self.input.LA(1)
                 if LA95 == DOT:
@@ -6965,12 +7197,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt95 == 1:
-                    # JavaTreeParser.g:698:9: ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) )
+                    # JavaTreeParser.g:749:9: ^( DOT (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS ) )
                     pass 
-                    self.match(self.input, DOT, self.FOLLOW_DOT_in_primaryExpression5958)
+                    self.match(self.input, DOT, self.FOLLOW_DOT_in_primaryExpression6537)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:699:13: (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS )
+                    # JavaTreeParser.g:750:13: (p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS ) | pt0= primitiveType CLASS | VOID CLASS )
                     alt93 = 3
                     LA93 = self.input.LA(1)
                     if LA93 == DOT or LA93 == FALSE or LA93 == NULL or LA93 == SUPER or LA93 == THIS or LA93 == TRUE or LA93 == ARRAY_DECLARATOR or LA93 == ARRAY_ELEMENT_ACCESS or LA93 == CLASS_CONSTRUCTOR_CALL or LA93 == METHOD_CALL or LA93 == PARENTESIZED_EXPR or LA93 == STATIC_ARRAY_CREATOR or LA93 == SUPER_CONSTRUCTOR_CALL or LA93 == THIS_CONSTRUCTOR_CALL or LA93 == IDENT or LA93 == HEX_LITERAL or LA93 == OCTAL_LITERAL or LA93 == DECIMAL_LITERAL or LA93 == FLOATING_POINT_LITERAL or LA93 == CHARACTER_LITERAL or LA93 == STRING_LITERAL:
@@ -6988,16 +7220,16 @@ class JavaTreeParser(LocalTreeParser):
                         raise nvae
 
                     if alt93 == 1:
-                        # JavaTreeParser.g:699:17: p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS )
+                        # JavaTreeParser.g:750:17: p0= primaryExpression ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS )
                         pass 
-                        self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression5978)
+                        self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression6557)
                         p0 = self.primaryExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
                             value = ex(p0, format="${left}.${right}") 
 
-                        # JavaTreeParser.g:701:17: ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS )
+                        # JavaTreeParser.g:752:17: ( IDENT | THIS | SUPER | ne0= innerNewExpression | CLASS )
                         alt92 = 5
                         LA92 = self.input.LA(1)
                         if LA92 == IDENT:
@@ -7019,27 +7251,27 @@ class JavaTreeParser(LocalTreeParser):
                             raise nvae
 
                         if alt92 == 1:
-                            # JavaTreeParser.g:701:21: IDENT
+                            # JavaTreeParser.g:752:21: IDENT
                             pass 
-                            IDENT4=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_primaryExpression6018)
+                            IDENT4=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_primaryExpression6597)
                             if self._state.backtracking == 0:
                                 value["right"] = ex(IDENT4.text, format="${left}", rename=True) 
 
 
 
                         elif alt92 == 2:
-                            # JavaTreeParser.g:703:21: THIS
+                            # JavaTreeParser.g:754:21: THIS
                             pass 
-                            self.match(self.input, THIS, self.FOLLOW_THIS_in_primaryExpression6062)
+                            self.match(self.input, THIS, self.FOLLOW_THIS_in_primaryExpression6641)
                             if self._state.backtracking == 0:
                                 value["format"] = "${left}" 
 
 
 
                         elif alt92 == 3:
-                            # JavaTreeParser.g:704:21: SUPER
+                            # JavaTreeParser.g:755:21: SUPER
                             pass 
-                            self.match(self.input, SUPER, self.FOLLOW_SUPER_in_primaryExpression6088)
+                            self.match(self.input, SUPER, self.FOLLOW_SUPER_in_primaryExpression6667)
                             if self._state.backtracking == 0:
                                 value["format"] = "${left}"
                                 value["left"] = ex(value["left"], "", "super(${left}, self)")
@@ -7048,9 +7280,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         elif alt92 == 4:
-                            # JavaTreeParser.g:708:18: ne0= innerNewExpression
+                            # JavaTreeParser.g:759:18: ne0= innerNewExpression
                             pass 
-                            self._state.following.append(self.FOLLOW_innerNewExpression_in_primaryExpression6128)
+                            self._state.following.append(self.FOLLOW_innerNewExpression_in_primaryExpression6707)
                             ne0 = self.innerNewExpression()
 
                             self._state.following.pop()
@@ -7060,9 +7292,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         elif alt92 == 5:
-                            # JavaTreeParser.g:709:21: CLASS
+                            # JavaTreeParser.g:760:21: CLASS
                             pass 
-                            self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6152)
+                            self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6731)
                             if self._state.backtracking == 0:
                                 value["right"] = ex("__class__", "", "${left}") 
 
@@ -7072,13 +7304,13 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     elif alt93 == 2:
-                        # JavaTreeParser.g:711:17: pt0= primitiveType CLASS
+                        # JavaTreeParser.g:762:17: pt0= primitiveType CLASS
                         pass 
-                        self._state.following.append(self.FOLLOW_primitiveType_in_primaryExpression6192)
+                        self._state.following.append(self.FOLLOW_primitiveType_in_primaryExpression6771)
                         pt0 = self.primitiveType()
 
                         self._state.following.pop()
-                        self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6194)
+                        self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6773)
                         if self._state.backtracking == 0:
                             value = ex(((pt0 is not None) and [self.input.getTokenStream().toString(
                                 self.input.getTreeAdaptor().getTokenStartIndex(pt0.start),
@@ -7088,10 +7320,10 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     elif alt93 == 3:
-                        # JavaTreeParser.g:712:17: VOID CLASS
+                        # JavaTreeParser.g:763:17: VOID CLASS
                         pass 
-                        self.match(self.input, VOID, self.FOLLOW_VOID_in_primaryExpression6214)
-                        self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6216)
+                        self.match(self.input, VOID, self.FOLLOW_VOID_in_primaryExpression6793)
+                        self.match(self.input, CLASS, self.FOLLOW_CLASS_in_primaryExpression6795)
                         if self._state.backtracking == 0:
                             value = ex("None", "__class__", "${left}.${right}") 
 
@@ -7103,9 +7335,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 2:
-                    # JavaTreeParser.g:716:9: parenthesizedExpression
+                    # JavaTreeParser.g:767:9: parenthesizedExpression
                     pass 
-                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_primaryExpression6253)
+                    self._state.following.append(self.FOLLOW_parenthesizedExpression_in_primaryExpression6832)
                     parenthesizedExpression5 = self.parenthesizedExpression()
 
                     self._state.following.pop()
@@ -7115,25 +7347,25 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 3:
-                    # JavaTreeParser.g:718:9: IDENT
+                    # JavaTreeParser.g:769:9: IDENT
                     pass 
-                    IDENT6=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_primaryExpression6266)
+                    IDENT6=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_primaryExpression6845)
                     if self._state.backtracking == 0:
                         value = ex(self.altIdent(IDENT6.text), format="${left}", rename=True)  
 
 
 
                 elif alt95 == 4:
-                    # JavaTreeParser.g:720:9: ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments )
+                    # JavaTreeParser.g:771:9: ^( METHOD_CALL p0= primaryExpression ( genericTypeArgumentList )? a0= arguments )
                     pass 
-                    self.match(self.input, METHOD_CALL, self.FOLLOW_METHOD_CALL_in_primaryExpression6280)
+                    self.match(self.input, METHOD_CALL, self.FOLLOW_METHOD_CALL_in_primaryExpression6859)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression6294)
+                    self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression6873)
                     p0 = self.primaryExpression()
 
                     self._state.following.pop()
-                    # JavaTreeParser.g:722:11: ( genericTypeArgumentList )?
+                    # JavaTreeParser.g:773:11: ( genericTypeArgumentList )?
                     alt94 = 2
                     LA94_0 = self.input.LA(1)
 
@@ -7142,28 +7374,28 @@ class JavaTreeParser(LocalTreeParser):
                     if alt94 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgumentList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_primaryExpression6306)
+                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_primaryExpression6885)
                         self.genericTypeArgumentList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_arguments_in_primaryExpression6321)
+                    self._state.following.append(self.FOLLOW_arguments_in_primaryExpression6900)
                     a0 = self.arguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        value = ex(p0, a0, "${left}(${right})") 
+                        value = ex(p0, a0, "${left}(${right})", call=True) 
 
 
                     self.match(self.input, UP, None)
 
 
                 elif alt95 == 5:
-                    # JavaTreeParser.g:727:9: ec0= explicitConstructorCall
+                    # JavaTreeParser.g:778:9: ec0= explicitConstructorCall
                     pass 
-                    self._state.following.append(self.FOLLOW_explicitConstructorCall_in_primaryExpression6356)
+                    self._state.following.append(self.FOLLOW_explicitConstructorCall_in_primaryExpression6935)
                     ec0 = self.explicitConstructorCall()
 
                     self._state.following.pop()
@@ -7173,16 +7405,16 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 6:
-                    # JavaTreeParser.g:729:9: ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression )
+                    # JavaTreeParser.g:780:9: ^( ARRAY_ELEMENT_ACCESS p0= primaryExpression e0= expression )
                     pass 
-                    self.match(self.input, ARRAY_ELEMENT_ACCESS, self.FOLLOW_ARRAY_ELEMENT_ACCESS_in_primaryExpression6370)
+                    self.match(self.input, ARRAY_ELEMENT_ACCESS, self.FOLLOW_ARRAY_ELEMENT_ACCESS_in_primaryExpression6949)
 
                     self.match(self.input, DOWN, None)
-                    self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression6384)
+                    self._state.following.append(self.FOLLOW_primaryExpression_in_primaryExpression6963)
                     p0 = self.primaryExpression()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_expression_in_primaryExpression6398)
+                    self._state.following.append(self.FOLLOW_expression_in_primaryExpression6977)
                     e0 = self.expression()
 
                     self._state.following.pop()
@@ -7194,9 +7426,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 7:
-                    # JavaTreeParser.g:735:9: literal
+                    # JavaTreeParser.g:786:9: literal
                     pass 
-                    self._state.following.append(self.FOLLOW_literal_in_primaryExpression6431)
+                    self._state.following.append(self.FOLLOW_literal_in_primaryExpression7010)
                     literal7 = self.literal()
 
                     self._state.following.pop()
@@ -7206,9 +7438,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 8:
-                    # JavaTreeParser.g:737:9: newExpression
+                    # JavaTreeParser.g:788:9: newExpression
                     pass 
-                    self._state.following.append(self.FOLLOW_newExpression_in_primaryExpression6444)
+                    self._state.following.append(self.FOLLOW_newExpression_in_primaryExpression7023)
                     newExpression8 = self.newExpression()
 
                     self._state.following.pop()
@@ -7218,27 +7450,27 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt95 == 9:
-                    # JavaTreeParser.g:739:9: THIS
+                    # JavaTreeParser.g:790:9: THIS
                     pass 
-                    self.match(self.input, THIS, self.FOLLOW_THIS_in_primaryExpression6457)
+                    self.match(self.input, THIS, self.FOLLOW_THIS_in_primaryExpression7036)
                     if self._state.backtracking == 0:
                         value = ex("self", format="${left}") 
 
 
 
                 elif alt95 == 10:
-                    # JavaTreeParser.g:741:9: arrayTypeDeclarator
+                    # JavaTreeParser.g:792:9: arrayTypeDeclarator
                     pass 
-                    self._state.following.append(self.FOLLOW_arrayTypeDeclarator_in_primaryExpression6470)
+                    self._state.following.append(self.FOLLOW_arrayTypeDeclarator_in_primaryExpression7049)
                     self.arrayTypeDeclarator()
 
                     self._state.following.pop()
 
 
                 elif alt95 == 11:
-                    # JavaTreeParser.g:743:9: SUPER
+                    # JavaTreeParser.g:794:9: SUPER
                     pass 
-                    self.match(self.input, SUPER, self.FOLLOW_SUPER_in_primaryExpression6481)
+                    self.match(self.input, SUPER, self.FOLLOW_SUPER_in_primaryExpression7060)
                     if self._state.backtracking == 0:
                         value = ex(self.topParentName, format="super(${left}, self)") 
 
@@ -7261,7 +7493,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "explicitConstructorCall"
-    # JavaTreeParser.g:747:1: explicitConstructorCall returns [value] : ( ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments ) | ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) ) );
+    # JavaTreeParser.g:798:1: explicitConstructorCall returns [value] : ( ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments ) | ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) ) );
     def explicitConstructorCall(self, ):
 
         value = None
@@ -7280,7 +7512,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:749:5: ( ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments ) | ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) ) )
+                # JavaTreeParser.g:800:5: ( ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments ) | ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) ) )
                 alt99 = 2
                 LA99_0 = self.input.LA(1)
 
@@ -7297,12 +7529,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt99 == 1:
-                    # JavaTreeParser.g:749:9: ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments )
+                    # JavaTreeParser.g:800:9: ^( THIS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? arguments )
                     pass 
-                    self.match(self.input, THIS_CONSTRUCTOR_CALL, self.FOLLOW_THIS_CONSTRUCTOR_CALL_in_explicitConstructorCall6517)
+                    self.match(self.input, THIS_CONSTRUCTOR_CALL, self.FOLLOW_THIS_CONSTRUCTOR_CALL_in_explicitConstructorCall7096)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:749:33: ( genericTypeArgumentList )?
+                    # JavaTreeParser.g:800:33: ( genericTypeArgumentList )?
                     alt96 = 2
                     LA96_0 = self.input.LA(1)
 
@@ -7311,14 +7543,14 @@ class JavaTreeParser(LocalTreeParser):
                     if alt96 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgumentList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_explicitConstructorCall6519)
+                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_explicitConstructorCall7098)
                         self.genericTypeArgumentList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorCall6522)
+                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorCall7101)
                     self.arguments()
 
                     self._state.following.pop()
@@ -7327,28 +7559,28 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt99 == 2:
-                    # JavaTreeParser.g:750:9: ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) )
+                    # JavaTreeParser.g:801:9: ^( SUPER_CONSTRUCTOR_CALL (pe0= primaryExpression )? ( genericTypeArgumentList )? (ag0= arguments ) )
                     pass 
-                    self.match(self.input, SUPER_CONSTRUCTOR_CALL, self.FOLLOW_SUPER_CONSTRUCTOR_CALL_in_explicitConstructorCall6534)
+                    self.match(self.input, SUPER_CONSTRUCTOR_CALL, self.FOLLOW_SUPER_CONSTRUCTOR_CALL_in_explicitConstructorCall7113)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:751:13: (pe0= primaryExpression )?
+                    # JavaTreeParser.g:802:13: (pe0= primaryExpression )?
                     alt97 = 2
                     LA97_0 = self.input.LA(1)
 
                     if (LA97_0 == DOT or LA97_0 == FALSE or LA97_0 == NULL or LA97_0 == SUPER or LA97_0 == THIS or LA97_0 == TRUE or LA97_0 == ARRAY_DECLARATOR or LA97_0 == ARRAY_ELEMENT_ACCESS or LA97_0 == CLASS_CONSTRUCTOR_CALL or LA97_0 == METHOD_CALL or LA97_0 == PARENTESIZED_EXPR or (STATIC_ARRAY_CREATOR <= LA97_0 <= SUPER_CONSTRUCTOR_CALL) or LA97_0 == THIS_CONSTRUCTOR_CALL or (IDENT <= LA97_0 <= STRING_LITERAL)) :
                         alt97 = 1
                     if alt97 == 1:
-                        # JavaTreeParser.g:751:14: pe0= primaryExpression
+                        # JavaTreeParser.g:802:14: pe0= primaryExpression
                         pass 
-                        self._state.following.append(self.FOLLOW_primaryExpression_in_explicitConstructorCall6551)
+                        self._state.following.append(self.FOLLOW_primaryExpression_in_explicitConstructorCall7130)
                         pe0 = self.primaryExpression()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:752:13: ( genericTypeArgumentList )?
+                    # JavaTreeParser.g:803:13: ( genericTypeArgumentList )?
                     alt98 = 2
                     LA98_0 = self.input.LA(1)
 
@@ -7357,17 +7589,17 @@ class JavaTreeParser(LocalTreeParser):
                     if alt98 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgumentList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_explicitConstructorCall6567)
+                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_explicitConstructorCall7146)
                         self.genericTypeArgumentList()
 
                         self._state.following.pop()
 
 
 
-                    # JavaTreeParser.g:753:13: (ag0= arguments )
-                    # JavaTreeParser.g:753:14: ag0= arguments
+                    # JavaTreeParser.g:804:13: (ag0= arguments )
+                    # JavaTreeParser.g:804:14: ag0= arguments
                     pass 
-                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorCall6585)
+                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorCall7164)
                     ag0 = self.arguments()
 
                     self._state.following.pop()
@@ -7398,7 +7630,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "arrayTypeDeclarator"
-    # JavaTreeParser.g:760:1: arrayTypeDeclarator : ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) ) ;
+    # JavaTreeParser.g:811:1: arrayTypeDeclarator : ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) ) ;
     def arrayTypeDeclarator(self, ):
 
         arrayTypeDeclarator_StartIndex = self.input.index()
@@ -7410,13 +7642,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return 
 
-                # JavaTreeParser.g:761:5: ( ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) ) )
-                # JavaTreeParser.g:761:9: ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) )
+                # JavaTreeParser.g:812:5: ( ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) ) )
+                # JavaTreeParser.g:812:9: ^( ARRAY_DECLARATOR ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType ) )
                 pass 
-                self.match(self.input, ARRAY_DECLARATOR, self.FOLLOW_ARRAY_DECLARATOR_in_arrayTypeDeclarator6645)
+                self.match(self.input, ARRAY_DECLARATOR, self.FOLLOW_ARRAY_DECLARATOR_in_arrayTypeDeclarator7224)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:761:28: ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType )
+                # JavaTreeParser.g:812:28: ( arrayTypeDeclarator | qualifiedIdentifier | primitiveType )
                 alt100 = 3
                 LA100 = self.input.LA(1)
                 if LA100 == ARRAY_DECLARATOR:
@@ -7434,27 +7666,27 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt100 == 1:
-                    # JavaTreeParser.g:761:29: arrayTypeDeclarator
+                    # JavaTreeParser.g:812:29: arrayTypeDeclarator
                     pass 
-                    self._state.following.append(self.FOLLOW_arrayTypeDeclarator_in_arrayTypeDeclarator6648)
+                    self._state.following.append(self.FOLLOW_arrayTypeDeclarator_in_arrayTypeDeclarator7227)
                     self.arrayTypeDeclarator()
 
                     self._state.following.pop()
 
 
                 elif alt100 == 2:
-                    # JavaTreeParser.g:761:51: qualifiedIdentifier
+                    # JavaTreeParser.g:812:51: qualifiedIdentifier
                     pass 
-                    self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_arrayTypeDeclarator6652)
+                    self._state.following.append(self.FOLLOW_qualifiedIdentifier_in_arrayTypeDeclarator7231)
                     self.qualifiedIdentifier()
 
                     self._state.following.pop()
 
 
                 elif alt100 == 3:
-                    # JavaTreeParser.g:761:73: primitiveType
+                    # JavaTreeParser.g:812:73: primitiveType
                     pass 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_arrayTypeDeclarator6656)
+                    self._state.following.append(self.FOLLOW_primitiveType_in_arrayTypeDeclarator7235)
                     self.primitiveType()
 
                     self._state.following.pop()
@@ -7483,7 +7715,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "newExpression"
-    # JavaTreeParser.g:765:1: newExpression returns [value] : ( ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) ) | ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? ) );
+    # JavaTreeParser.g:816:1: newExpression returns [value] : ( ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) ) | ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? ) );
     def newExpression(self, ):
 
         value = None
@@ -7511,7 +7743,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:766:5: ( ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) ) | ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? ) )
+                # JavaTreeParser.g:817:5: ( ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) ) | ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? ) )
                 alt105 = 2
                 LA105_0 = self.input.LA(1)
 
@@ -7528,12 +7760,12 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt105 == 1:
-                    # JavaTreeParser.g:766:9: ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) )
+                    # JavaTreeParser.g:817:9: ^( STATIC_ARRAY_CREATOR (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction ) )
                     pass 
-                    self.match(self.input, STATIC_ARRAY_CREATOR, self.FOLLOW_STATIC_ARRAY_CREATOR_in_newExpression6683)
+                    self.match(self.input, STATIC_ARRAY_CREATOR, self.FOLLOW_STATIC_ARRAY_CREATOR_in_newExpression7262)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:767:11: (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction )
+                    # JavaTreeParser.g:818:11: (tp0= primitiveType ac0= newArrayConstruction | (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction )
                     alt102 = 2
                     LA102_0 = self.input.LA(1)
 
@@ -7550,13 +7782,13 @@ class JavaTreeParser(LocalTreeParser):
                         raise nvae
 
                     if alt102 == 1:
-                        # JavaTreeParser.g:767:13: tp0= primitiveType ac0= newArrayConstruction
+                        # JavaTreeParser.g:818:13: tp0= primitiveType ac0= newArrayConstruction
                         pass 
-                        self._state.following.append(self.FOLLOW_primitiveType_in_newExpression6699)
+                        self._state.following.append(self.FOLLOW_primitiveType_in_newExpression7278)
                         tp0 = self.primitiveType()
 
                         self._state.following.pop()
-                        self._state.following.append(self.FOLLOW_newArrayConstruction_in_newExpression6703)
+                        self._state.following.append(self.FOLLOW_newArrayConstruction_in_newExpression7282)
                         ac0 = self.newArrayConstruction()
 
                         self._state.following.pop()
@@ -7569,9 +7801,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                     elif alt102 == 2:
-                        # JavaTreeParser.g:769:13: (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction
+                        # JavaTreeParser.g:820:13: (gt1= genericTypeArgumentList )? tp1= qualifiedTypeIdent ac1= newArrayConstruction
                         pass 
-                        # JavaTreeParser.g:769:16: (gt1= genericTypeArgumentList )?
+                        # JavaTreeParser.g:820:16: (gt1= genericTypeArgumentList )?
                         alt101 = 2
                         LA101_0 = self.input.LA(1)
 
@@ -7580,18 +7812,18 @@ class JavaTreeParser(LocalTreeParser):
                         if alt101 == 1:
                             # JavaTreeParser.g:0:0: gt1= genericTypeArgumentList
                             pass 
-                            self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_newExpression6733)
+                            self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_newExpression7312)
                             gt1 = self.genericTypeArgumentList()
 
                             self._state.following.pop()
 
 
 
-                        self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_newExpression6738)
+                        self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_newExpression7317)
                         tp1 = self.qualifiedTypeIdent()
 
                         self._state.following.pop()
-                        self._state.following.append(self.FOLLOW_newArrayConstruction_in_newExpression6742)
+                        self._state.following.append(self.FOLLOW_newArrayConstruction_in_newExpression7321)
                         ac1 = self.newArrayConstruction()
 
                         self._state.following.pop()
@@ -7606,12 +7838,12 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt105 == 2:
-                    # JavaTreeParser.g:774:9: ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? )
+                    # JavaTreeParser.g:825:9: ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? q1= qualifiedTypeIdent a1= arguments ( classTopLevelScope )? )
                     pass 
-                    self.match(self.input, CLASS_CONSTRUCTOR_CALL, self.FOLLOW_CLASS_CONSTRUCTOR_CALL_in_newExpression6790)
+                    self.match(self.input, CLASS_CONSTRUCTOR_CALL, self.FOLLOW_CLASS_CONSTRUCTOR_CALL_in_newExpression7369)
 
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:775:11: ( genericTypeArgumentList )?
+                    # JavaTreeParser.g:826:11: ( genericTypeArgumentList )?
                     alt103 = 2
                     LA103_0 = self.input.LA(1)
 
@@ -7620,22 +7852,22 @@ class JavaTreeParser(LocalTreeParser):
                     if alt103 == 1:
                         # JavaTreeParser.g:0:0: genericTypeArgumentList
                         pass 
-                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_newExpression6802)
+                        self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_newExpression7381)
                         self.genericTypeArgumentList()
 
                         self._state.following.pop()
 
 
 
-                    self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_newExpression6817)
+                    self._state.following.append(self.FOLLOW_qualifiedTypeIdent_in_newExpression7396)
                     q1 = self.qualifiedTypeIdent()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_arguments_in_newExpression6831)
+                    self._state.following.append(self.FOLLOW_arguments_in_newExpression7410)
                     a1 = self.arguments()
 
                     self._state.following.pop()
-                    # JavaTreeParser.g:778:11: ( classTopLevelScope )?
+                    # JavaTreeParser.g:829:11: ( classTopLevelScope )?
                     alt104 = 2
                     LA104_0 = self.input.LA(1)
 
@@ -7644,7 +7876,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt104 == 1:
                         # JavaTreeParser.g:0:0: classTopLevelScope
                         pass 
-                        self._state.following.append(self.FOLLOW_classTopLevelScope_in_newExpression6843)
+                        self._state.following.append(self.FOLLOW_classTopLevelScope_in_newExpression7422)
                         self.classTopLevelScope()
 
                         self._state.following.pop()
@@ -7675,7 +7907,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "innerNewExpression"
-    # JavaTreeParser.g:785:1: innerNewExpression returns [value] : ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? ) ;
+    # JavaTreeParser.g:836:1: innerNewExpression returns [value] : ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? ) ;
     def innerNewExpression(self, ):
 
         value = None
@@ -7692,13 +7924,13 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:786:5: ( ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? ) )
-                # JavaTreeParser.g:786:9: ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? )
+                # JavaTreeParser.g:837:5: ( ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? ) )
+                # JavaTreeParser.g:837:9: ^( CLASS_CONSTRUCTOR_CALL ( genericTypeArgumentList )? id0= IDENT ag0= arguments ( classTopLevelScope )? )
                 pass 
-                self.match(self.input, CLASS_CONSTRUCTOR_CALL, self.FOLLOW_CLASS_CONSTRUCTOR_CALL_in_innerNewExpression6892)
+                self.match(self.input, CLASS_CONSTRUCTOR_CALL, self.FOLLOW_CLASS_CONSTRUCTOR_CALL_in_innerNewExpression7471)
 
                 self.match(self.input, DOWN, None)
-                # JavaTreeParser.g:787:11: ( genericTypeArgumentList )?
+                # JavaTreeParser.g:838:11: ( genericTypeArgumentList )?
                 alt106 = 2
                 LA106_0 = self.input.LA(1)
 
@@ -7707,19 +7939,19 @@ class JavaTreeParser(LocalTreeParser):
                 if alt106 == 1:
                     # JavaTreeParser.g:0:0: genericTypeArgumentList
                     pass 
-                    self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_innerNewExpression6904)
+                    self._state.following.append(self.FOLLOW_genericTypeArgumentList_in_innerNewExpression7483)
                     self.genericTypeArgumentList()
 
                     self._state.following.pop()
 
 
 
-                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_innerNewExpression6919)
-                self._state.following.append(self.FOLLOW_arguments_in_innerNewExpression6933)
+                id0=self.match(self.input, IDENT, self.FOLLOW_IDENT_in_innerNewExpression7498)
+                self._state.following.append(self.FOLLOW_arguments_in_innerNewExpression7512)
                 ag0 = self.arguments()
 
                 self._state.following.pop()
-                # JavaTreeParser.g:790:11: ( classTopLevelScope )?
+                # JavaTreeParser.g:841:11: ( classTopLevelScope )?
                 alt107 = 2
                 LA107_0 = self.input.LA(1)
 
@@ -7728,7 +7960,7 @@ class JavaTreeParser(LocalTreeParser):
                 if alt107 == 1:
                     # JavaTreeParser.g:0:0: classTopLevelScope
                     pass 
-                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_innerNewExpression6945)
+                    self._state.following.append(self.FOLLOW_classTopLevelScope_in_innerNewExpression7524)
                     self.classTopLevelScope()
 
                     self._state.following.pop()
@@ -7760,7 +7992,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "newArrayConstruction"
-    # JavaTreeParser.g:796:1: newArrayConstruction returns [value] : (ad0= arrayDeclaratorList ai0= arrayInitializer | (ex0= expression )+ ( arrayDeclaratorList )? );
+    # JavaTreeParser.g:847:1: newArrayConstruction returns [value] : (ad0= arrayDeclaratorList ai0= arrayInitializer | (ex0= expression )+ ( arrayDeclaratorList )? );
     def newArrayConstruction(self, ):
 
         value = None
@@ -7781,7 +8013,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return value
 
-                # JavaTreeParser.g:798:5: (ad0= arrayDeclaratorList ai0= arrayInitializer | (ex0= expression )+ ( arrayDeclaratorList )? )
+                # JavaTreeParser.g:849:5: (ad0= arrayDeclaratorList ai0= arrayInitializer | (ex0= expression )+ ( arrayDeclaratorList )? )
                 alt110 = 2
                 LA110_0 = self.input.LA(1)
 
@@ -7798,13 +8030,13 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt110 == 1:
-                    # JavaTreeParser.g:798:9: ad0= arrayDeclaratorList ai0= arrayInitializer
+                    # JavaTreeParser.g:849:9: ad0= arrayDeclaratorList ai0= arrayInitializer
                     pass 
-                    self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_newArrayConstruction7003)
+                    self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_newArrayConstruction7582)
                     ad0 = self.arrayDeclaratorList()
 
                     self._state.following.pop()
-                    self._state.following.append(self.FOLLOW_arrayInitializer_in_newArrayConstruction7007)
+                    self._state.following.append(self.FOLLOW_arrayInitializer_in_newArrayConstruction7586)
                     ai0 = self.arrayInitializer()
 
                     self._state.following.pop()
@@ -7814,9 +8046,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                 elif alt110 == 2:
-                    # JavaTreeParser.g:800:9: (ex0= expression )+ ( arrayDeclaratorList )?
+                    # JavaTreeParser.g:851:9: (ex0= expression )+ ( arrayDeclaratorList )?
                     pass 
-                    # JavaTreeParser.g:800:9: (ex0= expression )+
+                    # JavaTreeParser.g:851:9: (ex0= expression )+
                     cnt108 = 0
                     while True: #loop108
                         alt108 = 2
@@ -7827,9 +8059,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt108 == 1:
-                            # JavaTreeParser.g:800:10: ex0= expression
+                            # JavaTreeParser.g:851:10: ex0= expression
                             pass 
-                            self._state.following.append(self.FOLLOW_expression_in_newArrayConstruction7030)
+                            self._state.following.append(self.FOLLOW_expression_in_newArrayConstruction7609)
                             ex0 = self.expression()
 
                             self._state.following.pop()
@@ -7853,7 +8085,7 @@ class JavaTreeParser(LocalTreeParser):
                         cnt108 += 1
 
 
-                    # JavaTreeParser.g:804:9: ( arrayDeclaratorList )?
+                    # JavaTreeParser.g:855:9: ( arrayDeclaratorList )?
                     alt109 = 2
                     LA109_0 = self.input.LA(1)
 
@@ -7862,7 +8094,7 @@ class JavaTreeParser(LocalTreeParser):
                     if alt109 == 1:
                         # JavaTreeParser.g:0:0: arrayDeclaratorList
                         pass 
-                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_newArrayConstruction7052)
+                        self._state.following.append(self.FOLLOW_arrayDeclaratorList_in_newArrayConstruction7631)
                         self.arrayDeclaratorList()
 
                         self._state.following.pop()
@@ -7888,7 +8120,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "arguments"
-    # JavaTreeParser.g:808:1: arguments returns [values] : ^( ARGUMENT_LIST (ex0= expression )* ) ;
+    # JavaTreeParser.g:859:1: arguments returns [values] : ^( ARGUMENT_LIST (ex0= expression )* ) ;
     def arguments(self, ):
 
         values = None
@@ -7905,14 +8137,14 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return values
 
-                # JavaTreeParser.g:810:5: ( ^( ARGUMENT_LIST (ex0= expression )* ) )
-                # JavaTreeParser.g:810:9: ^( ARGUMENT_LIST (ex0= expression )* )
+                # JavaTreeParser.g:861:5: ( ^( ARGUMENT_LIST (ex0= expression )* ) )
+                # JavaTreeParser.g:861:9: ^( ARGUMENT_LIST (ex0= expression )* )
                 pass 
-                self.match(self.input, ARGUMENT_LIST, self.FOLLOW_ARGUMENT_LIST_in_arguments7087)
+                self.match(self.input, ARGUMENT_LIST, self.FOLLOW_ARGUMENT_LIST_in_arguments7666)
 
                 if self.input.LA(1) == DOWN:
                     self.match(self.input, DOWN, None)
-                    # JavaTreeParser.g:810:25: (ex0= expression )*
+                    # JavaTreeParser.g:861:25: (ex0= expression )*
                     while True: #loop111
                         alt111 = 2
                         LA111_0 = self.input.LA(1)
@@ -7922,9 +8154,9 @@ class JavaTreeParser(LocalTreeParser):
 
 
                         if alt111 == 1:
-                            # JavaTreeParser.g:810:26: ex0= expression
+                            # JavaTreeParser.g:861:26: ex0= expression
                             pass 
-                            self._state.following.append(self.FOLLOW_expression_in_arguments7092)
+                            self._state.following.append(self.FOLLOW_expression_in_arguments7671)
                             ex0 = self.expression()
 
                             self._state.following.pop()
@@ -7968,7 +8200,7 @@ class JavaTreeParser(LocalTreeParser):
 
 
     # $ANTLR start "literal"
-    # JavaTreeParser.g:816:1: literal returns [value] : ( HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL | FLOATING_POINT_LITERAL | CHARACTER_LITERAL | STRING_LITERAL | TRUE | FALSE | NULL );
+    # JavaTreeParser.g:867:1: literal returns [value] : ( HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL | FLOATING_POINT_LITERAL | CHARACTER_LITERAL | STRING_LITERAL | TRUE | FALSE | NULL );
     def literal(self, ):
 
         retval = self.literal_return()
@@ -7982,7 +8214,7 @@ class JavaTreeParser(LocalTreeParser):
                     success = True
                     return retval
 
-                # JavaTreeParser.g:817:5: ( HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL | FLOATING_POINT_LITERAL | CHARACTER_LITERAL | STRING_LITERAL | TRUE | FALSE | NULL )
+                # JavaTreeParser.g:868:5: ( HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL | FLOATING_POINT_LITERAL | CHARACTER_LITERAL | STRING_LITERAL | TRUE | FALSE | NULL )
                 alt112 = 9
                 LA112 = self.input.LA(1)
                 if LA112 == HEX_LITERAL:
@@ -8012,81 +8244,81 @@ class JavaTreeParser(LocalTreeParser):
                     raise nvae
 
                 if alt112 == 1:
-                    # JavaTreeParser.g:817:9: HEX_LITERAL
+                    # JavaTreeParser.g:868:9: HEX_LITERAL
                     pass 
-                    self.match(self.input, HEX_LITERAL, self.FOLLOW_HEX_LITERAL_in_literal7140)
+                    self.match(self.input, HEX_LITERAL, self.FOLLOW_HEX_LITERAL_in_literal7719)
                     if self._state.backtracking == 0:
                         retval.value = self.input.toString(retval.start, self.input.LT(-1)) 
 
 
 
                 elif alt112 == 2:
-                    # JavaTreeParser.g:818:9: OCTAL_LITERAL
+                    # JavaTreeParser.g:869:9: OCTAL_LITERAL
                     pass 
-                    self.match(self.input, OCTAL_LITERAL, self.FOLLOW_OCTAL_LITERAL_in_literal7152)
+                    self.match(self.input, OCTAL_LITERAL, self.FOLLOW_OCTAL_LITERAL_in_literal7742)
                     if self._state.backtracking == 0:
                         retval.value = self.input.toString(retval.start, self.input.LT(-1)) 
 
 
 
                 elif alt112 == 3:
-                    # JavaTreeParser.g:819:9: DECIMAL_LITERAL
+                    # JavaTreeParser.g:870:9: DECIMAL_LITERAL
                     pass 
-                    self.match(self.input, DECIMAL_LITERAL, self.FOLLOW_DECIMAL_LITERAL_in_literal7164)
+                    self.match(self.input, DECIMAL_LITERAL, self.FOLLOW_DECIMAL_LITERAL_in_literal7763)
                     if self._state.backtracking == 0:
                         retval.value = formatFloatLiteral(self.input.toString(retval.start, self.input.LT(-1))) 
 
 
 
                 elif alt112 == 4:
-                    # JavaTreeParser.g:820:9: FLOATING_POINT_LITERAL
+                    # JavaTreeParser.g:871:9: FLOATING_POINT_LITERAL
                     pass 
-                    self.match(self.input, FLOATING_POINT_LITERAL, self.FOLLOW_FLOATING_POINT_LITERAL_in_literal7176)
+                    self.match(self.input, FLOATING_POINT_LITERAL, self.FOLLOW_FLOATING_POINT_LITERAL_in_literal7782)
                     if self._state.backtracking == 0:
                         retval.value = formatFloatLiteral(self.input.toString(retval.start, self.input.LT(-1))) 
 
 
 
                 elif alt112 == 5:
-                    # JavaTreeParser.g:821:9: CHARACTER_LITERAL
+                    # JavaTreeParser.g:872:9: CHARACTER_LITERAL
                     pass 
-                    self.match(self.input, CHARACTER_LITERAL, self.FOLLOW_CHARACTER_LITERAL_in_literal7188)
+                    self.match(self.input, CHARACTER_LITERAL, self.FOLLOW_CHARACTER_LITERAL_in_literal7794)
                     if self._state.backtracking == 0:
                         retval.value = self.input.toString(retval.start, self.input.LT(-1)) 
 
 
 
                 elif alt112 == 6:
-                    # JavaTreeParser.g:822:9: STRING_LITERAL
+                    # JavaTreeParser.g:873:9: STRING_LITERAL
                     pass 
-                    self.match(self.input, STRING_LITERAL, self.FOLLOW_STRING_LITERAL_in_literal7200)
+                    self.match(self.input, STRING_LITERAL, self.FOLLOW_STRING_LITERAL_in_literal7811)
                     if self._state.backtracking == 0:
                         retval.value = self.input.toString(retval.start, self.input.LT(-1)) 
 
 
 
                 elif alt112 == 7:
-                    # JavaTreeParser.g:823:9: TRUE
+                    # JavaTreeParser.g:874:9: TRUE
                     pass 
-                    self.match(self.input, TRUE, self.FOLLOW_TRUE_in_literal7212)
+                    self.match(self.input, TRUE, self.FOLLOW_TRUE_in_literal7831)
                     if self._state.backtracking == 0:
                         retval.value = "True" 
 
 
 
                 elif alt112 == 8:
-                    # JavaTreeParser.g:824:9: FALSE
+                    # JavaTreeParser.g:875:9: FALSE
                     pass 
-                    self.match(self.input, FALSE, self.FOLLOW_FALSE_in_literal7224)
+                    self.match(self.input, FALSE, self.FOLLOW_FALSE_in_literal7861)
                     if self._state.backtracking == 0:
                         retval.value = "False" 
 
 
 
                 elif alt112 == 9:
-                    # JavaTreeParser.g:825:9: NULL
+                    # JavaTreeParser.g:876:9: NULL
                     pass 
-                    self.match(self.input, NULL, self.FOLLOW_NULL_in_literal7236)
+                    self.match(self.input, NULL, self.FOLLOW_NULL_in_literal7890)
                     if self._state.backtracking == 0:
                         retval.value = "None" 
 
@@ -8109,10 +8341,10 @@ class JavaTreeParser(LocalTreeParser):
 
     # $ANTLR start "synpred125_JavaTreeParser"
     def synpred125_JavaTreeParser_fragment(self, ):
-        # JavaTreeParser.g:604:35: ( switchCaseLabel )
-        # JavaTreeParser.g:604:35: switchCaseLabel
+        # JavaTreeParser.g:644:35: ( switchCaseLabel )
+        # JavaTreeParser.g:644:35: switchCaseLabel
         pass 
-        self._state.following.append(self.FOLLOW_switchCaseLabel_in_synpred125_JavaTreeParser4559)
+        self._state.following.append(self.FOLLOW_switchCaseLabel_in_synpred125_JavaTreeParser5051)
         self.switchCaseLabel()
 
         self._state.following.pop()
@@ -8124,10 +8356,10 @@ class JavaTreeParser(LocalTreeParser):
 
     # $ANTLR start "synpred132_JavaTreeParser"
     def synpred132_JavaTreeParser_fragment(self, ):
-        # JavaTreeParser.g:616:48: ( ( expression )* )
-        # JavaTreeParser.g:616:48: ( expression )*
+        # JavaTreeParser.g:667:48: ( ( expression )* )
+        # JavaTreeParser.g:667:48: ( expression )*
         pass 
-        # JavaTreeParser.g:616:48: ( expression )*
+        # JavaTreeParser.g:667:48: ( expression )*
         while True: #loop143
             alt143 = 2
             LA143_0 = self.input.LA(1)
@@ -8139,7 +8371,7 @@ class JavaTreeParser(LocalTreeParser):
             if alt143 == 1:
                 # JavaTreeParser.g:0:0: expression
                 pass 
-                self._state.following.append(self.FOLLOW_expression_in_synpred132_JavaTreeParser4644)
+                self._state.following.append(self.FOLLOW_expression_in_synpred132_JavaTreeParser5223)
                 self.expression()
 
                 self._state.following.pop()
@@ -8213,455 +8445,455 @@ class JavaTreeParser(LocalTreeParser):
     FOLLOW_extendsClause_in_typeDeclaration460 = frozenset([128, 138, 139])
     FOLLOW_interfaceTopLevelScope_in_typeDeclaration476 = frozenset([3])
     FOLLOW_ENUM_in_typeDeclaration510 = frozenset([2])
-    FOLLOW_modifierList_in_typeDeclaration522 = frozenset([164])
-    FOLLOW_IDENT_in_typeDeclaration534 = frozenset([125, 140])
-    FOLLOW_implementsClause_in_typeDeclaration546 = frozenset([125, 140])
-    FOLLOW_enumTopLevelScope_in_typeDeclaration559 = frozenset([3])
-    FOLLOW_AT_in_typeDeclaration581 = frozenset([2])
-    FOLLOW_modifierList_in_typeDeclaration593 = frozenset([164])
-    FOLLOW_IDENT_in_typeDeclaration605 = frozenset([111])
-    FOLLOW_annotationTopLevelScope_in_typeDeclaration617 = frozenset([3])
-    FOLLOW_EXTENDS_CLAUSE_in_extendsClause661 = frozenset([2])
-    FOLLOW_type_in_extendsClause666 = frozenset([3, 157])
-    FOLLOW_IMPLEMENTS_CLAUSE_in_implementsClause705 = frozenset([2])
-    FOLLOW_type_in_implementsClause710 = frozenset([3, 157])
-    FOLLOW_GENERIC_TYPE_PARAM_LIST_in_genericTypeParameterList735 = frozenset([2])
-    FOLLOW_genericTypeParameter_in_genericTypeParameterList737 = frozenset([3, 164])
-    FOLLOW_IDENT_in_genericTypeParameter759 = frozenset([2])
-    FOLLOW_bound_in_genericTypeParameter761 = frozenset([3])
-    FOLLOW_EXTENDS_BOUND_LIST_in_bound783 = frozenset([2])
-    FOLLOW_type_in_bound785 = frozenset([3, 157])
-    FOLLOW_ENUM_TOP_LEVEL_SCOPE_in_enumTopLevelScope807 = frozenset([2])
-    FOLLOW_enumConstant_in_enumTopLevelScope809 = frozenset([3, 123, 128, 138, 140, 164])
-    FOLLOW_classTopLevelScope_in_enumTopLevelScope812 = frozenset([3])
-    FOLLOW_IDENT_in_enumConstant834 = frozenset([2])
-    FOLLOW_annotationList_in_enumConstant836 = frozenset([3, 112, 123, 128, 138, 140])
-    FOLLOW_arguments_in_enumConstant838 = frozenset([3, 123, 128, 138, 140])
-    FOLLOW_classTopLevelScope_in_enumConstant841 = frozenset([3])
-    FOLLOW_CLASS_TOP_LEVEL_SCOPE_in_classTopLevelScope864 = frozenset([2])
-    FOLLOW_classScopeDeclarations_in_classTopLevelScope866 = frozenset([3, 7, 61, 67, 77, 121, 122, 124, 136, 160, 163])
-    FOLLOW_CLASS_INSTANCE_INITIALIZER_in_classScopeDeclarations909 = frozenset([2])
-    FOLLOW_block_in_classScopeDeclarations911 = frozenset([3])
-    FOLLOW_CLASS_STATIC_INITIALIZER_in_classScopeDeclarations924 = frozenset([2])
-    FOLLOW_block_in_classScopeDeclarations926 = frozenset([3])
-    FOLLOW_FUNCTION_METHOD_DECL_in_classScopeDeclarations939 = frozenset([2])
-    FOLLOW_modifierList_in_classScopeDeclarations965 = frozenset([3, 138, 157])
-    FOLLOW_genericTypeParameterList_in_classScopeDeclarations979 = frozenset([3, 157])
-    FOLLOW_type_in_classScopeDeclarations994 = frozenset([164])
-    FOLLOW_IDENT_in_classScopeDeclarations1010 = frozenset([133])
-    FOLLOW_formalParameterList_in_classScopeDeclarations1026 = frozenset([3, 114, 117, 156])
-    FOLLOW_arrayDeclaratorList_in_classScopeDeclarations1040 = frozenset([3, 117, 156])
-    FOLLOW_throwsClause_in_classScopeDeclarations1053 = frozenset([3, 117])
-    FOLLOW_block_in_classScopeDeclarations1066 = frozenset([3])
-    FOLLOW_VOID_METHOD_DECL_in_classScopeDeclarations1101 = frozenset([2])
-    FOLLOW_modifierList_in_classScopeDeclarations1127 = frozenset([138, 164])
-    FOLLOW_genericTypeParameterList_in_classScopeDeclarations1141 = frozenset([164])
-    FOLLOW_IDENT_in_classScopeDeclarations1156 = frozenset([133])
-    FOLLOW_formalParameterList_in_classScopeDeclarations1172 = frozenset([3, 117, 156])
-    FOLLOW_throwsClause_in_classScopeDeclarations1186 = frozenset([3, 117])
-    FOLLOW_block_in_classScopeDeclarations1199 = frozenset([3])
-    FOLLOW_VAR_DECLARATION_in_classScopeDeclarations1235 = frozenset([2])
-    FOLLOW_modifierList_in_classScopeDeclarations1249 = frozenset([3, 157])
-    FOLLOW_type_in_classScopeDeclarations1263 = frozenset([162])
-    FOLLOW_variableDeclaratorList_in_classScopeDeclarations1277 = frozenset([3])
-    FOLLOW_CONSTRUCTOR_DECL_in_classScopeDeclarations1311 = frozenset([2])
-    FOLLOW_modifierList_in_classScopeDeclarations1337 = frozenset([133, 138])
-    FOLLOW_genericTypeParameterList_in_classScopeDeclarations1351 = frozenset([133])
-    FOLLOW_formalParameterList_in_classScopeDeclarations1366 = frozenset([117, 156])
-    FOLLOW_throwsClause_in_classScopeDeclarations1380 = frozenset([117])
-    FOLLOW_block_in_classScopeDeclarations1393 = frozenset([3])
-    FOLLOW_typeDeclaration_in_classScopeDeclarations1426 = frozenset([1])
-    FOLLOW_INTERFACE_TOP_LEVEL_SCOPE_in_interfaceTopLevelScope1447 = frozenset([2])
-    FOLLOW_interfaceScopeDeclarations_in_interfaceTopLevelScope1449 = frozenset([3, 7, 61, 67, 77, 136, 160, 163])
-    FOLLOW_FUNCTION_METHOD_DECL_in_interfaceScopeDeclarations1481 = frozenset([2])
-    FOLLOW_modifierList_in_interfaceScopeDeclarations1507 = frozenset([3, 138, 157])
-    FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1521 = frozenset([3, 157])
-    FOLLOW_type_in_interfaceScopeDeclarations1536 = frozenset([164])
-    FOLLOW_IDENT_in_interfaceScopeDeclarations1552 = frozenset([133])
-    FOLLOW_formalParameterList_in_interfaceScopeDeclarations1568 = frozenset([3, 114, 156])
-    FOLLOW_arrayDeclaratorList_in_interfaceScopeDeclarations1582 = frozenset([3, 156])
-    FOLLOW_throwsClause_in_interfaceScopeDeclarations1595 = frozenset([3])
-    FOLLOW_VOID_METHOD_DECL_in_interfaceScopeDeclarations1630 = frozenset([2])
-    FOLLOW_modifierList_in_interfaceScopeDeclarations1656 = frozenset([138, 164])
-    FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1670 = frozenset([164])
-    FOLLOW_IDENT_in_interfaceScopeDeclarations1685 = frozenset([133])
-    FOLLOW_formalParameterList_in_interfaceScopeDeclarations1701 = frozenset([3, 156])
-    FOLLOW_throwsClause_in_interfaceScopeDeclarations1715 = frozenset([3])
-    FOLLOW_VAR_DECLARATION_in_interfaceScopeDeclarations1750 = frozenset([2])
-    FOLLOW_modifierList_in_interfaceScopeDeclarations1764 = frozenset([3, 157])
-    FOLLOW_type_in_interfaceScopeDeclarations1778 = frozenset([162])
-    FOLLOW_variableDeclaratorList_in_interfaceScopeDeclarations1792 = frozenset([3])
-    FOLLOW_typeDeclaration_in_interfaceScopeDeclarations1825 = frozenset([1])
-    FOLLOW_VAR_DECLARATOR_LIST_in_variableDeclaratorList1859 = frozenset([2])
-    FOLLOW_variableDeclarator_in_variableDeclaratorList1864 = frozenset([3, 161])
-    FOLLOW_VAR_DECLARATOR_in_variableDeclarator1895 = frozenset([2])
-    FOLLOW_variableDeclaratorId_in_variableDeclarator1910 = frozenset([3, 116, 126])
-    FOLLOW_variableInitializer_in_variableDeclarator1939 = frozenset([3])
-    FOLLOW_IDENT_in_variableDeclaratorId1998 = frozenset([2])
-    FOLLOW_arrayDeclaratorList_in_variableDeclaratorId2024 = frozenset([3])
-    FOLLOW_arrayInitializer_in_variableInitializer2064 = frozenset([1])
-    FOLLOW_expression_in_variableInitializer2078 = frozenset([1])
-    FOLLOW_LBRACK_in_arrayDeclarator2106 = frozenset([41])
-    FOLLOW_RBRACK_in_arrayDeclarator2108 = frozenset([1])
-    FOLLOW_ARRAY_DECLARATOR_LIST_in_arrayDeclaratorList2138 = frozenset([2])
-    FOLLOW_ARRAY_DECLARATOR_in_arrayDeclaratorList2141 = frozenset([3, 113])
-    FOLLOW_ARRAY_INITIALIZER_in_arrayInitializer2176 = frozenset([2])
-    FOLLOW_variableInitializer_in_arrayInitializer2193 = frozenset([3, 116, 126])
-    FOLLOW_THROWS_CLAUSE_in_throwsClause2253 = frozenset([2])
-    FOLLOW_qualifiedIdentifier_in_throwsClause2255 = frozenset([3, 15, 164])
-    FOLLOW_MODIFIER_LIST_in_modifierList2291 = frozenset([2])
-    FOLLOW_modifier_in_modifierList2296 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
-    FOLLOW_PUBLIC_in_modifier2321 = frozenset([1])
-    FOLLOW_PROTECTED_in_modifier2331 = frozenset([1])
-    FOLLOW_PRIVATE_in_modifier2341 = frozenset([1])
-    FOLLOW_STATIC_in_modifier2351 = frozenset([1])
-    FOLLOW_ABSTRACT_in_modifier2361 = frozenset([1])
-    FOLLOW_NATIVE_in_modifier2371 = frozenset([1])
-    FOLLOW_SYNCHRONIZED_in_modifier2381 = frozenset([1])
-    FOLLOW_TRANSIENT_in_modifier2391 = frozenset([1])
-    FOLLOW_VOLATILE_in_modifier2401 = frozenset([1])
-    FOLLOW_STRICTFP_in_modifier2411 = frozenset([1])
-    FOLLOW_localModifier_in_modifier2421 = frozenset([1])
-    FOLLOW_LOCAL_MODIFIER_LIST_in_localModifierList2455 = frozenset([2])
-    FOLLOW_localModifier_in_localModifierList2460 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
-    FOLLOW_FINAL_in_localModifier2489 = frozenset([1])
-    FOLLOW_annotation_in_localModifier2503 = frozenset([1])
-    FOLLOW_TYPE_in_type2539 = frozenset([2])
-    FOLLOW_primitiveType_in_type2554 = frozenset([3, 114])
-    FOLLOW_qualifiedTypeIdent_in_type2573 = frozenset([3, 114])
-    FOLLOW_arrayDeclaratorList_in_type2589 = frozenset([3])
-    FOLLOW_QUALIFIED_TYPE_IDENT_in_qualifiedTypeIdent2650 = frozenset([2])
-    FOLLOW_typeIdent_in_qualifiedTypeIdent2655 = frozenset([3, 164])
-    FOLLOW_IDENT_in_typeIdent2687 = frozenset([2])
-    FOLLOW_genericTypeArgumentList_in_typeIdent2689 = frozenset([3])
+    FOLLOW_modifierList_in_typeDeclaration536 = frozenset([164])
+    FOLLOW_IDENT_in_typeDeclaration552 = frozenset([125, 140])
+    FOLLOW_implementsClause_in_typeDeclaration569 = frozenset([125, 140])
+    FOLLOW_enumTopLevelScope_in_typeDeclaration585 = frozenset([3])
+    FOLLOW_AT_in_typeDeclaration619 = frozenset([2])
+    FOLLOW_modifierList_in_typeDeclaration645 = frozenset([164])
+    FOLLOW_IDENT_in_typeDeclaration661 = frozenset([111])
+    FOLLOW_annotationTopLevelScope_in_typeDeclaration675 = frozenset([3])
+    FOLLOW_EXTENDS_CLAUSE_in_extendsClause731 = frozenset([2])
+    FOLLOW_type_in_extendsClause736 = frozenset([3, 157])
+    FOLLOW_IMPLEMENTS_CLAUSE_in_implementsClause775 = frozenset([2])
+    FOLLOW_type_in_implementsClause780 = frozenset([3, 157])
+    FOLLOW_GENERIC_TYPE_PARAM_LIST_in_genericTypeParameterList805 = frozenset([2])
+    FOLLOW_genericTypeParameter_in_genericTypeParameterList807 = frozenset([3, 164])
+    FOLLOW_IDENT_in_genericTypeParameter829 = frozenset([2])
+    FOLLOW_bound_in_genericTypeParameter831 = frozenset([3])
+    FOLLOW_EXTENDS_BOUND_LIST_in_bound853 = frozenset([2])
+    FOLLOW_type_in_bound855 = frozenset([3, 157])
+    FOLLOW_ENUM_TOP_LEVEL_SCOPE_in_enumTopLevelScope877 = frozenset([2])
+    FOLLOW_enumConstant_in_enumTopLevelScope879 = frozenset([3, 123, 128, 138, 140, 164])
+    FOLLOW_classTopLevelScope_in_enumTopLevelScope882 = frozenset([3])
+    FOLLOW_IDENT_in_enumConstant915 = frozenset([2])
+    FOLLOW_annotationList_in_enumConstant927 = frozenset([3, 112, 123, 128, 138, 140])
+    FOLLOW_arguments_in_enumConstant942 = frozenset([3, 123, 128, 138, 140])
+    FOLLOW_classTopLevelScope_in_enumConstant958 = frozenset([3])
+    FOLLOW_CLASS_TOP_LEVEL_SCOPE_in_classTopLevelScope1000 = frozenset([2])
+    FOLLOW_classScopeDeclarations_in_classTopLevelScope1002 = frozenset([3, 7, 61, 67, 77, 121, 122, 124, 136, 160, 163])
+    FOLLOW_CLASS_INSTANCE_INITIALIZER_in_classScopeDeclarations1045 = frozenset([2])
+    FOLLOW_block_in_classScopeDeclarations1047 = frozenset([3])
+    FOLLOW_CLASS_STATIC_INITIALIZER_in_classScopeDeclarations1060 = frozenset([2])
+    FOLLOW_block_in_classScopeDeclarations1062 = frozenset([3])
+    FOLLOW_FUNCTION_METHOD_DECL_in_classScopeDeclarations1075 = frozenset([2])
+    FOLLOW_modifierList_in_classScopeDeclarations1102 = frozenset([3, 138, 157])
+    FOLLOW_genericTypeParameterList_in_classScopeDeclarations1116 = frozenset([3, 157])
+    FOLLOW_type_in_classScopeDeclarations1131 = frozenset([164])
+    FOLLOW_IDENT_in_classScopeDeclarations1147 = frozenset([133])
+    FOLLOW_formalParameterList_in_classScopeDeclarations1163 = frozenset([3, 114, 117, 156])
+    FOLLOW_arrayDeclaratorList_in_classScopeDeclarations1177 = frozenset([3, 117, 156])
+    FOLLOW_throwsClause_in_classScopeDeclarations1190 = frozenset([3, 117])
+    FOLLOW_block_in_classScopeDeclarations1203 = frozenset([3])
+    FOLLOW_VOID_METHOD_DECL_in_classScopeDeclarations1238 = frozenset([2])
+    FOLLOW_modifierList_in_classScopeDeclarations1264 = frozenset([138, 164])
+    FOLLOW_genericTypeParameterList_in_classScopeDeclarations1278 = frozenset([164])
+    FOLLOW_IDENT_in_classScopeDeclarations1293 = frozenset([133])
+    FOLLOW_formalParameterList_in_classScopeDeclarations1309 = frozenset([3, 117, 156])
+    FOLLOW_throwsClause_in_classScopeDeclarations1323 = frozenset([3, 117])
+    FOLLOW_block_in_classScopeDeclarations1336 = frozenset([3])
+    FOLLOW_VAR_DECLARATION_in_classScopeDeclarations1372 = frozenset([2])
+    FOLLOW_modifierList_in_classScopeDeclarations1386 = frozenset([3, 157])
+    FOLLOW_type_in_classScopeDeclarations1400 = frozenset([162])
+    FOLLOW_variableDeclaratorList_in_classScopeDeclarations1414 = frozenset([3])
+    FOLLOW_CONSTRUCTOR_DECL_in_classScopeDeclarations1448 = frozenset([2])
+    FOLLOW_modifierList_in_classScopeDeclarations1474 = frozenset([133, 138])
+    FOLLOW_genericTypeParameterList_in_classScopeDeclarations1488 = frozenset([133])
+    FOLLOW_formalParameterList_in_classScopeDeclarations1503 = frozenset([117, 156])
+    FOLLOW_throwsClause_in_classScopeDeclarations1517 = frozenset([117])
+    FOLLOW_block_in_classScopeDeclarations1530 = frozenset([3])
+    FOLLOW_typeDeclaration_in_classScopeDeclarations1563 = frozenset([1])
+    FOLLOW_INTERFACE_TOP_LEVEL_SCOPE_in_interfaceTopLevelScope1584 = frozenset([2])
+    FOLLOW_interfaceScopeDeclarations_in_interfaceTopLevelScope1586 = frozenset([3, 7, 61, 67, 77, 136, 160, 163])
+    FOLLOW_FUNCTION_METHOD_DECL_in_interfaceScopeDeclarations1618 = frozenset([2])
+    FOLLOW_modifierList_in_interfaceScopeDeclarations1644 = frozenset([3, 138, 157])
+    FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1658 = frozenset([3, 157])
+    FOLLOW_type_in_interfaceScopeDeclarations1673 = frozenset([164])
+    FOLLOW_IDENT_in_interfaceScopeDeclarations1689 = frozenset([133])
+    FOLLOW_formalParameterList_in_interfaceScopeDeclarations1705 = frozenset([3, 114, 156])
+    FOLLOW_arrayDeclaratorList_in_interfaceScopeDeclarations1719 = frozenset([3, 156])
+    FOLLOW_throwsClause_in_interfaceScopeDeclarations1732 = frozenset([3])
+    FOLLOW_VOID_METHOD_DECL_in_interfaceScopeDeclarations1767 = frozenset([2])
+    FOLLOW_modifierList_in_interfaceScopeDeclarations1793 = frozenset([138, 164])
+    FOLLOW_genericTypeParameterList_in_interfaceScopeDeclarations1807 = frozenset([164])
+    FOLLOW_IDENT_in_interfaceScopeDeclarations1822 = frozenset([133])
+    FOLLOW_formalParameterList_in_interfaceScopeDeclarations1838 = frozenset([3, 156])
+    FOLLOW_throwsClause_in_interfaceScopeDeclarations1852 = frozenset([3])
+    FOLLOW_VAR_DECLARATION_in_interfaceScopeDeclarations1887 = frozenset([2])
+    FOLLOW_modifierList_in_interfaceScopeDeclarations1901 = frozenset([3, 157])
+    FOLLOW_type_in_interfaceScopeDeclarations1915 = frozenset([162])
+    FOLLOW_variableDeclaratorList_in_interfaceScopeDeclarations1929 = frozenset([3])
+    FOLLOW_typeDeclaration_in_interfaceScopeDeclarations1962 = frozenset([1])
+    FOLLOW_VAR_DECLARATOR_LIST_in_variableDeclaratorList1996 = frozenset([2])
+    FOLLOW_variableDeclarator_in_variableDeclaratorList2001 = frozenset([3, 161])
+    FOLLOW_VAR_DECLARATOR_in_variableDeclarator2032 = frozenset([2])
+    FOLLOW_variableDeclaratorId_in_variableDeclarator2047 = frozenset([3, 116, 126])
+    FOLLOW_variableInitializer_in_variableDeclarator2076 = frozenset([3])
+    FOLLOW_IDENT_in_variableDeclaratorId2135 = frozenset([2])
+    FOLLOW_arrayDeclaratorList_in_variableDeclaratorId2161 = frozenset([3])
+    FOLLOW_arrayInitializer_in_variableInitializer2201 = frozenset([1])
+    FOLLOW_expression_in_variableInitializer2215 = frozenset([1])
+    FOLLOW_LBRACK_in_arrayDeclarator2243 = frozenset([41])
+    FOLLOW_RBRACK_in_arrayDeclarator2245 = frozenset([1])
+    FOLLOW_ARRAY_DECLARATOR_LIST_in_arrayDeclaratorList2275 = frozenset([2])
+    FOLLOW_ARRAY_DECLARATOR_in_arrayDeclaratorList2278 = frozenset([3, 113])
+    FOLLOW_ARRAY_INITIALIZER_in_arrayInitializer2313 = frozenset([2])
+    FOLLOW_variableInitializer_in_arrayInitializer2330 = frozenset([3, 116, 126])
+    FOLLOW_THROWS_CLAUSE_in_throwsClause2390 = frozenset([2])
+    FOLLOW_qualifiedIdentifier_in_throwsClause2392 = frozenset([3, 15, 164])
+    FOLLOW_MODIFIER_LIST_in_modifierList2428 = frozenset([2])
+    FOLLOW_modifier_in_modifierList2433 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
+    FOLLOW_PUBLIC_in_modifier2471 = frozenset([1])
+    FOLLOW_PROTECTED_in_modifier2494 = frozenset([1])
+    FOLLOW_PRIVATE_in_modifier2514 = frozenset([1])
+    FOLLOW_STATIC_in_modifier2536 = frozenset([1])
+    FOLLOW_ABSTRACT_in_modifier2559 = frozenset([1])
+    FOLLOW_NATIVE_in_modifier2580 = frozenset([1])
+    FOLLOW_SYNCHRONIZED_in_modifier2603 = frozenset([1])
+    FOLLOW_TRANSIENT_in_modifier2620 = frozenset([1])
+    FOLLOW_VOLATILE_in_modifier2640 = frozenset([1])
+    FOLLOW_STRICTFP_in_modifier2661 = frozenset([1])
+    FOLLOW_localModifier_in_modifier2684 = frozenset([1])
+    FOLLOW_LOCAL_MODIFIER_LIST_in_localModifierList2720 = frozenset([2])
+    FOLLOW_localModifier_in_localModifierList2725 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
+    FOLLOW_FINAL_in_localModifier2754 = frozenset([1])
+    FOLLOW_annotation_in_localModifier2768 = frozenset([1])
+    FOLLOW_TYPE_in_type2804 = frozenset([2])
+    FOLLOW_primitiveType_in_type2819 = frozenset([3, 114])
+    FOLLOW_qualifiedTypeIdent_in_type2838 = frozenset([3, 114])
+    FOLLOW_arrayDeclaratorList_in_type2854 = frozenset([3])
+    FOLLOW_QUALIFIED_TYPE_IDENT_in_qualifiedTypeIdent2915 = frozenset([2])
+    FOLLOW_typeIdent_in_qualifiedTypeIdent2920 = frozenset([3, 164])
+    FOLLOW_IDENT_in_typeIdent2952 = frozenset([2])
+    FOLLOW_genericTypeArgumentList_in_typeIdent2954 = frozenset([3])
     FOLLOW_set_in_primitiveType0 = frozenset([1])
-    FOLLOW_GENERIC_TYPE_ARG_LIST_in_genericTypeArgumentList2808 = frozenset([2])
-    FOLLOW_genericTypeArgument_in_genericTypeArgumentList2810 = frozenset([3, 40, 157])
-    FOLLOW_type_in_genericTypeArgument2832 = frozenset([1])
-    FOLLOW_QUESTION_in_genericTypeArgument2843 = frozenset([2])
-    FOLLOW_genericWildcardBoundType_in_genericTypeArgument2845 = frozenset([3])
-    FOLLOW_EXTENDS_in_genericWildcardBoundType2868 = frozenset([2])
-    FOLLOW_type_in_genericWildcardBoundType2870 = frozenset([3])
-    FOLLOW_SUPER_in_genericWildcardBoundType2882 = frozenset([2])
-    FOLLOW_type_in_genericWildcardBoundType2884 = frozenset([3])
-    FOLLOW_FORMAL_PARAM_LIST_in_formalParameterList2919 = frozenset([2])
-    FOLLOW_formalParameterStandardDecl_in_formalParameterList2934 = frozenset([3, 134, 135])
-    FOLLOW_formalParameterVarargDecl_in_formalParameterList2953 = frozenset([3])
-    FOLLOW_FORMAL_PARAM_STD_DECL_in_formalParameterStandardDecl2994 = frozenset([2])
-    FOLLOW_localModifierList_in_formalParameterStandardDecl3008 = frozenset([3, 157])
-    FOLLOW_type_in_formalParameterStandardDecl3022 = frozenset([164])
-    FOLLOW_variableDeclaratorId_in_formalParameterStandardDecl3036 = frozenset([3])
-    FOLLOW_FORMAL_PARAM_VARARG_DECL_in_formalParameterVarargDecl3073 = frozenset([2])
-    FOLLOW_localModifierList_in_formalParameterVarargDecl3087 = frozenset([3, 157])
-    FOLLOW_type_in_formalParameterVarargDecl3101 = frozenset([164])
-    FOLLOW_variableDeclaratorId_in_formalParameterVarargDecl3115 = frozenset([3])
-    FOLLOW_IDENT_in_qualifiedIdentifier3151 = frozenset([1])
-    FOLLOW_DOT_in_qualifiedIdentifier3172 = frozenset([2])
-    FOLLOW_qualifiedIdentifier_in_qualifiedIdentifier3186 = frozenset([164])
-    FOLLOW_IDENT_in_qualifiedIdentifier3198 = frozenset([3])
-    FOLLOW_ANNOTATION_LIST_in_annotationList3241 = frozenset([2])
-    FOLLOW_annotation_in_annotationList3243 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
-    FOLLOW_AT_in_annotation3270 = frozenset([2])
-    FOLLOW_qualifiedIdentifier_in_annotation3284 = frozenset([3, 105])
-    FOLLOW_annotationInit_in_annotation3298 = frozenset([3])
-    FOLLOW_ANNOTATION_INIT_BLOCK_in_annotationInit3330 = frozenset([2])
-    FOLLOW_annotationInitializers_in_annotationInit3332 = frozenset([3])
-    FOLLOW_ANNOTATION_INIT_KEY_LIST_in_annotationInitializers3354 = frozenset([2])
-    FOLLOW_annotationInitializer_in_annotationInitializers3356 = frozenset([3, 164])
-    FOLLOW_ANNOTATION_INIT_DEFAULT_KEY_in_annotationInitializers3369 = frozenset([2])
-    FOLLOW_annotationElementValue_in_annotationInitializers3371 = frozenset([3])
-    FOLLOW_IDENT_in_annotationInitializer3393 = frozenset([2])
-    FOLLOW_annotationElementValue_in_annotationInitializer3395 = frozenset([3])
-    FOLLOW_ANNOTATION_INIT_ARRAY_ELEMENT_in_annotationElementValue3417 = frozenset([2])
-    FOLLOW_annotationElementValue_in_annotationElementValue3419 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102, 104, 116, 126])
-    FOLLOW_annotation_in_annotationElementValue3431 = frozenset([1])
-    FOLLOW_expression_in_annotationElementValue3441 = frozenset([1])
-    FOLLOW_ANNOTATION_TOP_LEVEL_SCOPE_in_annotationTopLevelScope3462 = frozenset([2])
-    FOLLOW_annotationScopeDeclarations_in_annotationTopLevelScope3464 = frozenset([3, 7, 61, 67, 77, 109, 160])
-    FOLLOW_ANNOTATION_METHOD_DECL_in_annotationScopeDeclarations3487 = frozenset([2])
-    FOLLOW_modifierList_in_annotationScopeDeclarations3489 = frozenset([3, 157])
-    FOLLOW_type_in_annotationScopeDeclarations3491 = frozenset([164])
-    FOLLOW_IDENT_in_annotationScopeDeclarations3493 = frozenset([3, 63])
-    FOLLOW_annotationDefaultValue_in_annotationScopeDeclarations3495 = frozenset([3])
-    FOLLOW_VAR_DECLARATION_in_annotationScopeDeclarations3508 = frozenset([2])
-    FOLLOW_modifierList_in_annotationScopeDeclarations3510 = frozenset([3, 157])
-    FOLLOW_type_in_annotationScopeDeclarations3512 = frozenset([162])
-    FOLLOW_variableDeclaratorList_in_annotationScopeDeclarations3514 = frozenset([3])
-    FOLLOW_typeDeclaration_in_annotationScopeDeclarations3525 = frozenset([1])
-    FOLLOW_DEFAULT_in_annotationDefaultValue3546 = frozenset([2])
-    FOLLOW_annotationElementValue_in_annotationDefaultValue3548 = frozenset([3])
-    FOLLOW_BLOCK_SCOPE_in_block3570 = frozenset([2])
-    FOLLOW_blockStatement_in_block3572 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_localVariableDeclaration_in_blockStatement3594 = frozenset([1])
-    FOLLOW_typeDeclaration_in_blockStatement3604 = frozenset([1])
-    FOLLOW_statement_in_blockStatement3616 = frozenset([1])
-    FOLLOW_VAR_DECLARATION_in_localVariableDeclaration3639 = frozenset([2])
-    FOLLOW_localModifierList_in_localVariableDeclaration3653 = frozenset([3, 157])
-    FOLLOW_type_in_localVariableDeclaration3667 = frozenset([162])
-    FOLLOW_variableDeclaratorList_in_localVariableDeclaration3681 = frozenset([3])
-    FOLLOW_block_in_statement3738 = frozenset([1])
-    FOLLOW_ASSERT_in_statement3749 = frozenset([2])
-    FOLLOW_expression_in_statement3764 = frozenset([3, 116, 126])
-    FOLLOW_expression_in_statement3782 = frozenset([3])
-    FOLLOW_IF_in_statement3808 = frozenset([2])
-    FOLLOW_parenthesizedExpression_in_statement3822 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement3846 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement3873 = frozenset([3])
-    FOLLOW_FOR_in_statement3899 = frozenset([2])
-    FOLLOW_forInit_in_statement3901 = frozenset([129])
-    FOLLOW_forCondition_in_statement3903 = frozenset([132])
-    FOLLOW_forUpdater_in_statement3905 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement3907 = frozenset([3])
-    FOLLOW_FOR_EACH_in_statement3920 = frozenset([2])
-    FOLLOW_localModifierList_in_statement3944 = frozenset([3, 157])
-    FOLLOW_type_in_statement3956 = frozenset([164])
-    FOLLOW_IDENT_in_statement3970 = frozenset([116, 126])
-    FOLLOW_expression_in_statement3984 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement4010 = frozenset([3])
-    FOLLOW_WHILE_in_statement4046 = frozenset([2])
-    FOLLOW_parenthesizedExpression_in_statement4060 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement4084 = frozenset([3])
-    FOLLOW_DO_in_statement4118 = frozenset([2])
-    FOLLOW_statement_in_statement4142 = frozenset([146])
-    FOLLOW_parenthesizedExpression_in_statement4156 = frozenset([3])
-    FOLLOW_TRY_in_statement4195 = frozenset([2])
-    FOLLOW_block_in_statement4217 = frozenset([3, 117, 119])
-    FOLLOW_catches_in_statement4239 = frozenset([3, 117])
-    FOLLOW_block_in_statement4254 = frozenset([3])
-    FOLLOW_SWITCH_in_statement4280 = frozenset([2])
-    FOLLOW_parenthesizedExpression_in_statement4282 = frozenset([154])
-    FOLLOW_switchBlockLabels_in_statement4284 = frozenset([3])
-    FOLLOW_SYNCHRONIZED_in_statement4296 = frozenset([2])
-    FOLLOW_parenthesizedExpression_in_statement4298 = frozenset([117])
-    FOLLOW_block_in_statement4300 = frozenset([3])
-    FOLLOW_RETURN_in_statement4312 = frozenset([2])
-    FOLLOW_expression_in_statement4339 = frozenset([3])
-    FOLLOW_THROW_in_statement4376 = frozenset([2])
-    FOLLOW_expression_in_statement4378 = frozenset([3])
-    FOLLOW_BREAK_in_statement4390 = frozenset([2])
-    FOLLOW_IDENT_in_statement4392 = frozenset([3])
-    FOLLOW_CONTINUE_in_statement4405 = frozenset([2])
-    FOLLOW_IDENT_in_statement4407 = frozenset([3])
-    FOLLOW_LABELED_STATEMENT_in_statement4420 = frozenset([2])
-    FOLLOW_IDENT_in_statement4422 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_statement_in_statement4424 = frozenset([3])
-    FOLLOW_expression_in_statement4437 = frozenset([1])
-    FOLLOW_SEMI_in_statement4449 = frozenset([1])
-    FOLLOW_CATCH_CLAUSE_LIST_in_catches4471 = frozenset([2])
-    FOLLOW_catchClause_in_catches4473 = frozenset([3, 59])
-    FOLLOW_CATCH_in_catchClause4496 = frozenset([2])
-    FOLLOW_formalParameterStandardDecl_in_catchClause4510 = frozenset([117])
-    FOLLOW_block_in_catchClause4524 = frozenset([3])
-    FOLLOW_SWITCH_BLOCK_LABEL_LIST_in_switchBlockLabels4557 = frozenset([2])
-    FOLLOW_switchCaseLabel_in_switchBlockLabels4559 = frozenset([3, 58, 63])
-    FOLLOW_switchDefaultLabel_in_switchBlockLabels4562 = frozenset([3, 58])
-    FOLLOW_switchCaseLabel_in_switchBlockLabels4565 = frozenset([3, 58])
-    FOLLOW_CASE_in_switchCaseLabel4587 = frozenset([2])
-    FOLLOW_expression_in_switchCaseLabel4589 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_blockStatement_in_switchCaseLabel4591 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_DEFAULT_in_switchDefaultLabel4613 = frozenset([2])
-    FOLLOW_blockStatement_in_switchDefaultLabel4615 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
-    FOLLOW_FOR_INIT_in_forInit4637 = frozenset([2])
-    FOLLOW_localVariableDeclaration_in_forInit4640 = frozenset([3])
-    FOLLOW_expression_in_forInit4644 = frozenset([3, 116, 126])
-    FOLLOW_FOR_CONDITION_in_forCondition4668 = frozenset([2])
-    FOLLOW_expression_in_forCondition4670 = frozenset([3])
-    FOLLOW_FOR_UPDATE_in_forUpdater4692 = frozenset([2])
-    FOLLOW_expression_in_forUpdater4694 = frozenset([3, 116, 126])
-    FOLLOW_PARENTESIZED_EXPR_in_parenthesizedExpression4722 = frozenset([2])
-    FOLLOW_expression_in_parenthesizedExpression4726 = frozenset([3])
-    FOLLOW_EXPR_in_expression4753 = frozenset([2])
-    FOLLOW_expr_in_expression4757 = frozenset([3])
-    FOLLOW_ASSIGN_in_expr4793 = frozenset([2])
-    FOLLOW_expr_in_expr4797 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4801 = frozenset([3])
-    FOLLOW_PLUS_ASSIGN_in_expr4821 = frozenset([2])
-    FOLLOW_expr_in_expr4825 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4829 = frozenset([3])
-    FOLLOW_MINUS_ASSIGN_in_expr4844 = frozenset([2])
-    FOLLOW_expr_in_expr4848 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4852 = frozenset([3])
-    FOLLOW_STAR_ASSIGN_in_expr4866 = frozenset([2])
-    FOLLOW_expr_in_expr4870 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4874 = frozenset([3])
-    FOLLOW_DIV_ASSIGN_in_expr4889 = frozenset([2])
-    FOLLOW_expr_in_expr4893 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4897 = frozenset([3])
-    FOLLOW_AND_ASSIGN_in_expr4913 = frozenset([2])
-    FOLLOW_expr_in_expr4917 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4921 = frozenset([3])
-    FOLLOW_OR_ASSIGN_in_expr4937 = frozenset([2])
-    FOLLOW_expr_in_expr4941 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4945 = frozenset([3])
-    FOLLOW_XOR_ASSIGN_in_expr4962 = frozenset([2])
-    FOLLOW_expr_in_expr4966 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4970 = frozenset([3])
-    FOLLOW_MOD_ASSIGN_in_expr4986 = frozenset([2])
-    FOLLOW_expr_in_expr4990 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr4994 = frozenset([3])
-    FOLLOW_BIT_SHIFT_RIGHT_ASSIGN_in_expr5010 = frozenset([2])
-    FOLLOW_expr_in_expr5012 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5014 = frozenset([3])
-    FOLLOW_SHIFT_RIGHT_ASSIGN_in_expr5026 = frozenset([2])
-    FOLLOW_expr_in_expr5028 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5030 = frozenset([3])
-    FOLLOW_SHIFT_LEFT_ASSIGN_in_expr5042 = frozenset([2])
-    FOLLOW_expr_in_expr5044 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5046 = frozenset([3])
-    FOLLOW_QUESTION_in_expr5058 = frozenset([2])
-    FOLLOW_expr_in_expr5062 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5066 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5070 = frozenset([3])
-    FOLLOW_LOGICAL_OR_in_expr5094 = frozenset([2])
-    FOLLOW_expr_in_expr5096 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5098 = frozenset([3])
-    FOLLOW_LOGICAL_AND_in_expr5110 = frozenset([2])
-    FOLLOW_expr_in_expr5112 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5114 = frozenset([3])
-    FOLLOW_OR_in_expr5126 = frozenset([2])
-    FOLLOW_expr_in_expr5128 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5130 = frozenset([3])
-    FOLLOW_XOR_in_expr5142 = frozenset([2])
-    FOLLOW_expr_in_expr5144 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5146 = frozenset([3])
-    FOLLOW_AND_in_expr5158 = frozenset([2])
-    FOLLOW_expr_in_expr5160 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5162 = frozenset([3])
-    FOLLOW_EQUAL_in_expr5174 = frozenset([2])
-    FOLLOW_expr_in_expr5178 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5182 = frozenset([3])
-    FOLLOW_NOT_EQUAL_in_expr5200 = frozenset([2])
-    FOLLOW_expr_in_expr5204 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5208 = frozenset([3])
-    FOLLOW_INSTANCEOF_in_expr5222 = frozenset([2])
-    FOLLOW_expr_in_expr5226 = frozenset([3, 157])
-    FOLLOW_type_in_expr5230 = frozenset([3])
-    FOLLOW_LESS_OR_EQUAL_in_expr5254 = frozenset([2])
-    FOLLOW_expr_in_expr5258 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5262 = frozenset([3])
-    FOLLOW_GREATER_OR_EQUAL_in_expr5279 = frozenset([2])
-    FOLLOW_expr_in_expr5283 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5287 = frozenset([3])
-    FOLLOW_BIT_SHIFT_RIGHT_in_expr5301 = frozenset([2])
-    FOLLOW_expr_in_expr5305 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5309 = frozenset([3])
-    FOLLOW_SHIFT_RIGHT_in_expr5323 = frozenset([2])
-    FOLLOW_expr_in_expr5327 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5331 = frozenset([3])
-    FOLLOW_GREATER_THAN_in_expr5350 = frozenset([2])
-    FOLLOW_expr_in_expr5354 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5358 = frozenset([3])
-    FOLLOW_SHIFT_LEFT_in_expr5376 = frozenset([2])
-    FOLLOW_expr_in_expr5380 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5384 = frozenset([3])
-    FOLLOW_LESS_THAN_in_expr5404 = frozenset([2])
-    FOLLOW_expr_in_expr5408 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5412 = frozenset([3])
-    FOLLOW_PLUS_in_expr5433 = frozenset([2])
-    FOLLOW_expr_in_expr5437 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5441 = frozenset([3])
-    FOLLOW_MINUS_in_expr5467 = frozenset([2])
-    FOLLOW_expr_in_expr5471 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5475 = frozenset([3])
-    FOLLOW_STAR_in_expr5500 = frozenset([2])
-    FOLLOW_expr_in_expr5504 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5508 = frozenset([3])
-    FOLLOW_DIV_in_expr5534 = frozenset([2])
-    FOLLOW_expr_in_expr5538 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5542 = frozenset([3])
-    FOLLOW_MOD_in_expr5569 = frozenset([2])
-    FOLLOW_expr_in_expr5573 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5577 = frozenset([3])
-    FOLLOW_UNARY_PLUS_in_expr5604 = frozenset([2])
-    FOLLOW_expr_in_expr5608 = frozenset([3])
-    FOLLOW_UNARY_MINUS_in_expr5637 = frozenset([2])
-    FOLLOW_expr_in_expr5641 = frozenset([3])
-    FOLLOW_PRE_INC_in_expr5669 = frozenset([2])
-    FOLLOW_expr_in_expr5673 = frozenset([3])
-    FOLLOW_PRE_DEC_in_expr5705 = frozenset([2])
+    FOLLOW_GENERIC_TYPE_ARG_LIST_in_genericTypeArgumentList3073 = frozenset([2])
+    FOLLOW_genericTypeArgument_in_genericTypeArgumentList3075 = frozenset([3, 40, 157])
+    FOLLOW_type_in_genericTypeArgument3097 = frozenset([1])
+    FOLLOW_QUESTION_in_genericTypeArgument3108 = frozenset([2])
+    FOLLOW_genericWildcardBoundType_in_genericTypeArgument3110 = frozenset([3])
+    FOLLOW_EXTENDS_in_genericWildcardBoundType3133 = frozenset([2])
+    FOLLOW_type_in_genericWildcardBoundType3135 = frozenset([3])
+    FOLLOW_SUPER_in_genericWildcardBoundType3147 = frozenset([2])
+    FOLLOW_type_in_genericWildcardBoundType3149 = frozenset([3])
+    FOLLOW_FORMAL_PARAM_LIST_in_formalParameterList3184 = frozenset([2])
+    FOLLOW_formalParameterStandardDecl_in_formalParameterList3199 = frozenset([3, 134, 135])
+    FOLLOW_formalParameterVarargDecl_in_formalParameterList3218 = frozenset([3])
+    FOLLOW_FORMAL_PARAM_STD_DECL_in_formalParameterStandardDecl3259 = frozenset([2])
+    FOLLOW_localModifierList_in_formalParameterStandardDecl3273 = frozenset([3, 157])
+    FOLLOW_type_in_formalParameterStandardDecl3287 = frozenset([164])
+    FOLLOW_variableDeclaratorId_in_formalParameterStandardDecl3301 = frozenset([3])
+    FOLLOW_FORMAL_PARAM_VARARG_DECL_in_formalParameterVarargDecl3338 = frozenset([2])
+    FOLLOW_localModifierList_in_formalParameterVarargDecl3352 = frozenset([3, 157])
+    FOLLOW_type_in_formalParameterVarargDecl3366 = frozenset([164])
+    FOLLOW_variableDeclaratorId_in_formalParameterVarargDecl3380 = frozenset([3])
+    FOLLOW_IDENT_in_qualifiedIdentifier3416 = frozenset([1])
+    FOLLOW_DOT_in_qualifiedIdentifier3437 = frozenset([2])
+    FOLLOW_qualifiedIdentifier_in_qualifiedIdentifier3451 = frozenset([164])
+    FOLLOW_IDENT_in_qualifiedIdentifier3463 = frozenset([3])
+    FOLLOW_ANNOTATION_LIST_in_annotationList3506 = frozenset([2])
+    FOLLOW_annotation_in_annotationList3508 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102])
+    FOLLOW_AT_in_annotation3544 = frozenset([2])
+    FOLLOW_qualifiedIdentifier_in_annotation3558 = frozenset([3, 105])
+    FOLLOW_annotationInit_in_annotation3575 = frozenset([3])
+    FOLLOW_ANNOTATION_INIT_BLOCK_in_annotationInit3636 = frozenset([2])
+    FOLLOW_annotationInitializers_in_annotationInit3640 = frozenset([3])
+    FOLLOW_ANNOTATION_INIT_KEY_LIST_in_annotationInitializers3677 = frozenset([2])
+    FOLLOW_annotationInitializer_in_annotationInitializers3682 = frozenset([3, 164])
+    FOLLOW_ANNOTATION_INIT_DEFAULT_KEY_in_annotationInitializers3698 = frozenset([2])
+    FOLLOW_annotationElementValue_in_annotationInitializers3700 = frozenset([3])
+    FOLLOW_IDENT_in_annotationInitializer3728 = frozenset([2])
+    FOLLOW_annotationElementValue_in_annotationInitializer3732 = frozenset([3])
+    FOLLOW_ANNOTATION_INIT_ARRAY_ELEMENT_in_annotationElementValue3770 = frozenset([2])
+    FOLLOW_annotationElementValue_in_annotationElementValue3772 = frozenset([3, 7, 53, 70, 81, 85, 86, 87, 90, 91, 94, 98, 102, 104, 116, 126])
+    FOLLOW_annotation_in_annotationElementValue3784 = frozenset([1])
+    FOLLOW_expression_in_annotationElementValue3796 = frozenset([1])
+    FOLLOW_ANNOTATION_TOP_LEVEL_SCOPE_in_annotationTopLevelScope3819 = frozenset([2])
+    FOLLOW_annotationScopeDeclarations_in_annotationTopLevelScope3821 = frozenset([3, 7, 61, 67, 77, 109, 160])
+    FOLLOW_ANNOTATION_METHOD_DECL_in_annotationScopeDeclarations3853 = frozenset([2])
+    FOLLOW_modifierList_in_annotationScopeDeclarations3867 = frozenset([3, 157])
+    FOLLOW_type_in_annotationScopeDeclarations3881 = frozenset([164])
+    FOLLOW_IDENT_in_annotationScopeDeclarations3895 = frozenset([3, 63])
+    FOLLOW_annotationDefaultValue_in_annotationScopeDeclarations3910 = frozenset([3])
+    FOLLOW_VAR_DECLARATION_in_annotationScopeDeclarations3947 = frozenset([2])
+    FOLLOW_modifierList_in_annotationScopeDeclarations3951 = frozenset([3, 157])
+    FOLLOW_type_in_annotationScopeDeclarations3955 = frozenset([162])
+    FOLLOW_variableDeclaratorList_in_annotationScopeDeclarations3959 = frozenset([3])
+    FOLLOW_typeDeclaration_in_annotationScopeDeclarations3981 = frozenset([1])
+    FOLLOW_DEFAULT_in_annotationDefaultValue4006 = frozenset([2])
+    FOLLOW_annotationElementValue_in_annotationDefaultValue4010 = frozenset([3])
+    FOLLOW_BLOCK_SCOPE_in_block4034 = frozenset([2])
+    FOLLOW_blockStatement_in_block4036 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_localVariableDeclaration_in_blockStatement4067 = frozenset([1])
+    FOLLOW_typeDeclaration_in_blockStatement4077 = frozenset([1])
+    FOLLOW_statement_in_blockStatement4089 = frozenset([1])
+    FOLLOW_VAR_DECLARATION_in_localVariableDeclaration4112 = frozenset([2])
+    FOLLOW_localModifierList_in_localVariableDeclaration4116 = frozenset([3, 157])
+    FOLLOW_type_in_localVariableDeclaration4120 = frozenset([162])
+    FOLLOW_variableDeclaratorList_in_localVariableDeclaration4124 = frozenset([3])
+    FOLLOW_block_in_statement4180 = frozenset([1])
+    FOLLOW_ASSERT_in_statement4191 = frozenset([2])
+    FOLLOW_expression_in_statement4206 = frozenset([3, 116, 126])
+    FOLLOW_expression_in_statement4224 = frozenset([3])
+    FOLLOW_IF_in_statement4249 = frozenset([2])
+    FOLLOW_parenthesizedExpression_in_statement4263 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4277 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4294 = frozenset([3])
+    FOLLOW_FOR_in_statement4319 = frozenset([2])
+    FOLLOW_forInit_in_statement4321 = frozenset([129])
+    FOLLOW_forCondition_in_statement4323 = frozenset([132])
+    FOLLOW_forUpdater_in_statement4325 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4327 = frozenset([3])
+    FOLLOW_FOR_EACH_in_statement4339 = frozenset([2])
+    FOLLOW_localModifierList_in_statement4363 = frozenset([3, 157])
+    FOLLOW_type_in_statement4375 = frozenset([164])
+    FOLLOW_IDENT_in_statement4389 = frozenset([116, 126])
+    FOLLOW_expression_in_statement4403 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4429 = frozenset([3])
+    FOLLOW_WHILE_in_statement4464 = frozenset([2])
+    FOLLOW_parenthesizedExpression_in_statement4478 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4502 = frozenset([3])
+    FOLLOW_DO_in_statement4535 = frozenset([2])
+    FOLLOW_statement_in_statement4559 = frozenset([146])
+    FOLLOW_parenthesizedExpression_in_statement4573 = frozenset([3])
+    FOLLOW_TRY_in_statement4606 = frozenset([2])
+    FOLLOW_block_in_statement4628 = frozenset([3, 117, 119])
+    FOLLOW_catches_in_statement4650 = frozenset([3, 117])
+    FOLLOW_block_in_statement4665 = frozenset([3])
+    FOLLOW_SWITCH_in_statement4690 = frozenset([2])
+    FOLLOW_parenthesizedExpression_in_statement4717 = frozenset([154])
+    FOLLOW_switchBlockLabels_in_statement4732 = frozenset([3])
+    FOLLOW_SYNCHRONIZED_in_statement4765 = frozenset([2])
+    FOLLOW_parenthesizedExpression_in_statement4767 = frozenset([117])
+    FOLLOW_block_in_statement4769 = frozenset([3])
+    FOLLOW_RETURN_in_statement4781 = frozenset([2])
+    FOLLOW_expression_in_statement4808 = frozenset([3])
+    FOLLOW_THROW_in_statement4845 = frozenset([2])
+    FOLLOW_expression_in_statement4847 = frozenset([3])
+    FOLLOW_BREAK_in_statement4859 = frozenset([2])
+    FOLLOW_IDENT_in_statement4864 = frozenset([3])
+    FOLLOW_CONTINUE_in_statement4883 = frozenset([2])
+    FOLLOW_IDENT_in_statement4888 = frozenset([3])
+    FOLLOW_LABELED_STATEMENT_in_statement4906 = frozenset([2])
+    FOLLOW_IDENT_in_statement4910 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_statement_in_statement4914 = frozenset([3])
+    FOLLOW_expression_in_statement4929 = frozenset([1])
+    FOLLOW_SEMI_in_statement4941 = frozenset([1])
+    FOLLOW_CATCH_CLAUSE_LIST_in_catches4963 = frozenset([2])
+    FOLLOW_catchClause_in_catches4965 = frozenset([3, 59])
+    FOLLOW_CATCH_in_catchClause4988 = frozenset([2])
+    FOLLOW_formalParameterStandardDecl_in_catchClause5002 = frozenset([117])
+    FOLLOW_block_in_catchClause5016 = frozenset([3])
+    FOLLOW_SWITCH_BLOCK_LABEL_LIST_in_switchBlockLabels5049 = frozenset([2])
+    FOLLOW_switchCaseLabel_in_switchBlockLabels5051 = frozenset([3, 58, 63])
+    FOLLOW_switchDefaultLabel_in_switchBlockLabels5054 = frozenset([3, 58])
+    FOLLOW_switchCaseLabel_in_switchBlockLabels5057 = frozenset([3, 58])
+    FOLLOW_CASE_in_switchCaseLabel5080 = frozenset([2])
+    FOLLOW_expression_in_switchCaseLabel5094 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_blockStatement_in_switchCaseLabel5108 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_DEFAULT_in_switchDefaultLabel5150 = frozenset([2])
+    FOLLOW_blockStatement_in_switchDefaultLabel5174 = frozenset([3, 7, 44, 54, 56, 61, 62, 64, 67, 73, 74, 77, 88, 93, 94, 96, 100, 103, 116, 117, 126, 130, 141, 160])
+    FOLLOW_FOR_INIT_in_forInit5216 = frozenset([2])
+    FOLLOW_localVariableDeclaration_in_forInit5219 = frozenset([3])
+    FOLLOW_expression_in_forInit5223 = frozenset([3, 116, 126])
+    FOLLOW_FOR_CONDITION_in_forCondition5247 = frozenset([2])
+    FOLLOW_expression_in_forCondition5249 = frozenset([3])
+    FOLLOW_FOR_UPDATE_in_forUpdater5271 = frozenset([2])
+    FOLLOW_expression_in_forUpdater5273 = frozenset([3, 116, 126])
+    FOLLOW_PARENTESIZED_EXPR_in_parenthesizedExpression5301 = frozenset([2])
+    FOLLOW_expression_in_parenthesizedExpression5305 = frozenset([3])
+    FOLLOW_EXPR_in_expression5332 = frozenset([2])
+    FOLLOW_expr_in_expression5336 = frozenset([3])
+    FOLLOW_ASSIGN_in_expr5372 = frozenset([2])
+    FOLLOW_expr_in_expr5376 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5380 = frozenset([3])
+    FOLLOW_PLUS_ASSIGN_in_expr5400 = frozenset([2])
+    FOLLOW_expr_in_expr5404 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5408 = frozenset([3])
+    FOLLOW_MINUS_ASSIGN_in_expr5423 = frozenset([2])
+    FOLLOW_expr_in_expr5427 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5431 = frozenset([3])
+    FOLLOW_STAR_ASSIGN_in_expr5445 = frozenset([2])
+    FOLLOW_expr_in_expr5449 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5453 = frozenset([3])
+    FOLLOW_DIV_ASSIGN_in_expr5468 = frozenset([2])
+    FOLLOW_expr_in_expr5472 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5476 = frozenset([3])
+    FOLLOW_AND_ASSIGN_in_expr5492 = frozenset([2])
+    FOLLOW_expr_in_expr5496 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5500 = frozenset([3])
+    FOLLOW_OR_ASSIGN_in_expr5516 = frozenset([2])
+    FOLLOW_expr_in_expr5520 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5524 = frozenset([3])
+    FOLLOW_XOR_ASSIGN_in_expr5541 = frozenset([2])
+    FOLLOW_expr_in_expr5545 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5549 = frozenset([3])
+    FOLLOW_MOD_ASSIGN_in_expr5565 = frozenset([2])
+    FOLLOW_expr_in_expr5569 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5573 = frozenset([3])
+    FOLLOW_BIT_SHIFT_RIGHT_ASSIGN_in_expr5589 = frozenset([2])
+    FOLLOW_expr_in_expr5591 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5593 = frozenset([3])
+    FOLLOW_SHIFT_RIGHT_ASSIGN_in_expr5605 = frozenset([2])
+    FOLLOW_expr_in_expr5607 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5609 = frozenset([3])
+    FOLLOW_SHIFT_LEFT_ASSIGN_in_expr5621 = frozenset([2])
+    FOLLOW_expr_in_expr5623 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5625 = frozenset([3])
+    FOLLOW_QUESTION_in_expr5637 = frozenset([2])
+    FOLLOW_expr_in_expr5641 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5645 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5649 = frozenset([3])
+    FOLLOW_LOGICAL_OR_in_expr5673 = frozenset([2])
+    FOLLOW_expr_in_expr5675 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5677 = frozenset([3])
+    FOLLOW_LOGICAL_AND_in_expr5689 = frozenset([2])
+    FOLLOW_expr_in_expr5691 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5693 = frozenset([3])
+    FOLLOW_OR_in_expr5705 = frozenset([2])
+    FOLLOW_expr_in_expr5707 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
     FOLLOW_expr_in_expr5709 = frozenset([3])
-    FOLLOW_POST_INC_in_expr5741 = frozenset([2])
-    FOLLOW_expr_in_expr5745 = frozenset([3])
-    FOLLOW_POST_DEC_in_expr5776 = frozenset([2])
-    FOLLOW_expr_in_expr5780 = frozenset([3])
-    FOLLOW_NOT_in_expr5811 = frozenset([2])
-    FOLLOW_expr_in_expr5815 = frozenset([3])
-    FOLLOW_LOGICAL_NOT_in_expr5851 = frozenset([2])
-    FOLLOW_expr_in_expr5855 = frozenset([3])
-    FOLLOW_CAST_EXPR_in_expr5883 = frozenset([2])
-    FOLLOW_type_in_expr5887 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
-    FOLLOW_expr_in_expr5891 = frozenset([3])
-    FOLLOW_primaryExpression_in_expr5913 = frozenset([1])
-    FOLLOW_DOT_in_primaryExpression5958 = frozenset([2])
-    FOLLOW_primaryExpression_in_primaryExpression5978 = frozenset([61, 92, 95, 120, 164])
-    FOLLOW_IDENT_in_primaryExpression6018 = frozenset([3])
-    FOLLOW_THIS_in_primaryExpression6062 = frozenset([3])
-    FOLLOW_SUPER_in_primaryExpression6088 = frozenset([3])
-    FOLLOW_innerNewExpression_in_primaryExpression6128 = frozenset([3])
-    FOLLOW_CLASS_in_primaryExpression6152 = frozenset([3])
-    FOLLOW_primitiveType_in_primaryExpression6192 = frozenset([61])
-    FOLLOW_CLASS_in_primaryExpression6194 = frozenset([3])
-    FOLLOW_VOID_in_primaryExpression6214 = frozenset([61])
-    FOLLOW_CLASS_in_primaryExpression6216 = frozenset([3])
-    FOLLOW_parenthesizedExpression_in_primaryExpression6253 = frozenset([1])
-    FOLLOW_IDENT_in_primaryExpression6266 = frozenset([1])
-    FOLLOW_METHOD_CALL_in_primaryExpression6280 = frozenset([2])
-    FOLLOW_primaryExpression_in_primaryExpression6294 = frozenset([112, 137])
-    FOLLOW_genericTypeArgumentList_in_primaryExpression6306 = frozenset([112])
-    FOLLOW_arguments_in_primaryExpression6321 = frozenset([3])
-    FOLLOW_explicitConstructorCall_in_primaryExpression6356 = frozenset([1])
-    FOLLOW_ARRAY_ELEMENT_ACCESS_in_primaryExpression6370 = frozenset([2])
-    FOLLOW_primaryExpression_in_primaryExpression6384 = frozenset([116, 126])
-    FOLLOW_expression_in_primaryExpression6398 = frozenset([3])
-    FOLLOW_literal_in_primaryExpression6431 = frozenset([1])
-    FOLLOW_newExpression_in_primaryExpression6444 = frozenset([1])
-    FOLLOW_THIS_in_primaryExpression6457 = frozenset([1])
-    FOLLOW_arrayTypeDeclarator_in_primaryExpression6470 = frozenset([1])
-    FOLLOW_SUPER_in_primaryExpression6481 = frozenset([1])
-    FOLLOW_THIS_CONSTRUCTOR_CALL_in_explicitConstructorCall6517 = frozenset([2])
-    FOLLOW_genericTypeArgumentList_in_explicitConstructorCall6519 = frozenset([112])
-    FOLLOW_arguments_in_explicitConstructorCall6522 = frozenset([3])
-    FOLLOW_SUPER_CONSTRUCTOR_CALL_in_explicitConstructorCall6534 = frozenset([2])
-    FOLLOW_primaryExpression_in_explicitConstructorCall6551 = frozenset([112, 137])
-    FOLLOW_genericTypeArgumentList_in_explicitConstructorCall6567 = frozenset([112])
-    FOLLOW_arguments_in_explicitConstructorCall6585 = frozenset([3])
-    FOLLOW_ARRAY_DECLARATOR_in_arrayTypeDeclarator6645 = frozenset([2])
-    FOLLOW_arrayTypeDeclarator_in_arrayTypeDeclarator6648 = frozenset([3])
-    FOLLOW_qualifiedIdentifier_in_arrayTypeDeclarator6652 = frozenset([3])
-    FOLLOW_primitiveType_in_arrayTypeDeclarator6656 = frozenset([3])
-    FOLLOW_STATIC_ARRAY_CREATOR_in_newExpression6683 = frozenset([2])
-    FOLLOW_primitiveType_in_newExpression6699 = frozenset([114, 116, 126])
-    FOLLOW_newArrayConstruction_in_newExpression6703 = frozenset([3])
-    FOLLOW_genericTypeArgumentList_in_newExpression6733 = frozenset([151])
-    FOLLOW_qualifiedTypeIdent_in_newExpression6738 = frozenset([114, 116, 126])
-    FOLLOW_newArrayConstruction_in_newExpression6742 = frozenset([3])
-    FOLLOW_CLASS_CONSTRUCTOR_CALL_in_newExpression6790 = frozenset([2])
-    FOLLOW_genericTypeArgumentList_in_newExpression6802 = frozenset([151])
-    FOLLOW_qualifiedTypeIdent_in_newExpression6817 = frozenset([112])
-    FOLLOW_arguments_in_newExpression6831 = frozenset([3, 123, 128, 138, 140])
-    FOLLOW_classTopLevelScope_in_newExpression6843 = frozenset([3])
-    FOLLOW_CLASS_CONSTRUCTOR_CALL_in_innerNewExpression6892 = frozenset([2])
-    FOLLOW_genericTypeArgumentList_in_innerNewExpression6904 = frozenset([164])
-    FOLLOW_IDENT_in_innerNewExpression6919 = frozenset([112])
-    FOLLOW_arguments_in_innerNewExpression6933 = frozenset([3, 123, 128, 138, 140])
-    FOLLOW_classTopLevelScope_in_innerNewExpression6945 = frozenset([3])
-    FOLLOW_arrayDeclaratorList_in_newArrayConstruction7003 = frozenset([116])
-    FOLLOW_arrayInitializer_in_newArrayConstruction7007 = frozenset([1])
-    FOLLOW_expression_in_newArrayConstruction7030 = frozenset([1, 114, 116, 126])
-    FOLLOW_arrayDeclaratorList_in_newArrayConstruction7052 = frozenset([1])
-    FOLLOW_ARGUMENT_LIST_in_arguments7087 = frozenset([2])
-    FOLLOW_expression_in_arguments7092 = frozenset([3, 116, 126])
-    FOLLOW_HEX_LITERAL_in_literal7140 = frozenset([1])
-    FOLLOW_OCTAL_LITERAL_in_literal7152 = frozenset([1])
-    FOLLOW_DECIMAL_LITERAL_in_literal7164 = frozenset([1])
-    FOLLOW_FLOATING_POINT_LITERAL_in_literal7176 = frozenset([1])
-    FOLLOW_CHARACTER_LITERAL_in_literal7188 = frozenset([1])
-    FOLLOW_STRING_LITERAL_in_literal7200 = frozenset([1])
-    FOLLOW_TRUE_in_literal7212 = frozenset([1])
-    FOLLOW_FALSE_in_literal7224 = frozenset([1])
-    FOLLOW_NULL_in_literal7236 = frozenset([1])
-    FOLLOW_switchCaseLabel_in_synpred125_JavaTreeParser4559 = frozenset([1])
-    FOLLOW_expression_in_synpred132_JavaTreeParser4644 = frozenset([1, 116, 126])
+    FOLLOW_XOR_in_expr5721 = frozenset([2])
+    FOLLOW_expr_in_expr5723 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5725 = frozenset([3])
+    FOLLOW_AND_in_expr5737 = frozenset([2])
+    FOLLOW_expr_in_expr5739 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5741 = frozenset([3])
+    FOLLOW_EQUAL_in_expr5753 = frozenset([2])
+    FOLLOW_expr_in_expr5757 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5761 = frozenset([3])
+    FOLLOW_NOT_EQUAL_in_expr5779 = frozenset([2])
+    FOLLOW_expr_in_expr5783 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5787 = frozenset([3])
+    FOLLOW_INSTANCEOF_in_expr5801 = frozenset([2])
+    FOLLOW_expr_in_expr5805 = frozenset([3, 157])
+    FOLLOW_type_in_expr5809 = frozenset([3])
+    FOLLOW_LESS_OR_EQUAL_in_expr5833 = frozenset([2])
+    FOLLOW_expr_in_expr5837 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5841 = frozenset([3])
+    FOLLOW_GREATER_OR_EQUAL_in_expr5858 = frozenset([2])
+    FOLLOW_expr_in_expr5862 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5866 = frozenset([3])
+    FOLLOW_BIT_SHIFT_RIGHT_in_expr5880 = frozenset([2])
+    FOLLOW_expr_in_expr5884 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5888 = frozenset([3])
+    FOLLOW_SHIFT_RIGHT_in_expr5902 = frozenset([2])
+    FOLLOW_expr_in_expr5906 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5910 = frozenset([3])
+    FOLLOW_GREATER_THAN_in_expr5929 = frozenset([2])
+    FOLLOW_expr_in_expr5933 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5937 = frozenset([3])
+    FOLLOW_SHIFT_LEFT_in_expr5955 = frozenset([2])
+    FOLLOW_expr_in_expr5959 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5963 = frozenset([3])
+    FOLLOW_LESS_THAN_in_expr5983 = frozenset([2])
+    FOLLOW_expr_in_expr5987 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr5991 = frozenset([3])
+    FOLLOW_PLUS_in_expr6012 = frozenset([2])
+    FOLLOW_expr_in_expr6016 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6020 = frozenset([3])
+    FOLLOW_MINUS_in_expr6046 = frozenset([2])
+    FOLLOW_expr_in_expr6050 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6054 = frozenset([3])
+    FOLLOW_STAR_in_expr6079 = frozenset([2])
+    FOLLOW_expr_in_expr6083 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6087 = frozenset([3])
+    FOLLOW_DIV_in_expr6113 = frozenset([2])
+    FOLLOW_expr_in_expr6117 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6121 = frozenset([3])
+    FOLLOW_MOD_in_expr6148 = frozenset([2])
+    FOLLOW_expr_in_expr6152 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6156 = frozenset([3])
+    FOLLOW_UNARY_PLUS_in_expr6183 = frozenset([2])
+    FOLLOW_expr_in_expr6187 = frozenset([3])
+    FOLLOW_UNARY_MINUS_in_expr6216 = frozenset([2])
+    FOLLOW_expr_in_expr6220 = frozenset([3])
+    FOLLOW_PRE_INC_in_expr6248 = frozenset([2])
+    FOLLOW_expr_in_expr6252 = frozenset([3])
+    FOLLOW_PRE_DEC_in_expr6284 = frozenset([2])
+    FOLLOW_expr_in_expr6288 = frozenset([3])
+    FOLLOW_POST_INC_in_expr6320 = frozenset([2])
+    FOLLOW_expr_in_expr6324 = frozenset([3])
+    FOLLOW_POST_DEC_in_expr6355 = frozenset([2])
+    FOLLOW_expr_in_expr6359 = frozenset([3])
+    FOLLOW_NOT_in_expr6390 = frozenset([2])
+    FOLLOW_expr_in_expr6394 = frozenset([3])
+    FOLLOW_LOGICAL_NOT_in_expr6430 = frozenset([2])
+    FOLLOW_expr_in_expr6434 = frozenset([3])
+    FOLLOW_CAST_EXPR_in_expr6462 = frozenset([2])
+    FOLLOW_type_in_expr6466 = frozenset([4, 5, 6, 8, 9, 13, 14, 15, 18, 19, 20, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 47, 48, 49, 50, 51, 52, 69, 76, 83, 92, 95, 99, 113, 115, 118, 120, 144, 146, 147, 148, 149, 150, 152, 153, 155, 158, 159, 164, 165, 166, 167, 168, 169, 170])
+    FOLLOW_expr_in_expr6470 = frozenset([3])
+    FOLLOW_primaryExpression_in_expr6492 = frozenset([1])
+    FOLLOW_DOT_in_primaryExpression6537 = frozenset([2])
+    FOLLOW_primaryExpression_in_primaryExpression6557 = frozenset([61, 92, 95, 120, 164])
+    FOLLOW_IDENT_in_primaryExpression6597 = frozenset([3])
+    FOLLOW_THIS_in_primaryExpression6641 = frozenset([3])
+    FOLLOW_SUPER_in_primaryExpression6667 = frozenset([3])
+    FOLLOW_innerNewExpression_in_primaryExpression6707 = frozenset([3])
+    FOLLOW_CLASS_in_primaryExpression6731 = frozenset([3])
+    FOLLOW_primitiveType_in_primaryExpression6771 = frozenset([61])
+    FOLLOW_CLASS_in_primaryExpression6773 = frozenset([3])
+    FOLLOW_VOID_in_primaryExpression6793 = frozenset([61])
+    FOLLOW_CLASS_in_primaryExpression6795 = frozenset([3])
+    FOLLOW_parenthesizedExpression_in_primaryExpression6832 = frozenset([1])
+    FOLLOW_IDENT_in_primaryExpression6845 = frozenset([1])
+    FOLLOW_METHOD_CALL_in_primaryExpression6859 = frozenset([2])
+    FOLLOW_primaryExpression_in_primaryExpression6873 = frozenset([112, 137])
+    FOLLOW_genericTypeArgumentList_in_primaryExpression6885 = frozenset([112])
+    FOLLOW_arguments_in_primaryExpression6900 = frozenset([3])
+    FOLLOW_explicitConstructorCall_in_primaryExpression6935 = frozenset([1])
+    FOLLOW_ARRAY_ELEMENT_ACCESS_in_primaryExpression6949 = frozenset([2])
+    FOLLOW_primaryExpression_in_primaryExpression6963 = frozenset([116, 126])
+    FOLLOW_expression_in_primaryExpression6977 = frozenset([3])
+    FOLLOW_literal_in_primaryExpression7010 = frozenset([1])
+    FOLLOW_newExpression_in_primaryExpression7023 = frozenset([1])
+    FOLLOW_THIS_in_primaryExpression7036 = frozenset([1])
+    FOLLOW_arrayTypeDeclarator_in_primaryExpression7049 = frozenset([1])
+    FOLLOW_SUPER_in_primaryExpression7060 = frozenset([1])
+    FOLLOW_THIS_CONSTRUCTOR_CALL_in_explicitConstructorCall7096 = frozenset([2])
+    FOLLOW_genericTypeArgumentList_in_explicitConstructorCall7098 = frozenset([112])
+    FOLLOW_arguments_in_explicitConstructorCall7101 = frozenset([3])
+    FOLLOW_SUPER_CONSTRUCTOR_CALL_in_explicitConstructorCall7113 = frozenset([2])
+    FOLLOW_primaryExpression_in_explicitConstructorCall7130 = frozenset([112, 137])
+    FOLLOW_genericTypeArgumentList_in_explicitConstructorCall7146 = frozenset([112])
+    FOLLOW_arguments_in_explicitConstructorCall7164 = frozenset([3])
+    FOLLOW_ARRAY_DECLARATOR_in_arrayTypeDeclarator7224 = frozenset([2])
+    FOLLOW_arrayTypeDeclarator_in_arrayTypeDeclarator7227 = frozenset([3])
+    FOLLOW_qualifiedIdentifier_in_arrayTypeDeclarator7231 = frozenset([3])
+    FOLLOW_primitiveType_in_arrayTypeDeclarator7235 = frozenset([3])
+    FOLLOW_STATIC_ARRAY_CREATOR_in_newExpression7262 = frozenset([2])
+    FOLLOW_primitiveType_in_newExpression7278 = frozenset([114, 116, 126])
+    FOLLOW_newArrayConstruction_in_newExpression7282 = frozenset([3])
+    FOLLOW_genericTypeArgumentList_in_newExpression7312 = frozenset([151])
+    FOLLOW_qualifiedTypeIdent_in_newExpression7317 = frozenset([114, 116, 126])
+    FOLLOW_newArrayConstruction_in_newExpression7321 = frozenset([3])
+    FOLLOW_CLASS_CONSTRUCTOR_CALL_in_newExpression7369 = frozenset([2])
+    FOLLOW_genericTypeArgumentList_in_newExpression7381 = frozenset([151])
+    FOLLOW_qualifiedTypeIdent_in_newExpression7396 = frozenset([112])
+    FOLLOW_arguments_in_newExpression7410 = frozenset([3, 123, 128, 138, 140])
+    FOLLOW_classTopLevelScope_in_newExpression7422 = frozenset([3])
+    FOLLOW_CLASS_CONSTRUCTOR_CALL_in_innerNewExpression7471 = frozenset([2])
+    FOLLOW_genericTypeArgumentList_in_innerNewExpression7483 = frozenset([164])
+    FOLLOW_IDENT_in_innerNewExpression7498 = frozenset([112])
+    FOLLOW_arguments_in_innerNewExpression7512 = frozenset([3, 123, 128, 138, 140])
+    FOLLOW_classTopLevelScope_in_innerNewExpression7524 = frozenset([3])
+    FOLLOW_arrayDeclaratorList_in_newArrayConstruction7582 = frozenset([116])
+    FOLLOW_arrayInitializer_in_newArrayConstruction7586 = frozenset([1])
+    FOLLOW_expression_in_newArrayConstruction7609 = frozenset([1, 114, 116, 126])
+    FOLLOW_arrayDeclaratorList_in_newArrayConstruction7631 = frozenset([1])
+    FOLLOW_ARGUMENT_LIST_in_arguments7666 = frozenset([2])
+    FOLLOW_expression_in_arguments7671 = frozenset([3, 116, 126])
+    FOLLOW_HEX_LITERAL_in_literal7719 = frozenset([1])
+    FOLLOW_OCTAL_LITERAL_in_literal7742 = frozenset([1])
+    FOLLOW_DECIMAL_LITERAL_in_literal7763 = frozenset([1])
+    FOLLOW_FLOATING_POINT_LITERAL_in_literal7782 = frozenset([1])
+    FOLLOW_CHARACTER_LITERAL_in_literal7794 = frozenset([1])
+    FOLLOW_STRING_LITERAL_in_literal7811 = frozenset([1])
+    FOLLOW_TRUE_in_literal7831 = frozenset([1])
+    FOLLOW_FALSE_in_literal7861 = frozenset([1])
+    FOLLOW_NULL_in_literal7890 = frozenset([1])
+    FOLLOW_switchCaseLabel_in_synpred125_JavaTreeParser5051 = frozenset([1])
+    FOLLOW_expression_in_synpred132_JavaTreeParser5223 = frozenset([1, 116, 126])
 
 
 

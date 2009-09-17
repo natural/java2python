@@ -64,22 +64,24 @@ packageHandlers = [
 
 ## these functions finish the construction of a class block.
 classHandlers = [
+    ## this function sorts sorts class methods by name.
+    'java2python.mods.classes.sortMethods',
+
     ## this handler creates an __init__ method if required and adds a
     ## super(...) call if necessary.
     'java2python.mods.classes.updateConstructor',
 
     ## this function scans the class for methods that look like
     ## accessors.  matching methods are renamed and declared as
-    ## properties.
-    'java2python.mods.classes.convertProperties',
+    ## properties.  references are *not* renamed, so if you use this
+    ## you will need to update those references (manually or with
+    ## output subsititutions).
+    #'java2python.mods.classes.convertProperties',
 
     ## with this handler, classes are scanned for duplicate method
     ## names.  matching methods are augmented with the '@overloaded'
     ## decorator.
     'java2python.mods.classes.overloadMethods',
-
-    ## this function sorts sorts class methods by name.
-    'java2python.mods.classes.sortMethods',
 
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
@@ -98,7 +100,7 @@ methodHandlers = [
 
     ## this function adds a comment with the original function's
     ## return type.
-    #'java2python.mods.methods.insertReturnComment',
+    #'java2python.mods.methods.insertReturnTypeComment',
 
     ## this function adds a comment with the original function's
     ## modifiers.

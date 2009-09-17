@@ -49,7 +49,7 @@ superClass=LocalTreeParser;
 
 
 @treeparser::header {
-## from logging import warn
+from logging import warn
 from java2python import expression as ex, parameter as px, formatFloatLiteral
 from java2python.parser.local import LocalTreeParser
 }
@@ -83,7 +83,7 @@ importDeclaration
 
 
 typeDeclaration
-    @after { self.commentHandler($start) }
+    @after {  }
     :   ^(CLASS
           { self.beginClassDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -92,7 +92,10 @@ typeDeclaration
           (ec0=extendsClause { self.addBases($ec0.values) })?
           (ic0=implementsClause { self.addBases($ic0.values) })?
           classTopLevelScope
-          { self.endClassDeclaration() }
+          {
+            self.commentHandler($start)
+            self.endClassDeclaration()
+          }
         )
 
     |   ^(INTERFACE
@@ -102,20 +105,33 @@ typeDeclaration
           genericTypeParameterList?
           (ec0=extendsClause { self.addBases($ec0.values) })?
           interfaceTopLevelScope
-          { self.endInterfaceDeclaration() }
+          {
+            self.commentHandler($start)
+            self.endInterfaceDeclaration()
+          }
         )
 
     |   ^(ENUM
-          modifierList
-          IDENT
-          implementsClause?
+          { self.beginEnumerationDeclaration() }
+          md0=modifierList { self.addModifiers($md0.values) }
+          id0=IDENT { self.setIdent(ident=$id0.text) }
+          (ic0=implementsClause { self.addBases($ic0.values) })?
           enumTopLevelScope
+          {
+            self.commentHandler($start)
+            self.endEnumerationDeclaration()
+          }
         )
 
     |   ^(AT
-          modifierList
-          IDENT
+          { self.beginAnnotationDeclaration() }
+          md0=modifierList { self.addModifiers($md0.values) }
+          id0=IDENT { self.setIdent(ident=$id0.text) }
           annotationTopLevelScope
+          {
+            self.commentHandler($start)
+            self.endAnnotationDeclration()
+          }
         )
     ;
 
@@ -148,7 +164,13 @@ enumTopLevelScope
     ;
 
 enumConstant
-    :   ^(IDENT annotationList arguments? classTopLevelScope?)
+    @init { args = None }
+    :   ^(id0=IDENT
+          annotationList
+          (ag0=arguments { args = $ag0.values })?
+          classTopLevelScope?
+        )
+        { self.addEnumValue($id0.text, args) }
     ;
 
 
@@ -166,6 +188,7 @@ classScopeDeclarations
     |   ^(CLASS_STATIC_INITIALIZER block)
 
     |   ^(FUNCTION_METHOD_DECL
+
           { self.beginMethodDecl() }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
@@ -175,7 +198,10 @@ classScopeDeclarations
           arrayDeclaratorList?
           throwsClause?
           block?
-          { self.endMethodDecl() }
+          {
+           self.commentHandler($start)
+           self.endMethodDecl()
+          }
         )
 
     |   ^(VOID_METHOD_DECL
@@ -187,6 +213,7 @@ classScopeDeclarations
           throwsClause?
           block?
           {
+            self.commentHandler($start)
             self.setType("void")
             self.endMethodDecl()
           }
@@ -207,6 +234,7 @@ classScopeDeclarations
           throwsClause?
           block
           {
+            self.commentHandler($start)
             self.setIdent("__init__")
             self.endMethodDecl()
           }
@@ -319,22 +347,23 @@ throwsClause
 
 modifierList returns [values]
     @init { $values = [] }
-    :   ^(MODIFIER_LIST (md0=modifier { values.append($md0.text) })*)
+    :   ^(MODIFIER_LIST (md0=modifier { values.append($md0.value) })*)
     ;
 
 
-modifier
-    :   PUBLIC
-    |   PROTECTED
-    |   PRIVATE
-    |   STATIC
-    |   ABSTRACT
-    |   NATIVE
-    |   SYNCHRONIZED
-    |   TRANSIENT
-    |   VOLATILE
-    |   STRICTFP
-    |   localModifier
+modifier returns [value]
+    @init { $value = ex(format="${left}") }
+    :   PUBLIC            { $value.update(left=$text) }
+    |   PROTECTED         { $value.update(left=$text) }
+    |   PRIVATE           { $value.update(left=$text) }
+    |   STATIC            { $value.update(left=$text) }
+    |   ABSTRACT          { $value.update(left=$text) }
+    |   NATIVE            { $value.update(left=$text) }
+    |   SYNCHRONIZED      { $value.update(left=$text) }
+    |   TRANSIENT         { $value.update(left=$text) }
+    |   VOLATILE          { $value.update(left=$text) }
+    |   STRICTFP          { $value.update(left=$text) }
+    |   lm0=localModifier { $value = $lm0.value }
     ;
 
 
@@ -449,33 +478,41 @@ annotationList
 
 
 annotation returns [value]
+    @init { $value = ex(format="${left}()") }
     :   ^(AT
-          qi0=qualifiedIdentifier { $value = qi0.value }
-          annotationInit?
+          qi0=qualifiedIdentifier { $value.update(left=$qi0.value, annotation=True) }
+          (ai0=annotationInit
+           {   right = ", ".join(self.formatExpression(v) for v in $ai0.values)
+               $value.update(right=right, format="${left}(${right})") }
+          )?
         )
     ;
 
 
-annotationInit
-    :   ^(ANNOTATION_INIT_BLOCK annotationInitializers)
+annotationInit returns [values]
+    :   ^(ANNOTATION_INIT_BLOCK ai0=annotationInitializers { $values = $ai0.values })
     ;
 
 
-annotationInitializers
-    :   ^(ANNOTATION_INIT_KEY_LIST annotationInitializer+)
+annotationInitializers returns [values]
+    @init { $values = [] }
+    :   ^(ANNOTATION_INIT_KEY_LIST (ai0=annotationInitializer { $values.append($ai0.value) })+)
     |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue)
     ;
 
 
-annotationInitializer
-    :   ^(IDENT annotationElementValue)
+annotationInitializer returns [value]
+    :   ^(id0=IDENT ae0=annotationElementValue
+          { $value = ex(left=self.renameIdent($id0.text),
+                        right=$ae0.value,
+                        format="${left}=${right}") })
     ;
 
 
-annotationElementValue
+annotationElementValue returns [value]
     :   ^(ANNOTATION_INIT_ARRAY_ELEMENT annotationElementValue*)
     |   annotation
-    |   expression
+    |   ex0=expression { $value = $ex0.value }
     ;
 
 
@@ -485,14 +522,22 @@ annotationTopLevelScope
 
 
 annotationScopeDeclarations
-    :   ^(ANNOTATION_METHOD_DECL modifierList type IDENT annotationDefaultValue?)
-    |   ^(VAR_DECLARATION modifierList type variableDeclaratorList)
+    @init { default = None }
+    :   ^(ANNOTATION_METHOD_DECL
+          md0=modifierList
+          tp0=type
+          id0=IDENT
+          (ad0=annotationDefaultValue { default = $ad0.value })?
+          { self.addAnnotationMethod($md0.values, $tp0.value, $id0.text, default) }
+        )
+    |   ^(VAR_DECLARATION md1=modifierList tp1=type vd1=variableDeclaratorList)
+         { self.addVariables($vd1.values, $tp1.value, $md1.values, local=True) }
     |   typeDeclaration
     ;
 
 
-annotationDefaultValue
-    :   ^(DEFAULT annotationElementValue)
+annotationDefaultValue returns [value]
+    :   ^(DEFAULT ae0=annotationElementValue { $value = $ae0.value })
     ;
 
 
@@ -502,6 +547,7 @@ block
 
 
 blockStatement
+    @after { self.commentHandler($start) }
     :   localVariableDeclaration
     |   typeDeclaration
     |   st0=statement { self.append($st0.value) }
@@ -509,34 +555,28 @@ blockStatement
 
 
 localVariableDeclaration
-    :   ^(VAR_DECLARATION
-          md1=localModifierList
-          tp1=type
-          vd1=variableDeclaratorList
-          { self.addVariables($vd1.values, $tp1.value, $md1.values, local=True) }
+    :   ^(VAR_DECLARATION md0=localModifierList tp0=type vd0=variableDeclaratorList
+          { self.addVariables($vd0.values, $tp0.value, $md0.values, local=True) }
         )
-
      ;
 
 
 statement returns [value]
-    @init { $value = ex() }
+    @init {
+        label = None
+        $value = ex()
+    }
     :   block
     |   ^(ASSERT
           (ex0=expression { ae = self.makeAssert($ex0.value)  })
           (ex1=expression { self.extendAssert(ae, $ex1.value) })?
         )
-
     |   ^(IF
-          pe0=parenthesizedExpression
-          { ifstat, elsestat = self.beginIf($pe0.value) }
-          statement
-          { self.endIf() }
+          pe0=parenthesizedExpression { ifstat, elsestat = self.beginIf($pe0.value) }
+          statement { self.endIf() }
           ({ self.beginElse(elsestat) } statement { self.endElse() })?
         )
-
     |   ^(FOR forInit forCondition forUpdater statement)
-
     |   ^(FOR_EACH
           { self.beginFor() }
           localModifierList
@@ -547,22 +587,18 @@ statement returns [value]
           st0=statement { self.append($st0.value) }
           { self.endFor() }
         )
-
     |   ^(WHILE
           pe0=parenthesizedExpression
           { self.beginWhile($pe0.value) }
           statement
           { self.endWhile() }
         )
-
     |   ^(DO
           { self.beginDo() }
           statement
           pe0=parenthesizedExpression
           { self.endDo($pe0.value) }
         )
-
-    // The second optional block is the optional finally block.
     |   ^(TRY
          { self.beginTry() }
          block
@@ -570,8 +606,12 @@ statement returns [value]
          catches?
          ({ self.beginTryFinally() } block { sef.endTryFinally() })?
         )
-
-    |   ^(SWITCH parenthesizedExpression switchBlockLabels)
+    |   ^(SWITCH
+          { self.beginSwitch() }
+          (pe0=parenthesizedExpression { self.setExpression($pe0.value) })
+          switchBlockLabels
+          { self.endSwitch() }
+        )
     |   ^(SYNCHRONIZED parenthesizedExpression block)
     |   ^(RETURN
           { $value.update(format="return") }
@@ -579,9 +619,9 @@ statement returns [value]
           { $value.update(format="return ${right}") }
         )
     |   ^(THROW expression)
-    |   ^(BREAK IDENT?)
-    |   ^(CONTINUE IDENT?)
-    |   ^(LABELED_STATEMENT IDENT statement)
+    |   ^(BREAK (id0=IDENT { label = $id0.text })?)  { self.addBreak(label=label) }
+    |   ^(CONTINUE (id0=IDENT { label = $id0.text })?) { self.addContinue(label=label) }
+    |   ^(LABELED_STATEMENT id0=IDENT lb0=statement { self.addLabel($id0.text) })
     |   ex0=expression { $value = $ex0.value }
     |   SEMI // Empty statement.
     ;
@@ -604,13 +644,24 @@ switchBlockLabels
     :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel? switchCaseLabel*)
     ;
 
+
 switchCaseLabel
-    :   ^(CASE expression blockStatement*)
+    :   ^(CASE
+          ex0=expression { self.addSwitchCase($ex0.value) }
+          blockStatement*
+        )
+        { self.maybePop(True) }
     ;
 
+
 switchDefaultLabel
-    :   ^(DEFAULT blockStatement*)
+    :   ^(DEFAULT
+          { self.addSwitchCaseDefault() }
+          blockStatement*
+        )
+        { self.maybePop(True) }
     ;
+
 
 forInit
     :   ^(FOR_INIT (localVariableDeclaration | expression*)?)
@@ -721,7 +772,7 @@ primaryExpression returns [value]
           p0=primaryExpression
           genericTypeArgumentList?
           a0=arguments
-          { $value = ex($p0.value, $a0.values, "${left}(${right})") }
+          { $value = ex($p0.value, $a0.values, "${left}(${right})", call=True) }
         )
 
     |   ec0=explicitConstructorCall { self.addSuperCall($ec0.value) }
@@ -814,13 +865,13 @@ arguments returns [values]
 
 
 literal returns [value]
-    :   HEX_LITERAL { $value = $text }
-    |   OCTAL_LITERAL { $value = $text }
-    |   DECIMAL_LITERAL { $value = formatFloatLiteral($text) }
+    :   HEX_LITERAL            { $value = $text }
+    |   OCTAL_LITERAL          { $value = $text }
+    |   DECIMAL_LITERAL        { $value = formatFloatLiteral($text) }
     |   FLOATING_POINT_LITERAL { $value = formatFloatLiteral($text) }
-    |   CHARACTER_LITERAL { $value = $text }
-    |   STRING_LITERAL { $value = $text }
-    |   TRUE { $value = "True" }
-    |   FALSE { $value = "False" }
-    |   NULL { $value = "None" }
+    |   CHARACTER_LITERAL      { $value = $text }
+    |   STRING_LITERAL         { $value = $text }
+    |   TRUE                   { $value = "True" }
+    |   FALSE                  { $value = "False" }
+    |   NULL                   { $value = "None" }
     ;

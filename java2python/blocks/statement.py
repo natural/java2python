@@ -7,20 +7,22 @@ from java2python.blocks.block import Block
 
 class Statement(Block):
     isStatement = True
+    initialPass = True
 
     def __init__(self, parent, name, expr=None):
         Block.__init__(self, parent, name)
-        self.append('pass')
+        if self.initialPass:
+            self.append('pass')
         self.setExpression(expr)
 
     def dump(self, output, indent):
         """ writes the string representation of this block
 
         """
-        name = self.name
-        blocks = self.blocks
         if self.isBadLabel or self.isNoOp:
             return
+        name = self.name
+        blocks = self.blocks
         offset = self.offset(indent)
         output.write('%s%s' % (offset, name))
         if self.expr:
@@ -53,8 +55,9 @@ class Statement(Block):
         """ True if instance needs a colon written after its expression
 
         """
-        return self.name in ('if', 'while', 'for', 'else', 'elif',
-                             'try', 'except', 'finally', 'with')
+        return self.name in ('class', 'def', 'elif', 'else', 'except',
+                             'finally', 'for', 'if', 'try', 'while', 'with', )
+
 
     def getExpression(self):
         return self.expr
@@ -69,9 +72,15 @@ class Statement(Block):
 
 
 class AssertStatement(Statement):
-    def __init__(self, parent, name, expr=None):
-        Statement.__init__(self, parent, name, expr)
-        self.blocks.pop()
+    initialPass = False
+
+
+class BreakStatement(Statement):
+    initialPass = False
+
+
+class ContinueStatement(Statement):
+    initialPass = False
 
 
 class ExceptStatement(Statement):
@@ -80,3 +89,15 @@ class ExceptStatement(Statement):
         expr['type'] = renames.get(expr['type'], expr['type'])
         expr['format'] = '(${type}, ), ${ident}'
         Statement.setExpression(self, expr)
+
+
+class SwitchStatement(Statement):
+    initialPass = False
+    switchExpression = None
+
+    def __init__(self, parent, name, expr=None):
+        Statement.__init__(self, parent, name, expr)
+        self.switchExpression = expr
+
+    def setExpression(self, expr):
+        self.expr = self.switchExpression = expr

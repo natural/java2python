@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 from itertools import count, dropwhile
 from operator import not_
+from string import Template
 
 
 def expression(left='', right='', format='', **kwds):
@@ -11,12 +12,12 @@ def expression(left='', right='', format='', **kwds):
     return dict(left=left, right=right, format=format, **kwds)
 
 
-def parameter(ident='', typ='', modifiers='', variadic='', format='$ident', **kwds):
+def parameter(ident='', type='', modifiers='', variadic='', format='$ident', **kwds):
     if variadic:
         format = '*' + format
     return dict(
         ident=ident,
-        type=typ,
+        type=type,
         modifiers=modifiers,
         variadic=variadic,
         format=format,
@@ -60,11 +61,6 @@ def importValue(name, reloaded=False):
     mod = importModule(str.join('.', modname), reloaded=reloaded)
     return getattr(mod, itemname)
 
-
-def isDeco(s):
-    return s.startswith('@') if isinstance(s, basestring) else False
-
-
 def isDict(v):
     return isinstance(v, (dict, ))
 
@@ -104,3 +100,21 @@ def formatFloatLiteral(value):
 
 
 nameCounter = count(0).next
+
+
+def findKey(mapping, key):
+    """ Returns the value of the specified key from a nested dictionary
+
+    """
+    if isDict(mapping):
+        try:
+            return mapping[key]
+        except (KeyError, ):
+            for k in mapping:
+                v = findKey(mapping[k], key)
+                if v is not None:
+                    return v
+
+
+def formatParameter(p):
+    return Template(p['format']).substitute(p)

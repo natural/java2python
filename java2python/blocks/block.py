@@ -5,7 +5,7 @@ from logging import debug, info, warn
 from re import sub as rxsub
 from string import Template
 
-from java2python import expression, maybeAttr, variable
+from java2python import expression, maybeAttr, variable, findKey, isDict
 from java2python.config import Config
 
 
@@ -20,16 +20,11 @@ class Block:
         self.parent = parent
         self.name = name
         self.blocks = []
+        self.decorators = []
         self.modifiers = []
         self.preamble = []
         self.epilogue = []
         self.variables = []
-
-    def getVars(self):
-        while self:
-            for v in self.variables:
-                yield v
-            self = self.parent
 
     def __iter__(self):
         """ to iterate over a block is to iterate over it's blocks
@@ -79,14 +74,14 @@ class Block:
         """ Returns True if this block is static, i.e., a static method
 
         """
-        return 'static' in self.modifiers
+        return 'static' in [self.formatExpression(m) for m in self.modifiers]
 
     @property
     def isPublic(self):
         """ Returns True if this block is public
 
         """
-        return 'public' in self.modifiers
+        return 'public' in [self.formatExpression(m) for m in self.modifiers]
 
     @property
     def isVoid(self):
@@ -95,8 +90,26 @@ class Block:
         """
         return self.type in ('void', None)
 
+    @property
+    def parents(self):
+        """ yields each ancestor of this instance
+
+        """
+        p = self.parent
+        while p:
+            yield p
+            p = p.parent
+
+    @property
+    def root(self):
+        while self:
+            if not self.parent:
+                break
+            self = self.parent
+        return self
+
     def asString(self):
-        """ asString() -> python source code representation of this block
+        """ Returns the python source code representation of this block
 
         """
         out = StringIO()
@@ -105,6 +118,7 @@ class Block:
         for subs in self.config.all('outputSubs', []):
             for sub in subs:
                 source = rxsub(sub[0], sub[1], source)
+
         return source
 
     def dump(self, output, indent):
@@ -145,7 +159,7 @@ class Block:
         """ formats nested dictionaries, substituting as necessary
 
         """
-        if isinstance(value, (dict, )):
+        if isDict(value):
             inner = value.copy()
             for key in (k for k in ('right', 'left', 'center', 'ident') if k in value):
                 inner[key] = self.formatExpression(value[key])
@@ -162,9 +176,12 @@ class Block:
         this methods doesn't use self.insert so that empty blocks
         don't have their pass statement popped
         """
+        warn('%s %s %s', self.__class__.__name__, self.name, value)
+        self.insert(index, self.makeComment(value, prefix))
+
+    def makeComment(self, value, prefix='#'):
         prefix = self.config.last('commentPrefix', prefix)
-        comment = expression(prefix, value, '$left$right')
-        self.blocks.insert(index, comment)
+        return expression(prefix, value, '$left$right')
 
     def getVariable(self, ident):
         while self:
@@ -186,12 +203,12 @@ class Block:
             value = fmt % value
         return value
 
-    def renameIdent(self, value):
-        """ Returns a simple replacement value for the given identifier
+    def renameIdent(self, ident):
+        """ Returns a simple replacement for the given identifier
 
         """
 	alt = self.config.combined('identRenames')
-        return alt.get(value, value)
+        return alt.get(ident, ident)
 
     def renameType(self, name):
         """ Returns replacement name for the given type
@@ -199,19 +216,6 @@ class Block:
         """
         alt = self.config.combined('typeRenames')
         return alt.get(name, name)
-
-    def oldAltIdFragment(self):
-        top = self.top
-        outer = top.outerMethod
-        if outer or (new in top.instanceMembers):
-            methargs = [v[1] for v in outer.parameters]
-            if new in top.instanceMembers: # and methargs:
-                if methargs[0] in ('cls', 'self'):
-                    fmt = methargs[0] + '.%s'
-                else:
-                    fmt = '%s'
-                new = fmt % new
-        return new
 
     def setConfigs(self, configs):
         """ sets the config on the root class so all instances share it
@@ -226,20 +230,23 @@ class Block:
         self.name = ident
 
     def addModifiers(self, modifiers):
-        self.modifiers.extend(modifiers)
+        """ extends this blocks modifiers with the given sequence
+
+        """
+        types = [(m, m.get('annotation')) for m in modifiers]
+        self.decorators.extend(mod for mod, anno in types if anno)
+        self.modifiers.extend(mod for mod, anno in types if not anno)
 
     def addVariables(self, decls, typ, modifiers, local=False, cls=False):
+        """ adds given variable declarations to this block
+
+        """
         for decl in decls:
             if typ.get('array'):
                 decl['format'] = '$left = []'
-            self.variables.append(variable(self.findIdent(decl), local=local, cls=cls))
+            if not decl.get('right'):
+                decl['format'] = '$left = $right'
+                decl['right'] = self.config.combined('typeValueMap').get(typ['left'], 'None')
+            self.variables.append(variable(findKey(decl, 'ident'), local=local, cls=cls))
             self.append(decl)
 
-    def findIdent(self, mapping):
-        if isinstance(mapping, (dict, )):
-            if 'ident' in mapping:
-                return mapping['ident']
-            for key in mapping:
-                v = self.findIdent(mapping[key])
-                if v is not None:
-                    return v

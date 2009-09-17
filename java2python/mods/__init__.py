@@ -3,7 +3,7 @@
 
 from functools import partial
 from logging import warn
-from java2python import expression
+from java2python import expression, maybeAttr
 from java2python.parser import JavaLexer
 
 
@@ -38,7 +38,7 @@ def simpleComments(block, text, typ):
     """
     formatter = simpleCommentFormatters.get(typ, simpleCommentFormatters[None])
     for line in reversed(list(formatter(text))):
-        block.addComment(line, index=0)
+        block.addComment(line)
 
 
 def commentImport(block, decl, isStatic, isStar):

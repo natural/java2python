@@ -1,6 +1,7 @@
 class Vars1 {
     static int a = 1;
     private static int b = 2;
+    private int c;
 
     private void x() {
 	System.out.println('x');
