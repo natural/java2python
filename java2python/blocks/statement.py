@@ -98,6 +98,7 @@ class SwitchStatement(Statement):
     def __init__(self, parent, name, expr=None):
         Statement.__init__(self, parent, name, expr)
         self.switchExpression = expr
+	self.elseExpression = None
 
     def setExpression(self, expr):
         self.expr = self.switchExpression = expr

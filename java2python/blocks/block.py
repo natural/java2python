@@ -5,16 +5,16 @@ from logging import debug, info, warn
 from re import sub as rxsub
 from string import Template
 
-from java2python import expression, maybeAttr, variable, findKey, isDict
+from java2python import expression, maybeAttr, variable, findKey, isDict, passExpr
 from java2python.config import Config
 
 
-class Block:
+class Block(object):
     """ Base class for blocks of Python source code.
 
     """
     config = None
-    passLine = [expression(left='pass', right='', format='$left')]
+    passLine = [passExpr(), ]
 
     def __init__(self, parent, name):
         self.parent = parent
@@ -27,7 +27,7 @@ class Block:
         self.variables = []
 
     def __iter__(self):
-        """ to iterate over a block is to iterate over it's blocks
+        """ to iterate over a block is to iterate over its blocks
 
         """
         for item in self.blocks:
@@ -101,7 +101,7 @@ class Block:
             p = p.parent
 
     @property
-    def root(self):
+    def ___root(self):
         while self:
             if not self.parent:
                 break
@@ -118,7 +118,6 @@ class Block:
         for subs in self.config.all('outputSubs', []):
             for sub in subs:
                 source = rxsub(sub[0], sub[1], source)
-
         return source
 
     def dump(self, output, indent):
@@ -165,7 +164,8 @@ class Block:
                 inner[key] = self.formatExpression(value[key])
                 if isinstance(inner[key], (basestring, )):
                     if inner.get('rename'):
-                        debug('%s %s rename: %s', self.__class__.__name__, self.name, inner[key])
+                        debug('%s %s rename: %s', self.__class__.__name__,
+			      self.name, inner[key])
                         inner[key] = self.renameIdent(inner[key])
             value = Template(inner['format']).substitute(inner)
         return value
@@ -176,23 +176,23 @@ class Block:
         this methods doesn't use self.insert so that empty blocks
         don't have their pass statement popped
         """
-        warn('%s %s %s', self.__class__.__name__, self.name, value)
+        #warn('%s %s %s', self.__class__.__name__, self.name, value)
         self.insert(index, self.makeComment(value, prefix))
 
     def makeComment(self, value, prefix='#'):
         prefix = self.config.last('commentPrefix', prefix)
         return expression(prefix, value, '$left$right')
 
-    def getVariable(self, ident):
+    def getVariable(self, ident, default=None):
         while self:
             for v in self.variables:
                 if v.get('ident') == ident:
                     return v
             self = self.parent
-        return {}
+        return default
 
     def altIdent(self, value):
-        var = self.getVariable(value)
+        var = self.getVariable(value, {})
         fmt = None
         params = getattr(self, 'parameterIdents', [])
         if var:

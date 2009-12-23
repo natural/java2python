@@ -15,4 +15,8 @@ class Comments2 {
     // single inside other method
     }
 
+    public static void main(String[] args) {
+    }
+
+
 }

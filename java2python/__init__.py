@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from functools import partial
 from itertools import count, dropwhile
 from operator import not_
 from string import Template
@@ -10,6 +11,9 @@ def expression(left='', right='', format='', **kwds):
 
     """
     return dict(left=left, right=right, format=format, **kwds)
+
+
+passExpr = partial(expression, left='pass', right='', format='$left')
 
 
 def parameter(ident='', type='', modifiers='', variadic='', format='$ident', **kwds):
@@ -23,6 +27,10 @@ def parameter(ident='', type='', modifiers='', variadic='', format='$ident', **k
         format=format,
         param=True,
     )
+
+
+clsParam = partial(parameter, ident='cls', type='object')
+selfParam = partial(parameter, ident='self', type='object')
 
 
 def variable(ident='', cls=False, local=False, **kwds):

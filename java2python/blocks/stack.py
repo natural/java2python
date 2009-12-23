@@ -8,8 +8,8 @@ from java2python import *
 from java2python.blocks import *
 
 
-class BlockStack:
-    """
+class BlockStack(object):
+    """ Simple stack of blocks.
 
     """
     def __init__(self, initial):
@@ -94,7 +94,6 @@ class BlockStack:
             default['left'] = values.get(default['left'], default['left'])
         decl = expression(self.renameIdent(ident), default, "$left = $right")
         self.append(decl)
-        warn('%s %s', self.top.name, decl)
 
     def beginClassScopeDecls(self):
         pass
@@ -200,7 +199,6 @@ class BlockStack:
     def addBreak(self, label=None):
         parent = self.top
         if label is not None:
-            warn('Unhandled break with label: %s', label)
             label = self.makeComment(label)
         breakstat = BreakStatement(parent=parent, name='break', expr=label)
         parent.append(breakstat)
@@ -209,7 +207,6 @@ class BlockStack:
     def addContinue(self, label=None):
         parent = self.top
         if label is not None:
-            warn('Unhandled continue with label: %s', label)
             label = self.makeComment(label)
         continuestat = ContinueStatement(parent=parent, name='continue', expr=label)
         parent.append(continuestat)
@@ -231,29 +228,40 @@ class BlockStack:
         return expr
 
     def addLabel(self, value):
+        warn('Label unhandled: %s', value)
         if value:
-            warn('Unhandled label: %s', value)
             value = 'label:%s' % value
         self.addComment(value)
 
     def beginEnumerationDeclaration(self):
+	""" Called by the tree grammar to begin processing an Enum.
+
+	"""
         parent = self.top
         cls = EnumerationClass(parent=parent, name=None)
         parent.append(self.push(cls))
         return cls
 
     def endEnumerationDeclaration(self, pop=True):
+	""" Called by the tree grammar to finish processing an Enum.
+
+	"""
         self.top.endDecl()
         return self.maybePop(pop)
 
     def beginSwitch(self):
+	""" Called by the tree grammar to begin processing a switch statement.
+
+	"""
         parent = self.top
         ifstat = SwitchStatement(parent=parent, name='switch')
         parent.append(self.push(ifstat))
         return ifstat
 
     def addSwitchCase(self, expr):
-        warn('%s %s', self.stack[-2], expr)
+	""" Called by the tree grammar to process a switch case.
+
+	"""
         switch = self.top
         if switch.name == 'switch':
             switch.name = 'if'
@@ -261,18 +269,25 @@ class BlockStack:
             self.push(switch)
         else:
             elifstat = Statement(parent=switch.parent, name='elif')
-            elifstat.setExpression(expression(switch.switchExpression, expr, '$left == $right'))
+	    expr = expression(switch.switchExpression, expr, '$left == $right')
+            elifstat.setExpression(expr)
             switch.parent.append(self.push(elifstat))
 
-
     def addSwitchCaseDefault(self):
+	""" Called by the tree grammar to process the default switch case.
+
+	"""
         switch = self.top
         if switch.name == 'switch':
             pass
         else:
             elsestat = Statement(parent=switch.parent, name='else')
+	    switch.elseExpression = elsestat
             switch.parent.append(self.push(elsestat))
 
     def endSwitch(self, pop=True):
+	""" Called by the tree grammar to finish processing a switch statement.
+
+	"""
         return self.maybePop(pop)
 

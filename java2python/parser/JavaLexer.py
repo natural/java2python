@@ -1,4 +1,4 @@
-# $ANTLR 3.1.1 Java.g 2009-08-24 12:29:31
+# $ANTLR 3.1.1 Java.g 2009-12-23 12:50:10
 
 import sys
 from antlr3 import *
@@ -2731,8 +2731,8 @@ class JavaLexer(Lexer):
             _type = HEX_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1019:13: ( '0' ( 'x' | 'X' ) ( HEX_DIGIT )+ ( INTEGER_TYPE_SUFFIX )? )
-            # Java.g:1019:15: '0' ( 'x' | 'X' ) ( HEX_DIGIT )+ ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1021:13: ( '0' ( 'x' | 'X' ) ( HEX_DIGIT )+ ( INTEGER_TYPE_SUFFIX )? )
+            # Java.g:1021:15: '0' ( 'x' | 'X' ) ( HEX_DIGIT )+ ( INTEGER_TYPE_SUFFIX )?
             pass 
             self.match(48)
             if self.input.LA(1) == 88 or self.input.LA(1) == 120:
@@ -2742,7 +2742,7 @@ class JavaLexer(Lexer):
                 self.recover(mse)
                 raise mse
 
-            # Java.g:1019:29: ( HEX_DIGIT )+
+            # Java.g:1021:29: ( HEX_DIGIT )+
             cnt1 = 0
             while True: #loop1
                 alt1 = 2
@@ -2753,7 +2753,7 @@ class JavaLexer(Lexer):
 
 
                 if alt1 == 1:
-                    # Java.g:1019:29: HEX_DIGIT
+                    # Java.g:1021:29: HEX_DIGIT
                     pass 
                     self.mHEX_DIGIT()
 
@@ -2768,14 +2768,14 @@ class JavaLexer(Lexer):
                 cnt1 += 1
 
 
-            # Java.g:1019:40: ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1021:40: ( INTEGER_TYPE_SUFFIX )?
             alt2 = 2
             LA2_0 = self.input.LA(1)
 
             if (LA2_0 == 76 or LA2_0 == 108) :
                 alt2 = 1
             if alt2 == 1:
-                # Java.g:1019:40: INTEGER_TYPE_SUFFIX
+                # Java.g:1021:40: INTEGER_TYPE_SUFFIX
                 pass 
                 self.mINTEGER_TYPE_SUFFIX()
 
@@ -2802,10 +2802,10 @@ class JavaLexer(Lexer):
             _type = DECIMAL_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1021:17: ( ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( INTEGER_TYPE_SUFFIX )? )
-            # Java.g:1021:19: ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1023:17: ( ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( INTEGER_TYPE_SUFFIX )? )
+            # Java.g:1023:19: ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( INTEGER_TYPE_SUFFIX )?
             pass 
-            # Java.g:1021:19: ( '0' | '1' .. '9' ( '0' .. '9' )* )
+            # Java.g:1023:19: ( '0' | '1' .. '9' ( '0' .. '9' )* )
             alt4 = 2
             LA4_0 = self.input.LA(1)
 
@@ -2819,16 +2819,16 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt4 == 1:
-                # Java.g:1021:20: '0'
+                # Java.g:1023:20: '0'
                 pass 
                 self.match(48)
 
 
             elif alt4 == 2:
-                # Java.g:1021:26: '1' .. '9' ( '0' .. '9' )*
+                # Java.g:1023:26: '1' .. '9' ( '0' .. '9' )*
                 pass 
                 self.matchRange(49, 57)
-                # Java.g:1021:35: ( '0' .. '9' )*
+                # Java.g:1023:35: ( '0' .. '9' )*
                 while True: #loop3
                     alt3 = 2
                     LA3_0 = self.input.LA(1)
@@ -2838,7 +2838,7 @@ class JavaLexer(Lexer):
 
 
                     if alt3 == 1:
-                        # Java.g:1021:35: '0' .. '9'
+                        # Java.g:1023:35: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
@@ -2850,14 +2850,14 @@ class JavaLexer(Lexer):
 
 
 
-            # Java.g:1021:46: ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1023:46: ( INTEGER_TYPE_SUFFIX )?
             alt5 = 2
             LA5_0 = self.input.LA(1)
 
             if (LA5_0 == 76 or LA5_0 == 108) :
                 alt5 = 1
             if alt5 == 1:
-                # Java.g:1021:46: INTEGER_TYPE_SUFFIX
+                # Java.g:1023:46: INTEGER_TYPE_SUFFIX
                 pass 
                 self.mINTEGER_TYPE_SUFFIX()
 
@@ -2884,11 +2884,11 @@ class JavaLexer(Lexer):
             _type = OCTAL_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1023:15: ( '0' ( '0' .. '7' )+ ( INTEGER_TYPE_SUFFIX )? )
-            # Java.g:1023:17: '0' ( '0' .. '7' )+ ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1025:15: ( '0' ( '0' .. '7' )+ ( INTEGER_TYPE_SUFFIX )? )
+            # Java.g:1025:17: '0' ( '0' .. '7' )+ ( INTEGER_TYPE_SUFFIX )?
             pass 
             self.match(48)
-            # Java.g:1023:21: ( '0' .. '7' )+
+            # Java.g:1025:21: ( '0' .. '7' )+
             cnt6 = 0
             while True: #loop6
                 alt6 = 2
@@ -2899,7 +2899,7 @@ class JavaLexer(Lexer):
 
 
                 if alt6 == 1:
-                    # Java.g:1023:22: '0' .. '7'
+                    # Java.g:1025:22: '0' .. '7'
                     pass 
                     self.matchRange(48, 55)
 
@@ -2914,14 +2914,14 @@ class JavaLexer(Lexer):
                 cnt6 += 1
 
 
-            # Java.g:1023:33: ( INTEGER_TYPE_SUFFIX )?
+            # Java.g:1025:33: ( INTEGER_TYPE_SUFFIX )?
             alt7 = 2
             LA7_0 = self.input.LA(1)
 
             if (LA7_0 == 76 or LA7_0 == 108) :
                 alt7 = 1
             if alt7 == 1:
-                # Java.g:1023:33: INTEGER_TYPE_SUFFIX
+                # Java.g:1025:33: INTEGER_TYPE_SUFFIX
                 pass 
                 self.mINTEGER_TYPE_SUFFIX()
 
@@ -2945,8 +2945,8 @@ class JavaLexer(Lexer):
     def mHEX_DIGIT(self, ):
 
         try:
-            # Java.g:1026:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            # Java.g:1026:13: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
+            # Java.g:1028:11: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            # Java.g:1028:13: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
             pass 
             if (48 <= self.input.LA(1) <= 57) or (65 <= self.input.LA(1) <= 70) or (97 <= self.input.LA(1) <= 102):
                 self.input.consume()
@@ -2971,8 +2971,8 @@ class JavaLexer(Lexer):
     def mINTEGER_TYPE_SUFFIX(self, ):
 
         try:
-            # Java.g:1029:21: ( ( 'l' | 'L' ) )
-            # Java.g:1029:23: ( 'l' | 'L' )
+            # Java.g:1031:21: ( ( 'l' | 'L' ) )
+            # Java.g:1031:23: ( 'l' | 'L' )
             pass 
             if self.input.LA(1) == 76 or self.input.LA(1) == 108:
                 self.input.consume()
@@ -3000,7 +3000,7 @@ class JavaLexer(Lexer):
             _type = FLOATING_POINT_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1032:5: ( ( '0' .. '9' )+ ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX ) | DOT ( '0' .. '9' )+ ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? )
+            # Java.g:1034:5: ( ( '0' .. '9' )+ ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX ) | DOT ( '0' .. '9' )+ ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? )
             alt17 = 2
             LA17_0 = self.input.LA(1)
 
@@ -3014,9 +3014,9 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt17 == 1:
-                # Java.g:1032:9: ( '0' .. '9' )+ ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX )
+                # Java.g:1034:9: ( '0' .. '9' )+ ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX )
                 pass 
-                # Java.g:1032:9: ( '0' .. '9' )+
+                # Java.g:1034:9: ( '0' .. '9' )+
                 cnt8 = 0
                 while True: #loop8
                     alt8 = 2
@@ -3027,7 +3027,7 @@ class JavaLexer(Lexer):
 
 
                     if alt8 == 1:
-                        # Java.g:1032:10: '0' .. '9'
+                        # Java.g:1034:10: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
@@ -3042,7 +3042,7 @@ class JavaLexer(Lexer):
                     cnt8 += 1
 
 
-                # Java.g:1033:9: ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX )
+                # Java.g:1035:9: ( DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )? | EXPONENT ( FLOAT_TYPE_SUFFIX )? | FLOAT_TYPE_SUFFIX )
                 alt13 = 3
                 LA13 = self.input.LA(1)
                 if LA13 == 46:
@@ -3057,10 +3057,10 @@ class JavaLexer(Lexer):
                     raise nvae
 
                 if alt13 == 1:
-                    # Java.g:1034:13: DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )?
+                    # Java.g:1036:13: DOT ( '0' .. '9' )* ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )?
                     pass 
                     self.mDOT()
-                    # Java.g:1034:17: ( '0' .. '9' )*
+                    # Java.g:1036:17: ( '0' .. '9' )*
                     while True: #loop9
                         alt9 = 2
                         LA9_0 = self.input.LA(1)
@@ -3070,7 +3070,7 @@ class JavaLexer(Lexer):
 
 
                         if alt9 == 1:
-                            # Java.g:1034:18: '0' .. '9'
+                            # Java.g:1036:18: '0' .. '9'
                             pass 
                             self.matchRange(48, 57)
 
@@ -3079,27 +3079,27 @@ class JavaLexer(Lexer):
                             break #loop9
 
 
-                    # Java.g:1034:29: ( EXPONENT )?
+                    # Java.g:1036:29: ( EXPONENT )?
                     alt10 = 2
                     LA10_0 = self.input.LA(1)
 
                     if (LA10_0 == 69 or LA10_0 == 101) :
                         alt10 = 1
                     if alt10 == 1:
-                        # Java.g:1034:29: EXPONENT
+                        # Java.g:1036:29: EXPONENT
                         pass 
                         self.mEXPONENT()
 
 
 
-                    # Java.g:1034:39: ( FLOAT_TYPE_SUFFIX )?
+                    # Java.g:1036:39: ( FLOAT_TYPE_SUFFIX )?
                     alt11 = 2
                     LA11_0 = self.input.LA(1)
 
                     if (LA11_0 == 68 or LA11_0 == 70 or LA11_0 == 100 or LA11_0 == 102) :
                         alt11 = 1
                     if alt11 == 1:
-                        # Java.g:1034:39: FLOAT_TYPE_SUFFIX
+                        # Java.g:1036:39: FLOAT_TYPE_SUFFIX
                         pass 
                         self.mFLOAT_TYPE_SUFFIX()
 
@@ -3108,17 +3108,17 @@ class JavaLexer(Lexer):
 
 
                 elif alt13 == 2:
-                    # Java.g:1035:13: EXPONENT ( FLOAT_TYPE_SUFFIX )?
+                    # Java.g:1037:13: EXPONENT ( FLOAT_TYPE_SUFFIX )?
                     pass 
                     self.mEXPONENT()
-                    # Java.g:1035:22: ( FLOAT_TYPE_SUFFIX )?
+                    # Java.g:1037:22: ( FLOAT_TYPE_SUFFIX )?
                     alt12 = 2
                     LA12_0 = self.input.LA(1)
 
                     if (LA12_0 == 68 or LA12_0 == 70 or LA12_0 == 100 or LA12_0 == 102) :
                         alt12 = 1
                     if alt12 == 1:
-                        # Java.g:1035:22: FLOAT_TYPE_SUFFIX
+                        # Java.g:1037:22: FLOAT_TYPE_SUFFIX
                         pass 
                         self.mFLOAT_TYPE_SUFFIX()
 
@@ -3127,7 +3127,7 @@ class JavaLexer(Lexer):
 
 
                 elif alt13 == 3:
-                    # Java.g:1036:13: FLOAT_TYPE_SUFFIX
+                    # Java.g:1038:13: FLOAT_TYPE_SUFFIX
                     pass 
                     self.mFLOAT_TYPE_SUFFIX()
 
@@ -3136,10 +3136,10 @@ class JavaLexer(Lexer):
 
 
             elif alt17 == 2:
-                # Java.g:1038:9: DOT ( '0' .. '9' )+ ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )?
+                # Java.g:1040:9: DOT ( '0' .. '9' )+ ( EXPONENT )? ( FLOAT_TYPE_SUFFIX )?
                 pass 
                 self.mDOT()
-                # Java.g:1038:13: ( '0' .. '9' )+
+                # Java.g:1040:13: ( '0' .. '9' )+
                 cnt14 = 0
                 while True: #loop14
                     alt14 = 2
@@ -3150,7 +3150,7 @@ class JavaLexer(Lexer):
 
 
                     if alt14 == 1:
-                        # Java.g:1038:14: '0' .. '9'
+                        # Java.g:1040:14: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
@@ -3165,27 +3165,27 @@ class JavaLexer(Lexer):
                     cnt14 += 1
 
 
-                # Java.g:1038:25: ( EXPONENT )?
+                # Java.g:1040:25: ( EXPONENT )?
                 alt15 = 2
                 LA15_0 = self.input.LA(1)
 
                 if (LA15_0 == 69 or LA15_0 == 101) :
                     alt15 = 1
                 if alt15 == 1:
-                    # Java.g:1038:25: EXPONENT
+                    # Java.g:1040:25: EXPONENT
                     pass 
                     self.mEXPONENT()
 
 
 
-                # Java.g:1038:35: ( FLOAT_TYPE_SUFFIX )?
+                # Java.g:1040:35: ( FLOAT_TYPE_SUFFIX )?
                 alt16 = 2
                 LA16_0 = self.input.LA(1)
 
                 if (LA16_0 == 68 or LA16_0 == 70 or LA16_0 == 100 or LA16_0 == 102) :
                     alt16 = 1
                 if alt16 == 1:
-                    # Java.g:1038:35: FLOAT_TYPE_SUFFIX
+                    # Java.g:1040:35: FLOAT_TYPE_SUFFIX
                     pass 
                     self.mFLOAT_TYPE_SUFFIX()
 
@@ -3208,8 +3208,8 @@ class JavaLexer(Lexer):
     def mEXPONENT(self, ):
 
         try:
-            # Java.g:1042:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            # Java.g:1042:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            # Java.g:1044:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            # Java.g:1044:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             pass 
             if self.input.LA(1) == 69 or self.input.LA(1) == 101:
                 self.input.consume()
@@ -3218,7 +3218,7 @@ class JavaLexer(Lexer):
                 self.recover(mse)
                 raise mse
 
-            # Java.g:1042:22: ( '+' | '-' )?
+            # Java.g:1044:22: ( '+' | '-' )?
             alt18 = 2
             LA18_0 = self.input.LA(1)
 
@@ -3237,7 +3237,7 @@ class JavaLexer(Lexer):
 
 
 
-            # Java.g:1042:33: ( '0' .. '9' )+
+            # Java.g:1044:33: ( '0' .. '9' )+
             cnt19 = 0
             while True: #loop19
                 alt19 = 2
@@ -3248,7 +3248,7 @@ class JavaLexer(Lexer):
 
 
                 if alt19 == 1:
-                    # Java.g:1042:34: '0' .. '9'
+                    # Java.g:1044:34: '0' .. '9'
                     pass 
                     self.matchRange(48, 57)
 
@@ -3279,8 +3279,8 @@ class JavaLexer(Lexer):
     def mFLOAT_TYPE_SUFFIX(self, ):
 
         try:
-            # Java.g:1045:19: ( ( 'f' | 'F' | 'd' | 'D' ) )
-            # Java.g:1045:21: ( 'f' | 'F' | 'd' | 'D' )
+            # Java.g:1047:19: ( ( 'f' | 'F' | 'd' | 'D' ) )
+            # Java.g:1047:21: ( 'f' | 'F' | 'd' | 'D' )
             pass 
             if self.input.LA(1) == 68 or self.input.LA(1) == 70 or self.input.LA(1) == 100 or self.input.LA(1) == 102:
                 self.input.consume()
@@ -3308,11 +3308,11 @@ class JavaLexer(Lexer):
             _type = CHARACTER_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1048:5: ( '\\'' ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) ) '\\'' )
-            # Java.g:1048:9: '\\'' ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) ) '\\''
+            # Java.g:1050:5: ( '\\'' ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) ) '\\'' )
+            # Java.g:1050:9: '\\'' ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) ) '\\''
             pass 
             self.match(39)
-            # Java.g:1048:14: ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) )
+            # Java.g:1050:14: ( ESCAPE_SEQUENCE | ~ ( '\\'' | '\\\\' ) )
             alt20 = 2
             LA20_0 = self.input.LA(1)
 
@@ -3326,13 +3326,13 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt20 == 1:
-                # Java.g:1048:16: ESCAPE_SEQUENCE
+                # Java.g:1050:16: ESCAPE_SEQUENCE
                 pass 
                 self.mESCAPE_SEQUENCE()
 
 
             elif alt20 == 2:
-                # Java.g:1048:34: ~ ( '\\'' | '\\\\' )
+                # Java.g:1050:34: ~ ( '\\'' | '\\\\' )
                 pass 
                 if (0 <= self.input.LA(1) <= 38) or (40 <= self.input.LA(1) <= 91) or (93 <= self.input.LA(1) <= 65535):
                     self.input.consume()
@@ -3366,11 +3366,11 @@ class JavaLexer(Lexer):
             _type = STRING_LITERAL
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1052:5: ( '\"' ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )* '\"' )
-            # Java.g:1052:8: '\"' ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )* '\"'
+            # Java.g:1054:5: ( '\"' ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )* '\"' )
+            # Java.g:1054:8: '\"' ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )* '\"'
             pass 
             self.match(34)
-            # Java.g:1052:12: ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )*
+            # Java.g:1054:12: ( ESCAPE_SEQUENCE | ~ ( '\\\\' | '\"' ) )*
             while True: #loop21
                 alt21 = 3
                 LA21_0 = self.input.LA(1)
@@ -3382,13 +3382,13 @@ class JavaLexer(Lexer):
 
 
                 if alt21 == 1:
-                    # Java.g:1052:14: ESCAPE_SEQUENCE
+                    # Java.g:1054:14: ESCAPE_SEQUENCE
                     pass 
                     self.mESCAPE_SEQUENCE()
 
 
                 elif alt21 == 2:
-                    # Java.g:1052:32: ~ ( '\\\\' | '\"' )
+                    # Java.g:1054:32: ~ ( '\\\\' | '\"' )
                     pass 
                     if (0 <= self.input.LA(1) <= 33) or (35 <= self.input.LA(1) <= 91) or (93 <= self.input.LA(1) <= 65535):
                         self.input.consume()
@@ -3422,7 +3422,7 @@ class JavaLexer(Lexer):
     def mESCAPE_SEQUENCE(self, ):
 
         try:
-            # Java.g:1057:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESCAPE | OCTAL_ESCAPE )
+            # Java.g:1059:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UNICODE_ESCAPE | OCTAL_ESCAPE )
             alt22 = 3
             LA22_0 = self.input.LA(1)
 
@@ -3445,7 +3445,7 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt22 == 1:
-                # Java.g:1057:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
+                # Java.g:1059:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
                 pass 
                 self.match(92)
                 if self.input.LA(1) == 34 or self.input.LA(1) == 39 or self.input.LA(1) == 92 or self.input.LA(1) == 98 or self.input.LA(1) == 102 or self.input.LA(1) == 110 or self.input.LA(1) == 114 or self.input.LA(1) == 116:
@@ -3458,13 +3458,13 @@ class JavaLexer(Lexer):
 
 
             elif alt22 == 2:
-                # Java.g:1058:9: UNICODE_ESCAPE
+                # Java.g:1060:9: UNICODE_ESCAPE
                 pass 
                 self.mUNICODE_ESCAPE()
 
 
             elif alt22 == 3:
-                # Java.g:1059:9: OCTAL_ESCAPE
+                # Java.g:1061:9: OCTAL_ESCAPE
                 pass 
                 self.mOCTAL_ESCAPE()
 
@@ -3482,7 +3482,7 @@ class JavaLexer(Lexer):
     def mOCTAL_ESCAPE(self, ):
 
         try:
-            # Java.g:1064:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            # Java.g:1066:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
             alt23 = 3
             LA23_0 = self.input.LA(1)
 
@@ -3519,25 +3519,25 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt23 == 1:
-                # Java.g:1064:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                # Java.g:1066:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1064:14: ( '0' .. '3' )
-                # Java.g:1064:15: '0' .. '3'
+                # Java.g:1066:14: ( '0' .. '3' )
+                # Java.g:1066:15: '0' .. '3'
                 pass 
                 self.matchRange(48, 51)
 
 
 
-                # Java.g:1064:25: ( '0' .. '7' )
-                # Java.g:1064:26: '0' .. '7'
+                # Java.g:1066:25: ( '0' .. '7' )
+                # Java.g:1066:26: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
 
 
-                # Java.g:1064:36: ( '0' .. '7' )
-                # Java.g:1064:37: '0' .. '7'
+                # Java.g:1066:36: ( '0' .. '7' )
+                # Java.g:1066:37: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3546,18 +3546,18 @@ class JavaLexer(Lexer):
 
 
             elif alt23 == 2:
-                # Java.g:1065:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                # Java.g:1067:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1065:14: ( '0' .. '7' )
-                # Java.g:1065:15: '0' .. '7'
+                # Java.g:1067:14: ( '0' .. '7' )
+                # Java.g:1067:15: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
 
 
-                # Java.g:1065:25: ( '0' .. '7' )
-                # Java.g:1065:26: '0' .. '7'
+                # Java.g:1067:25: ( '0' .. '7' )
+                # Java.g:1067:26: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3566,11 +3566,11 @@ class JavaLexer(Lexer):
 
 
             elif alt23 == 3:
-                # Java.g:1066:9: '\\\\' ( '0' .. '7' )
+                # Java.g:1068:9: '\\\\' ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1066:14: ( '0' .. '7' )
-                # Java.g:1066:15: '0' .. '7'
+                # Java.g:1068:14: ( '0' .. '7' )
+                # Java.g:1068:15: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3591,8 +3591,8 @@ class JavaLexer(Lexer):
     def mUNICODE_ESCAPE(self, ):
 
         try:
-            # Java.g:1071:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
-            # Java.g:1071:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
+            # Java.g:1073:5: ( '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT )
+            # Java.g:1073:9: '\\\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
             pass 
             self.match(92)
             self.match(117)
@@ -3619,11 +3619,11 @@ class JavaLexer(Lexer):
             _type = IDENT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1075:5: ( JAVA_ID_START ( JAVA_ID_PART )* )
-            # Java.g:1075:9: JAVA_ID_START ( JAVA_ID_PART )*
+            # Java.g:1077:5: ( JAVA_ID_START ( JAVA_ID_PART )* )
+            # Java.g:1077:9: JAVA_ID_START ( JAVA_ID_PART )*
             pass 
             self.mJAVA_ID_START()
-            # Java.g:1075:23: ( JAVA_ID_PART )*
+            # Java.g:1077:23: ( JAVA_ID_PART )*
             while True: #loop24
                 alt24 = 2
                 LA24_0 = self.input.LA(1)
@@ -3633,7 +3633,7 @@ class JavaLexer(Lexer):
 
 
                 if alt24 == 1:
-                    # Java.g:1075:24: JAVA_ID_PART
+                    # Java.g:1077:24: JAVA_ID_PART
                     pass 
                     self.mJAVA_ID_PART()
 
@@ -3660,7 +3660,7 @@ class JavaLexer(Lexer):
     def mJAVA_ID_START(self, ):
 
         try:
-            # Java.g:1080:5: ( '\\u0024' | '\\u0041' .. '\\u005a' | '\\u005f' | '\\u0061' .. '\\u007a' | '\\u00c0' .. '\\u00d6' | '\\u00d8' .. '\\u00f6' | '\\u00f8' .. '\\u00ff' | '\\u0100' .. '\\u1fff' | '\\u3040' .. '\\u318f' | '\\u3300' .. '\\u337f' | '\\u3400' .. '\\u3d2d' | '\\u4e00' .. '\\u9fff' | '\\uf900' .. '\\ufaff' )
+            # Java.g:1082:5: ( '\\u0024' | '\\u0041' .. '\\u005a' | '\\u005f' | '\\u0061' .. '\\u007a' | '\\u00c0' .. '\\u00d6' | '\\u00d8' .. '\\u00f6' | '\\u00f8' .. '\\u00ff' | '\\u0100' .. '\\u1fff' | '\\u3040' .. '\\u318f' | '\\u3300' .. '\\u337f' | '\\u3400' .. '\\u3d2d' | '\\u4e00' .. '\\u9fff' | '\\uf900' .. '\\ufaff' )
             # Java.g:
             pass 
             if self.input.LA(1) == 36 or (65 <= self.input.LA(1) <= 90) or self.input.LA(1) == 95 or (97 <= self.input.LA(1) <= 122) or (192 <= self.input.LA(1) <= 214) or (216 <= self.input.LA(1) <= 246) or (248 <= self.input.LA(1) <= 8191) or (12352 <= self.input.LA(1) <= 12687) or (13056 <= self.input.LA(1) <= 13183) or (13312 <= self.input.LA(1) <= 15661) or (19968 <= self.input.LA(1) <= 40959) or (63744 <= self.input.LA(1) <= 64255):
@@ -3686,7 +3686,7 @@ class JavaLexer(Lexer):
     def mJAVA_ID_PART(self, ):
 
         try:
-            # Java.g:1097:5: ( JAVA_ID_START | '\\u0030' .. '\\u0039' )
+            # Java.g:1099:5: ( JAVA_ID_START | '\\u0030' .. '\\u0039' )
             # Java.g:
             pass 
             if self.input.LA(1) == 36 or (48 <= self.input.LA(1) <= 57) or (65 <= self.input.LA(1) <= 90) or self.input.LA(1) == 95 or (97 <= self.input.LA(1) <= 122) or (192 <= self.input.LA(1) <= 214) or (216 <= self.input.LA(1) <= 246) or (248 <= self.input.LA(1) <= 8191) or (12352 <= self.input.LA(1) <= 12687) or (13056 <= self.input.LA(1) <= 13183) or (13312 <= self.input.LA(1) <= 15661) or (19968 <= self.input.LA(1) <= 40959) or (63744 <= self.input.LA(1) <= 64255):
@@ -3715,8 +3715,8 @@ class JavaLexer(Lexer):
             _type = WS
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1101:5: ( ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' ) )
-            # Java.g:1101:8: ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' )
+            # Java.g:1103:5: ( ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' ) )
+            # Java.g:1103:8: ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' )
             pass 
             if (9 <= self.input.LA(1) <= 10) or (12 <= self.input.LA(1) <= 13) or self.input.LA(1) == 32:
                 self.input.consume()
@@ -3749,11 +3749,11 @@ class JavaLexer(Lexer):
             _type = COMMENT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1105:5: ( '/*' ( options {greedy=false; } : . )* '*/' )
-            # Java.g:1105:9: '/*' ( options {greedy=false; } : . )* '*/'
+            # Java.g:1107:5: ( '/*' ( options {greedy=false; } : . )* '*/' )
+            # Java.g:1107:9: '/*' ( options {greedy=false; } : . )* '*/'
             pass 
             self.match("/*")
-            # Java.g:1105:14: ( options {greedy=false; } : . )*
+            # Java.g:1107:14: ( options {greedy=false; } : . )*
             while True: #loop25
                 alt25 = 2
                 LA25_0 = self.input.LA(1)
@@ -3772,7 +3772,7 @@ class JavaLexer(Lexer):
 
 
                 if alt25 == 1:
-                    # Java.g:1105:42: .
+                    # Java.g:1107:42: .
                     pass 
                     self.matchAny()
 
@@ -3806,11 +3806,11 @@ class JavaLexer(Lexer):
             _type = LINE_COMMENT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1109:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
-            # Java.g:1109:7: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+            # Java.g:1111:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
+            # Java.g:1111:7: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
             pass 
             self.match("//")
-            # Java.g:1109:12: (~ ( '\\n' | '\\r' ) )*
+            # Java.g:1111:12: (~ ( '\\n' | '\\r' ) )*
             while True: #loop26
                 alt26 = 2
                 LA26_0 = self.input.LA(1)
@@ -3820,7 +3820,7 @@ class JavaLexer(Lexer):
 
 
                 if alt26 == 1:
-                    # Java.g:1109:12: ~ ( '\\n' | '\\r' )
+                    # Java.g:1111:12: ~ ( '\\n' | '\\r' )
                     pass 
                     if (0 <= self.input.LA(1) <= 9) or (11 <= self.input.LA(1) <= 12) or (14 <= self.input.LA(1) <= 65535):
                         self.input.consume()
@@ -3835,14 +3835,14 @@ class JavaLexer(Lexer):
                     break #loop26
 
 
-            # Java.g:1109:26: ( '\\r' )?
+            # Java.g:1111:26: ( '\\r' )?
             alt27 = 2
             LA27_0 = self.input.LA(1)
 
             if (LA27_0 == 13) :
                 alt27 = 1
             if alt27 == 1:
-                # Java.g:1109:26: '\\r'
+                # Java.g:1111:26: '\\r'
                 pass 
                 self.match(13)
 

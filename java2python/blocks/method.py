@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from string import Template
-from java2python import parameter, expression, maybeAttr, formatParameter
+from java2python import clsParam, selfParam, expression, maybeAttr, formatParameter
 from java2python.blocks.block import Block
 
 
@@ -39,32 +38,49 @@ class Method(Block):
         parameters = self.parameterIdents
         return 'def %s(%s):' % (self.name, str.join(', ', parameters))
 
-    @property
-    def parameterIdents(self):
-        return [formatParameter(p) for p in self.parameters]
-
-
-    def setType(self, value):
-        self.type = value
-
     def addModifiers(self, modifiers):
+	""" Adds modifiers to this method.  May also add classmethod decorator.
+
+	"""
         Block.addModifiers(self, modifiers)
-        if self.isStatic:
+	if self.isStatic:
             self.decorators.append('classmethod')
 
     def addParameters(self, params):
-        if self.isStatic:
-            first = parameter(ident='cls', type='object')
-        else:
-            first = parameter(ident='self', type='object')
+	""" Adds parameters to this method.
+
+	"""
+	first = clsParam() if self.isStatic else selfParam()
         self.parameters.extend([first] + params)
 
     def addSuperCall(self, expr):
+	""" Adds a super call to the given expression and inserts it
+            as a child of this method.
+
+	"""
         expr.update(format="super(${left}, self).__init__(${right})",
                     left=self.parent.name, super=True)
         self.insert(0, expr)
 
     def maybeAddSuperCall(self):
+	""" Adds an empty super call if any child of this method has a
+            super indicator.
+
+	"""
         supers = [block.get('super') for block in self if maybeAttr(block, 'get')]
         if not any(supers):
             self.addSuperCall(expression())
+
+    @property
+    def parameterIdents(self):
+	""" Returns a list of formatted parameters for this method.
+
+	"""
+        return [formatParameter(p) for p in self.parameters]
+
+    def setType(self, value):
+	""" Sets the type of this method.
+
+	"""
+        self.type = value
+

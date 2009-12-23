@@ -641,13 +641,15 @@ catchClause
 
 
 switchBlockLabels
-    :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel? switchCaseLabel*)
+// This is the original grammar that produces duplicate case blocks:
+//  :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel? switchCaseLabel?)
+    :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel?)
     ;
 
 
 switchCaseLabel
     :   ^(CASE
-          ex0=expression { self.addSwitchCase($ex0.value) }
+          ( ex0=expression { self.addSwitchCase($ex0.value) } )
           blockStatement*
         )
         { self.maybePop(True) }
