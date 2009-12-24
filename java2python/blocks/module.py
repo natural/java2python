@@ -3,7 +3,7 @@
 """ java2python.blocks.module -> defines the Module block type.
 
 """
-from java2python.blocks.block import Block
+from java2python.blocks import Block
 
 
 class Module(Block):

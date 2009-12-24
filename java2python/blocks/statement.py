@@ -3,7 +3,7 @@
 """ java2python.blocks.statement -> defines various Statement block types.
 
 """
-from java2python.blocks.block import Block
+from java2python.blocks import Block
 
 
 class Statement(Block):

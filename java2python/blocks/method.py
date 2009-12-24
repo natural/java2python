@@ -4,7 +4,7 @@
 
 """
 from java2python import clsParam, selfParam, expression, maybeAttr, formatParameter
-from java2python.blocks.block import Block
+from java2python.blocks import Block
 
 
 class Method(Block):

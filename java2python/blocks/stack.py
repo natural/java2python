@@ -3,10 +3,24 @@
 """ java2python.blocks.stack -> a simple stack of source blocks.
 
 """
+from functools import partial
 from logging import info, debug, warn
 
 from java2python import expression, isDict, maybeAttr, nameCounter, variable
-from java2python.blocks import Class, EnumerationClass, Method, Statement
+from java2python.blocks import Class, Enumeration, Method, Statement
+
+
+assertStatement = partial(Statement, name='assert')
+breakStatement = partial(Statement, name='break')
+continueStatement = partial(Statement, name='continue')
+elifStatement = partial(Statement, name='elif')
+elseStatement = partial(Statement, name='else')
+exceptStatement = partial(Statement, name='except')
+forStatement = partial(Statement, name='for')
+ifStatement = partial(Statement, name='if')
+tryStatement = partial(Statement, name='try')
+whileStatement = partial(Statement, name='while')
+withStatement = partial(Statement, name='with')
 
 
 class BlockStack(object):
@@ -138,7 +152,7 @@ class BlockStack(object):
 
     def beginForEach(self):
         parent = self.top
-        forblock = Statement(parent=parent, name='for')
+        forblock = forStatement(parent=parent)
         parent.append(self.push(forblock))
         return forblock
 
@@ -147,7 +161,7 @@ class BlockStack(object):
 
     def beginForLoop(self, init, cond, update):
 	parent = self.top
-	whileloop = Statement(parent=parent, name='while', expr=cond)
+	whileloop = whileStatement(parent=parent, expr=cond)
 	whileloop.updates = update
 	parent.append(self.push(whileloop))
 	return whileloop
@@ -159,7 +173,7 @@ class BlockStack(object):
 
     def beginWhile(self, expr):
         parent = self.top
-        whileblock = Statement(parent=parent, name='while', expr=expr)
+        whileblock = whileStatement(parent=parent, expr=expr)
         parent.append(self.push(whileblock))
         return whileblock
 
@@ -168,14 +182,14 @@ class BlockStack(object):
 
     def beginDo(self):
         parent = self.top
-        doblock = Statement(parent=parent, name='while', expr='True')
+        doblock = whileStatement(parent=parent, expr='True')
         parent.append(self.push(doblock))
         return doblock
 
     def endDo(self, expr, pop=True):
         doblock = self.top
         expr = expression(expr, format="not $left")
-        ifbreak = Statement(parent=doblock, name='if', expr=expr)
+        ifbreak = ifStatement(parent=doblock, expr=expr)
         ifbreak.append('break')
         doblock.append(ifbreak)
         return self.maybePop(pop=pop)
@@ -183,9 +197,9 @@ class BlockStack(object):
 
     def beginIf(self, expr):
         parent = self.top
-        ifstat = Statement(parent=parent, name='if', expr=expr)
+        ifstat = ifStatement(parent=parent, expr=expr)
         parent.append(self.push(ifstat))
-        elsestat = Statement(parent=parent, name='else')
+        elsestat = elseStatement(parent=parent)
         return ifstat, elsestat
 
     def endIf(self, pop=True):
@@ -199,7 +213,7 @@ class BlockStack(object):
 
     def makeAssert(self, expr):
         parent = self.top
-        assertstat = Statement(parent=parent, name='assert', expr=expr)
+        assertstat = assertStatement(parent=parent, expr=expr)
         parent.append(assertstat)
         return assertstat
 
@@ -208,7 +222,7 @@ class BlockStack(object):
 
     def beginTry(self):
         parent = self.top
-        trystat = Statement(parent=parent, name='try')
+        trystat = tryStatement(parent=parent)
         parent.append(self.push(trystat))
         return trystat
 
@@ -217,7 +231,7 @@ class BlockStack(object):
 
     def beginCatch(self, expr):
         parent = self.top
-        exceptstat = Statement(parent=parent, name='except', expr=expr)
+        exceptstat = exceptStatement(parent=parent, expr=expr)
         parent.append(self.push(exceptstat))
         return exceptstat
 
@@ -234,7 +248,7 @@ class BlockStack(object):
         parent = self.top
         if label is not None:
             label = self.makeComment(label)
-        breakstat = Statement(parent=parent, name='break', expr=label)
+        breakstat = breakStatement(parent=parent, expr=label)
         parent.append(breakstat)
         return breakstat
 
@@ -242,7 +256,7 @@ class BlockStack(object):
         parent = self.top
         if label is not None:
             label = self.makeComment(label)
-        continuestat = Statement(parent=parent, name='continue', expr=label)
+        continuestat = continueStatement(parent=parent, expr=label)
         parent.append(continuestat)
         return continuestat
 
@@ -272,7 +286,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        cls = EnumerationClass(parent=parent)
+        cls = Enumeration(parent=parent)
         parent.append(self.push(cls))
         return cls
 
@@ -303,7 +317,7 @@ class BlockStack(object):
             switch.setExpression(case)
             self.push(switch)
         else:
-            elifstat = Statement(parent=switch.parent, name='elif')
+            elifstat = elifStatement(parent=switch.parent)
 	    case = expression(switch.switchExpression, expr, '$left == $right')
             elifstat.setExpression(case)
             switch.parent.append(self.push(elifstat))
@@ -313,10 +327,8 @@ class BlockStack(object):
 
 	"""
         switch = self.top
-	if switch.name is None:
-            pass
-        else:
-            elsestat = Statement(parent=switch.parent, name='else')
+	if switch.name is not None:
+            elsestat = elseStatement(parent=switch.parent)
             switch.parent.append(self.push(elsestat))
 
     def endSwitch(self, pop=True):
@@ -338,7 +350,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        withstat = Statement(parent=parent, name='with')
+        withstat = withStatement(parent=parent)
         parent.append(self.push(withstat))
         return withstat
 
