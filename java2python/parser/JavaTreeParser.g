@@ -83,7 +83,6 @@ importDeclaration
 
 
 typeDeclaration
-    @after {  }
     :   ^(CLASS
           { self.beginClassDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -576,12 +575,13 @@ statement returns [value]
           statement { self.endIf() }
           ({ self.beginElse(elsestat) } statement { self.endElse() })?
         )
-    |   ^(FOR finit0=forInit
-              fcond0=forCondition
-              fupdt0=forUpdater
-              { self.beginForLoop($finit0.values, $fcond0.value, $fupdt0.values) }
-              statement
-              { self.endForLoop() }
+    |   ^(FOR
+          finit0=forInit
+          fcond0=forCondition
+          fupdt0=forUpdater
+          { self.beginForLoop($finit0.values, $fcond0.value, $fupdt0.values) }
+          statement
+          { self.endForLoop() }
         )
     |   ^(FOR_EACH
           { self.beginForEach() }
@@ -727,18 +727,18 @@ expr returns [value]
     |   ^(QUESTION lv0=expr rv0=expr cv0=expr)
           { $value.update(left=lv0, right=rv0,
                           format="(${right} if ${left} else ${center})", center=cv0) }
-    |   ^(LOGICAL_OR expr expr)
-    |   ^(LOGICAL_AND expr expr)
-    |   ^(OR expr expr)
-    |   ^(XOR expr expr)
-    |   ^(AND expr expr)
-    |   ^(EQUAL lv0=expr rv0=expr     { $value = exs(lv0, rv0, "==") })
-    |   ^(NOT_EQUAL lv0=expr rv0=expr { $value = exs(lv0, rv0, "!=") })
+    |   ^(LOGICAL_OR lv0=expr rv0=expr       { $value = exs(lv0, rv0, "or")               })
+    |   ^(LOGICAL_AND lv0=expr rv0=expr      { $value = exs(lv0, rv0, "and")              })
+    |   ^(OR lv0=expr rv0=expr               { $value = exs(lv0, rv0, "|")                })
+    |   ^(XOR lv0=expr rv0=expr              { $value = exs(lv0, rv0, "^")                })
+    |   ^(AND lv0=expr rv0=expr              { $value = exs(lv0, rv0, "&")                })
+    |   ^(EQUAL lv0=expr rv0=expr            { $value = exs(lv0, rv0, "==")               })
+    |   ^(NOT_EQUAL lv0=expr rv0=expr        { $value = exs(lv0, rv0, "!=")               })
     |   ^(INSTANCEOF lv0=expr tp0=type
           { $value = ex(lv0, $tp0.value, "isinstance(${left}, (${right}, ))") })
     |   ^(LESS_OR_EQUAL lv0=expr rv0=expr    { $value = exs(lv0, rv0, "<=")               })
     |   ^(GREATER_OR_EQUAL lv0=expr rv0=expr { $value = exs(lv0, rv0, ">=")               })
-    |   ^(BIT_SHIFT_RIGHT lv0=expr rv0=expr  )
+    |   ^(BIT_SHIFT_RIGHT lv0=expr rv0=expr                                                )
     |   ^(SHIFT_RIGHT lv0=expr rv0=expr      { $value = exs(lv0, rv0, ">>")               })
     |   ^(GREATER_THAN lv0=expr rv0=expr     { $value = exs(lv0, rv0, ">")                })
     |   ^(SHIFT_LEFT lv0=expr rv0=expr       { $value = exs(lv0, rv0, "<<")               })

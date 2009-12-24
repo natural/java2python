@@ -85,6 +85,12 @@ def simpleDocString(block):
         block.insert(0, line)
 
 
+def methodRename(block):
+    renames = block.config.combined('methodRenames')
+    if block.name in renames:
+	block.name = renames[block.name]
+
+
 def getBsrSrc():
     from inspect import getsource
     from java2python.mods.includes import bsr
@@ -116,3 +122,5 @@ def synchronizedDeco(stack):
     if src not in stack.bottom:
         stack.bottom.insert(0, src)
     return expression(left, right, '$left = bsr($left, $right)')
+
+

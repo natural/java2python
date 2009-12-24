@@ -94,6 +94,9 @@ classHandlers = [
 
 ## these functions complete the construction of method blocks.
 methodHandlers = [
+    ## this function uses the methodRenames map above
+    'java2python.mods.methodRename',
+
     ## this function inserts a simple docstring at the beginning of
     ## the class definition.
     'java2python.mods.simpleDocString',
@@ -213,6 +216,7 @@ methodRenames = {
     'not'    : 'not_',
     'or'     : 'or_',
     'print'  : 'print_',
+    'toString' : '__str__',
 }
 
 

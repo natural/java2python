@@ -62,36 +62,54 @@ class BlockStack(object):
         return self.pop() if pop else None
 
     def beginClassDeclaration(self):
+	""" Called by the tree grammar to begin processing a class declaration
+
+	"""
         parent = self.top
         cls = Class(parent=parent, name=None)
         parent.append(self.push(cls))
         return cls
 
     def endClassDeclaration(self, pop=True):
+	""" Called by the tree grammar to finish processing a class declaration
+
+	"""
         cls = self.top
         if maybeAttr(cls.parent, 'isClass'):
             cls.parent.variables.append(variable(ident=cls.name, cls=True))
         return self.maybePop(pop=pop)
 
     def beginInterfaceDeclaration(self):
+	""" Called by the tree grammar to begin processing an interface
+
+	"""
         parent = self.top
         cls = Class(parent=parent, name=None)
         parent.append(self.push(cls))
         return cls
 
     def endInterfaceDeclaration(self, pop=True):
+	""" Called by the tree grammar to finish processing an interface
+
+	"""
         cls = self.top
         if maybeAttr(cls.parent, 'isClass'):
             cls.parent.variables.append(variable(ident=cls.name, cls=True))
         return self.maybePop(pop=pop)
 
     def beginAnnotationDeclaration(self):
+	""" Called by the tree grammar to begin processing an annotation
+
+	"""
         parent = self.top
         anno = AnnotationClass(parent=parent, name=None)
         parent.append(self.push(anno))
         return anno
 
     def endAnnotationDeclration(self, pop=True):
+	""" Called by the tree grammar to finish processing an annotation
+
+	"""
         return self.maybePop(pop=pop)
 
     def addAnnotationMethod(self, modifiers, typ, ident, default=None):

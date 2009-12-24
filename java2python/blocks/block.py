@@ -27,33 +27,33 @@ class Block(object):
         self.variables = []
 
     def __iter__(self):
-        """ to iterate over a block is to iterate over its blocks
+        """ To iterate over a block is to iterate over its blocks
 
         """
         for item in self.blocks:
             yield item
 
     def __len__(self):
-        """ returns the length of this block
+        """ Returns the length of this block
 
         """
         return len(self.blocks)
 
+    def append(self, value):
+        """ Adds value to the end of this block
+
+        """
+        self.insert(len(self), value)
+
     def extend(self, sequence):
-	""" adds values from sequence to end of this block
+	""" Adds values from sequence to end of this block
 
 	"""
 	for item in sequence:
 	    self.append(item)
 
-    def append(self, value):
-        """ adds given value to the end of this block
-
-        """
-        self.insert(len(self), value)
-
     def insert(self, index, value):
-        """ inserts the given value into this block at the specified index
+        """ Inserts value into this block at the specified index
 
         """
         if self.containsOnlyPass:
@@ -178,18 +178,22 @@ class Block(object):
         return value
 
     def addComment(self, value, index=0, prefix='#'):
-        """ adds a comment to this block
+        """ Adds a comment to this block
 
-        this methods doesn't use self.insert so that empty blocks
-        don't have their pass statement popped
         """
         self.insert(index, self.makeComment(value, prefix))
 
     def makeComment(self, value, prefix='#'):
+	""" Formats the given value as a comment
+
+	"""
         prefix = self.config.last('commentPrefix', prefix)
         return expression(prefix, value, '$left$right')
 
     def getVariable(self, ident, default=None):
+	""" Returns variable with given ident or default
+
+	"""
         while self:
             for v in self.variables:
                 if v.get('ident') == ident:
