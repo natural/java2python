@@ -39,6 +39,13 @@ class Block(object):
         """
         return len(self.blocks)
 
+    def extend(self, sequence):
+	""" adds values from sequence to end of this block
+
+	"""
+	for item in sequence:
+	    self.append(item)
+
     def append(self, value):
         """ adds given value to the end of this block
 
@@ -176,7 +183,6 @@ class Block(object):
         this methods doesn't use self.insert so that empty blocks
         don't have their pass statement popped
         """
-        #warn('%s %s %s', self.__class__.__name__, self.name, value)
         self.insert(index, self.makeComment(value, prefix))
 
     def makeComment(self, value, prefix='#'):
@@ -241,12 +247,14 @@ class Block(object):
         """ adds given variable declarations to this block
 
         """
+	typeMap = self.config.combined('typeValueMap')
+	addVar = self.variables.append
         for decl in decls:
             if typ.get('array'):
                 decl['format'] = '$left = []'
             if not decl.get('right'):
                 decl['format'] = '$left = $right'
-                decl['right'] = self.config.combined('typeValueMap').get(typ['left'], 'None')
-            self.variables.append(variable(findKey(decl, 'ident'), local=local, cls=cls))
+                decl['right'] = typeMap.get(typ['left'], 'None')
+            addVar(variable(findKey(decl, 'ident'), local=local, cls=cls))
             self.append(decl)
 

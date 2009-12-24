@@ -576,16 +576,22 @@ statement returns [value]
           statement { self.endIf() }
           ({ self.beginElse(elsestat) } statement { self.endElse() })?
         )
-    |   ^(FOR forInit forCondition forUpdater statement)
+    |   ^(FOR finit0=forInit
+              fcond0=forCondition
+              fupdt0=forUpdater
+              { self.beginForLoop($finit0.values, $fcond0.value, $fupdt0.values) }
+              statement
+              { self.endForLoop() }
+        )
     |   ^(FOR_EACH
-          { self.beginFor() }
+          { self.beginForEach() }
           localModifierList
           type
           id0=IDENT
           ex0=expression
           { self.setExpression(ex($id0.text, $ex0.value, format="${left} in ${right}")) }
           st0=statement { self.append($st0.value) }
-          { self.endFor() }
+          { self.endForEach() }
         )
     |   ^(WHILE
           pe0=parenthesizedExpression
@@ -612,13 +618,18 @@ statement returns [value]
           switchBlockLabels
           { self.endSwitch() }
         )
-    |   ^(SYNCHRONIZED parenthesizedExpression block)
+    |   ^(SYNCHRONIZED
+          { self.beginSync() }
+          (pe0=parenthesizedExpression { self.setExpression($pe0.value) })
+          block
+          { self.endSync() }
+         )
     |   ^(RETURN
           { $value.update(format="return") }
           (ex0=expression { $value.update(right=$ex0.value) })?
           { $value.update(format="return ${right}") }
         )
-    |   ^(THROW expression)
+    |   ^(THROW ex0=expression { self.addThrow($ex0.value) })
     |   ^(BREAK (id0=IDENT { label = $id0.text })?)  { self.addBreak(label=label) }
     |   ^(CONTINUE (id0=IDENT { label = $id0.text })?) { self.addContinue(label=label) }
     |   ^(LABELED_STATEMENT id0=IDENT lb0=statement { self.addLabel($id0.text) })
@@ -652,7 +663,7 @@ switchCaseLabel
           ( ex0=expression { self.addSwitchCase($ex0.value) } )
           blockStatement*
         )
-        { self.maybePop(True) }
+        { self.maybePop(pop=True) }
     ;
 
 
@@ -661,20 +672,26 @@ switchDefaultLabel
           { self.addSwitchCaseDefault() }
           blockStatement*
         )
-        { self.maybePop(True) }
+        { self.maybePop(pop=True) }
     ;
 
 
-forInit
-    :   ^(FOR_INIT (localVariableDeclaration | expression*)?)
+forInit returns [values]
+    @init { $values = [] }
+    :   ^(FOR_INIT (
+          localVariableDeclaration |
+          (ex0=expression { $values.append( $ex0.value)})*)?
+        )
     ;
 
-forCondition
-    :   ^(FOR_CONDITION expression?)
+forCondition returns [value]
+    @init { $value = ex() }
+    :   ^(FOR_CONDITION ex0=expression? {$value = ex($ex0.value, format="(${left})") } )
     ;
 
-forUpdater
-    :   ^(FOR_UPDATE expression*)
+forUpdater returns [values]
+    @init { $values = [] }
+    :   ^(FOR_UPDATE (ex0=expression { $values.append( $ex0.value) })*)
     ;
 
 // EXPRESSIONS

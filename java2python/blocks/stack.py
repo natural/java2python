@@ -4,18 +4,25 @@
 
 """
 from logging import info, debug, warn
-from java2python import *
-from java2python.blocks import *
+
+from java2python import expression, isDict, maybeAttr, nameCounter, variable
+from java2python.blocks import (AnnotationClass, AssertStatement,
+				BreakStatement, Class, EnumerationClass,
+				ExceptStatement, Method, Statement,
+				SwitchStatement, )
 
 
 class BlockStack(object):
-    """ Simple stack of blocks.
+    """ Simple stack of source blocks.
 
     """
     def __init__(self, initial):
         self.stack = [initial]
 
     def __getattr__(self, name):
+	""" Defers missing attribute lookup to the top block.
+
+	"""
         return getattr(self.top, name)
 
     def pop(self):
@@ -64,7 +71,7 @@ class BlockStack(object):
         cls = self.top
         if maybeAttr(cls.parent, 'isClass'):
             cls.parent.variables.append(variable(ident=cls.name, cls=True))
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginInterfaceDeclaration(self):
         parent = self.top
@@ -76,7 +83,7 @@ class BlockStack(object):
         cls = self.top
         if maybeAttr(cls.parent, 'isClass'):
             cls.parent.variables.append(variable(ident=cls.name, cls=True))
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginAnnotationDeclaration(self):
         parent = self.top
@@ -85,7 +92,7 @@ class BlockStack(object):
         return anno
 
     def endAnnotationDeclration(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def addAnnotationMethod(self, modifiers, typ, ident, default=None):
         if not isDict(default):
@@ -112,16 +119,28 @@ class BlockStack(object):
         cls = meth.parent
         if meth.name == '__init__':
             meth.maybeAddSuperCall()
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
-    def beginFor(self):
+    def beginForEach(self):
         parent = self.top
         forblock = Statement(parent=parent, name='for')
         parent.append(self.push(forblock))
         return forblock
 
-    def endFor(self):
-        return self.pop()
+    def endForEach(self, pop=True):
+        return self.maybePop(pop=pop)
+
+    def beginForLoop(self, init, cond, update):
+	parent = self.top
+	whileloop = Statement(parent=parent, name='while', expr=cond)
+	whileloop.updates = update
+	parent.append(self.push(whileloop))
+	return whileloop
+
+    def endForLoop(self, pop=True):
+	loop = self.maybePop(pop=pop)
+	loop.extend(loop.updates)
+        return loop
 
     def beginWhile(self, expr):
         parent = self.top
@@ -130,7 +149,7 @@ class BlockStack(object):
         return whileblock
 
     def endWhile(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginDo(self):
         parent = self.top
@@ -144,7 +163,7 @@ class BlockStack(object):
         ifbreak = Statement(parent=doblock, name='if', expr=expr)
         ifbreak.append('break')
         doblock.append(ifbreak)
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
 
     def beginIf(self, expr):
@@ -155,13 +174,13 @@ class BlockStack(object):
         return ifstat, elsestat
 
     def endIf(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginElse(self, stat):
         self.top.append(self.push(stat))
 
     def endElse(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def makeAssert(self, expr):
         parent = self.top
@@ -179,7 +198,7 @@ class BlockStack(object):
         return trystat
 
     def endTry(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginCatch(self, expr):
         parent = self.top
@@ -188,7 +207,7 @@ class BlockStack(object):
         return exceptstat
 
     def endCatch(self, pop=True):
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginTryFinally(self):
         pass
@@ -247,7 +266,7 @@ class BlockStack(object):
 
 	"""
         self.top.endDecl()
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
     def beginSwitch(self):
 	""" Called by the tree grammar to begin processing a switch statement.
@@ -289,5 +308,27 @@ class BlockStack(object):
 	""" Called by the tree grammar to finish processing a switch statement.
 
 	"""
-        return self.maybePop(pop)
+        return self.maybePop(pop=pop)
 
+    def addThrow(self, expr):
+	""" Called by the tree grammar to process a throw statement.
+
+	"""
+	raiseexpr = expression(right=expr, format='raise $right')
+	self.top.append(raiseexpr)
+	return raiseexpr
+
+    def beginSync(self):
+	""" Called by the tree grammar to begin a synchronized statement.
+
+	"""
+        parent = self.top
+        withstat = Statement(parent=parent, name='with')
+        parent.append(self.push(withstat))
+        return withstat
+
+    def endSync(self, pop=True):
+	""" Called by the tree grammar to finish a synchronized statement.
+
+	"""
+	return self.maybePop(pop=pop)
