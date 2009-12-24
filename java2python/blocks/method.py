@@ -1,23 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" java2python.blocks.method -> defines the Method block type.
+
+"""
 from java2python import clsParam, selfParam, expression, maybeAttr, formatParameter
 from java2python.blocks.block import Block
 
 
 class Method(Block):
-    """
+    """ Method -> block type for representing translated methods.
 
     """
     isMethod = True
 
-    def __init__(self, parent, name):
+    def __init__(self, parent=None, name=None):
         Block.__init__(self, parent, name)
         self.parameters = []
         self.append('pass')
-        self.type = None
 
     def dump(self, output, indent):
-        """ writes the string representation of this block
+        """ Writes the string representation of this block
 
         """
         offset = self.offset(indent)
@@ -77,10 +79,3 @@ class Method(Block):
 
 	"""
         return [formatParameter(p) for p in self.parameters]
-
-    def setType(self, value):
-	""" Sets the type of this method.
-
-	"""
-        self.type = value
-

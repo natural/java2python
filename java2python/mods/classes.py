@@ -125,3 +125,12 @@ def updateConstructor(block):
         meth.addComment('end instance variables')
     #if not meth.hasSuperCall: # and variables:
 
+
+
+def updateAnnotation(block):
+    if maybeAttr(block, 'isAnnotation'):
+	block.bases.append('Annotation')
+	if 'object' in block.bases:
+	    block.bases.remove('object')
+
+

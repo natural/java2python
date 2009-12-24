@@ -613,8 +613,7 @@ statement returns [value]
          ({ self.beginTryFinally() } block { sef.endTryFinally() })?
         )
     |   ^(SWITCH
-          { self.beginSwitch() }
-          (pe0=parenthesizedExpression { self.setExpression($pe0.value) })
+          (pe0=parenthesizedExpression { self.beginSwitch($pe0.value) })
           switchBlockLabels
           { self.endSwitch() }
         )

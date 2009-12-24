@@ -1,22 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from logging import warn
-from java2python import parameter
+""" java2python.blocks.statement -> defines various Statement block types.
+
+"""
 from java2python.blocks.block import Block
 
 
 class Statement(Block):
-    isStatement = True
-    initialPass = True
+    """ Statement -> block type that represents a Python statement.
 
-    def __init__(self, parent, name, expr=None):
+    """
+    isStatement = True
+
+    def __init__(self, parent=None, name=None, expr=None, **kwds):
         Block.__init__(self, parent, name)
-        if self.initialPass:
+	if self.needsInitialPass:
             self.append('pass')
         self.setExpression(expr)
+	for key, value in kwds.items():
+	    setattr(self, key, value)
 
     def dump(self, output, indent):
-        """ writes the string representation of this block
+        """ Writes the string representation of this block
 
         """
         if self.isBadLabel or self.isNoOp:
@@ -40,7 +45,7 @@ class Statement(Block):
         """
         if self.name in ('break', 'continue'):
             names = [p.name for p in self.parents]
-            return 'while' not in names and 'for' not in names
+            return ('while' not in names) and ('for' not in names)
 
     @property
     def isNoOp(self):
@@ -48,7 +53,7 @@ class Statement(Block):
 
         """
         empty = not self.blocks or self.containsOnlyPass
-        return self.name in ('else', 'finally') and empty
+        return (self.name in ('else', 'finally')) and empty
 
     @property
     def needsBlockIndicator(self):
@@ -58,47 +63,24 @@ class Statement(Block):
         return self.name in ('class', 'def', 'elif', 'else', 'except',
                              'finally', 'for', 'if', 'try', 'while', 'with', )
 
+    @property
+    def needsInitialPass(self):
+	return self.name not in ('break', 'assert', 'continue', 'switch', )
 
     def getExpression(self):
+	""" Gets the value of the expression for this Statement.
+
+	"""
         return self.expr
 
     def setExpression(self, value):
-        """ sets the value of the expression for this Statement
+        """ Sets the value of the expression for this Statement
 
-        @param value expression (see formatExpression in BasicBlock class).
-        @return None
         """
+	if self.name == 'except':
+	    renames = self.config.combined('exceptionRenames')
+	    value.update(
+		type=renames.get(value['type'], value['type']),
+		format='(${type}, ), ${ident}',
+	    )
         self.expr = value
-
-
-class AssertStatement(Statement):
-    initialPass = False
-
-
-class BreakStatement(Statement):
-    initialPass = False
-
-
-class ContinueStatement(Statement):
-    initialPass = False
-
-
-class ExceptStatement(Statement):
-    def setExpression(self, expr):
-        renames = self.config.combined('exceptionRenames')
-        expr['type'] = renames.get(expr['type'], expr['type'])
-        expr['format'] = '(${type}, ), ${ident}'
-        Statement.setExpression(self, expr)
-
-
-class SwitchStatement(Statement):
-    initialPass = False
-    switchExpression = None
-
-    def __init__(self, parent, name, expr=None):
-        Statement.__init__(self, parent, name, expr)
-        self.switchExpression = expr
-	self.elseExpression = None
-
-    def setExpression(self, expr):
-        self.expr = self.switchExpression = expr

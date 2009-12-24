@@ -1,24 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from logging import warn
+""" java2python.blocks.cls -> defines the Class block type and various subtypes.
+
+"""
 from java2python import maybeAttr, expression, formatParameter
 from java2python.blocks.block import Block
 
 
 class Class(Block):
+    """ Class -> block type for representing translated classes.
+
+    """
     defaultBases = []
     isClass = True
 
-    def __init__(self, parent, name):
+    def __init__(self, parent=None, name=None, **kwds):
         Block.__init__(self, parent, name)
         self.bases = self.defaultBases[:]
         self.append('pass')
+	for key, value in kwds.items():
+	    setattr(self, key, value)
 
     def dump(self, output, indent):
-        """ writes the string representation of this block
+        """ Writes the string representation of this block
 
-        @param output any writable file-like object
-        @param indent indentation level of this block
         """
         for handler in self.config.handlers('classHandlers'):
             handler(self)
@@ -29,11 +34,9 @@ class Class(Block):
         Block.dump(self, output, indent+1)
         output.write('\n')
 
-
     def decl(self):
         """ generates a class statement accounting for base types
 
-        @return class declaration as string
         """
         bases, name = self.bases, self.name
         if bases:
@@ -43,9 +46,17 @@ class Class(Block):
             decl = 'class %s:' % (name, )
         return decl
 
+    def addBases(self, bases):
+	""" Extend this classes bases with the given sequence.
+
+	"""
+        self.bases.extend(bases)
+
     @property
     def initMethod(self):
-        """ returns the __init__ method from this block """
+        """ Returns the __init__ method from this block or None
+
+	"""
         for meth in self.methods:
             if meth.name == '__init__':
                 return meth
@@ -59,26 +70,27 @@ class Class(Block):
             if maybeAttr(block, 'isMethod'):
                 yield block
 
-    def addBases(self, bases):
-        self.bases.extend(bases)
-
-
-
-class AnnotationClass(Class):
-    defaultBases = ['Annotation']
-
 
 class EnumerationClass(Class):
+    """ EnumerationClass -> block type for representing translated enumerations.
+
+    """
     defaultBases = ['Enum']
 
-    def __init__(self, parent, name):
+    def __init__(self, parent=None, name=None):
         Class.__init__(self, parent, name)
         self.values = []
 
     def addEnumValue(self, ident, arguments):
+	""" Called by the tree parser to add an enumerated value.
+
+	"""
         self.values.append((ident, arguments))
 
     def endDecl(self):
+	""" Called by the block stack to finalize the enumeration.
+
+	"""
         values = self.values
         if all(args==None for ident, args in values):
             ## simple enum

@@ -16,7 +16,7 @@ class Block(object):
     config = None
     passLine = [passExpr(), ]
 
-    def __init__(self, parent, name):
+    def __init__(self, parent=None, name=None):
         self.parent = parent
         self.name = name
         self.blocks = []
@@ -25,6 +25,7 @@ class Block(object):
         self.preamble = []
         self.epilogue = []
         self.variables = []
+        self.type = None
 
     def __iter__(self):
         """ To iterate over a block is to iterate over its blocks
@@ -262,3 +263,20 @@ class Block(object):
             addVar(variable(findKey(decl, 'ident'), local=local, cls=cls))
             self.append(decl)
 
+
+    def setType(self, value):
+	""" Sets the type of this block.
+
+	"""
+        self.type = value
+
+
+    def getType(self):
+	""" Gets the type of this block.
+
+	"""
+        return self.type
+
+    def callWriters(self, key, output):
+	for writer in self.config.handlers(key):
+	    writer(self, output)

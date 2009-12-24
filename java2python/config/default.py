@@ -87,6 +87,9 @@ classHandlers = [
     ## the class definition.
     'java2python.mods.simpleDocString',
 
+    ## this function addss a base class to annotation types
+    'java2python.mods.classes.updateAnnotation',
+
     'java2python.mods.classes.insertModifiersAsComments',
     'java2python.mods.classes.updateBases',
 ]

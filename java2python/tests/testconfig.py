@@ -51,5 +51,6 @@ classHandlers = [
     'java2python.mods.simpleDocString',
     'java2python.mods.classes.insertModifiersAsComments',
     'java2python.mods.classes.updateBases',
+    'java2python.mods.classes.updateAnnotation',
 
 ]

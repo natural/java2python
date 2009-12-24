@@ -6,14 +6,11 @@
 from logging import info, debug, warn
 
 from java2python import expression, isDict, maybeAttr, nameCounter, variable
-from java2python.blocks import (AnnotationClass, AssertStatement,
-				BreakStatement, Class, EnumerationClass,
-				ExceptStatement, Method, Statement,
-				SwitchStatement, )
+from java2python.blocks import Class, EnumerationClass, Method, Statement
 
 
 class BlockStack(object):
-    """ Simple stack of source blocks.
+    """ BlockStack -> stack of block objects for the tree parser.
 
     """
     def __init__(self, initial):
@@ -66,7 +63,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        cls = Class(parent=parent, name=None)
+        cls = Class(parent=parent)
         parent.append(self.push(cls))
         return cls
 
@@ -84,7 +81,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        cls = Class(parent=parent, name=None)
+        cls = Class(parent=parent)
         parent.append(self.push(cls))
         return cls
 
@@ -102,7 +99,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        anno = AnnotationClass(parent=parent, name=None)
+        anno = Class(parent=parent, isAnnotation=True)
         parent.append(self.push(anno))
         return anno
 
@@ -128,7 +125,7 @@ class BlockStack(object):
 
     def beginMethodDecl(self):
         parent = self.top
-        meth = Method(parent=parent, name=None)
+        meth = Method(parent=parent)
         parent.append(self.push(meth))
         return meth
 
@@ -202,7 +199,7 @@ class BlockStack(object):
 
     def makeAssert(self, expr):
         parent = self.top
-        assertstat = AssertStatement(parent=parent, name='assert', expr=expr)
+        assertstat = Statement(parent=parent, name='assert', expr=expr)
         parent.append(assertstat)
         return assertstat
 
@@ -220,7 +217,7 @@ class BlockStack(object):
 
     def beginCatch(self, expr):
         parent = self.top
-        exceptstat = ExceptStatement(parent=parent, name='except', expr=expr)
+        exceptstat = Statement(parent=parent, name='except', expr=expr)
         parent.append(self.push(exceptstat))
         return exceptstat
 
@@ -237,7 +234,7 @@ class BlockStack(object):
         parent = self.top
         if label is not None:
             label = self.makeComment(label)
-        breakstat = BreakStatement(parent=parent, name='break', expr=label)
+        breakstat = Statement(parent=parent, name='break', expr=label)
         parent.append(breakstat)
         return breakstat
 
@@ -245,7 +242,7 @@ class BlockStack(object):
         parent = self.top
         if label is not None:
             label = self.makeComment(label)
-        continuestat = ContinueStatement(parent=parent, name='continue', expr=label)
+        continuestat = Statement(parent=parent, name='continue', expr=label)
         parent.append(continuestat)
         return continuestat
 
@@ -275,7 +272,7 @@ class BlockStack(object):
 
 	"""
         parent = self.top
-        cls = EnumerationClass(parent=parent, name=None)
+        cls = EnumerationClass(parent=parent)
         parent.append(self.push(cls))
         return cls
 
@@ -286,28 +283,29 @@ class BlockStack(object):
         self.top.endDecl()
         return self.maybePop(pop=pop)
 
-    def beginSwitch(self):
+    def beginSwitch(self, expr):
 	""" Called by the tree grammar to begin processing a switch statement.
 
 	"""
         parent = self.top
-        ifstat = SwitchStatement(parent=parent, name='switch')
-        parent.append(self.push(ifstat))
-        return ifstat
+        switch = Statement(parent=parent, expr=expr, switchExpression=expr)
+        parent.append(self.push(switch))
+        return switch
 
     def addSwitchCase(self, expr):
 	""" Called by the tree grammar to process a switch case.
 
 	"""
         switch = self.top
-        if switch.name == 'switch':
+	if switch.name is None:
             switch.name = 'if'
-            switch.expr = expression(switch.expr, expr, '$left == $right')
+	    case = expression(switch.getExpression(), expr, '$left == $right')
+            switch.setExpression(case)
             self.push(switch)
         else:
             elifstat = Statement(parent=switch.parent, name='elif')
-	    expr = expression(switch.switchExpression, expr, '$left == $right')
-            elifstat.setExpression(expr)
+	    case = expression(switch.switchExpression, expr, '$left == $right')
+            elifstat.setExpression(case)
             switch.parent.append(self.push(elifstat))
 
     def addSwitchCaseDefault(self):
@@ -315,11 +313,10 @@ class BlockStack(object):
 
 	"""
         switch = self.top
-        if switch.name == 'switch':
+	if switch.name is None:
             pass
         else:
             elsestat = Statement(parent=switch.parent, name='else')
-	    switch.elseExpression = elsestat
             switch.parent.append(self.push(elsestat))
 
     def endSwitch(self, pop=True):
