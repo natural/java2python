@@ -78,7 +78,10 @@ packageDeclaration
 
 
 importDeclaration
-    :   ^(IMPORT STATIC? qualifiedIdentifier DOTSTAR?)
+    @init { star = None }
+    :   ^(IMPORT STATIC? qi0=qualifiedIdentifier (DOTSTAR { star=True })?
+          { self.addImport($qi0.value, star) }
+        )
     ;
 
 

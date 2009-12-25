@@ -3,6 +3,7 @@
 """ java2python.blocks.module -> defines the Module block type.
 
 """
+from java2python import expression
 from java2python.blocks import Block
 
 
@@ -31,6 +32,16 @@ class Module(Block):
 
         """
         self.addComment(value)
+
+    def addImport(self, value, star):
+	""" Adds the given import expression to the preamble
+
+	"""
+	if star:
+	    expr = expression(right=value, format='from $right import *')
+	else:
+	    expr = expression(right=value, format='import $right')
+	self.preamble.append(expr)
 
     @staticmethod
     def getBaseName(infile, outfile):

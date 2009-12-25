@@ -12,7 +12,6 @@ commentPrefix = '## '
 
 ## move inner class definitions to the top of their outer class.
 ## allows the outer class to reference the inner class definition
-## later in its definition.
 bubbleInnerClasses = True
 
 
@@ -210,15 +209,15 @@ typeValueMap = {
 ## replace and/or augment this with their own.
 methodRenames = {
     'equals' : '__eq__',
-    'and'    : 'and_',
-    'del'    : 'del_',
-    'elif'   : 'elif_',
-    'from'   : 'from_',
-    'in'     : 'in_',
-    'is'     : 'is_',
-    'not'    : 'not_',
-    'or'     : 'or_',
-    'print'  : 'print_',
+    # 'and'    : 'and_',
+    # 'del'    : 'del_',
+    # 'elif'   : 'elif_',
+    # 'from'   : 'from_',
+    # 'in'     : 'in_',
+    # 'is'     : 'is_',
+    # 'not'    : 'not_',
+    # 'or'     : 'or_',
+    # 'print'  : 'print_',
     'toString' : '__str__',
 }
 

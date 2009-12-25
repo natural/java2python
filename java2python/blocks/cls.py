@@ -25,32 +25,22 @@ class Class(Block):
         """ Writes the string representation of this block
 
         """
-        for handler in self.config.handlers('classHandlers'):
-            handler(self)
+	self.callHandlers('classHandlers')
         offset = self.offset(indent)
-        decl = self.decl()
-        if decl:
-            output.write('%s%s\n' % (offset, decl))
+        output.write('%s%s\n' % (offset, self.decl))
         Block.dump(self, output, indent+1)
         output.write('\n')
 
+    @property
     def decl(self):
         """ generates a class statement accounting for base types
 
         """
-        bases, name = self.bases, self.name
+	bases, decl, args = self.bases, 'class %s:', (self.name, )
         if bases:
             bases = [self.formatExpression(b) for b in bases]
-            decl = 'class %s(%s):' % (name, str.join(', ', bases))
-        else:
-            decl = 'class %s:' % (name, )
-        return decl
-
-    def addBases(self, bases):
-	""" Extend this classes bases with the given sequence.
-
-	"""
-        self.bases.extend(bases)
+            decl, args = 'class %s(%s):', (self.name, str.join(', ', bases))
+        return decl % args
 
     @property
     def initMethod(self):
@@ -69,3 +59,9 @@ class Class(Block):
         for block in self:
             if maybeAttr(block, 'isMethod'):
                 yield block
+
+    def addBases(self, bases):
+	""" Extend this classes bases with the given sequence.
+
+	"""
+        self.bases.extend(bases)

@@ -124,8 +124,8 @@ class Block(object):
         self.dump(out, 0)
         source = out.getvalue()
         for subs in self.config.all('outputSubs', []):
-            for sub in subs:
-                source = rxsub(sub[0], sub[1], source)
+            for pattern, replacement in subs:
+                source = rxsub(pattern, replacement, source)
         return source
 
     def dump(self, output, indent):
@@ -203,8 +203,7 @@ class Block(object):
         return default
 
     def altIdent(self, value):
-        var = self.getVariable(value, {})
-        fmt = None
+        fmt, var = None, self.getVariable(value, {})
         params = getattr(self, 'parameterIdents', [])
         if var:
             if var.get('cls') and var.get('ident') not in params:
@@ -280,3 +279,7 @@ class Block(object):
     def callWriters(self, key, output):
 	for writer in self.config.handlers(key):
 	    writer(self, output)
+
+    def callHandlers(self, key):
+        for handler in self.config.handlers(key):
+            handler(self)

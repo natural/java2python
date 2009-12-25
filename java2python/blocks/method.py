@@ -23,22 +23,29 @@ class Method(Block):
 
         """
         offset = self.offset(indent)
-        for handler in self.config.handlers('methodHandlers'):
-            handler(self)
+	self.callHandlers('methodHandlers')
         for fmt, seq in (('\n%s%s', self.preamble), ('\n%s@%s', self.decorators)):
             if seq:
                 for item in seq:
                     item = self.formatExpression(item)
                     output.write(fmt % (offset, item))
-        output.write('\n%s%s\n' % (offset, self.decl()))
+        output.write('\n%s%s\n' % (offset, self.decl))
         Block.dump(self, output, indent+1)
 
+    @property
     def decl(self):
         """ generates a class statement accounting for base types
 
         """
         parameters = self.parameterIdents
         return 'def %s(%s):' % (self.name, str.join(', ', parameters))
+
+    @property
+    def parameterIdents(self):
+	""" Returns a list of formatted parameters for this method.
+
+	"""
+        return [formatParameter(p) for p in self.parameters]
 
     def addModifiers(self, modifiers):
 	""" Adds modifiers to this method.  May also add classmethod decorator.
@@ -72,10 +79,3 @@ class Method(Block):
         supers = [block.get('super') for block in self if maybeAttr(block, 'get')]
         if not any(supers):
             self.addSuperCall(expression())
-
-    @property
-    def parameterIdents(self):
-	""" Returns a list of formatted parameters for this method.
-
-	"""
-        return [formatParameter(p) for p in self.parameters]
