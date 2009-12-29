@@ -108,14 +108,6 @@ class Block(object):
             yield p
             p = p.parent
 
-    @property
-    def ___root(self):
-        while self:
-            if not self.parent:
-                break
-            self = self.parent
-        return self
-
     def asString(self):
         """ Returns the python source code representation of this block
 

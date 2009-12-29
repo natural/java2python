@@ -113,6 +113,17 @@ methodHandlers = [
 ]
 
 
+classAnnotationHandlers = [
+    ## this function prints a warning if class decorators are present
+    ## but not supported by this version of python.
+    'java2python.mods.annotations.warnClassDecorators',
+
+    # this function removes class decorators if present but not supported
+    ## by this version of python.
+    'java2python.mods.annotations.filterClassDecorators',
+
+]
+
 ## these functions are writers; they're called to write directly to an
 ## output when a module is dumped.  they use the modulePreamble and
 ## moduleEpilogue values below.

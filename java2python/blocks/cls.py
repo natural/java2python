@@ -25,8 +25,14 @@ class Class(Block):
         """ Writes the string representation of this block
 
         """
-	self.callHandlers('classHandlers')
         offset = self.offset(indent)
+	self.callHandlers('classHandlers')
+	self.callHandlers('classAnnotationHandlers')
+        for fmt, seq in (('\n%s%s\n', self.preamble), ('\n%s@%s\n', self.decorators)):
+            if seq:
+                for item in seq:
+                    item = self.formatExpression(item)
+                    output.write(fmt % (offset, item))
         output.write('%s%s\n' % (offset, self.decl))
         Block.dump(self, output, indent+1)
         output.write('\n')

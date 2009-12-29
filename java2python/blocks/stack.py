@@ -60,6 +60,13 @@ class BlockStack(object):
         return self.stack[-1]
 
     @property
+    def previousOrTop(self):
+	try:
+	    return self.stack[-2]
+	except (IndexError, ):
+	    return self.top
+
+    @property
     def bottom(self):
         """ Returns item at the bottom of the stack. The stack is unchanged.
 
@@ -137,9 +144,13 @@ class BlockStack(object):
     def endClassScopeDecls(self):
         pass
 
-    def beginMethodDecl(self):
+    def beginMethodDecl(self, type=None, ident=None):
         parent = self.top
         meth = Method(parent=parent)
+	if type is not None:
+	    meth.setType(type)
+	if ident is not None:
+	    meth.setIdent(ident)
         parent.append(self.push(meth))
         return meth
 

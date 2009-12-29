@@ -94,7 +94,7 @@ def trimStrings(strings):
     return list(reversed(list(dropwhile(not_, reversed(strings)))))
 
 
-def formatFloatLiteral(value):
+def formatFloat(value):
     """ Turns a java float into a syntactically correct python float.
 
     """

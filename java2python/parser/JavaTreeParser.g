@@ -49,8 +49,7 @@ superClass=LocalTreeParser;
 
 
 @treeparser::header {
-from logging import warn
-from java2python import expression as ex, parameter as px, formatFloatLiteral
+from java2python import expression as ex, parameter as px, formatFloat
 from java2python.parser.local import LocalTreeParser
 }
 
@@ -86,6 +85,7 @@ importDeclaration
 
 
 typeDeclaration
+    @init { self.commentHandler($start) }
     :   ^(CLASS
           { self.beginClassDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -94,12 +94,8 @@ typeDeclaration
           (ec0=extendsClause { self.addBases($ec0.values) })?
           (ic0=implementsClause { self.addBases($ic0.values) })?
           classTopLevelScope
-          {
-            self.commentHandler($start)
-            self.endClassDeclaration()
-          }
+          { self.endClassDeclaration() }
         )
-
     |   ^(INTERFACE
           { self.beginInterfaceDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -107,33 +103,22 @@ typeDeclaration
           genericTypeParameterList?
           (ec0=extendsClause { self.addBases($ec0.values) })?
           interfaceTopLevelScope
-          {
-            self.commentHandler($start)
-            self.endInterfaceDeclaration()
-          }
+          { self.endInterfaceDeclaration() }
         )
-
     |   ^(ENUM
           { self.beginEnumerationDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
           id0=IDENT { self.setIdent(ident=$id0.text) }
           (ic0=implementsClause { self.addBases($ic0.values) })?
           enumTopLevelScope
-          {
-            self.commentHandler($start)
-            self.endEnumerationDeclaration()
-          }
+          { self.endEnumerationDeclaration() }
         )
-
     |   ^(AT
           { self.beginAnnotationDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
           id0=IDENT { self.setIdent(ident=$id0.text) }
           annotationTopLevelScope
-          {
-            self.commentHandler($start)
-            self.endAnnotationDeclration()
-          }
+          { self.endAnnotationDeclration() }
         )
     ;
 
@@ -166,13 +151,13 @@ enumTopLevelScope
     ;
 
 enumConstant
-    @init { args = None }
+    @init { annos = args = None }
     :   ^(id0=IDENT
-          annotationList
+          (an0=annotationList { annos = $an0.values })
           (ag0=arguments { args = $ag0.values })?
           classTopLevelScope?
         )
-        { self.addEnumValue($id0.text, args) }
+        { self.addEnumValue($id0.text, args, annos) }
     ;
 
 
@@ -183,14 +168,13 @@ classTopLevelScope
 
 classScopeDeclarations
     @init  { self.beginClassScopeDecls() }
-    @after { self.endClassScopeDecls() }
-
+    @after {
+        self.endClassScopeDecls()
+        self.commentHandler($start)
+    }
     :   ^(CLASS_INSTANCE_INITIALIZER block)
-
     |   ^(CLASS_STATIC_INITIALIZER block)
-
     |   ^(FUNCTION_METHOD_DECL
-
           { self.beginMethodDecl() }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
@@ -200,48 +184,33 @@ classScopeDeclarations
           arrayDeclaratorList?
           throwsClause?
           block?
-          {
-           self.commentHandler($start)
-           self.endMethodDecl()
-          }
+          { self.endMethodDecl() }
         )
-
     |   ^(VOID_METHOD_DECL
-          { self.beginMethodDecl() }
+          { self.beginMethodDecl(type="void") }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
           id0=IDENT { self.setIdent(ident=$id0.text) }
           fp0=formalParameterList { self.addParameters($fp0.values) }
           throwsClause?
           block?
-          {
-            self.commentHandler($start)
-            self.setType("void")
-            self.endMethodDecl()
-          }
+          { self.endMethodDecl() }
          )
-
     |   ^(VAR_DECLARATION
           md0=modifierList
           tp0=type
           vd0=variableDeclaratorList
           { self.addVariables($vd0.values, $tp0.value, $md0.values, cls=True) }
         )
-
     |   ^(CONSTRUCTOR_DECL
-          { self.beginMethodDecl() }
+          { self.beginMethodDecl(ident="__init__") }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
           fp0=formalParameterList { self.addParameters($fp0.values) }
           throwsClause?
           block
-          {
-            self.commentHandler($start)
-            self.setIdent("__init__")
-            self.endMethodDecl()
-          }
+          { self.endMethodDecl() }
         )
-
     |   typeDeclaration
     ;
 
@@ -252,7 +221,6 @@ interfaceTopLevelScope
 
 
 interfaceScopeDeclarations
-    @after { self.commentHandler($start) }
     :   ^(FUNCTION_METHOD_DECL
           { self.beginMethodDecl() }
           md0=modifierList { self.addModifiers($md0.values) }
@@ -264,30 +232,23 @@ interfaceScopeDeclarations
           throwsClause?
           { self.endMethodDecl() }
         )
-
     |   ^(VOID_METHOD_DECL
-          { self.beginMethodDecl() }
+          { self.beginMethodDecl(type="void") }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
           id0=IDENT { self.setIdent(ident=$id0.text) }
           fp0=formalParameterList { self.addParameters($fp0.values) }
           throwsClause?
-          {
-            self.setType("void")
-            self.endMethodDecl()
-          }
+          { self.endMethodDecl() }
         )
-
     |   ^(VAR_DECLARATION
           md1=modifierList
           tp1=type
           vd1=variableDeclaratorList
           { self.addClassVariables($vd1.values, $tp1.value, $md1.values) }
         )
-
     |   typeDeclaration
     ;
-
 
 variableDeclaratorList returns [values]
     @init { $values = [] }
@@ -308,10 +269,9 @@ variableDeclarator returns [value]
 variableDeclaratorId returns [value]
     @init { $value = ex(format="${left}") }
     :   ^(IDENT
-           {
-            expr = ex(self.altIdent($IDENT.text), format="${left}", rename=True, ident=$IDENT.text)
-            $value.update(expr)
-            }
+           { expr = ex(self.altIdent($IDENT.text), format="${left}", rename=True, ident=$IDENT.text)
+             $value.update(expr)
+           }
           (arrayDeclaratorList { $value.update(format="${left}", array=True) })?
         )
     ;
@@ -328,12 +288,14 @@ arrayDeclarator
     ;
 
 
-arrayDeclaratorList returns [values] @init { $values = [] }
+arrayDeclaratorList returns [values]
+    @init { $values = [] }
     :   ^(ARRAY_DECLARATOR_LIST (ARRAY_DECLARATOR { $values.append($text) })*)
     ;
 
 
-arrayInitializer returns [value] @init { $value, format = "", "${right}" }
+arrayInitializer returns [value]
+    @init { $value, format = "", "${right}" }
     :   ^(ARRAY_INITIALIZER
             (v0=variableInitializer
             { $value, format = ex($value, $v0.value, format), "${left}, ${right}" }
@@ -365,7 +327,7 @@ modifier returns [value]
     |   TRANSIENT         { $value.update(left=$text) }
     |   VOLATILE          { $value.update(left=$text) }
     |   STRICTFP          { $value.update(left=$text) }
-    |   lm0=localModifier { $value = $lm0.value }
+    |   lm0=localModifier { $value = $lm0.value       }
     ;
 
 
@@ -384,11 +346,9 @@ localModifier returns [value]
 type returns [value]
     @init { $value = ex(format="${left}") }
     :   ^(TYPE
-          (pt0=primitiveType { $value.update(left=self.renameType($pt0.text)) } |
-           qt0=qualifiedTypeIdent { $value.update(left=self.renameType($qt0.value)) })
-          (arrayDeclaratorList
-           { $value["array"] = True }
-          )?
+          (pt0=primitiveType      { $value.update(left=self.renameType($pt0.text)) } |
+           qt0=qualifiedTypeIdent { $value.update(left=self.renameType($qt0.value))} )
+          (arrayDeclaratorList    { $value["array"] = True } )?
         )
     ;
 
@@ -416,21 +376,19 @@ primitiveType
 
 
 genericTypeArgumentList returns [values]
+    @init { $values = [] }
     :   ^(GENERIC_TYPE_ARG_LIST genericTypeArgument+)
     ;
-
 
 genericTypeArgument
     :   type
     |   ^(QUESTION genericWildcardBoundType?)
     ;
 
-
 genericWildcardBoundType
     :   ^(EXTENDS type)
     |   ^(SUPER type)
     ;
-
 
 formalParameterList returns [values]
     @init { $values = [] }
@@ -440,7 +398,6 @@ formalParameterList returns [values]
         )
     ;
 
-
 formalParameterStandardDecl returns [value]
     :   ^(FORMAL_PARAM_STD_DECL
           lm0=localModifierList
@@ -449,7 +406,6 @@ formalParameterStandardDecl returns [value]
         ) { $value = px($vd0.value["ident"], $tp0.text, $lm0.values, variadic=False) }
     ;
 
-
 formalParameterVarargDecl returns [value]
     :   ^(FORMAL_PARAM_VARARG_DECL
           lm0=localModifierList
@@ -457,7 +413,6 @@ formalParameterVarargDecl returns [value]
           vd0=variableDeclaratorId
         ) { $value = px($vd0.value["ident"], $tp0.text, $lm0.values, variadic=True) }
     ;
-
 
 qualifiedIdentifier returns [value]
     :   IDENT
@@ -474,8 +429,9 @@ qualifiedIdentifier returns [value]
     ;
 
 
-annotationList
-    :   ^(ANNOTATION_LIST annotation*)
+annotationList returns [values]
+    @init { $values = [] }
+    :   ^(ANNOTATION_LIST (an0=annotation { $values.append($an0.value) })*)
     ;
 
 
@@ -484,14 +440,16 @@ annotation returns [value]
     :   ^(AT
           qi0=qualifiedIdentifier { $value.update(left=$qi0.value, annotation=True) }
           (ai0=annotationInit
-           {   right = ", ".join(self.formatExpression(v) for v in $ai0.values)
-               $value.update(right=right, format="${left}(${right})") }
+           { right = ", ".join(self.formatExpression(v) for v in $ai0.values)
+             $value.update(right=right, format="${left}(${right})")
+           }
           )?
         )
     ;
 
 
 annotationInit returns [values]
+    @init { $values = [] }
     :   ^(ANNOTATION_INIT_BLOCK ai0=annotationInitializers { $values = $ai0.values })
     ;
 
@@ -502,7 +460,6 @@ annotationInitializers returns [values]
     |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue)
     ;
 
-
 annotationInitializer returns [value]
     :   ^(id0=IDENT ae0=annotationElementValue
           { $value = ex(left=self.renameIdent($id0.text),
@@ -510,18 +467,15 @@ annotationInitializer returns [value]
                         format="${left}=${right}") })
     ;
 
-
 annotationElementValue returns [value]
     :   ^(ANNOTATION_INIT_ARRAY_ELEMENT annotationElementValue*)
-    |   annotation
-    |   ex0=expression { $value = $ex0.value }
+    |   (an0=annotation { $value = $an0.value })
+    |   (ex0=expression { $value = $ex0.value })
     ;
-
 
 annotationTopLevelScope
     :   ^(ANNOTATION_TOP_LEVEL_SCOPE annotationScopeDeclarations*)
     ;
-
 
 annotationScopeDeclarations
     @init { default = None }
@@ -537,24 +491,20 @@ annotationScopeDeclarations
     |   typeDeclaration
     ;
 
-
 annotationDefaultValue returns [value]
     :   ^(DEFAULT ae0=annotationElementValue { $value = $ae0.value })
     ;
 
-
 block
+    @init { self.commentHandler($start) }
     :   ^(BLOCK_SCOPE blockStatement*)
     ;
 
-
 blockStatement
-    @after { self.commentHandler($start) }
     :   localVariableDeclaration
     |   typeDeclaration
     |   st0=statement { self.append($st0.value) }
     ;
-
 
 localVariableDeclaration
     :   ^(VAR_DECLARATION md0=localModifierList tp0=type vd0=variableDeclaratorList
@@ -562,12 +512,8 @@ localVariableDeclaration
         )
      ;
 
-
 statement returns [value]
-    @init {
-        label = None
-        $value = ex()
-    }
+    @init { label, $value = None, ex() }
     :   block
     |   ^(ASSERT
           (ex0=expression { ae = self.makeAssert($ex0.value)  })
@@ -639,11 +585,9 @@ statement returns [value]
     |   SEMI // Empty statement.
     ;
 
-
 catches
     :   ^(CATCH_CLAUSE_LIST catchClause+)
     ;
-
 
 catchClause
     :   ^(CATCH
@@ -652,13 +596,11 @@ catchClause
         )
     ;
 
-
 switchBlockLabels
 // This is the original grammar that produces duplicate case blocks:
 //  :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel? switchCaseLabel?)
     :   ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabel* switchDefaultLabel?)
     ;
-
 
 switchCaseLabel
     :   ^(CASE
@@ -668,7 +610,6 @@ switchCaseLabel
         { self.maybePop(pop=True) }
     ;
 
-
 switchDefaultLabel
     :   ^(DEFAULT
           { self.addSwitchCaseDefault() }
@@ -676,7 +617,6 @@ switchDefaultLabel
         )
         { self.maybePop(pop=True) }
     ;
-
 
 forInit returns [values]
     @init { $values = [] }
@@ -696,8 +636,6 @@ forUpdater returns [values]
     :   ^(FOR_UPDATE (ex0=expression { $values.append( $ex0.value) })*)
     ;
 
-// EXPRESSIONS
-
 parenthesizedExpression returns [value]
     :   ^(PARENTESIZED_EXPR ex0=expression { $value = ex($ex0.value, format="(${left})") })
     ;
@@ -708,11 +646,11 @@ expression returns [value]
 
 expr returns [value]
     @init {
-    $value = ex()
-    def exs(left, right, op):
-        return ex(left, right, "${left} " + op + " ${right}")
-    def exs1(left, op):
-        return ex(left, format=op + "${left}")
+        $value = ex()
+        def exs(left, right, op):
+            return ex(left, right, "${left} " + op + " ${right}")
+        def exs1(left, op):
+            return ex(left, format=op + "${left}")
     }
     :   ^(ASSIGN lv0=expr rv0=expr       { $value = exs(lv0, rv0, "=")   })
     |   ^(PLUS_ASSIGN lv0=expr rv0=expr  { $value = exs(lv0, rv0, "+=")  })
@@ -786,35 +724,25 @@ primaryExpression returns [value]
         )
 
     |   parenthesizedExpression { $value = $parenthesizedExpression.value }
-
     |   IDENT { $value = ex(self.altIdent($IDENT.text), format="${left}", rename=True)  }
-
     |   ^(METHOD_CALL
           p0=primaryExpression
           genericTypeArgumentList?
           a0=arguments
           { $value = ex($p0.value, $a0.values, "${left}(${right})", call=True) }
         )
-
     |   ec0=explicitConstructorCall { self.addSuperCall($ec0.value) }
-
     |   ^(ARRAY_ELEMENT_ACCESS
           p0=primaryExpression
           e0=expression
           { $value = ex($p0.value, $e0.value, "${left}[${right}]") }
         )
-
     |   literal { $value = ex($literal.value, format="${left}") }
-
     |   newExpression { $value = $newExpression.value }
-
     |   THIS { $value = ex("self", format="${left}") }
-
     |   arrayTypeDeclarator
-
     |   SUPER { $value = ex(self.topParentName, format="super(${left}, self)") }
     ;
-
 
 explicitConstructorCall returns [value]
     @init { $value = ex() }
@@ -828,11 +756,9 @@ explicitConstructorCall returns [value]
         )
     ;
 
-
 arrayTypeDeclarator
     :   ^(ARRAY_DECLARATOR (arrayTypeDeclarator | qualifiedIdentifier | primitiveType))
     ;
-
 
 newExpression returns [value]
     :   ^(STATIC_ARRAY_CREATOR
@@ -842,7 +768,6 @@ newExpression returns [value]
             { $value = self.makeArrayCreator($tp1.value, $ac1.value, $gt1.values) }
           )
         )
-
     |   ^(CLASS_CONSTRUCTOR_CALL
           genericTypeArgumentList?
           q1=qualifiedTypeIdent
@@ -851,7 +776,6 @@ newExpression returns [value]
           { $value = ex($q1.value, $a1.values, "${left}(${right})") }
         )
     ;
-
 
 //something like 'InnerType innerType = outer.new InnerType();'
 innerNewExpression returns [value]
@@ -864,7 +788,6 @@ innerNewExpression returns [value]
         )
     ;
 
-
 newArrayConstruction returns [value]
     @init { $value, format = "", "${right}" }
     :   ad0=arrayDeclaratorList ai0=arrayInitializer
@@ -876,7 +799,6 @@ newArrayConstruction returns [value]
         arrayDeclaratorList?
     ;
 
-
 arguments returns [values]
     @init { $values, format = "", "${right}" }
     :   ^(ARGUMENT_LIST (ex0=expression
@@ -884,15 +806,14 @@ arguments returns [values]
         )
     ;
 
-
 literal returns [value]
-    :   HEX_LITERAL            { $value = $text }
-    |   OCTAL_LITERAL          { $value = $text }
-    |   DECIMAL_LITERAL        { $value = formatFloatLiteral($text) }
-    |   FLOATING_POINT_LITERAL { $value = formatFloatLiteral($text) }
-    |   CHARACTER_LITERAL      { $value = $text }
-    |   STRING_LITERAL         { $value = $text }
-    |   TRUE                   { $value = "True" }
-    |   FALSE                  { $value = "False" }
-    |   NULL                   { $value = "None" }
+    :   HEX_LITERAL            { $value = $text              }
+    |   OCTAL_LITERAL          { $value = $text              }
+    |   DECIMAL_LITERAL        { $value = formatFloat($text) }
+    |   FLOATING_POINT_LITERAL { $value = formatFloat($text) }
+    |   CHARACTER_LITERAL      { $value = $text              }
+    |   STRING_LITERAL         { $value = $text              }
+    |   TRUE                   { $value = "True"             }
+    |   FALSE                  { $value = "False"            }
+    |   NULL                   { $value = "None"             }
     ;

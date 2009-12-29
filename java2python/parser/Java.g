@@ -57,12 +57,12 @@
 grammar Java;
 
 options {
-    language = Python;
-    backtrack = true;
-    memoize = true;
-    output = AST;
-    ASTLabelType = CommonTree;
+language=Python;
+backtrack=true;
+memoize=true;
+output=AST;
 }
+
 
 tokens {
 
@@ -237,7 +237,6 @@ tokens {
 }
 
 @header {
-# placeholder
 
 }
 

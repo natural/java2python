@@ -17,7 +17,7 @@ class Enumeration(Class):
         Class.__init__(self, parent, name)
         self.values = []
 
-    def addEnumValue(self, ident, arguments):
+    def addEnumValue(self, ident, arguments, annotations):
 	""" Called by the tree parser to add an enumerated value.
 
 	"""

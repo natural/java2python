@@ -6,7 +6,7 @@ multiline comment above the Comments class.
 
 // single line comment above the Comments class.
 
-class Comments {
+class Comments1 {
     /** multi above other method **/
     // single above other method
     public static void other() { int j = 1;}
