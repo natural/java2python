@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from cStringIO import StringIO
-from logging import debug, info, warn
+from logging import debug
 from re import sub as rxsub
 from string import Template
 
@@ -195,6 +195,9 @@ class Block(object):
         return default
 
     def altIdent(self, value):
+	""" Returns a calculated replacement for the given value.
+
+	"""
         fmt, var = None, self.getVariable(value, {})
         params = getattr(self, 'parameterIdents', [])
         if var:
@@ -254,7 +257,6 @@ class Block(object):
             addVar(variable(findKey(decl, 'ident'), local=local, cls=cls))
             self.append(decl)
 
-
     def setType(self, value):
 	""" Sets the type of this block.
 
@@ -269,9 +271,15 @@ class Block(object):
         return self.type
 
     def callWriters(self, key, output):
+	""" Calls each writer specified by the config key.
+
+	"""
 	for writer in self.config.handlers(key):
 	    writer(self, output)
 
     def callHandlers(self, key):
+	""" Calls each handler specified by the config key.
+
+	"""
         for handler in self.config.handlers(key):
             handler(self)

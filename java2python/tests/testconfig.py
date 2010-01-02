@@ -32,6 +32,7 @@ outputSubs = [
     ## these two fudge something that should be handled in parsing
     (r'(.*?)StaticInner\(\)', r'\1cls.StaticInner()'),
     (r'(.*?)outer\.cls', r'\1outer'),
+    (r'from java\.util import \*', ''),
     ]
 
 

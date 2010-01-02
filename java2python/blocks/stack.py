@@ -131,6 +131,9 @@ class BlockStack(object):
         return self.maybePop(pop=pop)
 
     def addAnnotationMethod(self, modifiers, typ, ident, default=None):
+	""" Called by the tree grammar when adding an annotation method
+
+	"""
         if not isDict(default):
             values = self.config.combined('typeValueMap')
             default = typ.copy()
@@ -139,22 +142,32 @@ class BlockStack(object):
         self.append(decl)
 
     def beginClassScopeDecls(self):
-        pass
+        """ Called by the tree grammar to begin processing class scope declarations
+
+	"""
 
     def endClassScopeDecls(self):
-        pass
+        """ Called by the tree grammar to finish processing class scope declarations
 
-    def beginMethodDecl(self, type=None, ident=None):
+	"""
+
+    def beginMethodDecl(self, typ=None, ident=None):
+	""" Called by the tree grammar to begin processing method declarations
+
+	"""
         parent = self.top
         meth = Method(parent=parent)
-	if type is not None:
-	    meth.setType(type)
+	if typ is not None:
+	    meth.setType(typ)
 	if ident is not None:
 	    meth.setIdent(ident)
         parent.append(self.push(meth))
         return meth
 
     def endMethodDecl(self, pop=True):
+	""" Called by the tree grammar to finish processing method declarations
+
+	"""
         meth = self.top
         cls = meth.parent
         if meth.name == '__init__':
@@ -162,15 +175,24 @@ class BlockStack(object):
         return self.maybePop(pop=pop)
 
     def beginForEach(self):
+	""" Called by the tree grammar to begin processing a for (each) loop.
+
+	"""
         parent = self.top
         forblock = forStatement(parent=parent)
         parent.append(self.push(forblock))
         return forblock
 
     def endForEach(self, pop=True):
+	""" Called by the tree grammar to finish processing a for (each) loop.
+
+	"""
         return self.maybePop(pop=pop)
 
     def beginForLoop(self, init, cond, update):
+	""" Called by the tree grammar to begin processing a for loop.
+
+	"""
 	parent = self.top
 	whileloop = whileStatement(parent=parent, expr=cond)
 	whileloop.updates = update
@@ -178,26 +200,41 @@ class BlockStack(object):
 	return whileloop
 
     def endForLoop(self, pop=True):
+	""" Called by the tree grammar to finish processing a for loop.
+
+	"""
 	loop = self.maybePop(pop=pop)
 	loop.extend(loop.updates)
         return loop
 
     def beginWhile(self, expr):
+	""" Called by the tree grammar to begin processing a while loop.
+
+	"""
         parent = self.top
         whileblock = whileStatement(parent=parent, expr=expr)
         parent.append(self.push(whileblock))
         return whileblock
 
     def endWhile(self, pop=True):
+	""" Called by the tree grammar to finish processing a while loop.
+
+	"""
         return self.maybePop(pop=pop)
 
     def beginDo(self):
+	""" Called by the tree grammar to begin processing a do-while loop.
+
+	"""
         parent = self.top
         doblock = whileStatement(parent=parent, expr='True')
         parent.append(self.push(doblock))
         return doblock
 
     def endDo(self, expr, pop=True):
+	""" Called by the tree grammar to finish processing a do-while loop.
+
+	"""
         doblock = self.top
         expr = expression(expr, format="not $left")
         ifbreak = ifStatement(parent=doblock, expr=expr)
@@ -205,8 +242,10 @@ class BlockStack(object):
         doblock.append(ifbreak)
         return self.maybePop(pop=pop)
 
-
     def beginIf(self, expr):
+	""" Called by the tree grammar to begin processing an if statement
+
+	"""
         parent = self.top
         ifstat = ifStatement(parent=parent, expr=expr)
         parent.append(self.push(ifstat))
@@ -214,21 +253,36 @@ class BlockStack(object):
         return ifstat, elsestat
 
     def endIf(self, pop=True):
+	""" Called by the tree grammar to finish processing an if statement
+
+	"""
         return self.maybePop(pop=pop)
 
     def beginElse(self, stat):
+	""" Called by the tree grammar to begin processing an else statement
+
+	"""
         self.top.append(self.push(stat))
 
     def endElse(self, pop=True):
+	""" Called by the tree grammar to finish processing an else statement
+
+	"""
         return self.maybePop(pop=pop)
 
     def makeAssert(self, expr):
+	""" Called by the tree grammar to create an assert statement
+
+	"""
         parent = self.top
         assertstat = assertStatement(parent=parent, expr=expr)
         parent.append(assertstat)
         return assertstat
 
     def extendAssert(self, stat, expr):
+	""" Called by the tree grammar to extend an assert statement
+
+	"""
         stat.setExpression(expression(stat.getExpression(), expr, "$left, $right"))
 
     def beginTry(self):
@@ -309,7 +363,7 @@ class BlockStack(object):
         return self.maybePop(pop=pop)
 
     def beginSwitch(self, expr):
-	""" Called by the tree grammar to begin processing a switch statement.
+	""" Called by the tree grammar to begin processing a switch statement
 
 	"""
         parent = self.top
@@ -343,13 +397,13 @@ class BlockStack(object):
             switch.parent.append(self.push(elsestat))
 
     def endSwitch(self, pop=True):
-	""" Called by the tree grammar to finish processing a switch statement.
+	""" Called by the tree grammar to finish processing a switch statement
 
 	"""
         return self.maybePop(pop=pop)
 
     def addThrow(self, expr):
-	""" Called by the tree grammar to process a throw statement.
+	""" Called by the tree grammar to process a throw statement
 
 	"""
 	raiseexpr = expression(right=expr, format='raise $right')
@@ -357,7 +411,7 @@ class BlockStack(object):
 	return raiseexpr
 
     def beginSync(self):
-	""" Called by the tree grammar to begin a synchronized statement.
+	""" Called by the tree grammar to begin a synchronized statement
 
 	"""
         parent = self.top
@@ -366,7 +420,7 @@ class BlockStack(object):
         return withstat
 
     def endSync(self, pop=True):
-	""" Called by the tree grammar to finish a synchronized statement.
+	""" Called by the tree grammar to finish a synchronized statement
 
 	"""
 	return self.maybePop(pop=pop)

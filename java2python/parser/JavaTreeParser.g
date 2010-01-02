@@ -84,7 +84,7 @@ importDeclaration
     ;
 
 
-typeDeclaration
+typeDeclaration returns [value]
     @init { self.commentHandler($start) }
     :   ^(CLASS
           { self.beginClassDeclaration() }
@@ -94,7 +94,7 @@ typeDeclaration
           (ec0=extendsClause { self.addBases($ec0.values) })?
           (ic0=implementsClause { self.addBases($ic0.values) })?
           classTopLevelScope
-          { self.endClassDeclaration() }
+          { $value = self.endClassDeclaration() }
         )
     |   ^(INTERFACE
           { self.beginInterfaceDeclaration() }
@@ -103,7 +103,7 @@ typeDeclaration
           genericTypeParameterList?
           (ec0=extendsClause { self.addBases($ec0.values) })?
           interfaceTopLevelScope
-          { self.endInterfaceDeclaration() }
+          { $value = self.endInterfaceDeclaration() }
         )
     |   ^(ENUM
           { self.beginEnumerationDeclaration() }
@@ -111,14 +111,14 @@ typeDeclaration
           id0=IDENT { self.setIdent(ident=$id0.text) }
           (ic0=implementsClause { self.addBases($ic0.values) })?
           enumTopLevelScope
-          { self.endEnumerationDeclaration() }
+          { $value = self.endEnumerationDeclaration() }
         )
     |   ^(AT
           { self.beginAnnotationDeclaration() }
           md0=modifierList { self.addModifiers($md0.values) }
           id0=IDENT { self.setIdent(ident=$id0.text) }
           annotationTopLevelScope
-          { self.endAnnotationDeclration() }
+          { $value = self.endAnnotationDeclration() }
         )
     ;
 
@@ -160,11 +160,9 @@ enumConstant
         { self.addEnumValue($id0.text, args, annos) }
     ;
 
-
 classTopLevelScope
     :   ^(CLASS_TOP_LEVEL_SCOPE classScopeDeclarations*)
     ;
-
 
 classScopeDeclarations
     @init  { self.beginClassScopeDecls() }
@@ -187,7 +185,7 @@ classScopeDeclarations
           { self.endMethodDecl() }
         )
     |   ^(VOID_METHOD_DECL
-          { self.beginMethodDecl(type="void") }
+          { self.beginMethodDecl(typ="void") }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
           id0=IDENT { self.setIdent(ident=$id0.text) }
@@ -233,7 +231,7 @@ interfaceScopeDeclarations
           { self.endMethodDecl() }
         )
     |   ^(VOID_METHOD_DECL
-          { self.beginMethodDecl(type="void") }
+          { self.beginMethodDecl(typ="void") }
           md0=modifierList { self.addModifiers($md0.values) }
           genericTypeParameterList?
           id0=IDENT { self.setIdent(ident=$id0.text) }
@@ -428,12 +426,10 @@ qualifiedIdentifier returns [value]
         )
     ;
 
-
 annotationList returns [values]
     @init { $values = [] }
     :   ^(ANNOTATION_LIST (an0=annotation { $values.append($an0.value) })*)
     ;
-
 
 annotation returns [value]
     @init { $value = ex(format="${left}()") }
@@ -447,16 +443,16 @@ annotation returns [value]
         )
     ;
 
-
 annotationInit returns [values]
     @init { $values = [] }
     :   ^(ANNOTATION_INIT_BLOCK ai0=annotationInitializers { $values = $ai0.values })
     ;
 
-
 annotationInitializers returns [values]
     @init { $values = [] }
-    :   ^(ANNOTATION_INIT_KEY_LIST (ai0=annotationInitializer { $values.append($ai0.value) })+)
+    :   ^(ANNOTATION_INIT_KEY_LIST
+          (ai0=annotationInitializer { $values.append($ai0.value) })+
+        )
     |   ^(ANNOTATION_INIT_DEFAULT_KEY annotationElementValue)
     ;
 
@@ -474,11 +470,15 @@ annotationElementValue returns [value]
     ;
 
 annotationTopLevelScope
-    :   ^(ANNOTATION_TOP_LEVEL_SCOPE annotationScopeDeclarations*)
+    :   ^(ANNOTATION_TOP_LEVEL_SCOPE
+          (an0=annotationScopeDeclarations)*
+        )
     ;
 
 annotationScopeDeclarations
-    @init { default = None }
+    @init {
+        default = None
+    }
     :   ^(ANNOTATION_METHOD_DECL
           md0=modifierList
           tp0=type
@@ -488,7 +488,7 @@ annotationScopeDeclarations
         )
     |   ^(VAR_DECLARATION md1=modifierList tp1=type vd1=variableDeclaratorList)
          { self.addVariables($vd1.values, $tp1.value, $md1.values, local=True) }
-    |   typeDeclaration
+    |   (tp0=typeDeclaration)
     ;
 
 annotationDefaultValue returns [value]
