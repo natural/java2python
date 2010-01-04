@@ -38,43 +38,10 @@ options {
 
 scope py_block {
     block;
+    add;
 }
-
-
-scope py_klass {
-    klass;
-    name;
-}
-
-
-scope py_method {
-    method;
-}
-
 
 scope py_mods {
-    add;
-}
-
-
-scope py_params {
-    add;
-}
-
-
-scope py_args {
-    args;
-    add;
-}
-
-
-scope py_expr {
-    expr;
-    add;
-}
-
-
-scope py_types {
     add;
 }
 
@@ -88,7 +55,10 @@ scope py_types {
 
 compilationUnit returns [module]
 scope py_block;
-@init { $module = $py_block::block = self.factory('module') }
+@init {
+    $module = $py_block::block = self.factory('module')
+    $py_block::add = $module.addChild
+    }
     :   annotations
         (   packageDeclaration importDeclaration* typeDeclaration*
         |   classOrInterfaceDeclaration typeDeclaration*
@@ -108,12 +78,11 @@ importDeclaration
 
 
 typeDeclaration
-scope py_klass, py_mods, py_types;
+scope py_block;
 @init {
-    klass = $py_klass::klass = self.factory('class')
-    klass.setParent($py_block::block)
-    $py_mods::add = klass.addModifier
-    $py_types::add = klass.addBase
+    klass = $py_block::block = self.factory('class')
+    $py_block[-2]::add(klass)
+    $py_block::add = klass.addChild
     }
     :   classOrInterfaceDeclaration
     |   ';'
@@ -131,6 +100,11 @@ classOrInterfaceModifiers
 
 
 classOrInterfaceModifier
+scope py_mods;
+@init {
+    $py_mods::add = lambda x:None
+}
+
     :   annotation                                // class or interface
     |   'public'     {$py_mods::add('public')}    // class or interface
     |   'protected'  {$py_mods::add('protected')} // class or interface
@@ -143,7 +117,7 @@ classOrInterfaceModifier
 
 
 modifiers
-    :   (modifier { $py_mods::add($modifier.text) })*
+    :   (modifier)*
     ;
 
 
@@ -152,9 +126,8 @@ classDeclaration
     |   enumDeclaration
     ;
 
-
 normalClassDeclaration
-    :   'class' Ident { $py_klass::klass.setName($Ident.text) } typeParameters?
+    :   'class' Ident { $py_block::block.setName($Ident.text) } typeParameters?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -228,11 +201,12 @@ interfaceBody
 
 
 classBodyDeclaration
-scope py_method, py_mods;
+scope py_block;
 @init {
-    $py_method::method = method = self.factory('method')
-    $py_mods::add = method.addModifier
-}
+    method = $py_block::block = self.factory('method')
+    method.setParent($py_block[-2]::block)
+    $py_block::add = method.addChild
+    }
     :   ';'
     |   'static'? block
     |   modifiers memberDecl
@@ -240,18 +214,9 @@ scope py_method, py_mods;
 
 
 memberDecl
-scope py_params;
     :   genericMethodOrConstructorDecl
     |   memberDeclaration
-    |   'void' Ident
-        {
-            method = $py_method::method
-            method.setType('void')
-            method.setParent($py_block::block)
-            method.setName($Ident.text)
-            $py_params::add = method.addParam
-        }
-        voidMethodDeclaratorRest
+    |   'void' Ident { $py_block::block.setName($Ident.text) } voidMethodDeclaratorRest
     |   Ident constructorDeclaratorRest
     |   interfaceDeclaration
     |   classDeclaration
@@ -259,10 +224,6 @@ scope py_params;
 
 
 memberDeclaration
-scope py_types;
-@init {
-    $py_types::add = $py_method.setType
-    }
     :   type (methodDeclaration | fieldDeclaration)
     ;
 
@@ -394,7 +355,14 @@ arrayInitializer
 
 
 modifier
-    :   annotation
+@init {
+    anno = False
+    }
+@after {
+    if not anno:
+        $py_block::block.addModifier($modifier.text)
+    }
+    :   annotation {anno=True}
     |   'public'
     |   'protected'
     |   'private'
@@ -426,7 +394,7 @@ typeName
 
 type
     :	classOrInterfaceType ('[' ']')*
-    |	primitiveType ('[' ']')* {$py_types::add($primitiveType.text)}
+    |	primitiveType ('[' ']')*
     ;
 
 
@@ -436,7 +404,6 @@ classOrInterfaceType
 }
     :	id0=Ident {values.append(id0.text)} typeArguments?
         ('.' id1=Ident typeArguments? {values.append(id1.text)} )*
-        {$py_types::add(values)}
     ;
 
 
@@ -474,10 +441,6 @@ qualifiedNameList
 
 
 formalParameters
-scope py_types;
-@init {
-    $py_types::add = lambda x:None
-}
     :   '(' formalParameterDecls? ')'
     ;
 
@@ -489,7 +452,7 @@ formalParameterDecls
 
 formalParameterDeclsRest
     :   variableDeclaratorId
-        {$py_params::add($variableDeclaratorId.text)}
+        {$py_block::block.addParam($variableDeclaratorId.text)}
         (',' formalParameterDecls)?
     |   '...' variableDeclaratorId
     ;
@@ -687,9 +650,9 @@ catchClause
     :   'catch' '(' formalParameter ')' block
     ;
 
-
 formalParameter
-    :   variableModifiers type variableDeclaratorId
+    :   variableModifiers type
+        variableDeclaratorId
     ;
 
 
@@ -917,22 +880,12 @@ castExpression
 
 
 primary
-scope py_args, py_expr;
-@init {
-    $py_expr::expr = []
-    $py_expr::add = $py_expr::expr.append
-    $py_args::args = []
-    $py_args::add = $py_args::args.append
-}
-@after {
-    print '####', $py_expr::expr, $py_args::args
-}
     :   parExpression
     |   'this' ('.' Ident)* identifierSuffix?
     |   'super' superSuffix
-    |   literal {$py_expr::add( $literal.text )}
+    |   literal
     |   'new' creator
-    |   id0=Ident {$py_expr::add(id0.text)} ('.' id1=Ident {$py_expr::add(id1.text)})* identifierSuffix?
+    |   id0=Ident ('.' id1=Ident)* identifierSuffix?
     |   primitiveType ('[' ']')* '.' 'class'
     |   'void' '.' 'class'
     ;
@@ -941,7 +894,7 @@ scope py_args, py_expr;
 identifierSuffix
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+ // can also be matched by selector, but do here
-    |   arguments {$py_args::add($arguments.text)}
+    |   arguments
     |   '.' 'class'
     |   '.' explicitGenericInvocation
     |   '.' 'this'

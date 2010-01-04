@@ -137,8 +137,9 @@ class Method(Block):
  	i = self.indents()
 	first = 'cls' if self.isStatic else 'self'
 	params = ', '.join([first] + self.parameters)
-	decos = '\n'.join(self.getDecos())
-	return decos + '\n'+('    '*i) + 'def %s(%s):' % (self.name, params)
+	decos = self.getDecos()
+	decos = ('\n'.join(decos) +'\n') if decos else ''
+	return decos + ('    '*i) + 'def %s(%s):' % (self.name, params)
 
     ##
     # parameter accessors
