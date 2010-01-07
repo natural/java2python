@@ -38,16 +38,26 @@ options {
 
 scope py_block {
     block;
-    add;
+    expr;
 }
 
-scope py_mods {
-    add;
+
+scope py_expr {
+    expr;
 }
 
+
+@header {
+    PREV = -2
+}
 
 @parser::members {
-    factory = None
+    def factory(self, *args, **kwds):
+        ##// lazy load if necessary
+        from java2python.blocks import BlockFactory
+        self.factory = factory = BlockFactory(())
+        return factory(*args, **kwds)
+
     def setFactory(self, factory):
         self.factory = factory
 }
@@ -56,9 +66,9 @@ scope py_mods {
 compilationUnit returns [module]
 scope py_block;
 @init {
-    $module = $py_block::block = self.factory('module')
-    $py_block::add = $module.addChild
-    }
+    ##// the topmost block, which is always a module
+    $py_block::block = $module = self.factory('module')
+}
     :   annotations
         (   packageDeclaration importDeclaration* typeDeclaration*
         |   classOrInterfaceDeclaration typeDeclaration*
@@ -68,28 +78,29 @@ scope py_block;
 
 
 packageDeclaration
+// TODO: py_block::block.setPackage
     :   'package' qualifiedName ';'
     ;
 
 
 importDeclaration
+// TODO:  call py_block::block.addImport
     :   'import' ('static')? qualifiedName ('.' '*')? ';'
     ;
 
 
 typeDeclaration
-scope py_block;
-@init {
-    klass = $py_block::block = self.factory('class')
-    $py_block[-2]::add(klass)
-    $py_block::add = klass.addChild
-    }
     :   classOrInterfaceDeclaration
     |   ';'
     ;
 
 
 classOrInterfaceDeclaration
+scope py_block;
+@init {
+    $py_block::block = self.factory('class')
+    $py_block::block.setParent($py_block[PREV]::block)
+}
     :   classOrInterfaceModifiers (classDeclaration | interfaceDeclaration)
     ;
 
@@ -100,19 +111,21 @@ classOrInterfaceModifiers
 
 
 classOrInterfaceModifier
-scope py_mods;
 @init {
-    $py_mods::add = lambda x:None
+    isAnno = False
 }
-
-    :   annotation                                // class or interface
-    |   'public'     {$py_mods::add('public')}    // class or interface
-    |   'protected'  {$py_mods::add('protected')} // class or interface
-    |   'private'    {$py_mods::add('private')}   // class or interface
-    |   'abstract'   {$py_mods::add('abstract')}  // class or interface
-    |   'static'     {$py_mods::add('static')}    // class or interface
-    |   'final'      {$py_mods::add('final')}     // class only -- does not apply to interfaces
-    |   'strictfp'   {$py_mods::add('strictfp')}  // class or interface
+@after {
+    if not isAnno:
+        $py_block::block.addModifier($classOrInterfaceModifier.text)
+}
+    :   annotation { isAnno = True } // class or interface
+    |   'public'                     // class or interface
+    |   'protected'                  // class or interface
+    |   'private'                    // class or interface
+    |   'abstract'                   // class or interface
+    |   'static'                     // class or interface
+    |   'final'                      // class only -- does not apply to interfaces
+    |   'strictfp'                   // class or interface
     ;
 
 
@@ -125,6 +138,7 @@ classDeclaration
     :   normalClassDeclaration
     |   enumDeclaration
     ;
+
 
 normalClassDeclaration
     :   'class' Ident { $py_block::block.setName($Ident.text) } typeParameters?
@@ -201,31 +215,63 @@ interfaceBody
 
 
 classBodyDeclaration
-scope py_block;
-@init {
-    method = $py_block::block = self.factory('method')
-    method.setParent($py_block[-2]::block)
-    $py_block::add = method.addChild
-    }
     :   ';'
     |   'static'? block
-    |   modifiers memberDecl
+    |   memberDecl /* was: modifiers memberDecl */
     ;
 
 
+// local grammar edit:  added modifiers prefix to each rule
+// local grammar edit:  moved methodDeclaration and fieldDeclaration rules in
 memberDecl
-    :   genericMethodOrConstructorDecl
-    |   memberDeclaration
-    |   'void' Ident { $py_block::block.setName($Ident.text) } voidMethodDeclaratorRest
-    |   Ident constructorDeclaratorRest
-    |   interfaceDeclaration
-    |   classDeclaration
+scope py_block;
+    :   modifiers genericMethodOrConstructorDecl
+
+    |   {
+        $py_block::block = self.factory('method')
+        $py_block::block.setParent($py_block[PREV]::block)
+        }
+        modifiers type methodDeclaration
+
+    |   {
+        ##// basic block for fields; discarded after the rule
+        $py_block::block = self.factory('block')
+        }
+        modifiers type fieldDeclaration
+        {
+        $py_block::block.reparentChildren($py_block[PREV]::block)
+        }
+
+    |   {
+        $py_block::block = self.factory('method')
+        $py_block::block.setType('void')
+        $py_block::block.setParent($py_block[PREV]::block)
+        }
+        modifiers 'void' Ident voidMethodDeclaratorRest
+        {
+        $py_block::block.setName($Ident.text)
+        }
+
+    |   {
+        $py_block::block = self.factory('method')
+        $py_block::block.setName('__init__')
+        $py_block::block.setParent($py_block[PREV]::block)
+        }
+        modifiers Ident constructorDeclaratorRest
+
+    |   modifiers interfaceDeclaration
+
+    |   {
+        $py_block::block = self.factory('class')
+        $py_block::block.setParent($py_block[PREV]::block)
+        }
+        modifiers classDeclaration
     ;
 
-
-memberDeclaration
-    :   type (methodDeclaration | fieldDeclaration)
-    ;
+// local grammar edit:  moved rules to parent rule (memberDecl)
+//memberDeclaration
+//    :   type (methodDeclaration | fieldDeclaration)
+//    ;
 
 
 genericMethodOrConstructorDecl
@@ -240,11 +286,18 @@ genericMethodOrConstructorRest
 
 
 methodDeclaration
-    :   Ident methodDeclaratorRest
+    :   Ident
+        { $py_block::block.setName($Ident.text) }
+        methodDeclaratorRest
     ;
 
 
 fieldDeclaration
+scope py_expr;
+@init {
+    $py_expr::expr = self.factory('expression', format='${left} = ${type}()')
+    $py_expr::expr.setParent($py_block::block)
+}
     :   variableDeclarators ';'
     ;
 
@@ -324,7 +377,20 @@ variableDeclarators
 
 
 variableDeclarator
-    :   variableDeclaratorId ('=' variableInitializer)?
+scope py_expr;
+@init {
+    expr = $py_expr[PREV]::expr
+}
+    :   variableDeclaratorId
+        { expr.left = $variableDeclaratorId.text }
+        ('='
+            {
+            expr.update(format='${left} = ${right}')
+            $py_expr::expr = expr.nestRight(format='${left}')
+            }
+            variableInitializer
+
+        )?
     ;
 
 
@@ -355,14 +421,12 @@ arrayInitializer
 
 
 modifier
-@init {
-    anno = False
-    }
+@init { anno = False }
 @after {
     if not anno:
         $py_block::block.addModifier($modifier.text)
-    }
-    :   annotation {anno=True}
+}
+    :   annotation { anno = True }
     |   'public'
     |   'protected'
     |   'private'
@@ -394,16 +458,23 @@ typeName
 
 type
     :	classOrInterfaceType ('[' ']')*
-    |	primitiveType ('[' ']')*
+    |	primitiveType
+        { $py_block::block.setType($primitiveType.text) }
+        ('[' ']')*
     ;
 
 
 classOrInterfaceType
 @init {
-    values = []
+    ids = []
 }
-    :	id0=Ident {values.append(id0.text)} typeArguments?
-        ('.' id1=Ident typeArguments? {values.append(id1.text)} )*
+@after {
+    $py_block::block.setType(ids)
+}
+    :	id0=Ident
+        { ids.append(id0.text) }
+        typeArguments?
+        ('.' id1=Ident typeArguments? { ids.append(id1.text) })*
     ;
 
 
@@ -446,15 +517,30 @@ formalParameters
 
 
 formalParameterDecls
+scope py_block;
+@init {
+    ##// block for catching the param type; discarded after rule
+    $py_block::block = self.factory('block')
+}
     :   variableModifiers type formalParameterDeclsRest
     ;
 
 
 formalParameterDeclsRest
-    :   variableDeclaratorId
-        {$py_block::block.addParam($variableDeclaratorId.text)}
+@init {
+    param = self.factory('expression')
+    param.update(format='${left}', type=$py_block::block.getType())
+}
+@after {
+    $py_block[PREV]::block.addParam(param)
+}
+    :   vi0=variableDeclaratorId
+        { param.left = $vi0.text }
         (',' formalParameterDecls)?
-    |   '...' variableDeclaratorId
+
+    |   '...'
+        vi1=variableDeclaratorId
+        { param.left = '*' + $vi1.text }
     ;
 
 
@@ -589,7 +675,6 @@ defaultValue
 
 // STATEMENTS / BLOCKS
 
-
 block
     :   '{' blockStatement* '}'
     ;
@@ -603,11 +688,23 @@ blockStatement
 
 
 localVariableDeclarationStatement
+scope py_block;
+@init {
+    $py_block::block = self.factory('block')
+}
+@after {
+    $py_block::block.reparentChildren($py_block[PREV]::block)
+}
     :    localVariableDeclaration ';'
     ;
 
 
 localVariableDeclaration
+scope py_expr;
+@init {
+    $py_expr::expr = self.factory('expression', format='${left}')
+    $py_expr::expr.setParent($py_block::block)
+}
     :   variableModifiers type variableDeclarators
     ;
 
@@ -618,6 +715,7 @@ variableModifiers
 
 
 statement
+scope py_block, py_expr;
     : block
     |   ASSERT expression (':' expression)? ';'
     |   'if' parExpression statement (options {k=1;}:'else' statement)?
@@ -631,12 +729,32 @@ statement
         )
     |   'switch' parExpression '{' switchBlockStatementGroups '}'
     |   'synchronized' parExpression block
-    |   'return' expression? ';'
+
+
+    |   {
+        $py_block::block = self.factory('block')
+        expr = self.factory('expression', left='return', format='${left}')
+        expr.setParent($py_block[PREV]::block)
+        }
+        'return' ({
+                    expr.update(format='${left} ${right}', right='${right}')
+                    $py_expr::expr = expr.nestRight(format='${left}')
+                  }
+        expression)?
+        ';'
+
     |   'throw' expression ';'
     |   'break' Ident? ';'
     |   'continue' Ident? ';'
     |   ';'
-    |   statementExpression ';'
+
+    |   {
+        $py_block::block = self.factory('block')
+        $py_expr::expr = self.factory('expression', format='${left}')
+        $py_expr::expr.setParent($py_block[PREV]::block)
+        }
+        statementExpression ';'
+
     |   Ident ':' statement
     ;
 
@@ -651,8 +769,7 @@ catchClause
     ;
 
 formalParameter
-    :   variableModifiers type
-        variableDeclaratorId
+    :   variableModifiers type variableDeclaratorId
     ;
 
 
@@ -883,18 +1000,46 @@ primary
     :   parExpression
     |   'this' ('.' Ident)* identifierSuffix?
     |   'super' superSuffix
+
     |   literal
+        {
+        $py_expr::expr.update(left=$literal.text)
+        }
+
     |   'new' creator
-    |   id0=Ident ('.' id1=Ident)* identifierSuffix?
+
+    |   id0=Ident
+        {
+        $py_expr::expr.update(left=$id0.text, format='${left}${right}')
+        $py_expr::expr = $py_expr::expr.nestRight(format='${left}')
+        }
+        ('.' id1=Ident
+            {
+            $py_expr::expr.update(left=$id1.text, format='.${left}${right}')
+            $py_expr::expr = $py_expr::expr.nestRight(format='${left}')
+            }
+        )*
+        identifierSuffix?
+
     |   primitiveType ('[' ']')* '.' 'class'
+
     |   'void' '.' 'class'
     ;
 
 
 identifierSuffix
+scope py_expr;
+
     :   ('[' ']')+ '.' 'class'
-    |   ('[' expression ']')+ // can also be matched by selector, but do here
-    |   arguments
+    // can also be matched by selector, but do here
+    |   ('[' expression ']')+
+
+    |   {
+        prev = $py_expr[PREV]::expr
+        $py_expr::expr = prev.nestLeft(format="(${left})")
+        }
+        '(' expressionList? ')'
+
     |   '.' 'class'
     |   '.' explicitGenericInvocation
     |   '.' 'this'
@@ -904,6 +1049,14 @@ identifierSuffix
 
 
 creator
+scope py_block;
+@init {
+    ##// used to catch the setType call
+    $py_block::block = self.factory('block')
+}
+@after {
+    $py_block::block.reparentChildren($py_block[PREV]::block)
+}
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName (arrayCreatorRest | classCreatorRest)
     ;
