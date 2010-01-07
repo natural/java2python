@@ -38,7 +38,6 @@ options {
 
 scope py_block {
     block;
-    expr;
 }
 
 
@@ -48,7 +47,7 @@ scope py_expr {
 
 
 @header {
-    PREV = -2
+    TOP = -1
 }
 
 @parser::members {
@@ -99,7 +98,7 @@ classOrInterfaceDeclaration
 scope py_block;
 @init {
     $py_block::block = self.factory('class')
-    $py_block::block.setParent($py_block[PREV]::block)
+    $py_block::block.setParent($py_block[TOP-1]::block)
 }
     :   classOrInterfaceModifiers (classDeclaration | interfaceDeclaration)
     ;
@@ -229,7 +228,7 @@ scope py_block;
 
     |   {
         $py_block::block = self.factory('method')
-        $py_block::block.setParent($py_block[PREV]::block)
+        $py_block::block.setParent($py_block[TOP-1]::block)
         }
         modifiers type methodDeclaration
 
@@ -239,13 +238,13 @@ scope py_block;
         }
         modifiers type fieldDeclaration
         {
-        $py_block::block.reparentChildren($py_block[PREV]::block)
+        $py_block::block.reparentChildren($py_block[TOP-1]::block)
         }
 
     |   {
         $py_block::block = self.factory('method')
         $py_block::block.setType('void')
-        $py_block::block.setParent($py_block[PREV]::block)
+        $py_block::block.setParent($py_block[TOP-1]::block)
         }
         modifiers 'void' Ident voidMethodDeclaratorRest
         {
@@ -255,7 +254,7 @@ scope py_block;
     |   {
         $py_block::block = self.factory('method')
         $py_block::block.setName('__init__')
-        $py_block::block.setParent($py_block[PREV]::block)
+        $py_block::block.setParent($py_block[TOP-1]::block)
         }
         modifiers Ident constructorDeclaratorRest
 
@@ -263,7 +262,7 @@ scope py_block;
 
     |   {
         $py_block::block = self.factory('class')
-        $py_block::block.setParent($py_block[PREV]::block)
+        $py_block::block.setParent($py_block[TOP-1]::block)
         }
         modifiers classDeclaration
     ;
@@ -379,10 +378,10 @@ variableDeclarators
 variableDeclarator
 scope py_expr;
 @init {
-    expr = $py_expr[PREV]::expr
+    expr = $py_expr[TOP-1]::expr
 }
-    :   variableDeclaratorId
-        { expr.left = $variableDeclaratorId.text }
+    :   vd0=variableDeclaratorId
+        { expr.left = $vd0.text }
         ('='
             {
             expr.update(format='${left} = ${right}')
@@ -421,7 +420,9 @@ arrayInitializer
 
 
 modifier
-@init { anno = False }
+@init {
+    anno = False
+}
 @after {
     if not anno:
         $py_block::block.addModifier($modifier.text)
@@ -466,6 +467,7 @@ type
 
 classOrInterfaceType
 @init {
+    ##// todo:  turn this into a nested Expression
     ids = []
 }
 @after {
@@ -532,15 +534,15 @@ formalParameterDeclsRest
     param.update(format='${left}', type=$py_block::block.getType())
 }
 @after {
-    $py_block[PREV]::block.addParam(param)
+    $py_block[TOP-1]::block.addParameter(param)
 }
-    :   vi0=variableDeclaratorId
-        { param.left = $vi0.text }
+    :   id0=variableDeclaratorId
+        { param.update(left=$id0.text) }
         (',' formalParameterDecls)?
 
     |   '...'
-        vi1=variableDeclaratorId
-        { param.left = '*' + $vi1.text }
+        id1=variableDeclaratorId
+        { param.update(left='*' + $id1.text) }
     ;
 
 
@@ -693,7 +695,7 @@ scope py_block;
     $py_block::block = self.factory('block')
 }
 @after {
-    $py_block::block.reparentChildren($py_block[PREV]::block)
+    $py_block::block.reparentChildren($py_block[TOP-1]::block)
 }
     :    localVariableDeclaration ';'
     ;
@@ -734,7 +736,7 @@ scope py_block, py_expr;
     |   {
         $py_block::block = self.factory('block')
         expr = self.factory('expression', left='return', format='${left}')
-        expr.setParent($py_block[PREV]::block)
+        expr.setParent($py_block[TOP-1]::block)
         }
         'return' ({
                     expr.update(format='${left} ${right}', right='${right}')
@@ -751,7 +753,7 @@ scope py_block, py_expr;
     |   {
         $py_block::block = self.factory('block')
         $py_expr::expr = self.factory('expression', format='${left}')
-        $py_expr::expr.setParent($py_block[PREV]::block)
+        $py_expr::expr.setParent($py_block[TOP-1]::block)
         }
         statementExpression ';'
 
@@ -1035,7 +1037,7 @@ scope py_expr;
     |   ('[' expression ']')+
 
     |   {
-        prev = $py_expr[PREV]::expr
+        prev = $py_expr[TOP-1]::expr
         $py_expr::expr = prev.nestLeft(format="(${left})")
         }
         '(' expressionList? ')'
@@ -1055,16 +1057,19 @@ scope py_block;
     $py_block::block = self.factory('block')
 }
 @after {
-    $py_block::block.reparentChildren($py_block[PREV]::block)
+    #print '## before creator', repr($py_expr::expr)
+    expr = $py_expr::expr.nestLeft(format="${type}()", type=$py_block::block.getType())
+    #$py_block::block.reparentChildren($py_block[TOP-1]::block)
 }
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName (arrayCreatorRest | classCreatorRest)
+        { print '#### createdName:', $createdName.text }
     ;
 
 
 createdName
     :   classOrInterfaceType
-    |   primitiveType
+    |   primitiveType { $py_block::block.setType($primitiveType.text) }
     ;
 
 

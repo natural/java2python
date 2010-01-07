@@ -7,13 +7,33 @@ class Block(object):
     def __init__(self, config):
 	self.setConfig(config)
 	self.setChildren([])
+	self.setDecorators([])
 	self.setModifiers([])
 	self.setName(None)
+	self.setParameters([])
 	self.setParent(None)
 	self.setType(None)
 
+    def __str__(self):
+	decl = self.getDeclaration()
+	decls = [decl] if decl else []
+	indent = self.indent()
+        lines = ['%s%s' % (indent*o.getDepth(), o) for o in self.children]
+	return ('\n').join(decls + lines)
+
+    def __repr__(self):
+	v = '<%s name:%s type:%s modifiers:%s>'
+	clsname = self.__class__.__name__
+	objname = self.getName()
+	typname = self.getType()
+	mods = ', '.join(self.getModifiers()) if self.getModifiers() else []
+	return v % (clsname, objname, typname, mods)
+
     def setConfig(self, config):
 	self.config = config
+
+    def getDeclaration(self):
+	return None
 
     ##
     # children accessors
@@ -26,11 +46,27 @@ class Block(object):
     def addChild(self, obj):
 	self.children.append(obj)
 
-    def reparentChildren(self, target):
-	for child in self.children:
-	    child.modifiers = self.modifiers
-	    child.type = self.type
-	    child.setParent(target)
+    ##
+    # decorator accessors
+    def getDecorators(self):
+	return self.decorators
+
+    def setDecorators(self, decorators):
+	self.decorators = decorators
+
+    def addDecorator(self, decorator):
+	self.decorators.append(decorator)
+
+    ##
+    # modifier accessors
+    def getModifiers(self):
+	return self.modifiers
+
+    def setModifiers(self, modifiers):
+	self.modifiers = modifiers
+
+    def addModifier(self, modifier):
+	self.modifiers.append(modifier)
 
     ##
     # name accessors
@@ -39,6 +75,17 @@ class Block(object):
 
     def setName(self, value):
 	self.name = value
+
+    ##
+    # parameter accessors
+    def getParameters(self):
+	return self.parameters
+
+    def setParameters(self, params):
+	self.parameters = params
+
+    def addParameter(self, param):
+	self.parameters.append(param)
 
     ##
     # parent accessors
@@ -52,71 +99,21 @@ class Block(object):
 
     ##
     # type accessors
-    def getType(self):
-	return self.type
+    def getType(self, asString=True):
+	value = getattr(self, 'type', None)
+	if isinstance(value, (basestring, )):
+	    return value
+	if isinstance(value, (tuple, list, )) and asString:
+	    return '.'.join(self.type)
+	return value
 
     def setType(self, value):
 	self.type = value
 
     ##
-    # modifier accessors
-    def getModifiers(self):
-	return self.modifiers
-
-    def setModifiers(self, modifiers):
-	self.modifiers = modifiers
-
-    def addModifier(self, modifier):
-	self.modifiers.append(modifier)
-
-    def debugPrint(self):
-	prefix = '#'
-	indent = self.indent
-	print '%s %s%r' % (prefix, indent*self.depth(), self)
-	for o in self.children:
-	    o.debugPrint()
-
-    def __str__(self):
-	decl = self.getDecl()
-	decls = [decl] if decl else []
-	indent = self.indent
-        lines = ['%s%s' % (indent*o.depth(), o) for o in self.children]
-	return ('\n').join(decls + lines)
-
-    def __repr__(self):
-	v = '<%s name:%s type:%s modifiers:%s>'
-	clsname = self.__class__.__name__
-	objname = self.getName()
-	typname = self.getType()
-	mods = ', '.join(self.getModifiers()) if self.getModifiers() else []
-	return v % (clsname, objname, typname, mods)
-
-    def getDecl(self):
-	return None
-
-    def getDecos(self):
-	return []
-
-    @property
-    def isStatic(self):
-	return 'static' in self.modifiers
-
-    @property
-    def isPublic(self):
-	return 'public' in self.modifiers
-
-    @property
-    def isVoid(self):
-	return 'void' == self.type
-
-    @property
-    def indent(self):
-	return '    ' # make config value
-
-    ##
     # calculates the depth of this block based on the number of
     # parents
-    def depth(self):
+    def getDepth(self):
 	depth = 0
 	while self:
 	    if self.parent:
@@ -126,23 +123,48 @@ class Block(object):
 		return depth
 	return depth
 
+    ##
+    # utilities
+    def debugPrint(self):
+	print '%s %s%r' % ('#', self.indent()*self.getDepth(), self)
+	for o in self.children:
+	    o.debugPrint()
+
+    def indent(self):
+	return '    ' # make config value
+
+    def isPublic(self):
+	return 'public' in self.modifiers
+
+    def isStatic(self):
+	return 'static' in self.modifiers
+
+
+    def isVoid(self):
+	return 'void' == self.type
+
+    def reparentChildren(self, target):
+	for child in self.children:
+	    child.modifiers = self.modifiers
+	    child.type = self.type
+	    child.setParent(target)
+
 
 class Module(Block):
     pass
 
 
 class Class(Block):
-    def __init__(self, config):
-	Block.__init__(self, config)
-
-    def getDecl(self):
-	#debug('%r', self)
+    ##
+    # format and return a class declaration.
+    def getDeclaration(self):
 	types = ', '.join(self.type or ['object']) # make config
 	types = '(%s)' % types if types else ''
 	return 'class %s%s:' % (self.name, types)
 
     ##
-    # override the type setter for extends or implements clauses
+    # override the type setter to account for extends or
+    # implements clauses
     def setType(self, value):
 	if not hasattr(self, 'type'):
 	    self.type = []
@@ -151,34 +173,24 @@ class Class(Block):
 	elif value:
 	    self.type.append(value)
 
-    def depth(self):
+    ##
+    # override the depth calculation to make module-level classes
+    # appear without indentation.
+    def getDepth(self):
 	if isinstance(self.parent, (Module, )):
 	    return 0
 	else:
-	    return Block.depth(self)
+	    return Block.getDepth(self)
 
 class Method(Block):
-    def __init__(self, config):
-	Block.__init__(self, config)
-	self.parameters = []
-
-    def getDecl(self):
-	first = 'cls' if self.isStatic else 'self'
-	params = ', '.join([first] + [str(p) for p in self.getParams()])
-	lines = ['@'+deco for deco in self.getDecos()]
+    ##
+    # format and return a method declaration.
+    def getDeclaration(self):
+	first = 'cls' if self.isStatic() else 'self'
+	params = ', '.join([first] + [str(p) for p in self.getParameters()])
+	lines = ['@'+deco for deco in self.getDecorators()]
 	lines.append('def %s(%s):' % (self.name, params))
 	return ''.join(lines)
-
-    ##
-    # parameter accessors
-    def getParams(self):
-	return self.parameters
-
-    def setParams(self, params):
-	self.parameters = params
-
-    def addParam(self, param):
-	self.parameters.append(param)
 
 
 class Expression(Block):
@@ -187,6 +199,9 @@ class Expression(Block):
 	defaults = dict(left='', right='', format='')
 	defaults.update(kwds)
 	self.update(**defaults)
+
+    def __nonzero__(self):
+	return bool(self.format)
 
     def __repr__(self):
 	v = '<%s format:%s left:%r right:%r%s%s>'
@@ -198,11 +213,6 @@ class Expression(Block):
     def __str__(self):
 	template = Template(self.format).safe_substitute
 	return template(left=self.left, right=self.right, type=self.type)
-
-    def __nonzero__(self):
-	return bool(self.format)
-	#return all((self.left, self.format))
-	#return any((self.left, self.right, self.format))
 
     def nestLeft(self, **kwds):
 	self.left = left = self.new(self.config)
