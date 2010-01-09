@@ -1,0 +1,166 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys
+from collections import defaultdict
+from logging import _levelNames as logLevels, exception, warning, info, basicConfig
+from optparse import OptionValueError, Option, OptionParser
+from os.path import basename, splitext
+from time import time
+
+from antlr3 import CommonTokenStream, ANTLRStringStream
+
+from java2python.blocks import BlockFactory
+from java2python.lib.colortools import colors
+from java2python.parser.local import LocalTreeAdaptor
+from java2python.parser.JavaLexer import JavaLexer
+from java2python.parser.JavaParser import JavaParser
+
+
+version = '0.3'
+
+
+def is_windows():
+    return sys.platform.startswith('win')
+
+
+def bad_loglevel(name, value):
+    msg = 'option %s: invalid loglevel: %r'
+    raise OptionValueError(msg % (name, value))
+
+
+def check_loglevel(option, opt, value):
+    try:
+        lvl = int(value)
+    except (ValueError, ):
+        name = value.upper()
+        if name not in logLevels:
+            bad_loglevel(opt, value)
+        lvl = logLevels[name]
+    else:
+        if lvl not in logLevels:
+            bad_loglevel(opt, value)
+    return lvl
+
+
+class LocalOption(Option):
+    TYPES = Option.TYPES + ('loglevel', )
+    TYPE_CHECKER = Option.TYPE_CHECKER.copy()
+    TYPE_CHECKER['loglevel'] = check_loglevel
+
+
+def transform(options):
+    timed = defaultdict(time)
+    timed['overall']
+
+    try:
+        source = open(options.inputfile).read()
+    except (TypeError, ):
+        source = options.inputfile.read()
+    except (IOError, ), exc:
+        code, msg = exc.args[0:2]
+        print 'IOError: %s.' % (msg, )
+        return code
+
+    lexer = JavaLexer(ANTLRStringStream(source))
+    lexer.setComments([])
+    parser = JavaParser(CommonTokenStream(lexer))
+
+    configs = options.configs
+    if options.includedefaults:
+        configs.insert(0, 'java2python.config.default')
+    parser.setFactory(BlockFactory(configs))
+    parser.setComments(lexer.comments)
+    parser.setTreeAdaptor(LocalTreeAdaptor(parser.checkComments))
+
+    timed['comp']
+    try:
+	module = parser.compilationUnit().module
+    except (Exception, ), exc:
+        exception('exception while parsing')
+        return 1
+    timed['comp_finish']
+
+    filein = fileout = filedefault = '-'
+    if options.inputfile and not isinstance(options.inputfile, file):
+	filein = basename(options.inputfile)
+    if options.outputfile and not isinstance(options.outputfile, file):
+	fileout = basename(options.outputfile)
+    elif fileout != filedefault:
+	fileout = '%s.py' % (splitext(filein)[0])
+
+    if fileout == filedefault:
+	output = sys.stdout
+    else:
+	output = open(fileout, 'w')
+    module.setName(fileout)
+
+    timed['encode']
+    source = str(module)
+    timed['encode_finish']
+
+    if options.pytree:
+	module.debugPrint()
+	print >> sys.stderr
+    print >> output, source
+
+    try:
+        compile(source, '<string>', 'exec')
+    except (SyntaxError, ), ex:
+        warning('Generated source has invalid syntax.')
+    else:
+        info('Generated source has valid syntax.')
+
+    timed['overall_finish']
+    info('Parser: %.4f seconds', timed['comp_finish'] - timed['comp'])
+    info('Encode: %.4f seconds', timed['encode_finish'] - timed['encode'])
+    info('Total:  %.4f seconds', timed['overall_finish'] - timed['overall'])
+    return 0
+
+
+def config_script(argv):
+    parser = OptionParser(option_class=LocalOption,
+                          version='%prog ' + version)
+    parser.add_option('-i', '--input', dest='inputfile',
+		      help='Read from INPUTFILE.  May use - for stdin.',
+		      metavar='INPUTFILE', default=None)
+    parser.add_option('-o', '--output', dest='outputfile',
+		      help='Write to OUTPUTFILE.  May use - for stdout.',
+		      metavar='OUTPUTFILE', default=None)
+    parser.add_option('-c', '--config', dest='configs',
+		      help='Use CONFIG module (not file).  May be repeated.',
+		      metavar='CONFIG', default=[],
+		      action='append')
+    parser.add_option('-n', '--nodefaults', dest='includedefaults',
+		      help='Ignore default configuration module.',
+		      default=True, action='store_false')
+    parser.add_option('-l', '--loglevel', dest='loglevel',
+		      help='Set log level by name or value.',
+		      default='WARN', type='loglevel')
+    parser.add_option('-y', '--pytree', dest='pytree',
+		      help='Print python object tree to stderr.',
+		      default=False, action='store_true')
+    parser.add_option('-r', '--nocolor', dest='nocolor',
+		      help='Disable color output.' +\
+  		          ('  No effect on Win OS.' if is_windows() else ''),
+		      default=False, action='store_true')
+
+    options, args = parser.parse_args(argv)
+    if len(args) > 2:
+	parser.error('Only one input file supported.')
+    elif len(args) == 2:
+	options.inputfile = args[1]
+    if options.inputfile == '-':
+        options.inputfile = sys.stdin
+    if options.outputfile == '-':
+        options.outputfile = sys.stdout
+    ## these next statements don't belong here, but this is as good a
+    ## place as any.
+    if is_windows() or options.nocolor:
+	colors.clear()
+    fmt = '# %(levelname)s %(funcName)s: %(message)s'
+    basicConfig(level=options.loglevel, format=fmt)
+    return options
+
+
+if __name__ == '__main__':
+    sys.exit(transform(config_script(sys.argv)))

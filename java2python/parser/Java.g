@@ -33,9 +33,28 @@ options {
     memoize=true;
     language=Python;
     output=AST;
+    superClass=LocalParser;
 }
 
 
+// topmost scope, a python module
+scope py_module {
+    module;
+}
+
+// python class scope
+scope py_klass {
+    klass;
+}
+
+// python method scope
+scope py_method {
+    method;
+}
+
+// the module, klass, and method scopes use this scope as a "mixin"
+// scope to provide down-level rules a reference to the active scope
+// without refering to it by a specific name.
 scope py_block {
     block;
 }
@@ -43,30 +62,43 @@ scope py_block {
 
 scope py_expr {
     expr;
+    nest;
 }
 
 
-@header {
+@parser::header {
     TOP = -1
+    from java2python.parser.local import LocalParser
 }
 
-@parser::members {
-    def factory(self, *args, **kwds):
-        ##// lazy load if necessary
-        from java2python.blocks import BlockFactory
-        self.factory = factory = BlockFactory(())
-        return factory(*args, **kwds)
 
-    def setFactory(self, factory):
-        self.factory = factory
+@lexer::members {
+    ##// composite grammar files like this one don't provide
+    ##// a way to indicate lexer base class so we implement
+    ##// the methods we need directly.  the client using the lexer
+    ##// must call setComments before passing the lexer to a token
+    ##// stream.
+    def setComments(self, comments):
+         self.comments = comments
+
+    def addComment(self, start, stop, text):
+        self.comments.append((start, stop, text.split('\n')))
 }
+
+
 
 
 compilationUnit returns [module]
-scope py_block;
+scope py_module, py_block;
 @init {
     ##// the topmost block, which is always a module
-    $py_block::block = $module = self.factory('module')
+    $module = $py_module::module = $py_block::block = self.factory('module')
+    self.checkCommentsLeading($start)
+}
+@after {
+    ##// necessary to catch any trailing comments
+    self.checkCommentsTrailing()
+    $module.cleanup()
 }
     :   annotations
         (   packageDeclaration importDeclaration* typeDeclaration*
@@ -76,15 +108,20 @@ scope py_block;
     ;
 
 
+// this rule only executes within a py_module scope
 packageDeclaration
-// TODO: py_block::block.setPackage
-    :   'package' qualifiedName ';'
+@after { $py_module::module.addPackage($qn0.value) }
+    :   'package' qn0=qualifiedName ';'
     ;
 
 
+// this rule only executes within a py_module scope
 importDeclaration
-// TODO:  call py_block::block.addImport
-    :   'import' ('static')? qualifiedName ('.' '*')? ';'
+@init { isStatic = dotStar = False }
+@after {
+    $py_module::module.addImport($qn0.value, isStatic=isStatic, dotStar=dotStar)
+}
+    :   'import' ('static' { isStatic = True })? qn0=qualifiedName ('.' '*' { dotStar = True })? ';'
     ;
 
 
@@ -95,10 +132,10 @@ typeDeclaration
 
 
 classOrInterfaceDeclaration
-scope py_block;
+scope py_klass, py_block;
 @init {
-    $py_block::block = self.factory('class')
-    $py_block::block.setParent($py_block[TOP-1]::block)
+    klass = $py_block::block = $py_klass::klass = self.factory('class')
+    klass.setParent($py_block[TOP-1]::block)
 }
     :   classOrInterfaceModifiers (classDeclaration | interfaceDeclaration)
     ;
@@ -110,9 +147,7 @@ classOrInterfaceModifiers
 
 
 classOrInterfaceModifier
-@init {
-    isAnno = False
-}
+@init { isAnno = False }
 @after {
     if not isAnno:
         $py_block::block.addModifier($classOrInterfaceModifier.text)
@@ -140,7 +175,7 @@ classDeclaration
 
 
 normalClassDeclaration
-    :   'class' Ident { $py_block::block.setName($Ident.text) } typeParameters?
+    :   'class' Ident { $py_klass::klass.setName($Ident.text) } typeParameters?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -223,47 +258,41 @@ classBodyDeclaration
 // local grammar edit:  added modifiers prefix to each rule
 // local grammar edit:  moved methodDeclaration and fieldDeclaration rules in
 memberDecl
-scope py_block;
+scope py_klass, py_block;
+@init {
+    parent = $py_block[TOP-1]::block
+    method = self.factory('method')
+    klass = self.factory('class')
+    field = self.factory('block')
+}
+@after {
+    if method.getName() is not None:
+        method.setParent(parent)
+    elif klass.getName() is not None:
+        klass.setParent(parent)
+    else:
+        field.reparentChildren(parent)
+}
     :   modifiers genericMethodOrConstructorDecl
 
-    |   {
-        $py_block::block = self.factory('method')
-        $py_block::block.setParent($py_block[TOP-1]::block)
-        }
+    |   { $py_block::block = method }
         modifiers type methodDeclaration
 
-    |   {
-        ##// basic block for fields; discarded after the rule
-        $py_block::block = self.factory('block')
-        }
+    |   { $py_block::block = field }
         modifiers type fieldDeclaration
-        {
-        $py_block::block.reparentChildren($py_block[TOP-1]::block)
-        }
 
-    |   {
-        $py_block::block = self.factory('method')
-        $py_block::block.setType('void')
-        $py_block::block.setParent($py_block[TOP-1]::block)
-        }
-        modifiers 'void' Ident voidMethodDeclaratorRest
-        {
-        $py_block::block.setName($Ident.text)
-        }
+    |   { $py_block::block = method }
+        modifiers 'void' { method.setType('void') }
+        id0=Ident  { method.setName($id0.text) }
+        voidMethodDeclaratorRest
 
-    |   {
-        $py_block::block = self.factory('method')
-        $py_block::block.setName('__init__')
-        $py_block::block.setParent($py_block[TOP-1]::block)
-        }
-        modifiers Ident constructorDeclaratorRest
+    |   { $py_block::block = method }
+        modifiers Ident { method.setName('__init__') }
+        constructorDeclaratorRest
 
     |   modifiers interfaceDeclaration
 
-    |   {
-        $py_block::block = self.factory('class')
-        $py_block::block.setParent($py_block[TOP-1]::block)
-        }
+    |   { $py_klass::klass = $py_block::block = klass }
         modifiers classDeclaration
     ;
 
@@ -285,8 +314,7 @@ genericMethodOrConstructorRest
 
 
 methodDeclaration
-    :   Ident
-        { $py_block::block.setName($Ident.text) }
+    :   id0=Ident { $py_block::block.setName($id0.text) }
         methodDeclaratorRest
     ;
 
@@ -380,12 +408,12 @@ scope py_expr;
 @init {
     expr = $py_expr[TOP-1]::expr
 }
-    :   vd0=variableDeclaratorId
-        { expr.left = $vd0.text }
+    :   vd0=variableDeclaratorId { expr.update(left=$vd0.text) }
         ('='
             {
             expr.update(format='${left} = ${right}')
-            $py_expr::expr = expr.nestRight(format='${left}')
+            $py_expr::expr = expr
+            $py_expr::nest = expr.nestRight
             }
             variableInitializer
 
@@ -467,7 +495,6 @@ type
 
 classOrInterfaceType
 @init {
-    ##// todo:  turn this into a nested Expression
     ids = []
 }
 @after {
@@ -521,7 +548,6 @@ formalParameters
 formalParameterDecls
 scope py_block;
 @init {
-    ##// block for catching the param type; discarded after rule
     $py_block::block = self.factory('block')
 }
     :   variableModifiers type formalParameterDeclsRest
@@ -562,8 +588,12 @@ explicitConstructorInvocation
     ;
 
 
-qualifiedName
-    :   Ident ('.' Ident)*
+qualifiedName returns [value]
+@init {
+    $value = []
+}
+    :   id0=Ident { $value.append($id0.text) }
+        ('.' id1=Ident { $value.append($id1.text) })*
     ;
 
 
@@ -740,7 +770,8 @@ scope py_block, py_expr;
         }
         'return' ({
                     expr.update(format='${left} ${right}', right='${right}')
-                    $py_expr::expr = expr.nestRight(format='${left}')
+                    $py_expr::expr = expr
+                    $py_expr::nest = expr.nestRight
                   }
         expression)?
         ';'
@@ -752,8 +783,9 @@ scope py_block, py_expr;
 
     |   {
         $py_block::block = self.factory('block')
-        $py_expr::expr = self.factory('expression', format='${left}')
-        $py_expr::expr.setParent($py_block[TOP-1]::block)
+        $py_expr::expr = expr = self.factory('expression', format='${left}')
+        $py_expr::nest = expr.nestLeft
+        expr.setParent($py_block[TOP-1]::block)
         }
         statementExpression ';'
 
@@ -817,16 +849,6 @@ forUpdate
 // EXPRESSIONS
 
 
-parExpression
-    :   '(' expression ')'
-    ;
-
-
-expressionList
-    :   expression (',' expression)*
-    ;
-
-
 statementExpression
     :   expression
     ;
@@ -835,6 +857,39 @@ statementExpression
 constantExpression
     :   expression
     ;
+
+
+parExpression
+    :   '(' expression ')'
+    ;
+
+
+expressionList
+scope py_expr;
+@init {
+    try:
+        nest = $py_expr[TOP-1]::nest
+    except (IndexError, ):
+        nest = None
+    if nest:
+        $py_expr::expr = expr = nest(format='${left}')
+    else:
+        $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::nest = expr.nestLeft
+}
+    :   {
+        expr.update(format='${left}${right}')
+        }
+        expression
+        (','
+            {
+            expr.update(format='${left}, ${right}')
+            $py_expr::nest = expr.nestRight
+            }
+            expression)*
+    ;
+
+
 
 
 expression
@@ -999,28 +1054,32 @@ castExpression
 
 
 primary
+scope py_expr;
+@init {
+    try:
+        nest = $py_expr[TOP-1]::nest
+    except (IndexError, ):
+        nest = None
+    if nest:
+        $py_expr::expr = expr = nest(format='${left}')
+    else:
+        $py_expr::expr = expr = self.factory('expression', format='${left}')
+}
     :   parExpression
     |   'this' ('.' Ident)* identifierSuffix?
     |   'super' superSuffix
 
-    |   literal
-        {
-        $py_expr::expr.update(left=$literal.text)
-        }
+    |   literal { $py_expr::expr.update(left=$literal.text) }
 
-    |   'new' creator
+    |   { $py_expr::nest = expr.nestLeft }
+        'new' creator
 
     |   id0=Ident
-        {
-        $py_expr::expr.update(left=$id0.text, format='${left}${right}')
-        $py_expr::expr = $py_expr::expr.nestRight(format='${left}')
-        }
+        { expr.update(left=$id0.text, format='${left}${right}') }
         ('.' id1=Ident
-            {
-            $py_expr::expr.update(left=$id1.text, format='.${left}${right}')
-            $py_expr::expr = $py_expr::expr.nestRight(format='${left}')
-            }
+            { expr = expr.nestRight(left=$id1.text, format='.${left}${right}') }
         )*
+        { $py_expr::nest = expr.nestRight }
         identifierSuffix?
 
     |   primitiveType ('[' ']')* '.' 'class'
@@ -1031,14 +1090,12 @@ primary
 
 identifierSuffix
 scope py_expr;
-
     :   ('[' ']')+ '.' 'class'
-    // can also be matched by selector, but do here
     |   ('[' expression ']')+
 
     |   {
-        prev = $py_expr[TOP-1]::expr
-        $py_expr::expr = prev.nestLeft(format="(${left})")
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format="(${left})")
+        $py_expr::nest = expr.nestLeft
         }
         '(' expressionList? ')'
 
@@ -1051,19 +1108,21 @@ scope py_expr;
 
 
 creator
-scope py_block;
+scope py_block, py_expr;
 @init {
-    ##// used to catch the setType call
     $py_block::block = self.factory('block')
+    nest = $py_expr[TOP-1]::nest
+    if nest is None:
+        nest = $py_expr[TOP-1]::expr.nestRight
+    $py_expr::expr = expr = nest(format="${type}(${left})")
+    $py_expr::nest = expr.nestLeft
+
 }
 @after {
-    #print '## before creator', repr($py_expr::expr)
-    expr = $py_expr::expr.nestLeft(format="${type}()", type=$py_block::block.getType())
-    #$py_block::block.reparentChildren($py_block[TOP-1]::block)
-}
+    expr.update(type=$py_block::block.getType())
+    }
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName (arrayCreatorRest | classCreatorRest)
-        { print '#### createdName:', $createdName.text }
     ;
 
 
@@ -1247,10 +1306,18 @@ WS  :  (' '|'\r'|'\t'|'\u000C'|'\n') {$channel=HIDDEN;}
 
 
 COMMENT
-    :   '/*' ( options {greedy=false;} : . )* '*/' {$channel=HIDDEN;}
+    :   '/*' ( options {greedy=false;} : . )* '*/'
+    {
+    $channel = HIDDEN
+    self.addComment($start, $stop, $text[2:-2])
+    }
     ;
 
 
 LINE_COMMENT
-    : '//' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
+    : '//' ~('\n'|'\r')* '\r'? '\n'
+    {
+    $channel = HIDDEN
+    self.addComment($start, $stop, $text[2:])
+    }
     ;

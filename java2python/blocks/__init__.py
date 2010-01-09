@@ -1,16 +1,18 @@
 #!/usr/bin/env python
+import sys
 from string import Template
 from java2python.config import Config
+from java2python.lib.colortools import red, yellow, green, cyan, white
 
 
 class Block(object):
     def __init__(self, config):
 	self.setConfig(config)
 	self.setChildren([])
+	self.setComments([])
 	self.setDecorators([])
 	self.setModifiers([])
 	self.setName(None)
-	self.setParameters([])
 	self.setParent(None)
 	self.setType(None)
 
@@ -18,16 +20,8 @@ class Block(object):
 	decl = self.getDeclaration()
 	decls = [decl] if decl else []
 	indent = self.indent()
-        lines = ['%s%s' % (indent*o.getDepth(), o) for o in self.children]
-	return ('\n').join(decls + lines)
-
-    def __repr__(self):
-	v = '<%s name:%s type:%s modifiers:%s>'
-	clsname = self.__class__.__name__
-	objname = self.getName()
-	typname = self.getType()
-	mods = ', '.join(self.getModifiers()) if self.getModifiers() else []
-	return v % (clsname, objname, typname, mods)
+        lines = ['%s%s' % (indent*o.getDepth(), o) for o in self.getChildren()]
+	return unicode.join(u'\n', decls + lines)
 
     def setConfig(self, config):
 	self.config = config
@@ -45,6 +39,23 @@ class Block(object):
 
     def addChild(self, obj):
 	self.children.append(obj)
+
+    ##
+    # comments accessors
+    def getComments(self):
+	return self.comments
+
+    def setComments(self, comments):
+	self.comments = comments
+
+    def addComment(self, comment):
+	start, stop, lines = comment
+	for line in lines:
+	    e = (
+		Expression(config=self.config,
+			   format='${left}',
+		           left='# %s' % line.rstrip().lstrip('\n')))
+	    e.setParent(self)
 
     ##
     # decorator accessors
@@ -77,17 +88,6 @@ class Block(object):
 	self.name = value
 
     ##
-    # parameter accessors
-    def getParameters(self):
-	return self.parameters
-
-    def setParameters(self, params):
-	self.parameters = params
-
-    def addParameter(self, param):
-	self.parameters.append(param)
-
-    ##
     # parent accessors
     def getParent(self):
 	return self.parent
@@ -114,6 +114,8 @@ class Block(object):
     # calculates the depth of this block based on the number of
     # parents
     def getDepth(self):
+	if isinstance(self.parent, (Module, )):
+	    return 0
 	depth = 0
 	while self:
 	    if self.parent:
@@ -125,10 +127,29 @@ class Block(object):
 
     ##
     # utilities
-    def debugPrint(self):
-	print '%s %s%r' % ('#', self.indent()*self.getDepth(), self)
-	for o in self.children:
-	    o.debugPrint()
+    def cleanup(self):
+	self.addChild(Expression(config=self.config, format='\n'))
+
+    def debugFormat(self):
+	parts = []
+	add = lambda *x:parts.extend(x)
+	add(white('<'))
+	add(green(self.__class__.__name__))
+	add(' ', white('name:'), cyan(self.getName()))
+	add(' ', white('type:'), cyan(self.getType() or 'Unknown'))
+	mods = self.getModifiers()
+	if mods:
+	    add(' ', white('mods:'), cyan(', '.join(self.getModifiers())))
+	add(white('>'))
+	return ''.join(parts)
+
+    def debugPrint(self, level=0):
+	indent = ' '*4
+	print >> sys.stderr, '%s%s' % (indent*level, self.debugFormat())
+	for o in self.getChildren():
+	    printer = getattr(o, 'debugPrint', None)
+	    if printer:
+		printer(level+1)
 
     def indent(self):
 	return '    ' # make config value
@@ -139,19 +160,43 @@ class Block(object):
     def isStatic(self):
 	return 'static' in self.modifiers
 
-
     def isVoid(self):
 	return 'void' == self.type
 
     def reparentChildren(self, target):
-	for child in self.children:
+	for child in self.getChildren():
 	    child.modifiers = self.modifiers
 	    child.type = self.type
 	    child.setParent(target)
 
 
 class Module(Block):
-    pass
+    def __init__(self, config):
+	Block.__init__(self, config)
+    	self.setPackages([])
+    	self.setImports([])
+
+    ##
+    # import accessors
+    def getImports(self):
+	return self.imports
+
+    def setImports(self, values):
+	self.imports = values
+
+    def addImport(self, value, isStatic=False, dotStar=False):
+	self.imports.append((value, isStatic, dotStar))
+
+    ##
+    # package accessors
+    def getPackages(self):
+	return self.packages
+
+    def setPackages(self, values):
+	self.packages = values
+
+    def addPackage(self, value):
+	self.packages.append(value)
 
 
 class Class(Block):
@@ -176,13 +221,29 @@ class Class(Block):
     ##
     # override the depth calculation to make module-level classes
     # appear without indentation.
-    def getDepth(self):
+    def __getDepth(self):
 	if isinstance(self.parent, (Module, )):
 	    return 0
 	else:
 	    return Block.getDepth(self)
 
+
 class Method(Block):
+    def __init__(self, config):
+	Block.__init__(self, config)
+    	self.setParameters([])
+
+    ##
+    # parameter accessors
+    def getParameters(self):
+	return self.parameters
+
+    def setParameters(self, params):
+	self.parameters = params
+
+    def addParameter(self, param):
+	self.parameters.append(param)
+
     ##
     # format and return a method declaration.
     def getDeclaration(self):
@@ -196,24 +257,27 @@ class Method(Block):
 class Expression(Block):
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
-	defaults = dict(left='', right='', format='')
+	defaults = dict(left='', right='', format='', comment='')
 	defaults.update(kwds)
 	self.update(**defaults)
 
     def __nonzero__(self):
 	return bool(self.format)
 
-    def __repr__(self):
-	v = '<%s format:%s left:%r right:%r%s%s>'
-	t = ' type:%s' % self.type if self.type else ''
-	m = ' mods:%s' % ','.join(self.modifiers) if self.modifiers else ''
-	c = self.__class__.__name__
-	return v % (c, self.format, self.left, self.right, t, m, )
-
     def __str__(self):
 	template = Template(self.format).safe_substitute
-	return template(left=self.left, right=self.right, type=self.type)
+	return template(left=self.left, right=self.right,
+			type=self.type, comment=self.comment)
 
+    ##
+    # convenience for grammar operations; simpler than assigning
+    # multiple attributes
+    def update(self, **kwds):
+	for key, value in kwds.items():
+	    setattr(self, key, value)
+
+    ##
+    # methods for simple creation of nested expressions
     def nestLeft(self, **kwds):
 	self.left = left = self.new(self.config)
 	left.update(**kwds)
@@ -224,22 +288,62 @@ class Expression(Block):
 	right.update(**kwds)
 	return right
 
-    def update(self, **kwds):
-	for key, value in kwds.items():
-	    setattr(self, key, value)
-
     @classmethod
     def new(cls, config):
 	return cls(config)
 
+    ##
+    # base class accessor overrides
+    def addComment(self, comment):
+	start, stop, lines = comment
+	if not self.format.count('${comment}'):
+	    self.format = self.format + ' # ${comment}'
+	self.comment += ' '.join(lines)
+
+    ##
+    # base class utility overrides
+    def debugFormat(self, title=''):
+	parts = []
+	add = lambda *x:parts.extend(x)
+	add(white('<'))
+	add(green('%s' % (title or self.__class__.__name__)))
+	for name in ('format', 'left', 'right', 'type'):
+	    attr = getattr(self, name, None)
+	    if attr and isinstance(attr, (basestring, )):
+		add(' ', white(name+':'), yellow(attr))
+	    ## other object types not formatted; debugPrint handles
+	    ## them directly.
+	add(white('>'))
+	return ''.join(parts)
+
+    def debugPrint(self, level=0, title=''):
+	indent = ' '*4
+	print >> sys.stderr, '%s%s' % (indent*level, self.debugFormat(title))
+	for name in ('left', 'right', 'type'):
+	    obj = getattr(self, name, None)
+	    printer = getattr(obj, 'debugPrint', None)
+	    if printer:
+		printer(level+1, name.title())
+
 
 class BlockFactory(object):
+    ##
+    # implemented like this so that it
+    # can be manipulated externally.
+    types = {
+	'block':Block,
+	'module':Module,
+	'class':Class,
+	'method':Method,
+	'expression':Expression,
+	}
+
     def __init__(self, configs):
 	self.config = Config(configs)
 
     def __call__(self, name, **kwds):
 	try:
-	    cls = globals()[name.title()]
+	    cls = self.types[name]
 	except (KeyError, ):
 	    raise TypeError('Unknown factory type: %s' % (name, ))
 	return cls(self.config, **kwds)
