@@ -11,7 +11,7 @@ class LocalParser(Parser):
     """
     def __init__(self, input, state=None):
 	Parser.__init__(self, input, state=state)
-	# make parser instance usable when run as a script
+	# makes instance usable when run as a script
 	self.setComments([])
         self.setFactory(BlockFactory(configs=[]))
 

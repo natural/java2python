@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import sys
 from string import Template
 from java2python.config import Config
@@ -51,10 +52,9 @@ class Block(object):
     def addComment(self, comment):
 	start, stop, lines = comment
 	for line in lines:
-	    e = (
-		Expression(config=self.config,
+	    e = Comment(config=self.config,
 			   format='${left}',
-		           left='# %s' % line.rstrip().lstrip('\n')))
+		           left='# %s' % line.rstrip().lstrip('\n'))
 	    e.setParent(self)
 
     ##
@@ -151,6 +151,9 @@ class Block(object):
 	    if printer:
 		printer(level+1)
 
+    def isComment(self):
+	return False
+
     def indent(self):
 	return '    ' # make config value
 
@@ -168,6 +171,15 @@ class Block(object):
 	    child.modifiers = self.modifiers
 	    child.type = self.type
 	    child.setParent(target)
+    ##
+    def getAtLeastOneChild(self):
+	children = self.children[:]
+	filtered = [c for c in children if not c.isComment()]
+	if not filtered:
+	    comment = Expression(self.config, format='${left}', left='pass')
+	    comment.setParent(self, autoAdd=False)
+	    children.append(comment)
+	return children
 
 
 class Module(Block):
@@ -200,12 +212,17 @@ class Module(Block):
 
 
 class Class(Block):
+    def __init__(self, config):
+	Block.__init__(self, config)
+	self.getChildren = self.getAtLeastOneChild
+
     ##
     # format and return a class declaration.
     def getDeclaration(self):
 	types = ', '.join(self.type or ['object']) # make config
 	types = '(%s)' % types if types else ''
 	return 'class %s%s:' % (self.name, types)
+
 
     ##
     # override the type setter to account for extends or
@@ -218,20 +235,12 @@ class Class(Block):
 	elif value:
 	    self.type.append(value)
 
-    ##
-    # override the depth calculation to make module-level classes
-    # appear without indentation.
-    def __getDepth(self):
-	if isinstance(self.parent, (Module, )):
-	    return 0
-	else:
-	    return Block.getDepth(self)
-
 
 class Method(Block):
     def __init__(self, config):
 	Block.__init__(self, config)
     	self.setParameters([])
+	self.getChildren = self.getAtLeastOneChild
 
     ##
     # parameter accessors
@@ -326,6 +335,11 @@ class Expression(Block):
 		printer(level+1, name.title())
 
 
+class Comment(Expression):
+    def isComment(self):
+	return True
+
+
 class BlockFactory(object):
     ##
     # implemented like this so that it
@@ -336,7 +350,8 @@ class BlockFactory(object):
 	'class':Class,
 	'method':Method,
 	'expression':Expression,
-	}
+	'comment':Comment,
+    }
 
     def __init__(self, configs):
 	self.config = Config(configs)
