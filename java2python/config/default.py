@@ -41,8 +41,8 @@ commentPrefix = '## '
 ## should include the docstring generator.  (other docstrings are
 ## indented).
 modulePreamble = [
-    'java2python.mods.simpleShebang',
-    'java2python.mods.simpleDocString',
+#    'java2python.mods.simpleShebang',
+#    'java2python.mods.simpleDocString',
 ]
 
 ## lines of static text inserted at the end of each module.  this is a
@@ -53,16 +53,16 @@ moduleEpilogue = [
 
 
 methodPreamble = [
-    'java2python.mods.newLine',
+#    'java2python.mods.newLine',
     ]
 
 classDocString = [
-    'java2python.mods.simpleDocString',
+#    'java2python.mods.simpleDocString',
     ]
 
 
 methodDocString = [
-    'java2python.mods.simpleDocString',
+#    'java2python.mods.simpleDocString',
     ]
 
 

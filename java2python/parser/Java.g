@@ -121,7 +121,8 @@ importDeclaration
 @after {
     $py_module::module.addImport($qn0.value, isStatic=isStatic, dotStar=dotStar)
 }
-    :   'import' ('static' { isStatic = True })? qn0=qualifiedName ('.' '*' { dotStar = True })? ';'
+    :   'import' ('static' { isStatic = True })?
+        qn0=qualifiedName ('.' '*' { dotStar = True })? ';'
     ;
 
 
@@ -322,8 +323,9 @@ methodDeclaration
 fieldDeclaration
 scope py_expr;
 @init {
-    $py_expr::expr = self.factory('expression', format='${left} = ${type}()')
-    $py_expr::expr.setParent($py_block::block)
+    expr = self.factory('expression', format='${left} = ${type}()')
+    expr.setParent($py_block::block)
+    $py_expr::expr, $py_expr::nest = expr, expr.nestLeft
 }
     :   variableDeclarators ';'
     ;
@@ -406,14 +408,16 @@ variableDeclarators
 variableDeclarator
 scope py_expr;
 @init {
-    expr = $py_expr[TOP-1]::expr
+    nest = $py_expr[TOP-1]::nest
+    $py_expr::expr = expr = nest(format='${left}')
+    $py_expr::nest = expr.nestLeft
+
 }
     :   vd0=variableDeclaratorId { expr.update(left=$vd0.text) }
         ('='
             {
-            expr.update(format='${left} = ${right}')
-            $py_expr::expr = expr
-            $py_expr::nest = expr.nestRight
+            $py_expr[TOP-1]::expr.update(format='${left} = ${right}')
+            $py_expr::nest = $py_expr[TOP-1]::expr.nestRight
             }
             variableInitializer
 
@@ -583,6 +587,11 @@ constructorBody
 
 
 explicitConstructorInvocation
+scope py_expr;
+@init {
+    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::nest = expr.nestLeft
+}
     :   nonWildcardTypeArguments? ('this' | 'super') arguments ';'
     |   primary '.' nonWildcardTypeArguments? 'super' arguments ';'
     ;
@@ -734,7 +743,8 @@ scope py_block;
 localVariableDeclaration
 scope py_expr;
 @init {
-    $py_expr::expr = self.factory('expression', format='${left}')
+    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::nest = expr.nestLeft
     $py_expr::expr.setParent($py_block::block)
 }
     :   variableModifiers type variableDeclarators
@@ -748,6 +758,10 @@ variableModifiers
 
 statement
 scope py_block, py_expr;
+@init {
+    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::nest = expr.nestLeft
+}
     : block
     |   ASSERT expression (':' expression)? ';'
     |   'if' parExpression statement (options {k=1;}:'else' statement)?
@@ -783,8 +797,6 @@ scope py_block, py_expr;
 
     |   {
         $py_block::block = self.factory('block')
-        $py_expr::expr = expr = self.factory('expression', format='${left}')
-        $py_expr::nest = expr.nestLeft
         expr.setParent($py_block[TOP-1]::block)
         }
         statementExpression ';'
@@ -867,29 +879,21 @@ parExpression
 expressionList
 scope py_expr;
 @init {
-    try:
-        nest = $py_expr[TOP-1]::nest
-    except (IndexError, ):
-        nest = None
-    if nest:
-        $py_expr::expr = expr = nest(format='${left}')
-    else:
-        $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}, ${right}')
     $py_expr::nest = expr.nestLeft
 }
-    :   {
-        expr.update(format='${left}${right}')
-        }
-        expression
+@after {
+    expr.update(format='${left}')
+}
+    :   expression
         (','
             {
-            expr.update(format='${left}, ${right}')
-            $py_expr::nest = expr.nestRight
+            $py_expr::expr = expr = expr.nestRight(format='${left}, ${right}')
+            $py_expr::nest = expr.nestLeft
             }
-            expression)*
+            expression
+        )*
     ;
-
-
 
 
 expression
@@ -1056,14 +1060,9 @@ castExpression
 primary
 scope py_expr;
 @init {
-    try:
-        nest = $py_expr[TOP-1]::nest
-    except (IndexError, ):
-        nest = None
-    if nest:
-        $py_expr::expr = expr = nest(format='${left}')
-    else:
-        $py_expr::expr = expr = self.factory('expression', format='${left}')
+    nest = $py_expr[TOP-1]::nest
+    $py_expr::expr = expr = nest(format='${left}')
+    $py_expr::nest = expr.nestLeft
 }
     :   parExpression
     |   'this' ('.' Ident)* identifierSuffix?
@@ -1090,14 +1089,14 @@ scope py_expr;
 
 identifierSuffix
 scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format="(${left})")
+    $py_expr::nest = expr.nestLeft
+}
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+
 
-    |   {
-        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format="(${left})")
-        $py_expr::nest = expr.nestLeft
-        }
-        '(' expressionList? ')'
+    |   '(' expressionList? ')'
 
     |   '.' 'class'
     |   '.' explicitGenericInvocation

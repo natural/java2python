@@ -210,11 +210,10 @@ class Block:
 
 	"""
 	indent = self.indent()
-	print >> sys.stderr, '%s%s' % (indent*level, self.debugFormat())
-	for o in self.getChildren():
-	    printer = getattr(o, 'debugPrint', None)
-	    if printer:
-		printer(level+1)
+	print >> stderr, '%s%s' % (indent*level, self.debugFormat())
+	for child in [o for o in self.getChildren() if o]:
+	    printer = getattr(child, 'debugPrint', lambda v:None)
+	    printer(level+1)
 
     def isComment(self):
 	""" Returns True if this block is a comment.
@@ -284,7 +283,7 @@ class Block:
 	    comment = Expression(self.config, format=Formats.left, left='pass')
 	    comment.setParent(self, autoAdd=False)
 	    children.append(comment)
-	return children
+	return children + [Expression(self.config, format=''), ]
 
 
 class Module(Block):
@@ -428,7 +427,7 @@ class Expression(Block):
 	""" x.__nonzero__() <==> x != 0
 
 	"""
-	return bool(self.format)
+	return bool(self.format.strip())
 
     def __str__(self):
 	""" x.__str__() <==> str(x)
@@ -491,7 +490,7 @@ class Expression(Block):
 
 	"""
 	indent = self.indent()
-	print >> sys.stderr, '%s%s' % (indent*level, self.debugFormat(title))
+	print >> stderr, '%s%s' % (indent*level, self.debugFormat(title))
 	for name in ('left', 'right', 'type'):
 	    obj = getattr(self, name, None)
 	    printer = getattr(obj, 'debugPrint', lambda x, y:None)
@@ -526,6 +525,9 @@ class BlockFactory(object):
 	self.config = config
 
     def __call__(self, name, **kwds):
+	""" Creates a new block instance of the specified type (by name).
+
+	"""
 	try:
 	    cls = self.types[name]
 	except (KeyError, ):
