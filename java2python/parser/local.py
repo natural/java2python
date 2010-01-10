@@ -3,6 +3,7 @@
 from antlr3 import Parser
 from antlr3.tree import CommonTreeAdaptor
 from java2python.blocks import BlockFactory
+from java2python.config import Config
 
 
 class LocalParser(Parser):
@@ -12,10 +13,10 @@ class LocalParser(Parser):
     def __init__(self, input, state=None):
 	Parser.__init__(self, input, state=state)
 	# makes instance usable when run as a script
-	self.setComments([])
-        self.setFactory(BlockFactory(configs=[]))
+	self.setRawComments([])
+        self.setFactory(BlockFactory(Config([])))
 
-    def setComments(self, value):
+    def setRawComments(self, value):
 	""" Sets the comment sequence to the given value
 
 	"""

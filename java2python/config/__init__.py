@@ -54,12 +54,16 @@ class Config:
             item = maybeImport(item)
         return item
 
-    def handlers(self, name):
+    def handlers(self, name, all=False):
         """ yields handlers from last config module, each possibly imported
 
         @param name handler attribute as string
         @return list of values
         """
-        handlers = self.last(name, ())
-        for handler in handlers:
-            yield maybeImport(handler)
+	if all:
+	    groups = self.all(name, ())
+	else:
+	    groups = [self.last(name, ()), ]
+	for group in groups:
+	    for handler in group:
+		yield maybeImport(handler)

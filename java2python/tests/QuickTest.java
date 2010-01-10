@@ -14,7 +14,8 @@ final class QuickTest extends Object {
 
 
     public String foo(int... bar) {
-//	System.out.println("foo: " + bar);
+//	comment about foo
+// wa
 	return "placeholder";
     }
 

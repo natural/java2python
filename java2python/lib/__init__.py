@@ -126,3 +126,8 @@ def findKey(mapping, key):
 
 def formatParameter(p):
     return Template(p['format']).substitute(p)
+
+
+class Formats:
+    comment = '$comment'
+    left = '$left'
