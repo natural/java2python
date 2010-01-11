@@ -66,6 +66,11 @@ scope py_expr {
 }
 
 
+scope py_assign {
+    assign;
+}
+
+
 @parser::header {
     TOP = -1
     from java2python.parser.local import LocalParser
@@ -93,11 +98,13 @@ scope py_module, py_block;
 @init {
     ##// the topmost block, which is always a module
     $module = $py_module::module = $py_block::block = self.factory('module')
+    ##// necessary to catch any leading comments before initial syntax.
     self.checkCommentsLeading($start)
 }
 @after {
-    ##// necessary to catch any trailing comments
+    ##// necessary to catch any trailing comments.
     self.checkCommentsTrailing()
+    ##// message the module that the parsing is complete.
     $module.cleanup()
 }
     :   annotations
@@ -135,8 +142,9 @@ typeDeclaration
 classOrInterfaceDeclaration
 scope py_klass, py_block;
 @init {
-    klass = $py_block::block = $py_klass::klass = self.factory('class')
-    klass.setParent($py_block[TOP-1]::block)
+    $py_block::block = $py_klass::klass = \
+        self.factory('class', parent=$py_block[TOP-1]::block)
+
 }
     :   classOrInterfaceModifiers (classDeclaration | interfaceDeclaration)
     ;
@@ -252,55 +260,54 @@ interfaceBody
 classBodyDeclaration
     :   ';'
     |   'static'? block
-    |   memberDecl /* was: modifiers memberDecl */
+    |   memberDecl
     ;
 
 
-// local grammar edit:  added modifiers prefix to each rule
-// local grammar edit:  moved methodDeclaration and fieldDeclaration rules in
 memberDecl
 scope py_klass, py_block;
 @init {
-    parent = $py_block[TOP-1]::block
     method = self.factory('method')
     klass = self.factory('class')
     field = self.factory('block')
+    isClass = isMethod = isField = False
 }
 @after {
-    if method.getName() is not None:
+    parent = $py_block[TOP-1]::block
+    if isMethod:
         method.setParent(parent)
-    elif klass.getName() is not None:
+    if isClass:
         klass.setParent(parent)
-    else:
+    if isField:
         field.reparentChildren(parent)
 }
     :   modifiers genericMethodOrConstructorDecl
 
     |   { $py_block::block = method }
         modifiers type methodDeclaration
+        { isMethod = True }
 
     |   { $py_block::block = field }
         modifiers type fieldDeclaration
+        { isField = True }
 
     |   { $py_block::block = method }
         modifiers 'void' { method.setType('void') }
         id0=Ident  { method.setName($id0.text) }
         voidMethodDeclaratorRest
+        { isMethod = True }
 
     |   { $py_block::block = method }
         modifiers Ident { method.setName('__init__') }
         constructorDeclaratorRest
+        { isMethod = True }
 
     |   modifiers interfaceDeclaration
 
     |   { $py_klass::klass = $py_block::block = klass }
         modifiers classDeclaration
+        { isClass = True }
     ;
-
-// local grammar edit:  moved rules to parent rule (memberDecl)
-//memberDeclaration
-//    :   type (methodDeclaration | fieldDeclaration)
-//    ;
 
 
 genericMethodOrConstructorDecl
@@ -323,8 +330,7 @@ methodDeclaration
 fieldDeclaration
 scope py_expr;
 @init {
-    expr = self.factory('expression', format='${left} = ${type}()')
-    expr.setParent($py_block::block)
+    expr = self.factory('expression', format='${left} = ${type}()', parent=$py_block::block)
     $py_expr::expr, $py_expr::nest = expr, expr.nestLeft
 }
     :   variableDeclarators ';'
@@ -408,10 +414,8 @@ variableDeclarators
 variableDeclarator
 scope py_expr;
 @init {
-    nest = $py_expr[TOP-1]::nest
-    $py_expr::expr = expr = nest(format='${left}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
     $py_expr::nest = expr.nestLeft
-
 }
     :   vd0=variableDeclaratorId { expr.update(left=$vd0.text) }
         ('='
@@ -452,9 +456,7 @@ arrayInitializer
 
 
 modifier
-@init {
-    anno = False
-}
+@init  { anno = False }
 @after {
     if not anno:
         $py_block::block.addModifier($modifier.text)
@@ -498,9 +500,7 @@ type
 
 
 classOrInterfaceType
-@init {
-    ids = []
-}
+@init  { ids = [] }
 @after {
     $py_block::block.setType(ids)
 }
@@ -560,8 +560,7 @@ scope py_block;
 
 formalParameterDeclsRest
 @init {
-    param = self.factory('expression')
-    param.update(format='${left}', type=$py_block::block.getType())
+    param = self.factory('expression', format='${left}', type=$py_block::block.getType())
 }
 @after {
     $py_block[TOP-1]::block.addParameter(param)
@@ -598,9 +597,7 @@ scope py_expr;
 
 
 qualifiedName returns [value]
-@init {
-    $value = []
-}
+@init { $value = [] }
     :   id0=Ident { $value.append($id0.text) }
         ('.' id1=Ident { $value.append($id1.text) })*
     ;
@@ -743,9 +740,8 @@ scope py_block;
 localVariableDeclaration
 scope py_expr;
 @init {
-    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::expr = expr = self.factory('expression', format='${left}', parent=$py_block::block)
     $py_expr::nest = expr.nestLeft
-    $py_expr::expr.setParent($py_block::block)
 }
     :   variableModifiers type variableDeclarators
     ;
@@ -759,12 +755,29 @@ variableModifiers
 statement
 scope py_block, py_expr;
 @init {
+    parent = $py_block[TOP-1]::block
     $py_expr::expr = expr = self.factory('expression', format='${left}')
     $py_expr::nest = expr.nestLeft
 }
-    : block
+    :   // generic block
+        { $py_block::block = block = self.factory('block') }
+        block
+        { block.reparentChildren(parent) }
+
+
     |   ASSERT expression (':' expression)? ';'
-    |   'if' parExpression statement (options {k=1;}:'else' statement)?
+
+    |   // if statement
+        {
+        $py_block::block = block = self.factory('statement', name='if', parent=parent)
+        $py_expr::expr = expr = block.getPrimaryExpression()
+        $py_expr::nest = expr.nestLeft
+        }
+        'if' parExpression
+        st0=statement
+        (options {k=1;}: 'else' statement)?
+
+
     |   'for' '(' forControl ')' statement
     |   'while' parExpression statement
     |   'do' statement 'while' parExpression ';'
@@ -777,10 +790,12 @@ scope py_block, py_expr;
     |   'synchronized' parExpression block
 
 
-    |   {
+    |   // return statement
+        {
         $py_block::block = self.factory('block')
-        expr = self.factory('expression', left='return', format='${left}')
-        expr.setParent($py_block[TOP-1]::block)
+        expr = self.factory('expression', left='return', format='${left}', 
+                            parent=$py_block[TOP-1]::block)
+
         }
         'return' ({
                     expr.update(format='${left} ${right}', right='${right}')
@@ -795,7 +810,8 @@ scope py_block, py_expr;
     |   'continue' Ident? ';'
     |   ';'
 
-    |   {
+    |   // expression statement
+        {
         $py_block::block = self.factory('block')
         expr.setParent($py_block[TOP-1]::block)
         }
@@ -883,11 +899,14 @@ scope py_expr;
     $py_expr::nest = expr.nestLeft
 }
 @after {
+    ##// update the last expression (which may be the first and only
+    ##// expression) to not have a trailing comma.
     expr.update(format='${left}')
 }
     :   expression
         (','
             {
+            ##// update the scope for the next iteration
             $py_expr::expr = expr = expr.nestRight(format='${left}, ${right}')
             $py_expr::nest = expr.nestLeft
             }
@@ -968,7 +987,14 @@ andExpression
 
 
 equalityExpression
-    :   instanceOfExpression ( ('==' | '!=') instanceOfExpression )*
+    :   instanceOfExpression
+        ( ex0=('==' | '!=')
+            {
+            $py_expr[TOP]::expr.update(format='${left} ' + $ex0.text + ' ${right}')
+            $py_expr[TOP]::nest = $py_expr[TOP]::expr.nestRight
+            }
+          instanceOfExpression
+        )*
     ;
 
 
@@ -1096,7 +1122,7 @@ scope py_expr;
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+
 
-    |   '(' expressionList? ')'
+    |   '(' (expressionList)? ')'
 
     |   '.' 'class'
     |   '.' explicitGenericInvocation
@@ -1111,15 +1137,13 @@ scope py_block, py_expr;
 @init {
     $py_block::block = self.factory('block')
     nest = $py_expr[TOP-1]::nest
-    if nest is None:
-        nest = $py_expr[TOP-1]::expr.nestRight
     $py_expr::expr = expr = nest(format="${type}(${left})")
     $py_expr::nest = expr.nestLeft
 
 }
 @after {
     expr.update(type=$py_block::block.getType())
-    }
+}
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName (arrayCreatorRest | classCreatorRest)
     ;

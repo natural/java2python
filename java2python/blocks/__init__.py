@@ -5,7 +5,7 @@ from string import Template
 from sys import stderr
 
 from java2python.lib import Formats
-from java2python.lib.colortools import red, yellow, green, cyan, white
+from java2python.lib.colortools import red, yellow, green, cyan, white, magenta, blue
 
 
 class Block:
@@ -285,6 +285,13 @@ class Block:
 	    children.append(comment)
 	return children + [Expression(self.config, format=''), ]
 
+    def update(self, **kwds):
+	"""  Keyword-based attribute assignment; convenience for the grammar.
+
+	"""
+	for key, value in kwds.items():
+	    setattr(self, key, value)
+
 
 class Module(Block):
     """ Module -> type of block for Python modules.
@@ -411,6 +418,30 @@ class Statement(Block):
     """ Statement -> type of block for Python statements.
 
     """
+    def __init__(self, config, **kwds):
+	Block.__init__(self, config)
+	self.setPrimaryExpression(Expression(self.config, format='$left'))
+
+    def getDeclaration(self):
+	items = []
+	items.append('%s %s:' % (self.getName(), self.getPrimaryExpression()))
+	return items
+
+    def getPrimaryExpression(self):
+	return self.primaryExpression
+
+    def setPrimaryExpression(self, value):
+	self.primaryExpression = value
+
+    def debugFormat(self):
+	parts = []
+	add = lambda *x:parts.extend(x)
+	add(white('<'))
+	add(magenta('%s' % self.__class__.__name__))
+	add(white(' name:'), yellow(self.getName()))
+	add(white(' expr:'), yellow(self.getPrimaryExpression()))
+	add(white('>'))
+	return ''.join(parts)
 
 
 class Expression(Block):
@@ -436,13 +467,6 @@ class Expression(Block):
 	template = Template(self.format).safe_substitute
 	return template(left=self.left, right=self.right,
 			type=self.type, comment=self.comment)
-
-    def update(self, **kwds):
-	"""  Keyword-based attribute assignment; convenience for the grammar.
-
-	"""
-	for key, value in kwds.items():
-	    setattr(self, key, value)
 
     def nestLeft(self, **kwds):
 	""" Create and assign a new expression for the left of this one.
@@ -475,7 +499,7 @@ class Expression(Block):
 	parts = []
 	add = lambda *x:parts.extend(x)
 	add(white('<'))
-	add(green('%s' % (title or self.__class__.__name__)))
+	add(blue('%s' % (title or self.__class__.__name__)))
 	for name in ('format', 'left', 'right', 'type'):
 	    attr = getattr(self, name, None)
 	    ## types other than strings are not formatted; debugPrint
@@ -524,12 +548,15 @@ class BlockFactory(object):
     def __init__(self, config):
 	self.config = config
 
-    def __call__(self, name, **kwds):
+    def __call__(self, typeName, name=None, parent=None, **kwds):
 	""" Creates a new block instance of the specified type (by name).
 
 	"""
 	try:
-	    cls = self.types[name]
+	    cls = self.types[typeName]
 	except (KeyError, ):
-	    raise TypeError('Unknown factory type: %s' % (name, ))
-	return cls(self.config, **kwds)
+	    raise TypeError('Unknown factory type: %s' % (typeName, ))
+	block = cls(self.config, **kwds)
+	block.setParent(parent)
+	block.setName(name)
+	return block
