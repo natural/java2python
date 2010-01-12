@@ -6,7 +6,8 @@ class Assert1 {
 
 	int y = 3;
         try {
-	    assert x == 0: y;
+	    assert x==0;
+
 	} catch (AssertionError e) {
 	    System.out.println(y);
 	} catch (IndexOutOfBoundsException e) {
@@ -14,3 +15,5 @@ class Assert1 {
         }
     }
 }
+
+//	    assert x == 0: y;

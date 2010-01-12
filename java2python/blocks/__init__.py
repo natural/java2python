@@ -20,6 +20,7 @@ class Block:
 	self.setName(None)
 	self.setParent(None)
 	self.setType(None)
+	self.setVariables([])
 
     def __str__(self):
 	""" x.__str__() <==> str(x)
@@ -171,6 +172,25 @@ class Block:
 	"""
 	self.type = value
 
+
+    def getVariables(self):
+	""" Returns the variable sequence of this block.
+
+	"""
+	return self.variables
+
+    def setVariables(self, value):
+	""" Sets the variable sequence of this block to the given value.
+
+	"""
+	self.variables = value
+
+    def addVariable(self, value):
+	""" Adds the given value to the variable sequence of this block.
+
+	"""
+	self.variables.append(value)
+
     def getDepth(self):
 	""" Returns the depth of this block based on it's parents.
 
@@ -271,6 +291,7 @@ class Block:
 	for child in self.getChildren():
 	    child.modifiers = self.modifiers
 	    child.type = self.type
+	    child.variables = self.variables
 	    child.setParent(target)
 
     def getAtLeastOneChild(self):
@@ -418,13 +439,33 @@ class Statement(Block):
     """ Statement -> type of block for Python statements.
 
     """
+    ## keywords with a block indicator (:).  doesn't include "class"
+    ## and "def" because we already have block types for those.
+    ## doesn't include "elif", "lambda" and "with" because we don't
+    ## generate those.
+    blockKeywords = [
+	'for',
+	'if',
+	'else',
+	'try',
+	'except',
+	'finally',
+	'while',
+    ]
+
+
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
 	self.setPrimaryExpression(Expression(self.config, format='$left'))
 
     def getDeclaration(self):
 	items = []
-	items.append('%s %s:' % (self.getName(), self.getPrimaryExpression()))
+	expr = self.getPrimaryExpression()
+	if not any((expr.left, expr.right, expr.comment, expr.type)):
+	    expr = ''
+	else:
+	    expr = ' %s' % (expr, )
+	items.append('%s%s:' % (self.getName(), expr))
 	return items
 
     def getPrimaryExpression(self):

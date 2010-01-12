@@ -76,6 +76,20 @@ class LocalParser(Parser):
 	if self.comments:
 	    self.checkComments(self.comments[-1][1]+1)
 
+    def fixFloatLiteral(self, value):
+        """ Turns a java float into a syntactically correct python float.
+
+        This could be a regular function, but having it here makes it
+        easily callable within the grammar.
+        """
+        if value.startswith('.'):
+            value = '0' + value
+        if value.endswith(('f', 'd')):
+            value = value[:-1]
+        elif value.endswith(('l', 'L')):
+            value = value[:-1] + 'L'
+        return value
+
 
 class LocalTreeAdaptor(CommonTreeAdaptor):
     """ Antlr tree subclass with hook for checking comments.

@@ -331,7 +331,8 @@ fieldDeclaration
 scope py_expr;
 @init {
     expr = self.factory('expression', format='${left} = ${type}()', parent=$py_block::block)
-    $py_expr::expr, $py_expr::nest = expr, expr.nestLeft
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestLeft
 }
     :   variableDeclarators ';'
     ;
@@ -417,7 +418,15 @@ scope py_expr;
     $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
     $py_expr::nest = expr.nestLeft
 }
-    :   vd0=variableDeclaratorId { expr.update(left=$vd0.text) }
+    :   variableDeclaratorId
+        {
+        vid = $variableDeclaratorId.text
+        expr.update(left=vid)
+        ##// this should be a reference to the active current
+        ##// py_method/py_klass instead.
+        $py_block[TOP-1]::block.addVariable(vid)
+
+        }
         ('='
             {
             $py_expr[TOP-1]::expr.update(format='${left} = ${right}')
@@ -603,13 +612,14 @@ qualifiedName returns [value]
     ;
 
 
-literal
-    :   integerLiteral
+literal returns [value]
+    :   integerLiteral        { $value = $integerLiteral.text       }
     |   FloatingPointLiteral
-    |   CharacterLiteral
-    |   StringLiteral
-    |   booleanLiteral
-    |   'null'
+        { $value = self.fixFloatLiteral($FloatingPointLiteral.text) }
+    |   CharacterLiteral      { $value = $CharacterLiteral.text     }
+    |   StringLiteral         { $value = $StringLiteral.text        }
+    |   booleanLiteral        { $value = $booleanLiteral.value      }
+    |   'null'                { $value = 'None'                     }
     ;
 
 
@@ -620,9 +630,9 @@ integerLiteral
     ;
 
 
-booleanLiteral
-    :   'true'
-    |   'false'
+booleanLiteral returns [value]
+    :   'true'  { $value = 'True'  }
+    |   'false' { $value = 'False' }
     ;
 
 
@@ -765,27 +775,80 @@ scope py_block, py_expr;
         { block.reparentChildren(parent) }
 
 
-    |   ASSERT expression (':' expression)? ';'
+    |   // assert statement
+        ASSERT
+        {
+        $py_block::block = self.factory('block')
+        $py_expr::expr = expr = self.factory('expression', format='assert ${left}',
+                                             parent=parent)
+        $py_expr::nest = expr.nestLeft
+        }
+        expression
+        (':' expression)? ';'
 
     |   // if statement
         {
-        $py_block::block = block = self.factory('statement', name='if', parent=parent)
-        $py_expr::expr = expr = block.getPrimaryExpression()
+        $py_block::block = self.factory('statement', name='if', parent=parent)
+        $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
         $py_expr::nest = expr.nestLeft
         }
         'if' parExpression
-        st0=statement
-        (options {k=1;}: 'else' statement)?
+        statement
+        (options {k=1;}: 'else'
+            {
+            $py_block::block = self.factory('statement', name='else', parent=parent)
+            }
+        statement
+        )?
 
 
     |   'for' '(' forControl ')' statement
     |   'while' parExpression statement
     |   'do' statement 'while' parExpression ';'
-    |   'try' block
-        ( catches 'finally' block
-        | catches
-        |   'finally' block
+
+
+    |   // try statement
+        {
+        $py_block::block = self.factory('statement', name='try', parent=parent)
+        $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+        $py_expr::nest = expr.nestLeft
+        }
+        'try'
+        block
+
+        (   // try...catch...finally
+            {
+            $py_block::block = self.factory('statement', name='except', parent=parent)
+            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::nest = expr.nestLeft
+            }
+            catches 'finally'
+            {
+            $py_block::block = self.factory('statement', name='finally', parent=parent)
+            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::nest = expr.nestLeft
+            }
+            block
+
+        |   // try...catch
+            {
+            $py_block::block = self.factory('statement', name='except', parent=parent)
+            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::nest = expr.nestLeft
+            }
+            catches
+
+        |   // try...finally
+            'finally'
+            {
+            $py_block::block = self.factory('statement', name='finally', parent=parent)
+            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::nest = expr.nestLeft
+            }
+            block
         )
+
+
     |   'switch' parExpression '{' switchBlockStatementGroups '}'
     |   'synchronized' parExpression block
 
@@ -793,8 +856,8 @@ scope py_block, py_expr;
     |   // return statement
         {
         $py_block::block = self.factory('block')
-        expr = self.factory('expression', left='return', format='${left}', 
-                            parent=$py_block[TOP-1]::block)
+        expr = self.factory('expression', left='return', format='${left}',
+                            parent=parent)
 
         }
         'return' ({
@@ -805,7 +868,16 @@ scope py_block, py_expr;
         expression)?
         ';'
 
-    |   'throw' expression ';'
+    |   // throw statement
+        {
+        $py_block::block = self.factory('block')
+        $py_expr::expr = expr = \
+            self.factory('expression', left='raise', format='${left} ${right}',
+                         parent=parent)
+        $py_expr::nest = expr.nestRight
+        }
+        'throw' expression ';'
+
     |   'break' Ident? ';'
     |   'continue' Ident? ';'
     |   ';'
@@ -813,7 +885,7 @@ scope py_block, py_expr;
     |   // expression statement
         {
         $py_block::block = self.factory('block')
-        expr.setParent($py_block[TOP-1]::block)
+        expr.setParent(parent)
         }
         statementExpression ';'
 
@@ -829,6 +901,7 @@ catches
 catchClause
     :   'catch' '(' formalParameter ')' block
     ;
+
 
 formalParameter
     :   variableModifiers type variableDeclaratorId
@@ -906,7 +979,7 @@ scope py_expr;
     :   expression
         (','
             {
-            ##// update the scope for the next iteration
+            ##// change the scope for the next iteration
             $py_expr::expr = expr = expr.nestRight(format='${left}, ${right}')
             $py_expr::nest = expr.nestLeft
             }
@@ -957,7 +1030,26 @@ assignmentOperator
 
 
 conditionalExpression
-    :   conditionalOrExpression ( '?' expression ':' expression )?
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
+    $py_expr::nest = expr.nestLeft
+}
+    :   conditionalOrExpression
+        (
+        {
+        expr.update(format='${right} if ${left}')
+        $py_expr::nest = expr.nestRight
+        }
+        '?' expression
+        {
+        left = self.factory('expression', format='${left} else ${right}', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr = left
+        $py_expr::nest = left.nestRight
+        }
+        ':' expression
+        )?
     ;
 
 
@@ -987,11 +1079,16 @@ andExpression
 
 
 equalityExpression
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
+    $py_expr::nest = expr.nestLeft
+}
     :   instanceOfExpression
         ( ex0=('==' | '!=')
             {
-            $py_expr[TOP]::expr.update(format='${left} ' + $ex0.text + ' ${right}')
-            $py_expr[TOP]::nest = $py_expr[TOP]::expr.nestRight
+            expr.update(format='${left} ' + $ex0.text + ' ${right}')
+            $py_expr::nest = expr.nestRight
             }
           instanceOfExpression
         )*
@@ -1094,7 +1191,7 @@ scope py_expr;
     |   'this' ('.' Ident)* identifierSuffix?
     |   'super' superSuffix
 
-    |   literal { $py_expr::expr.update(left=$literal.text) }
+    |   literal { $py_expr::expr.update(left=$literal.value) }
 
     |   { $py_expr::nest = expr.nestLeft }
         'new' creator
