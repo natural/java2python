@@ -267,46 +267,44 @@ classBodyDeclaration
 memberDecl
 scope py_klass, py_block;
 @init {
-    method = self.factory('method')
-    klass = self.factory('class')
-    field = self.factory('block')
-    isClass = isMethod = isField = False
-}
-@after {
-    parent = $py_block[TOP-1]::block
-    if isMethod:
-        method.setParent(parent)
-    if isClass:
-        klass.setParent(parent)
-    if isField:
-        field.reparentChildren(parent)
+    parent, factory = $py_block[TOP-1]::block, self.factory
+    method, klass, field = factory('method'), factory('class'), factory('block')
 }
     :   modifiers genericMethodOrConstructorDecl
 
-    |   { $py_block::block = method }
+    |   {
+        $py_block::block = method
+        method.setParent(parent)
+        }
         modifiers type methodDeclaration
-        { isMethod = True }
 
     |   { $py_block::block = field }
         modifiers type fieldDeclaration
-        { isField = True }
+        { field.reparentChildren(parent) }
 
-    |   { $py_block::block = method }
+    |   {
+        $py_block::block = method
+        method.setParent(parent)
+        }
         modifiers 'void' { method.setType('void') }
         id0=Ident  { method.setName($id0.text) }
         voidMethodDeclaratorRest
-        { isMethod = True }
 
-    |   { $py_block::block = method }
+    |   {
+        $py_block::block = method
+        method.setParent(parent)
+        }
         modifiers Ident { method.setName('__init__') }
         constructorDeclaratorRest
-        { isMethod = True }
+
 
     |   modifiers interfaceDeclaration
 
-    |   { $py_klass::klass = $py_block::block = klass }
+    |   {
+        $py_klass::klass = $py_block::block = klass
+        klass.setParent(parent)
+        }
         modifiers classDeclaration
-        { isClass = True }
     ;
 
 
@@ -1032,8 +1030,12 @@ assignmentOperator
 conditionalExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
-    $py_expr::nest = expr.nestLeft
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
 }
     :   conditionalOrExpression
         (
@@ -1054,41 +1056,137 @@ scope py_expr;
 
 
 conditionalOrExpression
-    :   conditionalAndExpression ( '||' conditionalAndExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   conditionalAndExpression
+        ( '||'
+            {
+            left = self.factory('expression', format='{left} or {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            conditionalAndExpression
+        )*
     ;
 
 
 conditionalAndExpression
-    :   inclusiveOrExpression ( '&&' inclusiveOrExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   inclusiveOrExpression
+        ( '&&'
+            {
+            left = self.factory('expression', format='{left} and {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            inclusiveOrExpression
+        )*
     ;
 
 
 inclusiveOrExpression
-    :   exclusiveOrExpression ( '|' exclusiveOrExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   exclusiveOrExpression
+        ( '|'
+            {
+            left = self.factory('expression', format='{left} | {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            exclusiveOrExpression
+        )*
     ;
 
 
 exclusiveOrExpression
-    :   andExpression ( '^' andExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   andExpression
+        ( '^'
+            {
+            left = self.factory('expression', format='{left} ^ {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            andExpression
+        )*
     ;
 
 
 andExpression
-    :   equalityExpression ( '&' equalityExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   equalityExpression
+        ( '&'
+            {
+            left = self.factory('expression', format='{left} & {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            equalityExpression
+        )*
     ;
 
 
 equalityExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
-    $py_expr::nest = expr.nestLeft
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
 }
     :   instanceOfExpression
         ( ex0=('==' | '!=')
             {
-            expr.update(format='{left} ' + $ex0.text + ' {right}')
-            $py_expr::nest = expr.nestRight
+            left = self.factory('expression', format='{left} ' + $ex0.text + ' {right}', left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
             }
           instanceOfExpression
         )*
@@ -1183,9 +1281,13 @@ castExpression
 primary
 scope py_expr;
 @init {
-    nest = $py_expr[TOP-1]::nest
-    $py_expr::expr = expr = nest(format='{left}')
-    $py_expr::nest = expr.nestLeft
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        nest = $py_expr[TOP-1]::nest
+        $py_expr::expr = expr = nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
 }
     :   parExpression
     |   'this' ('.' Ident)* identifierSuffix?

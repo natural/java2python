@@ -1,4 +1,4 @@
-PYTHONPATH=..:.
+PYTHONPATH=../..:.
 ## CLASSPATH=.
 
 java_sources := $(wildcard *.java)

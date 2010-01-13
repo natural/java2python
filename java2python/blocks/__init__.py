@@ -31,10 +31,12 @@ class Block:
 	preamble = self.getPreamble()
 	indent = self.indent()
 	decs = self.getDeclaration()
+	#decs = ['%s%s' % (indent*self.getDepth(), d) for d in decs]
 	docs = self.getDocString()
 	docs = ['%s%s' % (indent*(1+self.getDepth()), s) for s in docs]
         body = ['%s%s' % (indent*o.getDepth(), o) for o in self.getChildren()]
-	return u'\n'.join(preamble + decs + docs + body)
+	text = u'\n'.join(preamble + decs + docs + body)
+	return self.applyOutputHandlers(text)
 
     def setConfig(self, config):
 	""" Sets the configuration object for this block.
@@ -52,7 +54,7 @@ class Block:
 	""" Returns a sequence of preamble lines for this block.
 
 	"""
-	name = '%sPreamble' % self.__class__.__name__.lower()
+	name = '%sPreamble' % self.blockTypeName()
 	preambles = self.config.handlers(name, all=True)
 	return list(chain(*[p(self) for p in preambles]))
 
@@ -60,9 +62,15 @@ class Block:
 	""" Returns a sequence of docstring lines for this block.
 
 	"""
-	name = '%sDocString' % self.__class__.__name__.lower()
+	name = '%sDocString' % self.blockTypeName()
 	docstrings = self.config.handlers(name, all=True)
 	return list(chain(*[p(self) for p in docstrings]))
+
+    def applyOutputHandlers(self, text):
+	name = '%sOutputHandlers' % self.blockTypeName()
+	for handler in self.config.handlers(name, all=True):
+	    text = handler(self, text)
+	return text
 
     def getChildren(self):
 	""" Returns sequence of children for this block.
@@ -218,7 +226,7 @@ class Block:
 	parts = []
 	add = lambda *x:parts.extend(x)
 	add(white('<'))
-	add(green(self.__class__.__name__))
+	add(green(self.blockTypeName().title()))
 	add(' ', white('name:'), cyan(self.getName()))
 	add(' ', white('type:'), cyan(self.getType() or 'Unknown'))
 	mods = self.getModifiers()
@@ -320,6 +328,8 @@ class Block:
 	    value = '%s_' % (value, )
 	return value
 
+    def blockTypeName(self):
+	return self.__class__.__name__.lower()
 
 class Module(Block):
     """ Module -> type of block for Python modules.
@@ -419,9 +429,16 @@ class Method(Block):
 	"""
 	first = 'cls' if self.isStatic() else 'self'
 	params = ', '.join([first] + [str(p) for p in self.getParameters()])
-	lines = ['@'+deco for deco in self.getDecorators()]
+	#lines = ['@'+deco for deco in self.getDecorators()]
+	# TODO:  fix decorator / declaration formating
+	lines = []
 	lines.append('def %s(%s):' % (self.name, params))
+	#for line in lines:
+	#    print '###LINE: %s ###' % (line, )
 	return lines
+
+    def getDecorators(self):
+	return ['classmethod', ]
 
     def getParameters(self):
 	""" Returns the parameter sequence of this method.
@@ -485,7 +502,7 @@ class Statement(Block):
 	parts = []
 	add = lambda *x:parts.extend(x)
 	add(white('<'))
-	add(magenta('%s' % self.__class__.__name__))
+	add(magenta('%s' % self.blockTypeName().title()))
 	add(white(' name:'), yellow(self.getName()))
 	add(white(' expr:'), yellow(self.getPrimaryExpression()))
 	add(white('>'))
@@ -545,7 +562,7 @@ class Expression(Block):
 	parts = []
 	add = lambda *x:parts.extend(x)
 	add(white('<'))
-	add(blue('%s' % (title or self.__class__.__name__)))
+	add(blue('%s' % (title or self.blockTypeName().title())))
 	for name in ('format', 'left', 'right', 'type'):
 	    attr = getattr(self, name, None)
 	    ## types other than strings are not formatted; debugPrint
@@ -566,6 +583,9 @@ class Expression(Block):
 	    printer = getattr(obj, 'debugPrint', lambda x, y:None)
 	    printer(level+1, name.title())
 
+    @property
+    def leafless(self):
+	return not any((self.left, self.right, self.type, self.comment))
 
 class Comment(Expression):
     """ Comment -> type of expression that indicates it's a comment.

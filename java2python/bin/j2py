@@ -99,7 +99,7 @@ def transform(options):
 	output = sys.stdout
     else:
 	output = open(fileout, 'w')
-    module.setName(fileout if fileout != '-' else '<stdout>')
+    module.setName(splitext(filein)[0] if filein != '-' else '<stdin>')
 
     timed['encode']
     source = str(module)

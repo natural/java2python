@@ -7,13 +7,17 @@ from antlr3.tree import CommonTreeAdaptor
 
 from java2python.blocks import BlockFactory
 from java2python.config import Config
-from java2python.parser.JavaLexer import Ident as IDENT
+
+##
+# This doesn't cause an import recursion, but I still don't like it.
+#from java2python.parser.JavaLexer import Ident
 
 
 class LocalParser(Parser):
     """ Antlr parser subclass with block factory and comment handling.
 
     """
+    identType = 4
     renameIdents = kwlist + ['None', 'str', ]
 
     def __init__(self, input, state=None):
@@ -36,7 +40,7 @@ class LocalParser(Parser):
 
     def checkNode(self, node):
 	self.checkComments(node)
-	if node.token.type == IDENT:
+	if node.token.type == self.identType:
 	    self.checkIdent(node)
 
     def checkIdent(self, node):
