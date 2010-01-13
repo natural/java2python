@@ -129,5 +129,5 @@ def formatParameter(p):
 
 
 class Formats:
-    comment = '$comment'
-    left = '$left'
+    comment = '{comment}'
+    left = '{left}'

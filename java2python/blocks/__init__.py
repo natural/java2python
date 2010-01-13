@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from itertools import chain
-from string import Template
+from keyword import kwlist
 from sys import stderr
 
 from java2python.lib import Formats
@@ -12,6 +12,8 @@ class Block:
     """ Block -> basic block of Python code.
 
     """
+    keywords = kwlist + ['None', 'str', ]
+
     def __init__(self, config):
 	self.setConfig(config)
 	self.setChildren([])
@@ -138,7 +140,7 @@ class Block:
 	""" Sets the name of this block.
 
 	"""
-	self.name = value
+	self.name = self.altName(value)
 
     def getParent(self):
 	""" Returns the parent of this block.
@@ -313,6 +315,11 @@ class Block:
 	for key, value in kwds.items():
 	    setattr(self, key, value)
 
+    def altName(self, value):
+	if value in self.keywords:
+	    value = '%s_' % (value, )
+	return value
+
 
 class Module(Block):
     """ Module -> type of block for Python modules.
@@ -456,7 +463,7 @@ class Statement(Block):
 
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
-	self.setPrimaryExpression(Expression(self.config, format='$left'))
+	self.setPrimaryExpression(Expression(self.config, format='{left}'))
 
     def getDeclaration(self):
 	items = []
@@ -505,9 +512,7 @@ class Expression(Block):
 	""" x.__str__() <==> str(x)
 
 	"""
-	template = Template(self.format).safe_substitute
-	return template(left=self.left, right=self.right,
-			type=self.type, comment=self.comment)
+	return self.format.format(**self.__dict__)
 
     def nestLeft(self, **kwds):
 	""" Create and assign a new expression for the left of this one.

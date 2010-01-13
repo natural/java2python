@@ -16,6 +16,12 @@ from java2python.parser.local import LocalTreeAdaptor
 from java2python.parser.JavaLexer import JavaLexer
 from java2python.parser.JavaParser import JavaParser
 
+try:
+    import psyco
+except (ImportError, ):
+    pass
+else:
+    psyco.full()
 
 version = '0.3'
 
@@ -71,7 +77,7 @@ def transform(options):
         configs.insert(0, 'java2python.config.default')
     parser.setFactory(BlockFactory(Config(configs)))
     parser.setRawComments(lexer.comments)
-    parser.setTreeAdaptor(LocalTreeAdaptor(parser.checkComments))
+    parser.setTreeAdaptor(LocalTreeAdaptor(callback=parser.checkNode))
 
     timed['comp']
     try:

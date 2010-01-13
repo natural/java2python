@@ -1,4 +1,4 @@
-# $ANTLR 3.1.1 Java.g 2010-01-11 20:37:40
+# $ANTLR 3.1.1 Java.g 2010-01-12 15:38:07
 
 import sys
 from antlr3 import *
@@ -4024,7 +4024,7 @@ class JavaParser(LocalParser):
         char_literal121_tree = None
 
                
-        expr = self.factory('expression', format='${left} = ${type}()', parent=self.py_block_stack[-1].block)
+        expr = self.factory('expression', format='{left} = {type}()', parent=self.py_block_stack[-1].block)
         self.py_expr_stack[-1].expr = expr
         self.py_expr_stack[-1].nest = expr.nestLeft
 
@@ -5520,7 +5520,7 @@ class JavaParser(LocalParser):
         char_literal175_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='${left}')
+        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -5569,7 +5569,7 @@ class JavaParser(LocalParser):
 
                     if self._state.backtracking == 0:
                                      
-                        self.py_expr_stack[TOP-1].expr.update(format='${left} = ${right}')
+                        self.py_expr_stack[TOP-1].expr.update(format='{left} = {right}')
                         self.py_expr_stack[-1].nest = self.py_expr_stack[TOP-1].expr.nestRight
                                     
 
@@ -7716,7 +7716,7 @@ class JavaParser(LocalParser):
         string_literal242_tree = None
 
                
-        param = self.factory('expression', format='${left}', type=self.py_block_stack[-1].block.getType())
+        param = self.factory('expression', format='{left}', type=self.py_block_stack[-1].block.getType())
 
         success = False
         try:
@@ -8059,7 +8059,7 @@ class JavaParser(LocalParser):
         char_literal257_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='${left}')
+        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -10659,7 +10659,7 @@ class JavaParser(LocalParser):
 
 
                
-        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='${left}', parent=self.py_block_stack[-1].block)
+        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='{left}', parent=self.py_block_stack[-1].block)
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -10946,7 +10946,7 @@ class JavaParser(LocalParser):
 
                
         parent = self.py_block_stack[TOP-1].block
-        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='${left}')
+        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -10993,7 +10993,7 @@ class JavaParser(LocalParser):
                     if self._state.backtracking == 0:
                                  
                         self.py_block_stack[-1].block = self.factory('block')
-                        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='assert ${left}',
+                        self.py_expr_stack[-1].expr = expr = self.factory('expression', format='assert {left}',
                                                              parent=parent)
                         self.py_expr_stack[-1].nest = expr.nestLeft
                                 
@@ -11404,7 +11404,7 @@ class JavaParser(LocalParser):
                     if self._state.backtracking == 0:
                                  
                         self.py_block_stack[-1].block = self.factory('block')
-                        expr = self.factory('expression', left='return', format='${left}',
+                        expr = self.factory('expression', left='return', format='{left}',
                                             parent=parent)
 
                                 
@@ -11426,7 +11426,7 @@ class JavaParser(LocalParser):
                         pass 
                         if self._state.backtracking == 0:
                                                
-                            expr.update(format='${left} ${right}', right='${right}')
+                            expr.update(format='{left} {right}', right='{right}')
                             self.py_expr_stack[-1].expr = expr
                             self.py_expr_stack[-1].nest = expr.nestRight
                                               
@@ -11457,7 +11457,7 @@ class JavaParser(LocalParser):
                                  
                         self.py_block_stack[-1].block = self.factory('block')
                         self.py_expr_stack[-1].expr = expr = \
-                            self.factory('expression', left='raise', format='${left} ${right}',
+                            self.factory('expression', left='raise', format='{left} {right}',
                                          parent=parent)
                         self.py_expr_stack[-1].nest = expr.nestRight
                                 
@@ -12976,7 +12976,7 @@ class JavaParser(LocalParser):
         char_literal433_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='${left}, ${right}')
+        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='{left}, {right}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -13019,7 +13019,7 @@ class JavaParser(LocalParser):
                         if self._state.backtracking == 0:
                                          
                             ##// change the scope for the next iteration
-                            self.py_expr_stack[-1].expr = expr = expr.nestRight(format='${left}, ${right}')
+                            self.py_expr_stack[-1].expr = expr = expr.nestRight(format='{left}, {right}')
                             self.py_expr_stack[-1].nest = expr.nestLeft
                                         
 
@@ -13049,7 +13049,7 @@ class JavaParser(LocalParser):
                             
                     ##// update the last expression (which may be the first and only
                     ##// expression) to not have a trailing comma.
-                    expr.update(format='${left}')
+                    expr.update(format='{left}')
 
 
 
@@ -13507,7 +13507,7 @@ class JavaParser(LocalParser):
         char_literal450_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='${left}')
+        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -13540,7 +13540,7 @@ class JavaParser(LocalParser):
                     pass 
                     if self._state.backtracking == 0:
                                  
-                        expr.update(format='${right} if ${left}')
+                        expr.update(format='{right} if {left}')
                         self.py_expr_stack[-1].nest = expr.nestRight
                                 
 
@@ -13558,7 +13558,7 @@ class JavaParser(LocalParser):
                         self._adaptor.addChild(root_0, expression449.tree)
                     if self._state.backtracking == 0:
                                  
-                        left = self.factory('expression', format='${left} else ${right}', left=expr.left)
+                        left = self.factory('expression', format='{left} else {right}', left=expr.left)
                         expr.update(left=left)
                         self.py_expr_stack[-1].expr = left
                         self.py_expr_stack[-1].nest = left.nestRight
@@ -14140,7 +14140,7 @@ class JavaParser(LocalParser):
         ex0_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='${left}')
+        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -14191,7 +14191,7 @@ class JavaParser(LocalParser):
 
                         if self._state.backtracking == 0:
                                          
-                            expr.update(format='${left} ' + ex0.text + ' ${right}')
+                            expr.update(format='{left} ' + ex0.text + ' {right}')
                             self.py_expr_stack[-1].nest = expr.nestRight
                                         
 
@@ -15737,7 +15737,7 @@ class JavaParser(LocalParser):
 
                
         nest = self.py_expr_stack[TOP-1].nest
-        self.py_expr_stack[-1].expr = expr = nest(format='${left}')
+        self.py_expr_stack[-1].expr = expr = nest(format='{left}')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -15925,7 +15925,7 @@ class JavaParser(LocalParser):
                         self._adaptor.addChild(root_0, id0_tree)
 
                     if self._state.backtracking == 0:
-                        expr.update(left=id0.text, format='${left}${right}') 
+                        expr.update(left=id0.text, format='{left}{right}') 
 
                     # Java.g:1181:9: ( '.' id1= Ident )*
                     while True: #loop150
@@ -15962,7 +15962,7 @@ class JavaParser(LocalParser):
                                 self._adaptor.addChild(root_0, id1_tree)
 
                             if self._state.backtracking == 0:
-                                expr = expr.nestRight(left=id1.text, format='.${left}${right}') 
+                                expr = expr.nestRight(left=id1.text, format='.{left}{right}') 
 
 
 
@@ -16161,7 +16161,7 @@ class JavaParser(LocalParser):
         string_literal552_tree = None
 
                
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format="(${left})")
+        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[TOP-1].nest(format='({left})')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
         success = False
@@ -16488,7 +16488,7 @@ class JavaParser(LocalParser):
                
         self.py_block_stack[-1].block = self.factory('block')
         nest = self.py_expr_stack[TOP-1].nest
-        self.py_expr_stack[-1].expr = expr = nest(format="${type}(${left})")
+        self.py_expr_stack[-1].expr = expr = nest(format='{type}({left})')
         self.py_expr_stack[-1].nest = expr.nestLeft
 
 

@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from keyword import kwlist
+
 from antlr3 import Parser
 from antlr3.tree import CommonTreeAdaptor
+
 from java2python.blocks import BlockFactory
 from java2python.config import Config
+from java2python.parser.JavaLexer import Ident as IDENT
 
 
 class LocalParser(Parser):
     """ Antlr parser subclass with block factory and comment handling.
 
     """
+    renameIdents = kwlist + ['None', 'str', ]
+
     def __init__(self, input, state=None):
 	Parser.__init__(self, input, state=state)
 	# makes instance usable when run as a script
@@ -27,6 +33,16 @@ class LocalParser(Parser):
 
 	"""
         self.factory = value
+
+    def checkNode(self, node):
+	self.checkComments(node)
+	if node.token.type == IDENT:
+	    self.checkIdent(node)
+
+    def checkIdent(self, node):
+	ident = node.token.text
+	if ident in self.renameIdents:
+	    node.token.text = '%s_' % (ident, )
 
     def checkComments(self, node):
 	"""  Called by the tree adapter below after each token is made
@@ -100,7 +116,7 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
 	self.callback = callback
 
     def createWithPayload(self, payload):
-	""" Invokes callback to check for comments as each node is created
+	""" Invokes commentCallback to check for comments as each node is created
 
 	"""
         node = CommonTreeAdaptor.createWithPayload(self, payload)

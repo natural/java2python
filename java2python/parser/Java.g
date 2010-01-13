@@ -330,7 +330,7 @@ methodDeclaration
 fieldDeclaration
 scope py_expr;
 @init {
-    expr = self.factory('expression', format='${left} = ${type}()', parent=$py_block::block)
+    expr = self.factory('expression', format='{left} = {type}()', parent=$py_block::block)
     $py_expr::expr = expr
     $py_expr::nest = expr.nestLeft
 }
@@ -415,7 +415,7 @@ variableDeclarators
 variableDeclarator
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   variableDeclaratorId
@@ -429,7 +429,7 @@ scope py_expr;
         }
         ('='
             {
-            $py_expr[TOP-1]::expr.update(format='${left} = ${right}')
+            $py_expr[TOP-1]::expr.update(format='{left} = {right}')
             $py_expr::nest = $py_expr[TOP-1]::expr.nestRight
             }
             variableInitializer
@@ -569,7 +569,7 @@ scope py_block;
 
 formalParameterDeclsRest
 @init {
-    param = self.factory('expression', format='${left}', type=$py_block::block.getType())
+    param = self.factory('expression', format='{left}', type=$py_block::block.getType())
 }
 @after {
     $py_block[TOP-1]::block.addParameter(param)
@@ -597,7 +597,7 @@ constructorBody
 explicitConstructorInvocation
 scope py_expr;
 @init {
-    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::expr = expr = self.factory('expression', format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   nonWildcardTypeArguments? ('this' | 'super') arguments ';'
@@ -750,7 +750,7 @@ scope py_block;
 localVariableDeclaration
 scope py_expr;
 @init {
-    $py_expr::expr = expr = self.factory('expression', format='${left}', parent=$py_block::block)
+    $py_expr::expr = expr = self.factory('expression', format='{left}', parent=$py_block::block)
     $py_expr::nest = expr.nestLeft
 }
     :   variableModifiers type variableDeclarators
@@ -766,7 +766,7 @@ statement
 scope py_block, py_expr;
 @init {
     parent = $py_block[TOP-1]::block
-    $py_expr::expr = expr = self.factory('expression', format='${left}')
+    $py_expr::expr = expr = self.factory('expression', format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   // generic block
@@ -779,7 +779,7 @@ scope py_block, py_expr;
         ASSERT
         {
         $py_block::block = self.factory('block')
-        $py_expr::expr = expr = self.factory('expression', format='assert ${left}',
+        $py_expr::expr = expr = self.factory('expression', format='assert {left}',
                                              parent=parent)
         $py_expr::nest = expr.nestLeft
         }
@@ -856,12 +856,12 @@ scope py_block, py_expr;
     |   // return statement
         {
         $py_block::block = self.factory('block')
-        expr = self.factory('expression', left='return', format='${left}',
+        expr = self.factory('expression', left='return', format='{left}',
                             parent=parent)
 
         }
         'return' ({
-                    expr.update(format='${left} ${right}', right='${right}')
+                    expr.update(format='{left} {right}', right='{right}')
                     $py_expr::expr = expr
                     $py_expr::nest = expr.nestRight
                   }
@@ -872,7 +872,7 @@ scope py_block, py_expr;
         {
         $py_block::block = self.factory('block')
         $py_expr::expr = expr = \
-            self.factory('expression', left='raise', format='${left} ${right}',
+            self.factory('expression', left='raise', format='{left} {right}',
                          parent=parent)
         $py_expr::nest = expr.nestRight
         }
@@ -968,19 +968,19 @@ parExpression
 expressionList
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}, ${right}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}, {right}')
     $py_expr::nest = expr.nestLeft
 }
 @after {
     ##// update the last expression (which may be the first and only
     ##// expression) to not have a trailing comma.
-    expr.update(format='${left}')
+    expr.update(format='{left}')
 }
     :   expression
         (','
             {
             ##// change the scope for the next iteration
-            $py_expr::expr = expr = expr.nestRight(format='${left}, ${right}')
+            $py_expr::expr = expr = expr.nestRight(format='{left}, {right}')
             $py_expr::nest = expr.nestLeft
             }
             expression
@@ -1032,18 +1032,18 @@ assignmentOperator
 conditionalExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   conditionalOrExpression
         (
         {
-        expr.update(format='${right} if ${left}')
+        expr.update(format='{right} if {left}')
         $py_expr::nest = expr.nestRight
         }
         '?' expression
         {
-        left = self.factory('expression', format='${left} else ${right}', left=expr.left)
+        left = self.factory('expression', format='{left} else {right}', left=expr.left)
         expr.update(left=left)
         $py_expr::expr = left
         $py_expr::nest = left.nestRight
@@ -1081,13 +1081,13 @@ andExpression
 equalityExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='${left}')
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   instanceOfExpression
         ( ex0=('==' | '!=')
             {
-            expr.update(format='${left} ' + $ex0.text + ' ${right}')
+            expr.update(format='{left} ' + $ex0.text + ' {right}')
             $py_expr::nest = expr.nestRight
             }
           instanceOfExpression
@@ -1184,7 +1184,7 @@ primary
 scope py_expr;
 @init {
     nest = $py_expr[TOP-1]::nest
-    $py_expr::expr = expr = nest(format='${left}')
+    $py_expr::expr = expr = nest(format='{left}')
     $py_expr::nest = expr.nestLeft
 }
     :   parExpression
@@ -1197,9 +1197,9 @@ scope py_expr;
         'new' creator
 
     |   id0=Ident
-        { expr.update(left=$id0.text, format='${left}${right}') }
+        { expr.update(left=$id0.text, format='{left}{right}') }
         ('.' id1=Ident
-            { expr = expr.nestRight(left=$id1.text, format='.${left}${right}') }
+            { expr = expr.nestRight(left=$id1.text, format='.{left}{right}') }
         )*
         { $py_expr::nest = expr.nestRight }
         identifierSuffix?
@@ -1213,7 +1213,7 @@ scope py_expr;
 identifierSuffix
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format="(${left})")
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='({left})')
     $py_expr::nest = expr.nestLeft
 }
     :   ('[' ']')+ '.' 'class'
@@ -1234,7 +1234,7 @@ scope py_block, py_expr;
 @init {
     $py_block::block = self.factory('block')
     nest = $py_expr[TOP-1]::nest
-    $py_expr::expr = expr = nest(format="${type}(${left})")
+    $py_expr::expr = expr = nest(format='{type}({left})')
     $py_expr::nest = expr.nestLeft
 
 }
