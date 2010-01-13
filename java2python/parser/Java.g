@@ -860,8 +860,7 @@ scope py_block, py_expr;
         }
         'return' ({
                     expr.update(format='{left} {right}', right='{right}')
-                    $py_expr::expr = expr
-                    $py_expr::nest = expr.nestRight
+                    $py_expr::expr, $py_expr::nest = expr, expr.nestRight
                   }
         expression)?
         ';'
@@ -1047,8 +1046,7 @@ scope py_expr;
         {
         left = self.factory('expression', format='{left} else {right}', left=expr.left)
         expr.update(left=left)
-        $py_expr::expr = left
-        $py_expr::nest = left.nestRight
+        $py_expr::expr, $py_expr::nest = left, left.nestRight
         }
         ':' expression
         )?
@@ -1070,8 +1068,7 @@ scope py_expr;
             {
             left = self.factory('expression', format='{left} or {right}', left=expr.left)
             expr.update(left=left)
-            $py_expr::expr = left
-            $py_expr::nest = left.nestRight
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
             }
             conditionalAndExpression
         )*
@@ -1093,8 +1090,7 @@ scope py_expr;
             {
             left = self.factory('expression', format='{left} and {right}', left=expr.left)
             expr.update(left=left)
-            $py_expr::expr = left
-            $py_expr::nest = left.nestRight
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
             }
             inclusiveOrExpression
         )*
@@ -1116,8 +1112,7 @@ scope py_expr;
             {
             left = self.factory('expression', format='{left} | {right}', left=expr.left)
             expr.update(left=left)
-            $py_expr::expr = left
-            $py_expr::nest = left.nestRight
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
             }
             exclusiveOrExpression
         )*
@@ -1139,8 +1134,7 @@ scope py_expr;
             {
             left = self.factory('expression', format='{left} ^ {right}', left=expr.left)
             expr.update(left=left)
-            $py_expr::expr = left
-            $py_expr::nest = left.nestRight
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
             }
             andExpression
         )*
@@ -1162,8 +1156,7 @@ scope py_expr;
             {
             left = self.factory('expression', format='{left} & {right}', left=expr.left)
             expr.update(left=left)
-            $py_expr::expr = left
-            $py_expr::nest = left.nestRight
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
             }
             equalityExpression
         )*
@@ -1203,19 +1196,24 @@ relationalExpression
     ;
 
 
-relationalOp
+relationalOp returns [value]
+@init {
+    $value = None
+}
     :   ('<' '=')=> t1='<' t2='='
         {
           $t1.getLine() == $t2.getLine() and \
           $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine()
         }?
+        { $value = '<=' }
     |   ('>' '=')=> t1='>' t2='='
         {
           $t1.getLine() == $t2.getLine() and \
           $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine()
         }?
-    |   '<'
-    |   '>'
+        { $value = '>=' }
+    |   '<' { $value = '<' }
+    |   '>' { $value = '>' }
     ;
 
 
@@ -1224,12 +1222,16 @@ shiftExpression
     ;
 
 
-shiftOp
+shiftOp returns [value]
+@init {
+    $value = None
+}
     :   ('<' '<')=> t1='<' t2='<'
         {
           $t1.getLine() == $t2.getLine() and \
           $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine()
         }?
+        { $value = '<<' }
     |   ('>' '>' '>')=> t1='>' t2='>' t3='>'
         {
           $t1.getLine() == $t2.getLine() and \
@@ -1237,36 +1239,141 @@ shiftOp
           $t2.getLine() == $t3.getLine() and \
           $t2.getCharPositionInLine() + 1 == $t3.getCharPositionInLine()
         }?
+        { $value = '>>>' }
     |   ('>' '>')=> t1='>' t2='>'
         {
           $t1.getLine() == $t2.getLine() and \
           $t1.getCharPositionInLine() + 1 == $t2.getCharPositionInLine()
         }?
+        { $value = '>>' }
     ;
 
 
 additiveExpression
-    :   multiplicativeExpression ( ('+' | '-') multiplicativeExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   multiplicativeExpression
+        ( op0=('+' | '-')
+            {
+            format = '{left} ' + $op0.text + ' {right}'
+            left = self.factory('expression', format=format, left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr = left
+            $py_expr::nest = left.nestRight
+            }
+            multiplicativeExpression
+        )*
     ;
 
 
 multiplicativeExpression
-    :   unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )*
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   unaryExpression
+        ( op0=( '*' | '/' | '%' )
+            {
+            format = '{left} ' + $op0.text + ' {right}'
+            left = self.factory('expression', format=format, left=expr.left)
+            expr.update(left=left)
+            $py_expr::expr, $py_expr::nest = left, left.nestRight
+            }
+            unaryExpression
+        )*
     ;
 
 
 unaryExpression
-    :   '+' unaryExpression
-    |   '-' unaryExpression
-    |   '++' unaryExpression
-    |   '--' unaryExpression
-    |   unaryExpressionNotPlusMinus
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   '+'
+        {
+        left = self.factory('expression', format='+{left}', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
+    |   '-'
+        {
+        format = '-{left}'
+        left = self.factory('expression', format=format, left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
+    |   '++'
+        {
+        left = self.factory('expression', format='{left} += 1', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
+    |   '--'
+        {
+        left = self.factory('expression', format='{left} -= 1', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
+    |   {
+        left = self.factory('expression', format='{left}', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpressionNotPlusMinus
     ;
 
 
 unaryExpressionNotPlusMinus
-    :   '~' unaryExpression
-    |   '!' unaryExpression
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.leafless:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   '~'
+        {
+        left = self.factory('expression', format='~{left}', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
+    |   '!'
+        {
+        left = self.factory('expression', format='not {left}', left=expr.left)
+        expr.update(left=left)
+        $py_expr::expr, $py_expr::nest = left, left.nestLeft
+        }
+        unaryExpression
+
     |   castExpression
     |   primary selector* ('++'|'--')?
     ;
@@ -1295,12 +1402,11 @@ scope py_expr;
 
     |   literal { $py_expr::expr.update(left=$literal.value) }
 
-    |   { $py_expr::nest = expr.nestLeft }
-        'new' creator
+    |   'new' creator
 
     |   id0=Ident
         { expr.update(left=$id0.text, format='{left}{right}') }
-        ('.' id1=Ident
+        (   '.' id1=Ident
             { expr = expr.nestRight(left=$id1.text, format='.{left}{right}') }
         )*
         { $py_expr::nest = expr.nestRight }
