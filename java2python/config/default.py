@@ -37,6 +37,14 @@ leadingIndent = '    '
 commentPrefix = '## '
 
 
+modulePrologueHandlers = [
+    'java2python.mods.simpleShebang',
+    'java2python.mods.simpleDocString',
+    ]
+
+moduleEpliogueHandlers = [
+    ]
+
 moduleOutputHandlers = [
     'java2python.mods.outputSubs',
     'java2python.mods.scriptMainStanza',

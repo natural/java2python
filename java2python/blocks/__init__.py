@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from cStringIO import StringIO
 from itertools import chain
 from keyword import kwlist
 from sys import stderr
 
 from java2python.lib import Formats
 from java2python.lib.colortools import red, yellow, green, cyan, white, magenta, blue
+
 
 
 class Block:
@@ -24,31 +26,25 @@ class Block:
 	self.setType(None)
 	self.setVariables([])
 
-    def __str__(self):
-	""" x.__str__() <==> str(x)
+    def iterPrologue(self):
+	yield None
 
-	"""
-	preamble = self.getPreamble()
-	indent = self.indent()
-	decs = self.getDeclaration()
-	#decs = ['%s%s' % (indent*self.getDepth(), d) for d in decs]
-	docs = self.getDocString()
-	docs = ['%s%s' % (indent*(1+self.getDepth()), s) for s in docs]
-        body = ['%s%s' % (indent*o.getDepth(), o) for o in self.getChildren()]
-	text = u'\n'.join(preamble + decs + docs + body)
-	return self.applyOutputHandlers(text)
+    def iterChildren(self):
+	return iter(self.getChildren())
+
+    def dump(self, fd, indent=0):
+	i = self.indent() * indent
+	for line in self.iterPrologue():
+	    if line is not None:
+		print >> fd, '{0}{1}'.format(i, line)
+	for child in self.iterChildren():
+	    child.dump(fd, indent+1)
 
     def setConfig(self, config):
 	""" Sets the configuration object for this block.
 
 	"""
 	self.config = config
-
-    def getDeclaration(self):
-	""" Returns the declaration for this block.
-
-	"""
-	return []
 
     def getPreamble(self):
 	""" Returns a sequence of preamble lines for this block.
@@ -148,7 +144,7 @@ class Block:
 	""" Sets the name of this block.
 
 	"""
-	self.name = self.altName(value)
+	self.name = value
 
     def getParent(self):
 	""" Returns the parent of this block.
@@ -205,16 +201,10 @@ class Block:
 	""" Returns the depth of this block based on it's parents.
 
 	"""
-	depth = 0
-	if self.parentIsModule():
-	    return depth
-	while self:
-	    if self.parent and not self.parentIsModule():
-		self = self.parent
-		depth += 1
-	    else:
-		return depth
-	return depth
+	parent = self.getParent()
+	if parent:
+	    return 1 + parent.getDepth()
+	return 0
 
     ##
     # utilities
@@ -331,6 +321,8 @@ class Block:
     def blockTypeName(self):
 	return self.__class__.__name__.lower()
 
+
+
 class Module(Block):
     """ Module -> type of block for Python modules.
 
@@ -339,6 +331,19 @@ class Module(Block):
 	Block.__init__(self, config)
     	self.setPackages([])
     	self.setImports([])
+
+    def __str__(self):
+	io = StringIO()
+	self.dump(io, -1)
+	return unicode(io.getvalue()+'\n')
+
+    def iterPrologue(self):
+	name = '%sPrologueHandlers' % self.blockTypeName()
+	handlers = self.config.handlers(name, all=True)
+	for handler in handlers:
+	    for line in handler(self):
+		yield line
+
 
     def getImports(self):
 	""" Returns sequence of imports for this module.
@@ -381,7 +386,7 @@ class Module(Block):
 
 	TODO:  make this a configuration epilogue
 	"""
-	self.addChild(Expression(config=self.config, format='\n'))
+	#self.addChild(Expression(config=self.config, format='\n'))
 
 
 class Class(Block):
@@ -390,15 +395,15 @@ class Class(Block):
     """
     def __init__(self, config):
 	Block.__init__(self, config)
-	self.getChildren = self.getAtLeastOneChild
+	#self.getChildren = self.getAtLeastOneChild
 
-    def getDeclaration(self):
+    def iterPrologue(self):
 	""" Returns the declaration for this class.
 
 	"""
-	types = ', '.join(self.type or ['object']) # make config
-	types = '(%s)' % types if types else ''
-	return ['class %s%s:' % (self.name, types), ]
+	bases = self.type or ['object']
+	yield 'class {0}({1}):'.format(self.getName(), ', '.join(bases))
+
 
     def setType(self, value):
 	""" Sets the type of this class.
@@ -421,24 +426,20 @@ class Method(Block):
     def __init__(self, config):
 	Block.__init__(self, config)
     	self.setParameters([])
-	self.getChildren = self.getAtLeastOneChild
+	#self.getChildren = self.getAtLeastOneChild
 
-    def getDeclaration(self):
+    def iterPrologue(self):
 	""" Returns the declaration for this method.
 
 	"""
+	for deco in self.getDecorators():
+	    yield '@{0}'.format(deco)
 	first = 'cls' if self.isStatic() else 'self'
 	params = ', '.join([first] + [str(p) for p in self.getParameters()])
-	#lines = ['@'+deco for deco in self.getDecorators()]
-	# TODO:  fix decorator / declaration formating
-	lines = []
-	lines.append('def %s(%s):' % (self.name, params))
-	#for line in lines:
-	#    print '###LINE: %s ###' % (line, )
-	return lines
+	yield 'def {0}({1}):'.format(self.name, params)
 
     def getDecorators(self):
-	return ['classmethod', ]
+	return ['classmethod'] if self.isStatic() else []
 
     def getParameters(self):
 	""" Returns the parameter sequence of this method.
@@ -482,15 +483,10 @@ class Statement(Block):
 	Block.__init__(self, config)
 	self.setPrimaryExpression(Expression(self.config, format='{left}'))
 
-    def getDeclaration(self):
-	items = []
+    def iterPrologue(self):
 	expr = self.getPrimaryExpression()
-	if not any((expr.left, expr.right, expr.comment, expr.type)):
-	    expr = ''
-	else:
-	    expr = ' %s' % (expr, )
-	items.append('%s%s:' % (self.getName(), expr))
-	return items
+	expr = '' if expr.isEmpty() else ' {0}'.format(expr)
+	yield '{0}{1}:'.format(self.getName(), expr)
 
     def getPrimaryExpression(self):
 	return self.primaryExpression
@@ -524,6 +520,9 @@ class Expression(Block):
 
 	"""
 	return bool(self.format.strip())
+
+    def dump(self, fd, indent=0):
+	print >> fd,  '{0}{1}'.format(self.indent()*indent, self)
 
     def __str__(self):
 	""" x.__str__() <==> str(x)
@@ -583,8 +582,7 @@ class Expression(Block):
 	    printer = getattr(obj, 'debugPrint', lambda x, y:None)
 	    printer(level+1, name.title())
 
-    @property
-    def leafless(self):
+    def isEmpty(self):
 	return not any((self.left, self.right, self.type, self.comment))
 
 class Comment(Expression):

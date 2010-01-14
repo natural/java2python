@@ -4,10 +4,7 @@ import re
 
 
 def simpleShebang(module):
-    return [
-	'#!/usr/bin/env python',
-	'# -*- coding: utf-8 -*-',
-    ]
+    yield '#!/usr/bin/env python'
 
 
 def simpleDocString(block):

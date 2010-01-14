@@ -102,7 +102,7 @@ def transform(options):
     module.setName(splitext(filein)[0] if filein != '-' else '<stdin>')
 
     timed['encode']
-    source = str(module)
+    source = unicode(module)
     timed['encode_finish']
 
     if options.pytree:

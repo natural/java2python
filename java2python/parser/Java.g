@@ -329,8 +329,7 @@ fieldDeclaration
 scope py_expr;
 @init {
     expr = self.factory('expression', format='{left} = {type}()', parent=$py_block::block)
-    $py_expr::expr = expr
-    $py_expr::nest = expr.nestLeft
+    $py_expr::expr, $py_expr::nest = expr, expr.nestLeft
 }
     :   variableDeclarators ';'
     ;
@@ -1029,7 +1028,7 @@ assignmentOperator
 conditionalExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1056,7 +1055,7 @@ scope py_expr;
 conditionalOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1078,7 +1077,7 @@ scope py_expr;
 conditionalAndExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1100,7 +1099,7 @@ scope py_expr;
 inclusiveOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1122,7 +1121,7 @@ scope py_expr;
 exclusiveOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1144,7 +1143,7 @@ scope py_expr;
 andExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1166,7 +1165,7 @@ scope py_expr;
 equalityExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1252,7 +1251,7 @@ shiftOp returns [value]
 additiveExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1276,7 +1275,7 @@ scope py_expr;
 multiplicativeExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1299,7 +1298,7 @@ scope py_expr;
 unaryExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1351,7 +1350,7 @@ scope py_expr;
 unaryExpressionNotPlusMinus
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1388,7 +1387,7 @@ castExpression
 primary
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.leafless:
+    if $py_expr[TOP-1]::expr.isEmpty():
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1421,13 +1420,20 @@ scope py_expr;
 identifierSuffix
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='({left})')
-    $py_expr::nest = expr.nestLeft
+    if $py_expr[TOP-1]::expr.isEmpty():
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = nest = expr.nestLeft
 }
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+
 
-    |   '(' (expressionList)? ')'
+    |   '('
+        { expr.update(format='({left})') }
+        (expressionList)?
+        ')'
 
     |   '.' 'class'
     |   '.' explicitGenericInvocation
