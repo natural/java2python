@@ -1,5 +1,7 @@
 final class QuickTest extends Object {
 
+    class Z {}
+
     class X {
 	int y = 1;
     }

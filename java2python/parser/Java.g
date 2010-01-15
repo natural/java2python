@@ -59,7 +59,6 @@ scope py_block {
     block;
 }
 
-
 scope py_expr {
     expr;
     nest;
@@ -124,12 +123,12 @@ packageDeclaration
 
 // this rule only executes within a py_module scope
 importDeclaration
-@init { isStatic = dotStar = False }
+@init { static = star = False }
 @after {
-    $py_module::module.addImport($qn0.value, isStatic=isStatic, dotStar=dotStar)
+    $py_module::module.addImport($qn0.value, static=static, star=star)
 }
-    :   'import' ('static' { isStatic = True })?
-        qn0=qualifiedName ('.' '*' { dotStar = True })? ';'
+    :   'import' ('static' { static = True })?
+        qn0=qualifiedName ('.' '*' { star = True })? ';'
     ;
 
 
@@ -144,7 +143,6 @@ scope py_klass, py_block;
 @init {
     $py_block::block = $py_klass::klass = \
         self.factory('class', parent=$py_block[TOP-1]::block)
-
 }
     :   classOrInterfaceModifiers (classDeclaration | interfaceDeclaration)
     ;
@@ -207,7 +205,14 @@ typeBound
 
 
 enumDeclaration
-    :   ENUM Ident ('implements' typeList)? enumBody
+@init {
+    klass = $py_klass::klass
+    klass.isEnum = True
+}
+    :   ENUM Ident
+        { klass.setName($Ident.text) }
+        ('implements' typeList)?
+        enumBody
     ;
 
 
@@ -222,7 +227,21 @@ enumConstants
 
 
 enumConstant
-    :   annotations? Ident arguments? classBody?
+scope py_block, py_expr;
+@init {
+    klass = $py_klass::klass
+    $py_block::block = self.factory('block')
+}
+    :   annotations?
+        Ident
+        { enumc = klass.addEnumConstant($Ident.text) }
+        ({
+            $py_expr::expr = expr = self.factory('expression', format='{left}')
+            $py_expr::nest = expr.nestLeft
+         }
+         arguments
+        )?
+        classBody?
     ;
 
 
@@ -1028,12 +1047,8 @@ assignmentOperator
 conditionalExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
-        $py_expr::expr = expr = $py_expr[TOP-1]::expr
-        $py_expr::nest = nest = $py_expr[TOP-1]::nest
-    else:
-        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
-        $py_expr::nest = expr.nestLeft
+    $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+    $py_expr::nest = expr.nestLeft
 }
     :   conditionalOrExpression
         (

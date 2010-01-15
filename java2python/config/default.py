@@ -40,16 +40,21 @@ commentPrefix = '## '
 modulePrologueHandlers = [
     'java2python.mods.simpleShebang',
     'java2python.mods.simpleDocString',
-    ]
+]
+
 
 moduleEpliogueHandlers = [
-    ]
+]
 
 moduleOutputHandlers = [
     'java2python.mods.outputSubs',
     'java2python.mods.scriptMainStanza',
-    'java2python.mods.scriptTrailingNewLine',
-    ]
+]
+
+
+methodDocStringHandlers = [
+    'java2python.mods.simpleDocString',
+]
 
 
 moduleOutputSubs = [
@@ -68,6 +73,13 @@ moduleOutputSubs = [
     (r'\.__class__\.getName\(\)', '.__class__.__name__'),
 ]
 
+
+classDocStringHandlers = [
+    'java2python.mods.simpleDocString',
+]
+
+
+classBaseLookup = 'java2python.mods.defaultClassBase'
 
 ## handlers for generating text inserted at the top of each module.
 ## this is a "last" option.  note that the preamble for a module

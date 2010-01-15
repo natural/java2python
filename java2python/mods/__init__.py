@@ -8,53 +8,49 @@ def simpleShebang(module):
 
 
 def simpleDocString(block):
-    return [
-	'""" generated source for %s' % block.getName(),
-	'',
-	'"""'
-    ]
+    yield '""" generated source for %s' % block.getName()
+    yield ''
+    yield '"""'
 
 
-def newLine(block):
-    ## ["\n"] doesn't work and it's annoying.
-    return []
-
-
-def outputSubs(module, text):
-    subs = module.config.all('moduleOutputSubs', [])
+def outputSubs(block, text):
+    subsname = '{0}OutputSubs'.format(block.__class__.__name__.lower())
+    subs = block.config.all(subsname, [])
     for sub in subs:
 	for pattern, repl in sub:
 	    text = re.sub(pattern, repl, text)
     return text
 
 
+mainStanzaTemplate = """
+if __name__ == '__main__':
+{indent}import sys
+{indent}{name}.main(sys.argv)
+"""
+
+
 def scriptMainStanza(module, text):
     name = module.getName()
-    indent = module.indent()
+    indent = module.getIndent()
 
     def filterClass(x):
-	return x.blockTypeName()=='class' and x.getName()==name
+	return x.isClass and x.getName()==name
 
     def filterMethod(x):
-	return x.blockTypeName()=='method' and \
-	       x.isPublic() and x.isStatic() and x.isVoid()
+	return x.isMethod and x.isPublic and x.isStatic and \
+	       x.isVoid and x.getName()=='main'
 
     for cls in [c for c in module.getChildren() if filterClass(c)]:
 	if [m for m in cls.getChildren() if filterMethod(m)]:
-	    return text +  '\n' + '\n'.join(
-		["if __name__ == '__main__':",
-		 ("%simport sys" % indent),
-		 ("%s%s.main(sys.argv)" % (indent, name)),
-		 ]
-		)
+	    return text + mainStanzaTemplate.format(indent=indent, name=name)
 
     return text
 
 
-def scriptTrailingNewLine(module, text):
-    if text and text[-1] != '\n':
-	return text + u'\n'
-    return text
+def defaultClassBase(block):
+    bases = block.getType() or ['object']
+    return iter(bases)
 
 
-
+def noClassBase(block):
+    yield None
