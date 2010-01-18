@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+
+
+"""
 import itertools
 import keyword
 import sys
@@ -15,21 +19,21 @@ class Block(object):
     keywords = keyword.kwlist + ['None', 'str', ]
 
     def __init__(self, config):
-	self.setConfig(config)
-	self.setChildren([])
-	self.setDecorators([])
-	self.setModifiers([])
-	self.setName(None)
-	self.setParent(None)
-	self.setType(None)
-	self.setVariables([])
+	self.config = config
+	self.children = []
+	self.decorators = []
+	self.modifiers = []
+	self.name = None
+	self.parent = None
+	self.type = None
+	self.variables = []
 
-    @classmethod
-    def className(cls):
-	""" Returns the name of this class.
+    @property
+    def className(self):
+	""" Returns the class name of this block.
 
 	"""
-	return cls.__name__
+	return self.__class__.__name__
 
     @classmethod
     def new(cls, config, **kwds):
@@ -51,22 +55,31 @@ class Block(object):
 	""" Default child iterator implementation; yields each child block.
 
 	"""
-	return iter(self.getChildren())
+	return iter(self.children)
+
+
+    def iterEpilogue(self):
+	"""
+	"""
+	yield None
+
 
     ##
     # default accessors
 
-    def getChildren(self):
+    @property
+    def children(self):
 	""" Returns sequence of children for this block.
 
 	"""
-	return self.children
+	return self._children
 
-    def setChildren(self, value):
-	""" Sets the children of this block to the given value.
+    @children.setter
+    def children(self, value):
+	"""
 
 	"""
-	self.children = value
+	self._children = value
 
     def addChild(self, value):
 	""" Adds a child to this block.
@@ -79,35 +92,39 @@ class Block(object):
 
 	"""
 	start, stop, lines = comment
-	prefix = self.getCommentPrefix()
+	prefix = self.commentPrefix
 	for line in lines:
 	    comment = '{0}{1}'.format(prefix, line.rstrip().lstrip('\n'))
-	    expr = Comment(config=self.getConfig(), format=comment)
-	    expr.setParent(self)
+	    expr = Expression(config=self.config, format=comment, isComment=True)
+	    expr.parent = self
 
-    def getConfig(self):
+    @property
+    def config(self):
 	""" Returns the configuration object for this block.
 
 	"""
-	return self.config
+	return self._config
 
-    def setConfig(self, config):
-	""" Sets the configuration object for this block.
+    @config.setter
+    def config(self, value):
+	"""
 
 	"""
-	self.config = config
+	self._config = value
 
-    def getDecorators(self):
+    @property
+    def decorators(self):
 	""" Returns the decorators of this block.
 
 	"""
-	return self.decorators
+	return self._decorators
 
-    def setDecorators(self, value):
-	""" Sets the decorators of this block.
+    @decorators.setter
+    def decorators(self, value):
+	"""
 
 	"""
-	self.decorators = value
+	self._decorators = value
 
     def addDecorator(self, value):
 	""" Adds a decorator to this block.
@@ -115,17 +132,16 @@ class Block(object):
 	"""
 	self.decorators.append(value)
 
-    def getModifiers(self):
+    @property
+    def modifiers(self):
 	""" Returns the modifiers of this block.
 
 	"""
-	return self.modifiers
+	return self._modifiers
 
-    def setModifiers(self, value):
-	""" Sets the modifiers of this block.
-
-	"""
-	self.modifiers = value
+    @modifiers.setter
+    def modifiers(self, value):
+	self._modifiers = value
 
     def addModifier(self, value):
 	""" Adds a modifier to this block.
@@ -133,61 +149,70 @@ class Block(object):
 	"""
 	self.modifiers.append(value)
 
-    def getName(self):
+    @property
+    def name(self):
 	""" Returns the name of this block.
 
 	"""
-	return self.name
+	return self._name
 
-    def setName(self, value):
+    @name.setter
+    def name(self, value):
 	""" Sets the name of this block.
 
 	"""
-	self.name = value
+	self._name = value
 
-    def getParent(self):
+    @property
+    def parent(self):
 	""" Returns the parent of this block.
 
 	"""
-	return self.parent
+	return self._parent
 
-    def setParent(self, parent, autoAdd=True):
+    @parent.setter
+    def parent(self, parent, autoAdd=True):
 	""" Sets the parent of this block.
 
 	"""
-	self.parent = parent
+	self._parent = parent
 	if autoAdd and hasattr(parent, 'addChild'):
 	    parent.addChild(self)
 
-    def getType(self, separator='.'):
+    @property
+    def type(self):
 	""" Returns the type of this block.
 
 	"""
-	value = getattr(self, 'type', None)
+	separator = '.'
+	value = self._type
 	if isinstance(value, (basestring, )):
 	    return value
 	elif isinstance(value, (tuple, list, )) and separator:
-	    return separator.join(self.type)
+	    return separator.join(self._type)
 	else:
 	    return value
 
-    def setType(self, value):
+    @type.setter
+    def type(self, value):
 	""" Sets the type of this block.
 
 	"""
-	self.type = value
+	self._type = value
 
-    def getVariables(self):
+    @property
+    def variables(self):
 	""" Returns the variable sequence of this block.
 
 	"""
-	return self.variables
+	return self._variables
 
-    def setVariables(self, value):
+    @variables.setter
+    def variables(self, value):
 	""" Sets the variable sequence of this block to the given value.
 
 	"""
-	self.variables = value
+	self._variables = value
 
     def addVariable(self, value):
 	""" Adds the given value to the variable sequence of this block.
@@ -195,17 +220,21 @@ class Block(object):
 	"""
 	self.variables.append(value)
 
-    def getIndent(self, default='    '):
+    @property
+    def indent(self):
 	""" Returns the configured indent character(s) or the default.
 
 	"""
-	return self.getConfig().last('leadingIndent', default)
+	default = '    '
+	return self.config.last('leadingIndent', default)
 
-    def getCommentPrefix(self, default='# '):
+    @property
+    def commentPrefix(self):
 	""" Returns the configured comment prefix or the default.
 
 	"""
-	return self.getConfig().last('commentPrefix', default)
+	default = '# '
+	return self.config.last('commentPrefix', default)
 
     ##
     # output methods
@@ -213,13 +242,30 @@ class Block(object):
     def dump(self, fd, level=0):
 	""" dump(fd, [level]) -> prints this block to the given file-like object.
 
+	The basic form of dumped lines looks like this:
+
+	    # prologue
+	        # child 1
+                # child n
+            # epilogue
+
+	For modules, the prologue contains the docstring.  The
+	epilogue contains the main script stanza (if any).
+
+	For classes and methods, the prologue contains decorators and
+	the declaration statement.  The docstring is contained within
+	the children.  Enum constants are contained in the class
+	epilogue.
+
 	"""
-	indent = level * self.getIndent()
-	notnone = lambda x:x is not None
-	for line in itertools.ifilter(notnone, self.iterPrologue()):
+	indent = level * self.indent
+	isNotNone = lambda x:x is not None
+	for line in itertools.ifilter(isNotNone, self.iterPrologue()):
 	    print >> fd, '{0}{1}'.format(indent, line)
 	for child in self.iterChildren():
 	    child.dump(fd, level+1)
+	for line in itertools.ifilter(isNotNone, self.iterEpilogue()):
+	    print >> fd, '{0}{1}'.format(indent, line)
 
     def debugFormat(self):
 	""" Returns a formatted (maybe with color) string for this block.
@@ -227,10 +273,10 @@ class Block(object):
 	"""
 	parts = []
 	add = lambda *x:parts.extend(x)
-	add(color.white('<'), color.green(self.className()))
-	add(' ', color.white('name:'), color.cyan(self.getName()))
-	add(' ', color.white('type:'), color.cyan(self.getType() or 'Unknown'))
-	mods = self.getModifiers()
+	add(color.white('<'), color.green(self.className))
+	add(' ', color.white('name:'), color.cyan(self.name))
+	add(' ', color.white('type:'), color.cyan(self.type or 'Unknown'))
+	mods = self.modifiers
 	if mods:
 	    add(' ', color.white('mods:'), color.cyan(', '.join(mods)))
 	add(color.white('>'))
@@ -240,17 +286,16 @@ class Block(object):
 	""" Prints the formatted string for this object to stderr.
 
 	"""
-	indent = self.getIndent()
+	indent = self.indent
 	print >> sys.stderr, '{0}{1}'.format(indent*level, self.debugFormat())
-	for child in [o for o in self.getChildren() if o]:
+	for child in [o for o in self.children if o]:
 	    printer = getattr(child, 'debugPrint', lambda v:None)
 	    printer(level+1)
 
     ##
-    # utilities
-    isClass = False
-    isMethod = False
-    isComment = False
+    # basic properties
+
+    isClass = isComment = isEnum = isExpression = isMethod = isStatement = False
 
     @property
     def isPublic(self):
@@ -273,15 +318,18 @@ class Block(object):
 	"""
 	return 'void' == self.type
 
+    ##
+    # utilities
+
     def reparentChildren(self, target):
 	""" Moves children of this block to target; adjusts types and parent.
 
 	"""
-	for child in self.getChildren():
-	    child.setModifiers(self.modifiers)
-	    child.setType(self.type)
-	    child.setVariables(self.variables)
-	    child.setParent(target)
+	for child in self.children:
+	    child.modifiers = self.modifiers
+	    child.type = self.type
+	    child.variables = self.variables
+	    child.parent = target
 
     def update(self, **kwds):
 	"""  Keyword-based attribute assignment; convenience for the grammar.
@@ -295,14 +343,33 @@ class Block(object):
 	    value = '{0}_'.format(value)
 	return value
 
-    def getHandler(self, value):
-	name = '{0}{1}'.format(self.className().lower(), value)
-	return self.getConfig().handler(name)
+    ## the first/last/handler methods on the config object are a mess.
+    ## clean them up.
 
-    def getHandlers(self, value):
-	name = '{0}{1}'.format(self.className().lower(), value)
-	return self.getConfig().handlers(name, all=True)
+    def getHandler(self, value, prefix=None):
+	if prefix is None:
+	    prefix = self.className.lower()
+	name = '{0}{1}'.format(prefix, value)
+	return self.config.handler(name)
 
+    def getHandlers(self, value, prefix=None):
+	if prefix is None:
+	    prefix = self.className.lower()
+	name = '{0}{1}'.format(prefix, value)
+	return self.config.handlers(name, all=True)
+
+    def findVariable(self, name):
+	if self.isMethod and name in [str(p) for p in self.parameters]:
+	    return name
+	elif self.isMethod and name in self.variables:
+	    return name
+	elif self.isMethod and name in self.parent.variables:
+	    if self.isStatic:
+		return 'cls.{0}'.format(name)
+	    else:
+		return 'self.{0}'.format(name)
+	else:
+	    return name
 
 class Module(Block):
     """ Module -> type of block for Python modules.
@@ -310,8 +377,8 @@ class Module(Block):
     """
     def __init__(self, config):
 	Block.__init__(self, config)
-    	self.setPackages([])
-    	self.setImports([])
+	self.imports = []
+	self.packages = []
 
     def __str__(self):
 	""" Returns generated python source code for this Module.
@@ -319,23 +386,24 @@ class Module(Block):
 	"""
 	strfd = StringIO.StringIO()
 	self.dump(strfd, -1)
-	source = strfd.getvalue() + '\n'
+	source = strfd.getvalue()
 	for handler in self.getHandlers('OutputHandlers'):
 	    source = handler(self, source)
 	return source
 
-
-    def getImports(self):
+    @property
+    def imports(self):
 	""" Returns sequence of imports for this module.
 
 	"""
-	return self.imports
+	return self._imports
 
-    def setImports(self, value):
+    @imports.setter
+    def imports(self, value):
 	""" Sets the sequence of imports for this module.
 
 	"""
-	self.imports = value
+	self._imports = value
 
     def addImport(self, value, static=False, star=False):
 	""" Adds an import to this module.
@@ -343,17 +411,19 @@ class Module(Block):
 	"""
 	self.imports.append((value, static, star))
 
-    def getPackages(self):
+    @property
+    def packages(self):
 	""" Returns sequence of package statements for this module.
 
 	"""
-	return self.packages
+	return self._packages
 
-    def setPackages(self, value):
+    @packages.setter
+    def packages(self, value):
 	""" Sets the sequence of package statements for this module.
 
 	"""
-	self.packages = value
+	self._packages = value
 
     def addPackage(self, value):
 	""" Adds a package statement to this module.
@@ -366,13 +436,18 @@ class Module(Block):
 
 	TODO:  make this a configuration epilogue
 	"""
-	#self.addChild(Expression(config=self.getConfig(), format='\n'))
+	#self.addChild(Expression(config=self.config, format='\n'))
 
     def iterPrologue(self):
 	""" iterPrologue -> yields module prologue lines by calling config handlers.
 
 	"""
 	for handler in self.getHandlers('PrologueHandlers'):
+	    for line in handler(self):
+		yield line
+
+    def iterEpilogue(self):
+	for handler in self.getHandlers('EpilogueHandlers'):
 	    for line in handler(self):
 		yield line
 
@@ -392,11 +467,11 @@ class PostDeclDocString(object):
 	children = []
 	handlers = self.getHandlers('DocStringHandlers')
 	for doc in itertools.chain(*(handler(self) for handler in handlers)):
-	    children.append(Expression(self.getConfig(), format=doc))
-	children += self.getChildren()
+	    children.append(Expression(self.config, format=doc, isDocString=True))
+	children += self.children
 	filtered = [c for c in children if not c.isComment]
 	if not filtered:
-	    children.append(Expression(self.getConfig(), format='pass'))
+	    children.append(Expression(self.config, format='pass'))
 	return iter(children)
 
 
@@ -404,49 +479,84 @@ class Class(PostDeclDocString, Block):
     """ Class -> type of block for Python classes.
 
     """
-    isEnum = False
     isClass = True
+    isEnum = False
 
     def __init__(self, config):
 	Block.__init__(self, config)
-	self.setEnumConstants([])
+	self.enumConstants = []
+
+    def iterChildren(self):
+	""" Yields the children of this class with empty lines at
+            various locations.
+
+	"""
+	last = Block(None)
+	newline = Expression(self.config)
+	for child in PostDeclDocString.iterChildren(self):
+	    if child.isMethod and last.isExpression and not last.isDocString:
+		yield newline
+	    elif last.isMethod and child.isMethod:
+		yield newline
+	    elif last.isClass:
+		yield newline
+	    yield child
+	    last = child
 
     def iterPrologue(self):
-	""" Returns the declaration for this class.
+	""" Yields the declaration for this class.
 
 	"""
+	bases = ''
 	handler = self.getHandler('BaseLookup')
-	bases = [b for b in handler(self) if b is not None]
-        bases = '({0})'.format(', '.join(bases)) if bases else ''
-	yield 'class {0}{1}:'.format(self.getName(), bases)
+	if handler:
+	    bases = [b for b in handler(self) if b is not None]
+	    bases = '({0})'.format(', '.join(bases)) if bases else ''
+	yield 'class {0}{1}:'.format(self.name, bases)
 
-    def setType(self, value):
-	""" Sets the type of this class.
+    def iterEpilogue(self):
+	if self.isEnum:
+	    handler = self.getHandler('EpilogueHandler', prefix='enum')
+	    print '### enum handler:', handler
+	    for line in handler(self):
+		yield line
+	else:
+	    ## nothing to do yet.
+	    pass
 
-	Overrides Block.setType to account to account for sequences of
-	values.
-	"""
-	if not hasattr(self, 'type'):
-	    self.type = []
-	if isinstance(value, (tuple, list)):
-	    self.type.extend(value)
-	elif value:
-	    self.type.append(value)
-
-    def getType(self):
-	value = getattr(self, 'type', [])
+    @property
+    def type(self):
+	value = self._type
 	if isinstance(value, (basestring, )):
 	    value = [value]
 	return value
 
-    def setEnumConstants(self, value):
-	self.enumConstants = value
+    @type.setter
+    def type(self, value):
+	""" Sets the type of this class.
 
-    def getEnumConstants(self):
-	return self.enumConstants
+	Overrides Block.type to account to account for sequences of
+	values.
+	"""
+	if not hasattr(self, '_type'):
+	    self._type = None
+	if self._type is None:
+	    self._type = []
+	if isinstance(value, (tuple, list)):
+	    self._type.extend(value)
+	elif value:
+	    self._type.append(value)
+
+
+    @property
+    def enumConstants(self):
+	return self._enumConstants
+
+    @enumConstants.setter
+    def enumConstants(self, value):
+	self._enumConstants = value
 
     def addEnumConstant(self, value):
-	print '### EC', value
 	self.enumConstants.append(value)
 
 
@@ -458,35 +568,40 @@ class Method(PostDeclDocString, Block):
 
     def __init__(self, config):
 	Block.__init__(self, config)
-    	self.setParameters([])
+	self.parameters = []
 
     def iterPrologue(self):
-	""" Returns the declaration for this method.
+	""" Yields the decorators (if any) and the declaration of this method.
 
 	"""
-	for deco in self.getDecorators():
+	for deco in self.iterDecorators():
 	    yield '@{0}'.format(deco)
 	first = 'cls' if self.isStatic else 'self'
-	params = ', '.join([first] + [str(p) for p in self.getParameters()])
+	params = ', '.join([first] + [str(p) for p in self.parameters])
 	yield 'def {0}({1}):'.format(self.name, params)
 
-    def getDecorators(self):
-	decos = Block.getDecorators(self)[:]
-	if self.isStatic and 'classmethod' not in decos:
-	    decos.append('classmethod')
-	return decos
+    def iterDecorators(self):
+	"""
 
-    def getParameters(self):
+	"""
+	def maybeClassMethodDeco():
+	    if self.isStatic and 'classmethod' not in self.decorators:
+		yield 'classmethod'
+	return itertools.chain(self.decorators, maybeClassMethodDeco())
+
+    @property
+    def parameters(self):
 	""" Returns the parameter sequence of this method.
 
 	"""
-	return self.parameters
+	return self._parameters
 
-    def setParameters(self, value):
+    @parameters.setter
+    def parameters(self, value):
 	""" Sets the parameter sequence of this methods to the given value.
 
 	"""
-	self.parameters = value
+	self._parameters = value
 
     def addParameter(self, value):
 	""" Adds the given value to this methods parameter sequence.
@@ -512,30 +627,31 @@ class Statement(Block):
 	'finally',
 	'while',
     ]
-
+    isStatement = True
 
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
-	expr = Expression(self.getConfig(), format='{left}')
-	self.setPrimaryExpression(expr)
+	self.primaryExpression = Expression(self.config, format='{left}')
 
     def iterPrologue(self):
-	expr = self.getPrimaryExpression()
-	expr = '' if expr.isEmpty() else ' {0}'.format(expr)
-	yield '{0}{1}:'.format(self.getName(), expr)
+	expr = self.primaryExpression
+	expr = '' if expr.isEmpty else ' {0}'.format(expr)
+	yield '{0}{1}:'.format(self.name, expr)
 
-    def getPrimaryExpression(self):
-	return self.primaryExpression
+    @property
+    def primaryExpression(self):
+	return self._primaryExpression
 
-    def setPrimaryExpression(self, value):
-	self.primaryExpression = value
+    @primaryExpression.setter
+    def primaryExpression(self, value):
+	self._primaryExpression = value
 
     def debugFormat(self):
 	parts = (
 	    color.white('<'),
-	    color.magenta(self.className()),
-	    color.white(' name:'), color.yellow(self.getName()),
-	    color.white(' expr:'), color.yellow(self.getPrimaryExpression()),
+	    color.magenta(self.className),
+	    color.white(' name:'), color.yellow(self.name),
+	    color.white(' expr:'), color.yellow(self.primaryExpression),
 	    color.white('>'),
 	)
 	return ''.join(parts)
@@ -545,6 +661,8 @@ class Expression(Block):
     """ Expression -> type of block for Python expressions.
 
     """
+    isExpression = True
+    isDocString = False
     keyNames = ('left', 'right', 'format', 'comment', 'type')
 
     def __init__(self, config, **kwds):
@@ -560,26 +678,27 @@ class Expression(Block):
 	return bool(self.format.strip())
 
     def dump(self, fd, indent=0):
-	print >> fd, '{0}{1}'.format(self.getIndent()*indent, self)
+	print >> fd, '{0}{1}'.format(self.indent*indent, self)
 
     def __str__(self):
 	""" x.__str__() <==> str(x)
 
 	"""
-	return self.format.format(**self.__dict__)
+	values = ((k, getattr(self, k)) for k in self.keyNames)
+	return self.format.format(**dict(values))
 
     def nestLeft(self, **kwds):
 	""" Create and assign a new expression for the left of this one.
 
 	"""
-	self.left = left = self.new(self.getConfig(), **kwds)
+	self.left = left = self.new(self.config, **kwds)
 	return left
 
     def nestRight(self, **kwds):
 	""" Create and assign a new expression for the right of this one.
 
 	"""
-	self.right = right = self.new(self.getConfig(), **kwds)
+	self.right = right = self.new(self.config, **kwds)
 	return right
 
     def addComment(self, comment):
@@ -589,7 +708,7 @@ class Expression(Block):
 	start, stop, lines = comment
 	cformat = '{comment}'
 	if not self.format.count(cformat):
-	    self.format = self.format + ' ' + self.getCommentPrefix() + cformat
+	    self.format = self.format + ' ' + self.commentPrefix + cformat
 	self.comment += ' '.join(lines)
 
     def debugFormat(self, title=''):
@@ -599,7 +718,7 @@ class Expression(Block):
 	parts = []
 	add = lambda *x:parts.extend(x)
 	add(color.white('<'))
-	add(color.blue(title or self.className()))
+	add(color.blue(title or self.className))
 	for name in self.keyNames:
 	    attr = getattr(self, name, None)
 	    ## types other than strings are not formatted; debugPrint
@@ -613,22 +732,16 @@ class Expression(Block):
 	""" Prints the formatted string for this object to stderr.
 
 	"""
-	indent = self.getIndent()
+	indent = self.indent
 	print >> sys.stderr, '{0}{1}'.format(indent*level, self.debugFormat(title))
 	for name in ('left', 'right', 'type'):
 	    obj = getattr(self, name, None)
 	    printer = getattr(obj, 'debugPrint', lambda x, y:None)
 	    printer(level+1, name.title())
 
+    @property
     def isEmpty(self):
 	return not any((self.left, self.right, self.type, self.comment))
-
-
-class Comment(Expression):
-    """ Comment -> type of expression that indicates it's a comment.
-
-    """
-    isComment = True
 
 
 class BlockFactory(object):
@@ -642,7 +755,6 @@ class BlockFactory(object):
     types = {
 	'block'      : Block,
 	'class'      : Class,
-	'comment'    : Comment,
 	'expression' : Expression,
 	'method'     : Method,
 	'module'     : Module,
@@ -661,6 +773,6 @@ class BlockFactory(object):
 	except (KeyError, ):
 	    raise TypeError('Unknown factory type: {0}'.format(typeName))
 	block = cls(self.config, **kwds)
-	block.setParent(parent)
-	block.setName(name)
+	block.parent = parent
+	block.name = name
 	return block

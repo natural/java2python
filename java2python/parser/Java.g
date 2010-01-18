@@ -79,12 +79,7 @@ scope py_assign {
 @lexer::members {
     ##// composite grammar files like this one don't provide
     ##// a way to indicate lexer base class so we implement
-    ##// the methods we need directly.  the client using the lexer
-    ##// must call setComments before passing the lexer to a token
-    ##// stream.
-    def setComments(self, comments):
-         self.comments = comments
-
+    ##// the methods we need directly.
     def addComment(self, start, stop, text):
         self.comments.append((start, stop, text.split('\n')))
 }
@@ -182,7 +177,7 @@ classDeclaration
 
 
 normalClassDeclaration
-    :   'class' Ident { $py_klass::klass.setName($Ident.text) } typeParameters?
+    :   'class' Ident { $py_klass::klass.name = $Ident.text } typeParameters?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -206,11 +201,11 @@ typeBound
 
 enumDeclaration
 @init {
-    klass = $py_klass::klass
+    klass = $py_block::block = $py_klass::klass
     klass.isEnum = True
 }
     :   ENUM Ident
-        { klass.setName($Ident.text) }
+        { klass.name = $Ident.text }
         ('implements' typeList)?
         enumBody
     ;
@@ -227,10 +222,9 @@ enumConstants
 
 
 enumConstant
-scope py_block, py_expr;
+scope py_expr;
 @init {
     klass = $py_klass::klass
-    $py_block::block = self.factory('block')
 }
     :   annotations?
         Ident
@@ -293,7 +287,7 @@ scope py_klass, py_block;
 
     |   {
         $py_block::block = method
-        method.setParent(parent)
+        method.parent = parent
         }
         modifiers type methodDeclaration
 
@@ -303,17 +297,17 @@ scope py_klass, py_block;
 
     |   {
         $py_block::block = method
-        method.setParent(parent)
+        method.parent = parent
         }
-        modifiers 'void' { method.setType('void') }
-        id0=Ident  { method.setName($id0.text) }
+        modifiers 'void' { method.type = 'void' }
+        id0=Ident  { method.name = $id0.text }
         voidMethodDeclaratorRest
 
     |   {
         $py_block::block = method
-        method.setParent(parent)
+        method.parent = parent
         }
-        modifiers Ident { method.setName('__init__') }
+        modifiers Ident { method.name = '__init__' }
         constructorDeclaratorRest
 
 
@@ -321,7 +315,7 @@ scope py_klass, py_block;
 
     |   {
         $py_klass::klass = $py_block::block = klass
-        klass.setParent(parent)
+        klass.parent = parent
         }
         modifiers classDeclaration
     ;
@@ -339,7 +333,7 @@ genericMethodOrConstructorRest
 
 
 methodDeclaration
-    :   id0=Ident { $py_block::block.setName($id0.text) }
+    :   id0=Ident { $py_block::block.name = $id0.text }
         methodDeclaratorRest
     ;
 
@@ -437,6 +431,8 @@ scope py_expr;
     :   variableDeclaratorId
         {
         vid = $variableDeclaratorId.text
+        block = $py_block[TOP-1]::block
+        block.addVariable(vid)
         expr.update(left=vid)
         ##// this should be a reference to the active current
         ##// py_method/py_klass instead.
@@ -519,7 +515,7 @@ typeName
 type
     :	classOrInterfaceType ('[' ']')*
     |	primitiveType
-        { $py_block::block.setType($primitiveType.text) }
+        { $py_block::block.type = $primitiveType.text }
         ('[' ']')*
     ;
 
@@ -527,7 +523,7 @@ type
 classOrInterfaceType
 @init  { ids = [] }
 @after {
-    $py_block::block.setType(ids)
+    $py_block::block.type = ids
 }
     :	id0=Ident
         { ids.append(id0.text) }
@@ -585,10 +581,13 @@ scope py_block;
 
 formalParameterDeclsRest
 @init {
-    param = self.factory('expression', format='{left}', type=$py_block::block.getType())
+    param = self.factory('expression', format='{left}', type=$py_block::block.type)
 }
 @after {
-    $py_block[TOP-1]::block.addParameter(param)
+    try:
+        $py_block[TOP-1]::block.addParameter(param)
+    except (AttributeError, ):
+        $py_block[TOP-2]::block.addParameter(param)
 }
     :   id0=variableDeclaratorId
         { param.update(left=$id0.text) }
@@ -805,7 +804,7 @@ scope py_block, py_expr;
     |   // if statement
         {
         $py_block::block = self.factory('statement', name='if', parent=parent)
-        $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+        $py_expr::expr = expr = $py_block::block.primaryExpression
         $py_expr::nest = expr.nestLeft
         }
         'if' parExpression
@@ -826,7 +825,7 @@ scope py_block, py_expr;
     |   // try statement
         {
         $py_block::block = self.factory('statement', name='try', parent=parent)
-        $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+        $py_expr::expr = expr = $py_block::block.primaryExpression
         $py_expr::nest = expr.nestLeft
         }
         'try'
@@ -835,13 +834,13 @@ scope py_block, py_expr;
         (   // try...catch...finally
             {
             $py_block::block = self.factory('statement', name='except', parent=parent)
-            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::expr = expr = $py_block::block.primaryExpression
             $py_expr::nest = expr.nestLeft
             }
             catches 'finally'
             {
             $py_block::block = self.factory('statement', name='finally', parent=parent)
-            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::expr = expr = $py_block::block.primaryExpression
             $py_expr::nest = expr.nestLeft
             }
             block
@@ -849,7 +848,7 @@ scope py_block, py_expr;
         |   // try...catch
             {
             $py_block::block = self.factory('statement', name='except', parent=parent)
-            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::expr = expr = $py_block::block.primaryExpression
             $py_expr::nest = expr.nestLeft
             }
             catches
@@ -858,7 +857,7 @@ scope py_block, py_expr;
             'finally'
             {
             $py_block::block = self.factory('statement', name='finally', parent=parent)
-            $py_expr::expr = expr = $py_block::block.getPrimaryExpression()
+            $py_expr::expr = expr = $py_block::block.primaryExpression
             $py_expr::nest = expr.nestLeft
             }
             block
@@ -900,7 +899,7 @@ scope py_block, py_expr;
     |   // expression statement
         {
         $py_block::block = self.factory('block')
-        expr.setParent(parent)
+        expr.parent = parent
         }
         statementExpression ';'
 
@@ -1004,7 +1003,23 @@ scope py_expr;
 
 
 expression
-    :   conditionalExpression (assignmentOperator expression)?
+scope py_expr;
+@init {
+    if $py_expr[TOP-1]::expr.isEmpty:
+        $py_expr::expr = expr = $py_expr[TOP-1]::expr
+        $py_expr::nest = nest = $py_expr[TOP-1]::nest
+    else:
+        $py_expr::expr = expr = $py_expr[TOP-1]::nest(format='{left}')
+        $py_expr::nest = expr.nestLeft
+}
+    :   conditionalExpression
+        (assignmentOperator
+            {
+            expr.update(format='{left} ' + $assignmentOperator.text + ' {right}')
+            $py_expr::nest = expr.nestRight
+            }
+         expression
+        )?
     ;
 
 
@@ -1070,7 +1085,7 @@ scope py_expr;
 conditionalOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1092,7 +1107,7 @@ scope py_expr;
 conditionalAndExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1114,7 +1129,7 @@ scope py_expr;
 inclusiveOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1136,7 +1151,7 @@ scope py_expr;
 exclusiveOrExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1158,7 +1173,7 @@ scope py_expr;
 andExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1180,7 +1195,7 @@ scope py_expr;
 equalityExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1266,7 +1281,7 @@ shiftOp returns [value]
 additiveExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1290,7 +1305,7 @@ scope py_expr;
 multiplicativeExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1313,7 +1328,7 @@ scope py_expr;
 unaryExpression
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1365,7 +1380,7 @@ scope py_expr;
 unaryExpressionNotPlusMinus
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1402,7 +1417,7 @@ castExpression
 primary
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1419,9 +1434,11 @@ scope py_expr;
     |   'new' creator
 
     |   id0=Ident
-        { expr.update(left=$id0.text, format='{left}{right}') }
+        {   var = $py_block[TOP-1]::block.findVariable($id0.text)
+            expr.update(left=var, format='{left}{right}') }
         (   '.' id1=Ident
-            { expr = expr.nestRight(left=$id1.text, format='.{left}{right}') }
+            {   var = $py_block[TOP-1]::block.findVariable($id1.text)
+                expr = expr.nestRight(left=$id1.text, format='.{left}{right}') }
         )*
         { $py_expr::nest = expr.nestRight }
         identifierSuffix?
@@ -1435,7 +1452,7 @@ scope py_expr;
 identifierSuffix
 scope py_expr;
 @init {
-    if $py_expr[TOP-1]::expr.isEmpty():
+    if $py_expr[TOP-1]::expr.isEmpty:
         $py_expr::expr = expr = $py_expr[TOP-1]::expr
         $py_expr::nest = nest = $py_expr[TOP-1]::nest
     else:
@@ -1468,7 +1485,7 @@ scope py_block, py_expr;
 
 }
 @after {
-    expr.update(type=$py_block::block.getType())
+    expr.update(type=$py_block::block.type)
 }
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName (arrayCreatorRest | classCreatorRest)
@@ -1477,7 +1494,7 @@ scope py_block, py_expr;
 
 createdName
     :   classOrInterfaceType
-    |   primitiveType { $py_block::block.setType($primitiveType.text) }
+    |   primitiveType { $py_block::block.type = $primitiveType.text }
     ;
 
 

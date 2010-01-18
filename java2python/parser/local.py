@@ -23,20 +23,8 @@ class LocalParser(Parser):
     def __init__(self, input, state=None):
 	Parser.__init__(self, input, state=state)
 	# makes instance usable when run as a script
-	self.setRawComments([])
-        self.setFactory(BlockFactory(Config([])))
-
-    def setRawComments(self, value):
-	""" Sets the comment sequence to the given value
-
-	"""
-        self.comments = value
-
-    def setFactory(self, value):
-	""" Sets the block factory to the given value
-
-	"""
-        self.factory = value
+	self.comments = []
+        self.factory = BlockFactory(Config([]))
 
     def checkNode(self, node):
 	self.checkComments(node)

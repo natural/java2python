@@ -42,13 +42,14 @@ modulePrologueHandlers = [
     'java2python.mods.simpleDocString',
 ]
 
-
-moduleEpliogueHandlers = [
+moduleEpilogueHandlers = [
+    'java2python.mods.scriptMainStanza',
 ]
+
 
 moduleOutputHandlers = [
     'java2python.mods.outputSubs',
-    'java2python.mods.scriptMainStanza',
+#    'java2python.mods.scriptMainStanza',
 ]
 
 
@@ -81,34 +82,24 @@ classDocStringHandlers = [
 
 classBaseLookup = 'java2python.mods.defaultClassBase'
 
-## handlers for generating text inserted at the top of each module.
-## this is a "last" option.  note that the preamble for a module
-## should include the docstring generator.  (other docstrings are
-## indented).
-modulePreamble = [
-#    'java2python.mods.simpleShebang',
-#    'java2python.mods.simpleDocString',
-]
 
-## lines of static text inserted at the end of each module.  this is a
-## "last" option.
-moduleEpilogue = [
-    ## TODO:  add "trailing-newline" handler.
-]
+## This enum constant handler inspects the enum block and determines
+## the best handler to call.  If the enum constant contains a
+## constructor, it defers to the enumConstantInstances, otherwise it
+## uses the enumConstantStrings:
+enumEpilogueHandler = 'java2python.mods.enumConstantSelector'
 
 
-methodPreamble = [
-#    'java2python.mods.newLine',
-    ]
+## This handler generates enum constants as instances of the enum
+## class (as class attributes):
+# enumEpilogueHandler = 'java2python.mods.enumConstantInstances'
 
-classDocString = [
-#    'java2python.mods.simpleDocString',
-    ]
+## This handler generates enum constants as integers:
+# enumEpilogueHandler = 'java2python.mods.enumConstantInts'
 
+## This handler generates enum constants as strings:
+# enumEpilogueHandler = 'java2python.mods.enumConstantStrings'
 
-methodDocString = [
-#    'java2python.mods.simpleDocString',
-    ]
 
 
 inputSubs = [

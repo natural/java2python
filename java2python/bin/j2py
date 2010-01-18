@@ -7,21 +7,10 @@ from optparse import OptionValueError, Option, OptionParser
 from os.path import basename, splitext
 from time import time
 
-from antlr3 import CommonTokenStream, ANTLRStringStream
 
-from java2python.blocks import BlockFactory
-from java2python.config import Config
 from java2python.lib.colortools import colors
-from java2python.parser.local import LocalTreeAdaptor
-from java2python.parser.JavaLexer import JavaLexer
-from java2python.parser.JavaParser import JavaParser
+from java2python.lib.transform import transform
 
-try:
-    import psyco
-except (ImportError, ):
-    pass
-else:
-    psyco.full()
 
 version = '0.3'
 
@@ -55,7 +44,7 @@ class LocalOption(Option):
     TYPE_CHECKER['loglevel'] = check_loglevel
 
 
-def transform(options):
+def main(options):
     timed = defaultdict(time)
     timed['overall']
 
@@ -68,20 +57,13 @@ def transform(options):
         print 'IOError: %s.' % (msg, )
         return code
 
-    lexer = JavaLexer(ANTLRStringStream(source))
-    lexer.setComments([])
-    parser = JavaParser(CommonTokenStream(lexer))
-
     configs = options.configs
     if options.includedefaults:
         configs.insert(0, 'java2python.config.default')
-    parser.setFactory(BlockFactory(Config(configs)))
-    parser.setRawComments(lexer.comments)
-    parser.setTreeAdaptor(LocalTreeAdaptor(callback=parser.checkNode))
 
     timed['comp']
     try:
-	module = parser.compilationUnit().module
+	module = transform(source, configs)
     except (Exception, ), exc:
         exception('exception while parsing')
         return 1
@@ -99,7 +81,7 @@ def transform(options):
 	output = sys.stdout
     else:
 	output = open(fileout, 'w')
-    module.setName(splitext(filein)[0] if filein != '-' else '<stdin>')
+    module.name = splitext(filein)[0] if filein != '-' else '<stdin>'
 
     timed['encode']
     source = unicode(module)
@@ -170,4 +152,4 @@ def config_script(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(transform(config_script(sys.argv)))
+    sys.exit(main(config_script(sys.argv)))
