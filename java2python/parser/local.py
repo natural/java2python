@@ -53,7 +53,7 @@ class LocalParser(Parser):
 	"""
 	stacks = ('expr', 'method', 'klass', 'module')
 	for name in stacks:
-	    stack = getattr(self, 'py_%s_stack' % name)
+	    stack = getattr(self, 'py_%s_stack' % name, None)
 	    if stack:
 		return getattr(stack[-1], name)
 

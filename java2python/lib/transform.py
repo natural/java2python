@@ -14,6 +14,5 @@ def transform(source, configs):
     parser.factory = BlockFactory(Config(configs))
     parser.comments = lexer.comments
     parser.setTreeAdaptor(LocalTreeAdaptor(callback=parser.checkNode))
-    module = parser.compilationUnit().module
-    return module
+    return parser.compilationUnit()
 

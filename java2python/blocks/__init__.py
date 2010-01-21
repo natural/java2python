@@ -6,7 +6,6 @@
 """
 import itertools
 import keyword
-import sys
 import StringIO
 
 import java2python.lib.colortools as color
@@ -98,6 +97,18 @@ class Block(object):
 	    expr = Expression(config=self.config, format=comment, isComment=True)
 	    expr.parent = self
 
+    def addType(self, value):
+	existing = self.type
+	if existing is None:
+	    value = [value]
+	elif isinstance(existing, (basestring, )):
+	    value = [existing, value, ]
+	elif isinstance(existing, (list, )):
+	    value = existing + [value]
+	else:
+	    raise Exception('Unhandled existing type')
+	self.type = value
+
     @property
     def config(self):
 	""" Returns the configuration object for this block.
@@ -171,12 +182,12 @@ class Block(object):
 	return self._parent
 
     @parent.setter
-    def parent(self, parent, autoAdd=True):
+    def parent(self, parent):
 	""" Sets the parent of this block.
 
 	"""
 	self._parent = parent
-	if autoAdd and hasattr(parent, 'addChild'):
+	if hasattr(parent, 'addChild'):
 	    parent.addChild(self)
 
     @property
@@ -282,15 +293,15 @@ class Block(object):
 	add(color.white('>'))
 	return ''.join(parts)
 
-    def debugPrint(self, level=0):
+    def debugPrint(self, fd, level=0):
 	""" Prints the formatted string for this object to stderr.
 
 	"""
 	indent = self.indent
-	print >> sys.stderr, '{0}{1}'.format(indent*level, self.debugFormat())
+	print >> fd, '{0}{1}'.format(indent*level, self.debugFormat())
 	for child in [o for o in self.children if o]:
-	    printer = getattr(child, 'debugPrint', lambda v:None)
-	    printer(level+1)
+	    printer = getattr(child, 'debugPrint', lambda x, y:None)
+	    printer(fd, level+1)
 
     ##
     # basic properties
@@ -603,11 +614,13 @@ class Method(PostDeclDocString, Block):
 	"""
 	self._parameters = value
 
-    def addParameter(self, value):
+    def addParameter(self, name, dimensions=0, variadic=False):
 	""" Adds the given value to this methods parameter sequence.
 
 	"""
-	self.parameters.append(value)
+	if variadic:
+	    name = '*{0}'.format(name)
+	self.parameters.append(name)
 
 
 class Statement(Block):
@@ -728,16 +741,16 @@ class Expression(Block):
 	add(color.white('>'))
 	return ''.join(parts)
 
-    def debugPrint(self, level=0, title=''):
+    def debugPrint(self, fd, level=0, title=''):
 	""" Prints the formatted string for this object to stderr.
 
 	"""
 	indent = self.indent
-	print >> sys.stderr, '{0}{1}'.format(indent*level, self.debugFormat(title))
+	print >> fd, '{0}{1}'.format(indent*level, self.debugFormat(title))
 	for name in ('left', 'right', 'type'):
 	    obj = getattr(self, name, None)
-	    printer = getattr(obj, 'debugPrint', lambda x, y:None)
-	    printer(level+1, name.title())
+	    printer = getattr(obj, 'debugPrint', lambda x, y, z:None)
+	    printer(fd, level+1, name.title())
 
     @property
     def isEmpty(self):
