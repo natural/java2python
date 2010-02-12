@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import re
+from re import sub as rxsub
+from java2python.blocks import Expression
+from functools import partial
 
 
 def simpleShebang(module):
@@ -13,12 +15,17 @@ def simpleDocString(block):
     yield '"""'
 
 
+def simpleModuleImports(block):
+    for value, static, star in block.imports:
+	yield value
+
+
 def outputSubs(block, text):
     subsname = '{0}OutputSubs'.format(block.className.lower())
     subs = block.config.all(subsname, [])
     for sub in subs:
 	for pattern, repl in sub:
-	    text = re.sub(pattern, repl, text)
+	    text = rxsub(pattern, repl, text)
     return text
 
 
@@ -40,7 +47,6 @@ def scriptMainStanza(module):
 	if [m for m in cls.children if filterMethod(m)]:
 	    yield scriptTemplate.format(indent=module.indent, name=module.name)
 	    break
-
 
 
 def defaultClassBase(block):
@@ -74,3 +80,48 @@ def enumConstantInts(block):
 	yield "{0}.{1} = {2}".format(block.name, c, i, )
     yield ''
 
+
+
+def simpleInterfaces(module):
+    mkExpr = partial(Expression, module.config,
+		     format='raise NotImplementedError({left})')
+    for iface in module.interfaces:
+	for method in iface.methods:
+	    expr = mkExpr(left='"Method \'%s\' is abstract"' % method.name)
+	    method.children.insert(0, expr)
+
+def abcInterfaces(module):
+    abcImport = 'from abc import ABCMeta, abstractmethod'
+    ifaces = list(module.interfaces)
+    if ifaces:
+	module.addImport(abcImport)
+	mkExpr = partial(Expression, module.config, format='{left}')
+	for iface in ifaces:
+	    iface.children.insert(0, mkExpr(left='__metaclass__ = ABCMeta'))
+	    for method in iface.methods:
+		method.addDecorator('abstractmethod')
+
+
+def zopeInterfaces(module):
+    ziImport = 'from zope.interface import Interface, implements'
+    ifaces = list(module.interfaces)
+    if ifaces:
+	module.addImport(ziImport)
+	for iface in ifaces:
+	    iface.type = 'Interface'
+	    for method in iface.methods:
+		method.requiresFirstParam = False
+
+	inames = [iface.name for iface in ifaces]
+	mkExpr = partial(Expression, module.config, format='{left}')
+
+	for cls in module.classes:
+	    ctypes = list(cls.type)
+	    imps = []
+	    for base in ctypes:
+		if base in inames:
+		    imps.append(base)
+		    cls.delType(base)
+	    if imps:
+		imp = ', '.join(imps)
+		cls.children.insert(0, mkExpr(left='implements({0})'.format(imp)))

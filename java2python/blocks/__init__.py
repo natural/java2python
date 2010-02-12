@@ -94,7 +94,9 @@ class Block(object):
 	prefix = self.commentPrefix
 	for line in lines:
 	    comment = '{0}{1}'.format(prefix, line.rstrip().lstrip('\n'))
-	    expr = Expression(config=self.config, format=comment, isComment=True)
+	    expr = Expression(config=self.config,
+			      format='{comment}',
+			      comment=comment, isComment=True)
 	    expr.parent = self
 
     def addType(self, value):
@@ -102,12 +104,22 @@ class Block(object):
 	if existing is None:
 	    value = [value]
 	elif isinstance(existing, (basestring, )):
-	    value = [existing, value, ]
+	    if value == existing:
+		value = [existing]
+	    else:
+		value = [existing, value, ]
 	elif isinstance(existing, (list, )):
-	    value = existing + [value]
+	    if value not in existing:
+		value = existing + [value]
 	else:
 	    raise Exception('Unhandled existing type')
 	self.type = value
+
+    def delType(self, value):
+	try:
+	    self._type.remove(value)
+	except (ValueError, AttributeError, ):
+	    pass
 
     @property
     def config(self):
@@ -247,6 +259,18 @@ class Block(object):
 	default = '# '
 	return self.config.last('commentPrefix', default)
 
+    @property
+    def classes(self):
+	for c in self.children:
+	    if getattr(c, 'isClass', False):
+		yield c
+
+    @property
+    def interfaces(self):
+	for c in self.children:
+	    if getattr(c, 'isInterface', False):
+		yield c
+
     ##
     # output methods
 
@@ -302,6 +326,7 @@ class Block(object):
 	for child in [o for o in self.children if o]:
 	    printer = getattr(child, 'debugPrint', lambda x, y:None)
 	    printer(fd, level+1)
+
 
     ##
     # basic properties
@@ -420,7 +445,9 @@ class Module(Block):
 	""" Adds an import to this module.
 
 	"""
-	self.imports.append((value, static, star))
+	imp = (value, static, star)
+	if imp not in self.imports:
+	    self.imports.append(imp)
 
     @property
     def packages(self):
@@ -447,6 +474,8 @@ class Module(Block):
 
 	TODO:  make this a configuration epilogue
 	"""
+	for handler in self.getHandlers('PostParseHandlers'):
+	    handler(self)
 	#self.addChild(Expression(config=self.config, format='\n'))
 
     def iterPrologue(self):
@@ -492,6 +521,7 @@ class Class(PostDeclDocString, Block):
     """
     isClass = True
     isEnum = False
+    isInterface = False
 
     def __init__(self, config):
 	Block.__init__(self, config)
@@ -536,6 +566,12 @@ class Class(PostDeclDocString, Block):
 	    pass
 
     @property
+    def methods(self):
+	for c in self.children:
+	    if c.isMethod:
+		yield c
+
+    @property
     def type(self):
 	value = self._type
 	if isinstance(value, (basestring, )):
@@ -550,13 +586,12 @@ class Class(PostDeclDocString, Block):
 	values.
 	"""
 	if not hasattr(self, '_type'):
-	    self._type = None
-	if self._type is None:
 	    self._type = []
+	typ = self._type
 	if isinstance(value, (tuple, list)):
-	    self._type.extend(value)
-	elif value:
-	    self._type.append(value)
+	    typ.extend([v for v in value if v not in typ])
+	elif value and value not in typ:
+	    typ.append(value)
 
 
     @property
@@ -570,12 +605,18 @@ class Class(PostDeclDocString, Block):
     def addEnumConstant(self, value):
 	self.enumConstants.append(value)
 
+    def setVariation(self, isClass=False, isEnum=False, isInterface=False):
+	self.isClass = isClass
+	self.isEnum = isEnum
+	self.isInterface = isInterface
+
 
 class Method(PostDeclDocString, Block):
     """ Method -> type of block for Python methods.
 
     """
     isMethod = True
+    requiresFirstParam = True
 
     def __init__(self, config):
 	Block.__init__(self, config)
@@ -587,8 +628,11 @@ class Method(PostDeclDocString, Block):
 	"""
 	for deco in self.iterDecorators():
 	    yield '@{0}'.format(deco)
-	first = 'cls' if self.isStatic else 'self'
-	params = ', '.join([first] + [str(p) for p in self.parameters])
+	if self.requiresFirstParam:
+	    first = ['cls' if self.isStatic else 'self']
+	else:
+	    first = []
+	params = ', '.join(first + [str(p) for p in self.parameters])
 	yield 'def {0}({1}):'.format(self.name, params)
 
     def iterDecorators(self):
@@ -676,7 +720,7 @@ class Expression(Block):
     """
     isExpression = True
     isDocString = False
-    keyNames = ('left', 'right', 'format', 'comment', 'type')
+    keyNames = ('left', 'right', 'format', 'comment', 'type', 'rule')
 
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
@@ -697,8 +741,13 @@ class Expression(Block):
 	""" x.__str__() <==> str(x)
 
 	"""
-	values = ((k, getattr(self, k)) for k in self.keyNames)
-	return self.format.format(**dict(values))
+	values = dict((k, getattr(self, k)) for k in self.keyNames)
+	try:
+	    return self.format.format(**values)
+	except (ValueError, ):
+	    print '##', values
+	    print '##', self.format
+	    raise
 
     def nestLeft(self, **kwds):
 	""" Create and assign a new expression for the left of this one.

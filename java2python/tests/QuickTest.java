@@ -18,16 +18,12 @@ final class QuickTest extends Object {
 
 
     public String foo(int... bar) {
-//	comment about foo
-// wa
 	return "placeholder";
     }
 
     public String bar(int c) {
-//	comment about bar
 	return "another non-empty string ";
     }
-
 
     public static void main(String[] args) {
         System.out.println("Hello, world.");

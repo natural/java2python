@@ -10,8 +10,10 @@ tokens = dict(tokens())
 
 
 def dumpTree(fd, tree, level=0):
-    t = tree.getToken()
-    tokenType = tokens.get(t.type, '?')
+    token = tree.getToken()
+    if token is None:
+	return
+    tokenType = tokens.get(token.type, '?')
     print >> fd, '{0}{1}'.format('    ' * level, tokenType)
     for child in tree.getChildren():
 	dumpTree(fd, child, level+1)

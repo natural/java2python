@@ -13,6 +13,6 @@ def transform(source, configs):
     parser = JavaParser(CommonTokenStream(lexer))
     parser.factory = BlockFactory(Config(configs))
     parser.comments = lexer.comments
-    parser.setTreeAdaptor(LocalTreeAdaptor(callback=parser.checkNode))
+    parser.setTreeAdaptor(LocalTreeAdaptor(callback=parser.handleNode))
     return parser.compilationUnit()
 

@@ -1,4 +1,5 @@
 interface Base {
+    int move(int dx, int dy);
 }
 
 interface Extra {
@@ -6,6 +7,9 @@ interface Extra {
 
 
 class Implements implements Base, Extra {
+    int move(int dx, int dy) {
+    }
+
     public static void main(String[] args) {
         Implements i = new Implements();
         System.out.println(i.getClass().getName());

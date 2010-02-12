@@ -87,8 +87,8 @@ scope py_expr {
 
 
 @parser::header {
-    from java2python.parser.local import LocalParser
-    TOP = -1
+    from java2python.parser.local import LocalParser, Formats as FS, ruleName
+    TOP, PREV = -1, -2
 }
 
 
@@ -102,15 +102,10 @@ scope py_expr {
 
 
 compilationUnit returns [module]
-scope py_block, py_module, py_klass;
+scope py_module;
 @init {
     ##// the topmost block, which is always a module
     $module = $py_module::module = self.factory('module')
-
-    ##// every compilation unit has at least one class-like block
-    ##// (class, enum, or interface), so we establish one here.  this also establishes
-    ##// the topmost py_block scope.
-    $py_klass::klass = $py_block::block = self.factory('class', parent=$module)
 
     ##// necessary to catch any leading comments before initial syntax.
     self.checkCommentsLeading($start)
@@ -141,6 +136,12 @@ importDeclaration
 
 
 typeDeclaration
+scope py_klass, py_block;
+@init {
+    ##// this rule is used only from the compilationUnit rule so we are
+    ##// certain the parent must be the module.
+    $py_klass::klass = $py_block::block = self.factory('class', parent=$py_module::module)
+}
     :   classOrInterfaceDeclaration
     |   ';'
     ;
@@ -192,9 +193,13 @@ classDeclaration
 normalClassDeclaration
 scope py_type;
 @init {
-    $py_type::add = $py_klass::klass.addType
+    klass = $py_klass::klass
+    klass.setVariation(isClass=True)
+    $py_type::add = klass.addType
 }
-    :   'class' id0=Ident { $py_klass::klass.name = $id0.text } typeParameters?
+    :   'class' id0=Ident
+        { klass.name = $id0.text }
+        typeParameters?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -248,7 +253,15 @@ interfaceDeclaration
 
 
 normalInterfaceDeclaration
-    :   'interface' Ident typeParameters? ('extends' typeList)? interfaceBody
+@init {
+    klass = $py_klass::klass
+}
+@after {
+    klass.setVariation(isInterface=True)
+}
+    :   'interface' id0=Ident
+        { klass.name = $id0.text }
+        typeParameters? ('extends' typeList)? interfaceBody
     ;
 
 
@@ -297,22 +310,15 @@ scope py_block, py_method, py_type;
     :   modifiers genericMethodOrConstructorDecl
 
     |   modifiers 'void' id0=Ident
-        {
-        method.name = $id0.text
-        method.type = 'void'
-        }
+        { method.name = $id0.text; method.type = 'void' }
         voidMethodDeclaratorRest
 
     |   modifiers id1=Ident
-        {
-        method.name = '__init__'
-        }
+        { method.name = '__init__' }
         constructorDeclaratorRest
 
     |   modifiers type id2=Ident
-        {
-        method.name = $id2.text
-        }
+        { method.name = $id2.text }
         methodDeclaratorRest
     ;
 
@@ -338,7 +344,7 @@ scope py_block, py_klass;
     $py_block::block = $py_klass::klass = klass = self.factory('class')
 }
 @after {
-    klass.parent = $py_klass[TOP-1]::klass
+    klass.parent = $py_klass[PREV]::klass
 }
     :    modifiers classDeclaration
     |    modifiers interfaceDeclaration
@@ -357,22 +363,31 @@ genericMethodOrConstructorRest
 
 
 interfaceBodyDeclaration
-    :   modifiers interfaceMemberDecl
+scope py_block, py_method, py_type;
+@init {
+    method = self.factory('method', parent=$py_klass::klass)
+    $py_block::block = $py_method::method = method
+    $py_type::add = method.addType
+}
+    :   modifiers interfaceMethodOrFieldDecl
+
+    |   modifiers interfaceGenericMethodDecl
+
+    |   modifiers 'void' id0=Ident voidInterfaceMethodDeclaratorRest
+        { method.name = $id0.text; method.type = 'void' }
+
+    |   modifiers interfaceDeclaration
+
+    |   modifiers classDeclaration
+
     |   ';'
     ;
 
 
-interfaceMemberDecl
-    :   interfaceMethodOrFieldDecl
-    |   interfaceGenericMethodDecl
-    |   'void' Ident voidInterfaceMethodDeclaratorRest
-    |   interfaceDeclaration
-    |   classDeclaration
-    ;
-
-
 interfaceMethodOrFieldDecl
-    :   type Ident interfaceMethodOrFieldRest
+    :   type id0=Ident
+        { $py_block::block.name = $id0.text }
+        interfaceMethodOrFieldRest
     ;
 
 
@@ -405,7 +420,11 @@ interfaceMethodDeclaratorRest
 
 
 interfaceGenericMethodDecl
-    :   typeParameters (type | 'void') Ident
+@init {
+    method = $py_method::method
+}
+    :   typeParameters (type | 'void') id0=Ident
+        { method.name = $id0.text }
         interfaceMethodDeclaratorRest
     ;
 
@@ -428,14 +447,14 @@ constantDeclarator
 variableDeclarators
 scope py_expr;
 @init {
-    $py_expr::expr = expr = \
-        self.factory('expression', format='{left} = {right}', right='None')
+    expr = self.factory('expression', format=FS.assign, right='None', rule=ruleName())
+    $py_expr::expr = expr
     $py_expr::nest = expr.nestRight
 }
 @after {
     expr.parent = $py_block::block
     if expr.right == 'None':
-        expr.update(format='{left} = {type}()')
+        expr.update(format=FS.tassign)
 }
     :   variableDeclarator (',' variableDeclarator)*
     ;
@@ -446,8 +465,9 @@ variableDeclarator
         { $py_expr::expr.update(left=$vd0.value['name']) }
         ('='
             {
-            $py_expr::expr = expr = $py_expr::nest(format='{left}')
-            $py_expr::nest = expr.nestLeft
+            expr = $py_expr::nest(format=FS.l, rule=ruleName('assign'))
+            $py_expr::expr = expr
+            $py_expr::nest = $py_expr::expr.nestLeft
             }
             variableInitializer
         )?
@@ -469,7 +489,7 @@ variableDeclaratorId returns [value]
     $value = dict(name='', dimensions=0)
 }
     :   id0=Ident { $value['name'] = $id0.text }
-        ('[' ']'  { $value['dimensions'] += 1})*
+        ('[' ']'  { $value['dimensions'] += 1 })*
     ;
 
 
@@ -535,8 +555,14 @@ type
 
 
 classOrInterfaceType
-    :	id0=Ident typeArguments?
-        ('.' id1=Ident typeArguments?)*
+@init {
+    ids = []
+}
+@after {
+    $py_type::add( '.'.join(ids) )
+}
+    :	id0=Ident { ids.append($id0.text) } typeArguments?
+        ('.' id1=Ident { ids.append($id1.text) } typeArguments?)*
     ;
 
 
@@ -574,6 +600,10 @@ qualifiedNameList
 
 
 formalParameters
+scope py_type;
+@init {
+    $py_type::add = lambda x:None # todo:   add type to parameter decl
+}
     :   '(' formalParameterDecls? ')'
     ;
 
@@ -604,6 +634,12 @@ constructorBody
 
 
 explicitConstructorInvocation
+scope py_expr;
+@init {
+    expr = self.factory('expression', format=FS.l, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestLeft
+}
     :   nonWildcardTypeArguments? ('this' | 'super') arguments ';'
     |   primary '.' nonWildcardTypeArguments? 'super' arguments ';'
     ;
@@ -619,8 +655,8 @@ literal
     |   FloatingPointLiteral
     |   CharacterLiteral
     |   StringLiteral
-    |   booleanLiteral
-    |   'null'
+    |   BooleanLiteral
+    |   NullLiteral
     ;
 
 
@@ -631,10 +667,6 @@ integerLiteral
     ;
 
 
-booleanLiteral
-    :   'true'
-    |   'false'
-    ;
 
 
 // ANNOTATIONS
@@ -731,14 +763,18 @@ block
 
 
 blockStatement
+/*
 scope py_expr;
 @init {
-    $py_expr::expr = expr = self.factory('expression', format='{left}')
-    $py_expr::nest = expr.nestLeft
+    expr = self.factory('expression', format=FS.r, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestRight
 }
 @after {
-    expr.parent = $py_block::block
+    if not expr.isEmpty:
+        expr.parent = $py_block::block
 }
+*/
     :   localVariableDeclarationStatement
     |   classOrInterfaceDeclaration
     |   statement
@@ -751,6 +787,14 @@ localVariableDeclarationStatement
 
 
 localVariableDeclaration
+scope py_block, py_type;
+@init {
+    $py_block::block = block = self.factory('block')
+    $py_type::add = block.addType
+}
+@after {
+    block.reparentChildren($py_block[PREV]::block)
+}
     :   variableModifiers type variableDeclarators
     ;
 
@@ -761,6 +805,17 @@ variableModifiers
 
 
 statement
+scope py_expr;
+@init {
+    try:
+        expr = $py_expr[PREV]::nest(format=FS.lr, rule=ruleName())
+    except (IndexError, ):
+        expr = self.factory('expression', format=FS.lr, rule=ruleName())
+        expr.parent = $py_block::block
+
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestRight
+}
     : block
     |   ASSERT expression (':' expression)? ';'
     |   'if' parExpression statement (options {k=1;}:'else' statement)?
@@ -774,7 +829,9 @@ statement
         )
     |   'switch' parExpression '{' switchBlockStatementGroups '}'
     |   'synchronized' parExpression block
-    |   'return' expression? ';'
+
+    |   'return' { expr.update(left='return', format=FS.lsr) } expression? ';'
+
     |   'throw' expression ';'
     |   'break' Ident? ';'
     |   'continue' Ident? ';'
@@ -862,7 +919,24 @@ constantExpression
 
 
 expression
-    :   conditionalExpression (assignmentOperator expression)?
+scope py_expr;
+@init {
+    expr = self.factory('expression', format=FS.lr, rule=ruleName('0'))
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestLeft
+}
+@after {
+    if not expr.isEmpty:
+        $py_expr[PREV]::nest(format=FS.l, left=expr)
+}
+    :   ce0=conditionalExpression
+        (ap0=assignmentOperator
+            {
+            expr.update(format=FS.assignOp($ap0.text), rule=ruleName('1'))
+            $py_expr::nest = expr.nestRight
+            }
+         ex0=expression
+        )?
     ;
 
 
@@ -903,7 +977,25 @@ assignmentOperator
 
 
 conditionalExpression
-    :   conditionalOrExpression ( '?' expression ':' expression )?
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   conditionalOrExpression
+        (   '?'
+            {
+            $py_expr::expr.update(format='{left} if {right}')
+            $py_expr::expr = expr = $py_expr::expr.nestRight(format='{left} else {right}')
+            $py_expr::nest = expr.nestLeft
+            }
+            expression
+            {
+            $py_expr::nest = expr.nestRight
+            }
+            ':'
+            expression
+        )?
     ;
 
 
@@ -933,7 +1025,21 @@ andExpression
 
 
 equalityExpression
-    :   instanceOfExpression ( ('==' | '!=') instanceOfExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   instanceOfExpression
+        (   eq0=('==' | '!=')
+            {
+            expr.update(format='{left} ' + $eq0.text + ' {right}')
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+
+            instanceOfExpression
+        )*
     ;
 
 
@@ -1012,7 +1118,9 @@ unaryExpressionNotPlusMinus
     :   '~' unaryExpression
     |   '!' unaryExpression
     |   castExpression
-    |   primary selector* ('++'|'--')?
+
+    |   primary
+        selector* ('++'|'--')?
     ;
 
 
@@ -1023,27 +1131,56 @@ castExpression
 
 
 primary
+scope py_expr;
 @init {
-    ##// this is only temporary; if there isn't an expression, it's because
-    ##// the calling rule hasn't created one and is therefore wrong.
-    try:
-        expr = $py_expr::expr
-    except (IndexError, ):
-        pass
-        #expr = self.factory('expression', format='{left}')
+    identLevel = 0
+    subId = lambda:'ident:' + str(identLevel)
+
+    expr = $py_expr[PREV]::nest(format=FS.lr, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = nest = expr.nestLeft
 }
     :   parExpression
+
     |   'this' ('.' Ident)* identifierSuffix?
+
     |   'super' superSuffix
-    |   literal { expr.update(left=$literal.text) }
+
+    |   literal
+        { expr.update(left=$literal.text, rule=ruleName('literal')) }
+
     |   'new' creator
-    |   id0=Ident ('.' id1=Ident)* identifierSuffix?
+
+    |   id0=Ident
+        {
+        expr = nest(format=FS.lr, left=$id0.text, rule=ruleName(subId()))
+        nest = expr.nestRight
+        }
+        ('.' id1=Ident
+            {
+            identLevel += 1
+            expr = nest(format='.'+FS.lr, left=$id1.text, rule=ruleName(subId()))
+            nest = expr.nestRight
+            }
+        )*
+        {
+        $py_expr::expr = expr
+        $py_expr::nest = expr.nestRight
+        }
+        identifierSuffix?
+
     |   primitiveType ('[' ']')* '.' 'class'
     |   'void' '.' 'class'
     ;
 
 
 identifierSuffix
+scope py_expr;
+@init {
+    expr = $py_expr[PREV]::nest(format=FS.l, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestLeft
+}
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+ // can also be matched by selector, but do here
     |   arguments
@@ -1056,8 +1193,16 @@ identifierSuffix
 
 
 creator
+scope py_expr;
+@init {
+    expr = $py_expr[PREV]::nest(format=FS.lr, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestRight
+}
     :   nonWildcardTypeArguments createdName classCreatorRest
-    |   createdName (arrayCreatorRest | classCreatorRest)
+    |   createdName
+        { expr.update(left=$createdName.text) ## cheat }
+        (arrayCreatorRest | classCreatorRest)
     ;
 
 
@@ -1096,6 +1241,9 @@ nonWildcardTypeArguments
 
 
 selector
+@after {
+    if 0:print '# exit selector:', $selector.text
+}
     :   '.' Ident arguments?
     |   '.' 'this'
     |   '.' 'super' superSuffix
@@ -1111,6 +1259,12 @@ superSuffix
 
 
 arguments
+scope py_expr;
+@init {
+    expr = $py_expr[PREV]::nest(format=FS.args, rule=ruleName())
+    $py_expr::expr = expr
+    $py_expr::nest = expr.nestLeft
+}
     :   '(' expressionList? ')'
     ;
 
@@ -1140,6 +1294,16 @@ FloatingPointLiteral
     |   '.' ('0'..'9')+ Exponent? FloatTypeSuffix?
     |   ('0'..'9')+ Exponent FloatTypeSuffix?
     |   ('0'..'9')+ FloatTypeSuffix
+    ;
+
+
+NullLiteral
+    :   'null'
+    ;
+
+BooleanLiteral
+    :   'true'
+    |   'false'
     ;
 
 

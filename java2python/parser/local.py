@@ -8,16 +8,15 @@ from antlr3.tree import CommonTreeAdaptor
 from java2python.blocks import BlockFactory
 from java2python.config import Config
 
-##
-# This doesn't cause an import recursion, but I still don't like it.
-#from java2python.parser.JavaLexer import Ident
+from java2python.parser.JavaLexer import (
+    Ident as IdentType, FloatingPointLiteral, NullLiteral, BooleanLiteral
+    )
 
 
 class LocalParser(Parser):
     """ Antlr parser subclass with block factory and comment handling.
 
     """
-    identType = 4
     renameIdents = kwlist + ['None', 'str', ]
 
     def __init__(self, input, state=None):
@@ -25,19 +24,26 @@ class LocalParser(Parser):
 	# makes instance usable when run as a script
 	self.comments = []
         self.factory = BlockFactory(Config([]))
+	self.nodeHandlerMap = {
+	    IdentType            : self.xformIdent,
+	    FloatingPointLiteral : self.xformFloat,
+	    NullLiteral          : self.xformNull,
+	    BooleanLiteral       : self.xformBool,
+        }
 
-    def checkNode(self, node):
-	self.checkComments(node)
-	if node.token.type == self.identType:
-	    self.checkIdent(node)
+    def handleNode(self, node):
+	""" Special treatments for various types of nodes
 
-    def checkIdent(self, node):
-	ident = node.token.text
-	if ident in self.renameIdents:
-	    node.token.text = '%s_' % (ident, )
+	"""
+	self.xformComments(node)
+	xform = self.nodeHandlerMap.get(node.token.type, lambda n:None)
+	xform(node)
 
-    def checkComments(self, node):
-	"""  Called by the tree adapter below after each token is made
+    def xformBool(self, node):
+	node.token.text = node.token.text.title()
+
+    def xformComments(self, node):
+	""" Called by the tree adapter below after each token is made
 
 	"""
 	start = node.token.start if hasattr(node, 'token') else node
@@ -46,6 +52,20 @@ class LocalParser(Parser):
 	    return
 	for comment in self.popComments(start):
 	    target.addComment(comment)
+
+    def xformFloat(self, node):
+	value = node.token.text
+	node.token.text = self.fixFloatLiteral(value)
+
+    def xformIdent(self, node):
+	ident = node.token.text
+	if ident in self.renameIdents:
+	    node.token.text = '%s_' % (ident, )
+
+    def xformNull(self, node):
+	node.token.text = 'None'
+
+
 
     def selectCommentsTarget(self):
 	""" Feeble attempt to locate the most appropriate block for comments
@@ -75,14 +95,14 @@ class LocalParser(Parser):
 	""" Handles any leading comments.
 
 	"""
-	self.checkComments(token.start)
+	self.xformComments(token.start)
 
     def checkCommentsTrailing(self):
 	""" Handles any trailing comments.
 
 	"""
 	if self.comments:
-	    self.checkComments(self.comments[-1][1]+1)
+	    self.xformComments(self.comments[-1][1]+1)
 
     def fixFloatLiteral(self, value):
         """ Turns a java float into a syntactically correct python float.
@@ -115,3 +135,27 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
 	if node.token:
 	    self.callback(node)
         return node
+
+
+class Formats:
+    l = '{left}'
+    r = '{right}'
+    t = '{type}'
+    lr = l + r
+    lsr = l + ' ' + r
+    args = '(' + l + ')'
+    assign = l + ' = ' + r
+    tassign = l + ' = ' + t + '()'
+
+    @classmethod
+    def assignOp(cls, op):
+	return cls.l + ' ' + op + ' ' + cls.r
+
+
+from sys import _getframe as getframe
+
+def ruleName(suffix='', depth=0):
+    name = getframe(depth+1).f_code.co_name
+    if suffix:
+	name += ':' + suffix
+    return name

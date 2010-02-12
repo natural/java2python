@@ -40,6 +40,7 @@ commentPrefix = '## '
 modulePrologueHandlers = [
     'java2python.mods.simpleShebang',
     'java2python.mods.simpleDocString',
+    'java2python.mods.simpleModuleImports',
 ]
 
 moduleEpilogueHandlers = [
@@ -74,6 +75,14 @@ moduleOutputSubs = [
     (r'\.__class__\.getName\(\)', '.__class__.__name__'),
 ]
 
+
+modulePostParseHandlers = [
+
+    ## You only need one of these:
+    'java2python.mods.simpleInterfaces',
+    #'java2python.mods.abcInterfaces',
+    #'java2python.mods.zopeInterfaces',
+]
 
 classDocStringHandlers = [
     'java2python.mods.simpleDocString',
