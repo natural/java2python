@@ -140,9 +140,11 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
 class Formats:
     l = '{left}'
     r = '{right}'
+    c = '{center}'
     t = '{type}'
     lr = l + r
     lsr = l + ' ' + r
+    cond = l + ' if ' + c + ' else ' + r
     args = '(' + l + ')'
     assign = l + ' = ' + r
     tassign = l + ' = ' + t + '()'

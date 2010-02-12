@@ -979,14 +979,14 @@ assignmentOperator
 conditionalExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[PREV]::expr
-    $py_expr::nest = nest = $py_expr[PREV]::nest
+    pnest = $py_expr[PREV]::nest
+    $py_expr::expr = expr = pnest(format=FS.lr)
+    $py_expr::nest = nest = expr.nestLeft
 }
     :   conditionalOrExpression
-        (   '?'
+        (  '?'
             {
-            $py_expr::expr.update(format='{left} if {right}')
-            $py_expr::expr = expr = $py_expr::expr.nestRight(format='{left} else {right}')
+            $py_expr::expr = expr = pnest(format=FS.cond, center=expr)
             $py_expr::nest = expr.nestLeft
             }
             expression
@@ -1037,7 +1037,6 @@ scope py_expr;
             $py_expr::expr = expr = expr.nestRight(format=FS.lr)
             $py_expr::nest = expr.nestRight
             }
-
             instanceOfExpression
         )*
     ;

@@ -720,7 +720,7 @@ class Expression(Block):
     """
     isExpression = True
     isDocString = False
-    keyNames = ('left', 'right', 'format', 'comment', 'type', 'rule')
+    keyNames = ('left', 'right', 'format', 'comment', 'type', 'rule', 'center')
 
     def __init__(self, config, **kwds):
 	Block.__init__(self, config)
