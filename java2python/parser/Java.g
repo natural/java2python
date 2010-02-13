@@ -37,15 +37,15 @@ options {
 }
 
 
-// generic scope for rules to refer to when the real block type
-// (class, method, etc). is unknown or irrelevant.
+// scope alias for rules to refer to when the real block type (class,
+// method, etc). is unknown or irrelevant.
 scope py_block {
     block;
 }
 
 
-// scope for a (single) python module; roughly equivalent to the java
-// compilation unit.
+// scope for a (single) python module; for our puroposes this is
+// equivalent to the java compilation unit.
 scope py_module {
     module;
 }
@@ -79,7 +79,7 @@ scope py_type {
 
 // scope for python expressions and statements.  the 'nest' attribute
 // is set by the parent expression or block to indicate how to create
-// a new contained expression.
+// a contained expression.
 scope py_expr {
     expr;
     nest;
@@ -126,12 +126,15 @@ scope py_module;
 
 
 packageDeclaration
-    :   'package' qualifiedName ';'
+@after { $py_module::module.addPackage($qn0.text) }
+    :   'package' qn0=qualifiedName ';'
     ;
 
 
 importDeclaration
-    :   'import' ('static')? qualifiedName ('.' '*')? ';'
+@init  { isStatic = isStar = False }
+@after { $py_module::module.addImport($qn0.text, isStatic, isStar) }
+    :   'import' ('static' { isStatic=True })? qn0=qualifiedName ('.' '*' { isStar=True })? ';'
     ;
 
 
@@ -161,9 +164,7 @@ classOrInterfaceModifiers
 // for class-like blocks only and we can refer to that scoped block
 // directly.
 classOrInterfaceModifier
-@init {
-    anno = False
-}
+@init  { anno = False }
 @after {
     if not anno:
         $py_klass::klass.addModifier($classOrInterfaceModifier.text)
@@ -420,10 +421,10 @@ interfaceMethodDeclaratorRest
 
 
 interfaceGenericMethodDecl
-@init {
-    method = $py_method::method
-}
-    :   typeParameters (type | 'void') id0=Ident
+@init { method = $py_method::method }
+    :   typeParameters
+        (type | 'void')
+        id0=Ident
         { method.name = $id0.text }
         interfaceMethodDeclaratorRest
     ;
@@ -485,9 +486,7 @@ constantDeclaratorRest
 
 
 variableDeclaratorId returns [value]
-@init {
-    $value = dict(name='', dimensions=0)
-}
+@init { $value = dict(name='', dimensions=0) }
     :   id0=Ident { $value['name'] = $id0.text }
         ('[' ']'  { $value['dimensions'] += 1 })*
     ;
@@ -505,9 +504,7 @@ arrayInitializer
 
 
 modifier
-@init {
-    anno = False
-}
+@init  { anno = False }
 @after {
     if not anno:
         $py_block::block.addModifier($modifier.text)
@@ -559,10 +556,15 @@ classOrInterfaceType
     ids = []
 }
 @after {
-    $py_type::add( '.'.join(ids) )
+    $py_type::add('.'.join(ids))
 }
-    :	id0=Ident { ids.append($id0.text) } typeArguments?
-        ('.' id1=Ident { ids.append($id1.text) } typeArguments?)*
+    :	id0=Ident
+        { ids.append($id0.text) }
+        typeArguments?
+        (   '.' id1=Ident
+            { ids.append($id1.text) }
+            typeArguments?
+        )*
     ;
 
 
@@ -614,12 +616,15 @@ formalParameterDecls
 
 
 formalParameterDeclsRest
+@init {
+    add = $py_method::method.addParameter
+}
     :   vd0=variableDeclaratorId
-        { $py_method::method.addParameter(**$vd0.value) }
+        { add(**$vd0.value) }
         (',' formalParameterDecls)?
 
     |   '...' vd1=variableDeclaratorId
-        { $py_method::method.addParameter(variadic=True, **$vd1.value) }
+        { add(variadic=True, **$vd1.value) }
     ;
 
 
@@ -812,10 +817,10 @@ scope py_expr;
     except (IndexError, ):
         expr = self.factory('expression', format=FS.lr, rule=ruleName())
         expr.parent = $py_block::block
-
     $py_expr::expr = expr
     $py_expr::nest = expr.nestRight
 }
+
     : block
     |   ASSERT expression (':' expression)? ';'
     |   'if' parExpression statement (options {k=1;}:'else' statement)?
@@ -899,6 +904,12 @@ forUpdate
 
 
 parExpression
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::nest(format='('+FS.lr+')', rule=ruleName())
+    $py_expr::nest = expr.nestLeft
+}
+
     :   '(' expression ')'
     ;
 
@@ -929,13 +940,16 @@ scope py_expr;
     if not expr.isEmpty:
         $py_expr[PREV]::nest(format=FS.l, left=expr)
 }
-    :   ce0=conditionalExpression
-        (ap0=assignmentOperator
+    :   conditionalExpression
+        (   op0=assignmentOperator
             {
-            expr.update(format=FS.assignOp($ap0.text), rule=ruleName('1'))
+            op = $op0.text
+            expr.update(format=FS.op(op), rule=ruleName('1'))
+            if op == '>>>=':
+                $py_module::module.addBsrSource()
             $py_expr::nest = expr.nestRight
             }
-         ex0=expression
+         expression
         )?
     ;
 
@@ -1000,27 +1014,92 @@ scope py_expr;
 
 
 conditionalOrExpression
-    :   conditionalAndExpression ( '||' conditionalAndExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   conditionalAndExpression
+        (   '||'
+            {
+            expr.update(format=FS.op('or'))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            conditionalAndExpression
+        )*
     ;
 
 
 conditionalAndExpression
-    :   inclusiveOrExpression ( '&&' inclusiveOrExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   inclusiveOrExpression
+        (   '&&'
+            {
+            expr.update(format=FS.op('and'))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            inclusiveOrExpression
+        )*
     ;
 
 
 inclusiveOrExpression
-    :   exclusiveOrExpression ( '|' exclusiveOrExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   exclusiveOrExpression
+        (   '|'
+            {
+            expr.update(format=FS.op('|'))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            exclusiveOrExpression
+        )*
     ;
 
 
 exclusiveOrExpression
-    :   andExpression ( '^' andExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   andExpression
+        (   '^'
+            {
+            expr.update(format=FS.op('^'))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            andExpression
+        )*
     ;
 
 
 andExpression
-    :   equalityExpression ( '&' equalityExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   equalityExpression
+        (   '&'
+            {
+            expr.update(format=FS.op('&'))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            equalityExpression
+        )*
     ;
 
 
@@ -1033,7 +1112,7 @@ scope py_expr;
     :   instanceOfExpression
         (   eq0=('==' | '!=')
             {
-            expr.update(format='{left} ' + $eq0.text + ' {right}')
+            expr.update(format=FS.op($eq0.text))
             $py_expr::expr = expr = expr.nestRight(format=FS.lr)
             $py_expr::nest = expr.nestRight
             }
@@ -1043,12 +1122,38 @@ scope py_expr;
 
 
 instanceOfExpression
-    :   relationalExpression ('instanceof' type)?
+scope py_expr, py_type;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+    $py_type::add = $py_type[PREV]::add
+}
+    :   relationalExpression
+        (   'instanceof'
+            {
+            $py_type::add = expr.addType
+            expr.update(format=FS.instance)
+            }
+            type
+        )?
     ;
 
 
 relationalExpression
-    :   shiftExpression ( relationalOp shiftExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   shiftExpression
+        (   op0=relationalOp
+            {
+            expr.update(format=FS.op($op0.text))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            shiftExpression
+        )*
     ;
 
 
@@ -1069,7 +1174,20 @@ relationalOp
 
 
 shiftExpression
-    :   additiveExpression ( shiftOp additiveExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
+    :   additiveExpression
+        (   op0=shiftOp
+            {
+            expr.update(format=FS.op($op0.text))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            additiveExpression
+        )*
     ;
 
 
@@ -1095,31 +1213,102 @@ shiftOp
 
 
 additiveExpression
-    :   multiplicativeExpression ( ('+' | '-') multiplicativeExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::nest(format=FS.lr)
+    $py_expr::nest = nest = expr.nestLeft
+}
+    :   multiplicativeExpression
+        (   op0=('+' | '-')
+            {
+            expr.update(format=FS.op($op0.text))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            multiplicativeExpression
+        )*
     ;
 
 
 multiplicativeExpression
-    :   unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )*
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::nest(format=FS.lr)
+    $py_expr::nest = nest = expr.nestLeft
+}
+    :   unaryExpression
+        (   op0=( '*' | '/' | '%' )
+            {
+            expr.update(format=FS.op($op0.text))
+            $py_expr::expr = expr = expr.nestRight(format=FS.lr)
+            $py_expr::nest = expr.nestRight
+            }
+            unaryExpression
+        )*
     ;
 
 
 unaryExpression
-    :   '+' unaryExpression
-    |   '-' unaryExpression
-    |   '++' unaryExpression
-    |   '--' unaryExpression
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::nest(format=FS.lr)
+    $py_expr::nest = nest = expr.nestLeft
+}
+    :   '+'
+        {
+        expr.update(format='+'+FS.lr)
+        $py_expr::nest = expr.nestRight
+        }
+        unaryExpression
+
+    |   '-'
+        {
+        expr.update(format='-'+FS.lr)
+        $py_expr::nest = expr.nestRight
+        }
+        unaryExpression
+
+    |   '++'
+        {
+        ##//TODO:  add mutable values when ++ and -- appear within assignments (py2)
+        ##// and nonlocal statement (py3)
+        expr.update(format=FS.l + ' += 1')
+        }
+        unaryExpression
+
+    |   '--'
+        {
+        expr.update(format=FS.l + ' -= 1')
+        }
+        unaryExpression
+
     |   unaryExpressionNotPlusMinus
     ;
 
 
 unaryExpressionNotPlusMinus
-    :   '~' unaryExpression
-    |   '!' unaryExpression
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::nest(format=FS.lr)
+    $py_expr::nest = nest = expr.nestLeft
+}
+    :   '~'
+        {
+        expr.update(format='~'+FS.lr)
+        $py_expr::nest = expr.nestRight
+        }
+        unaryExpression
+
+    |   '!'
+        {
+        expr.update(format='not '+FS.lr)
+        $py_expr::nest = expr.nestRight
+        }
+        unaryExpression
+
     |   castExpression
 
-    |   primary
-        selector* ('++'|'--')?
+    |   primary selector* ('++'|'--')?
     ;
 
 
@@ -1139,7 +1328,7 @@ scope py_expr;
     $py_expr::expr = expr
     $py_expr::nest = nest = expr.nestLeft
 }
-    :   parExpression
+    :   parExpression // handled in rule
 
     |   'this' ('.' Ident)* identifierSuffix?
 
@@ -1192,15 +1381,18 @@ scope py_expr;
 
 
 creator
-scope py_expr;
+scope py_expr, py_type;
 @init {
     expr = $py_expr[PREV]::nest(format=FS.lr, rule=ruleName())
     $py_expr::expr = expr
     $py_expr::nest = expr.nestRight
+    def setLeft(v):
+        expr.addType(v)
+        expr.left = expr.type
+    $py_type::add = setLeft
 }
     :   nonWildcardTypeArguments createdName classCreatorRest
     |   createdName
-        { expr.update(left=$createdName.text) ## cheat }
         (arrayCreatorRest | classCreatorRest)
     ;
 

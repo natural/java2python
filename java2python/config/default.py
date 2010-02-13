@@ -40,7 +40,8 @@ commentPrefix = '## '
 modulePrologueHandlers = [
     'java2python.mods.simpleShebang',
     'java2python.mods.simpleDocString',
-    'java2python.mods.simpleModuleImports',
+    'java2python.mods.commentedImports',
+    'java2python.mods.commentedPackageName',
 ]
 
 moduleEpilogueHandlers = [
@@ -90,6 +91,13 @@ classDocStringHandlers = [
 
 
 classBaseLookup = 'java2python.mods.defaultClassBase'
+
+
+
+typeSubstitutionMap = {
+    'String'           : 'str',
+    'java.lang.String' : 'str',
+}
 
 
 ## This enum constant handler inspects the enum block and determines

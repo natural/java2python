@@ -12,7 +12,6 @@ final class QuickTest extends Object {
     static int m = 3;
 
     public QuickTest(int z) {
-	int x = !z;
 	System.out.println("quick test ctor");
     }
 

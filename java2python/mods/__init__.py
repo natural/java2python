@@ -15,9 +15,20 @@ def simpleDocString(block):
     yield '"""'
 
 
-def simpleModuleImports(block):
+def commentedImports(block):
+    fmt = block.commentPrefix + ' import {right}'
+    starfmt = block.commentPrefix + ' from {right} import *'
     for value, static, star in block.imports:
-	yield value
+	if star:
+	    yield Expression(block.config, format=starfmt, right=value)
+	else:
+	    yield Expression(block.config, format=fmt, right=value)
+
+
+def commentedPackageName(block):
+    fmt = block.commentPrefix + ' {comment}'
+    for value in block.packages:
+	yield Expression(block.config, format=fmt, comment=value)
 
 
 def outputSubs(block, text):

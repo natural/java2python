@@ -148,9 +148,14 @@ class Formats:
     args = '(' + l + ')'
     assign = l + ' = ' + r
     tassign = l + ' = ' + t + '()'
+    instance = 'isinstance(' + l + ', (' + t + ', ))'
 
     @classmethod
-    def assignOp(cls, op):
+    def op(cls, op):
+	if op == '>>>':
+	    return '({left} & (2**32+{left})) >> {right}'
+	if op == '>>>=':
+	    return '{left} = bsr({left}, {right})'
 	return cls.l + ' ' + op + ' ' + cls.r
 
 

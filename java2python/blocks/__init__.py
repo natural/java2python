@@ -113,6 +113,11 @@ class Block(object):
 		value = existing + [value]
 	else:
 	    raise Exception('Unhandled existing type')
+
+	# this is gimpy.  fix it.
+	tm = self.config.last('typeSubstitutionMap', {})
+	typeMap = lambda t:tm.get(t, t)
+	value = [typeMap(v) for v in value if v]
 	self.type = value
 
     def delType(self, value):
@@ -491,6 +496,14 @@ class Module(Block):
 	    for line in handler(self):
 		yield line
 
+
+    def addBsrSource(self):
+        from inspect import getsource
+	from java2python.mods.includes import bsr
+	if not getattr(self, 'bsrIncluded', False):
+	    bsrExpr = Expression(self.config, format='{left}', left=getsource(bsr))
+	    self.children.insert(0, bsrExpr)
+	    self.bsrIncluded = True
 
 
 class PostDeclDocString(object):
