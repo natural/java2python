@@ -38,7 +38,7 @@ options {
 
 
 // scope alias for rules to refer to when the real block type (class,
-// method, etc). is unknown or irrelevant.
+// method, etc.) is unknown or irrelevant.
 scope py_block {
     block;
 }
@@ -51,7 +51,7 @@ scope py_module {
 }
 
 
-// scope for python classes; this scope is nested for us by the rule
+// scope for python classes. this scope is nested for us by the rule
 // invocations.
 scope py_klass {
     klass;
@@ -104,16 +104,14 @@ scope py_expr {
 compilationUnit returns [module]
 scope py_module;
 @init {
-    ##// the topmost block, which is always a module
+    ##// the topmost block which is always a module
     $module = $py_module::module = self.factory('module')
-
-    ##// necessary to catch any leading comments before initial syntax.
+    ##// necessary to catch any leading comments before initial syntax
     self.checkCommentsLeading($start)
 }
 @after {
-    ##// necessary to catch any trailing comments.
+    ##// necessary to catch any trailing comments
     self.checkCommentsTrailing()
-
     ##// message the module that the parsing is complete.
     $module.cleanup()
 }
@@ -134,7 +132,10 @@ packageDeclaration
 importDeclaration
 @init  { isStatic = isStar = False }
 @after { $py_module::module.addImport($qn0.text, isStatic, isStar) }
-    :   'import' ('static' { isStatic=True })? qn0=qualifiedName ('.' '*' { isStar=True })? ';'
+    :   'import'
+        ('static' { isStatic=True })?
+        qn0=qualifiedName
+        ('.' '*' { isStar=True })? ';'
     ;
 
 
@@ -143,7 +144,8 @@ scope py_klass, py_block;
 @init {
     ##// this rule is used only from the compilationUnit rule so we are
     ##// certain the parent must be the module.
-    $py_klass::klass = $py_block::block = self.factory('class', parent=$py_module::module)
+    $py_klass::klass = $py_block::block = \
+        self.factory('class', parent=$py_module::module)
 }
     :   classOrInterfaceDeclaration
     |   ';'
@@ -169,14 +171,14 @@ classOrInterfaceModifier
     if not anno:
         $py_klass::klass.addModifier($classOrInterfaceModifier.text)
 }
-    :   annotation { anno = True }    // class or interface
-    |   'public'                      // class or interface
-    |   'protected'                   // class or interface
-    |   'private'                     // class or interface
-    |   'abstract'                    // class or interface
-    |   'static'                      // class or interface
-    |   'final'                       // class only -- does not apply to interfaces
-    |   'strictfp'                    // class or interface
+    :   annotation { anno = True }  // class or interface
+    |   'public'                    // class or interface
+    |   'protected'                 // class or interface
+    |   'private'                   // class or interface
+    |   'abstract'                  // class or interface
+    |   'static'                    // class or interface
+    |   'final'                     // class -- does not apply to interfaces
+    |   'strictfp'                  // class or interface
     ;
 
 
@@ -254,12 +256,8 @@ interfaceDeclaration
 
 
 normalInterfaceDeclaration
-@init {
-    klass = $py_klass::klass
-}
-@after {
-    klass.setVariation(isInterface=True)
-}
+@init  { klass = $py_klass::klass }
+@after { klass.setVariation(isInterface=True) }
     :   'interface' id0=Ident
         { klass.name = $id0.text }
         typeParameters? ('extends' typeList)? interfaceBody
@@ -311,7 +309,10 @@ scope py_block, py_method, py_type;
     :   modifiers genericMethodOrConstructorDecl
 
     |   modifiers 'void' id0=Ident
-        { method.name = $id0.text; method.type = 'void' }
+        {
+          method.name = $id0.text
+          method.type = 'void'
+        }
         voidMethodDeclaratorRest
 
     |   modifiers id1=Ident
@@ -341,12 +342,8 @@ scope py_block, py_type;
 
 classInnerClassDecl
 scope py_block, py_klass;
-@init {
-    $py_block::block = $py_klass::klass = klass = self.factory('class')
-}
-@after {
-    klass.parent = $py_klass[PREV]::klass
-}
+@init  { $py_block::block = $py_klass::klass = self.factory('class') }
+@after { $py_klass::klass.parent = $py_klass[PREV]::klass }
     :    modifiers classDeclaration
     |    modifiers interfaceDeclaration
     ;
@@ -366,8 +363,8 @@ genericMethodOrConstructorRest
 interfaceBodyDeclaration
 scope py_block, py_method, py_type;
 @init {
-    method = self.factory('method', parent=$py_klass::klass)
-    $py_block::block = $py_method::method = method
+    $py_block::block = $py_method::method = method = \
+        self.factory('method', parent=$py_klass::klass)
     $py_type::add = method.addType
 }
     :   modifiers interfaceMethodOrFieldDecl
@@ -375,7 +372,10 @@ scope py_block, py_method, py_type;
     |   modifiers interfaceGenericMethodDecl
 
     |   modifiers 'void' id0=Ident voidInterfaceMethodDeclaratorRest
-        { method.name = $id0.text; method.type = 'void' }
+        {
+          method.name = $id0.text
+          method.type = 'void'
+        }
 
     |   modifiers interfaceDeclaration
 
@@ -448,8 +448,9 @@ constantDeclarator
 variableDeclarators
 scope py_expr;
 @init {
-    expr = self.factory('expression', format=FS.assign, right='None', rule=ruleName())
-    $py_expr::expr = expr
+    $py_expr::expr = expr = \
+        self.factory('expression', format=FS.assign, right='None',
+                     rule=ruleName())
     $py_expr::nest = expr.nestRight
 }
 @after {
@@ -499,6 +500,11 @@ variableInitializer
 
 
 arrayInitializer
+scope py_expr;
+@init {
+    $py_expr::expr = expr = $py_expr[PREV]::expr
+    $py_expr::nest = nest = $py_expr[PREV]::nest
+}
     :   '{' (variableInitializer (',' variableInitializer)* (',')? )? '}'
     ;
 
@@ -540,9 +546,7 @@ typeName
 
 
 type
-@init {
-    add = $py_type::add
-}
+@init { add = $py_type::add }
     :	classOrInterfaceType ('[' ']')*
     |	primitiveType
         { add($primitiveType.text) }
@@ -552,12 +556,8 @@ type
 
 
 classOrInterfaceType
-@init {
-    ids = []
-}
-@after {
-    $py_type::add('.'.join(ids))
-}
+@init  { ids = [] }
+@after { $py_type::add('.'.join(ids)) }
     :	id0=Ident
         { ids.append($id0.text) }
         typeArguments?
@@ -603,9 +603,7 @@ qualifiedNameList
 
 formalParameters
 scope py_type;
-@init {
-    $py_type::add = lambda x:None # todo:   add type to parameter decl
-}
+@init { $py_type::add = lambda x:None # todo:   add type to parameter decl }
     :   '(' formalParameterDecls? ')'
     ;
 
@@ -616,9 +614,7 @@ formalParameterDecls
 
 
 formalParameterDeclsRest
-@init {
-    add = $py_method::method.addParameter
-}
+@init { add = $py_method::method.addParameter }
     :   vd0=variableDeclaratorId
         { add(**$vd0.value) }
         (',' formalParameterDecls)?
@@ -641,8 +637,8 @@ constructorBody
 explicitConstructorInvocation
 scope py_expr;
 @init {
-    expr = self.factory('expression', format=FS.l, rule=ruleName())
-    $py_expr::expr = expr
+    $py_expr::expr = expr = \
+        self.factory('expression', format=FS.l, rule=ruleName())
     $py_expr::nest = expr.nestLeft
 }
     :   nonWildcardTypeArguments? ('this' | 'super') arguments ';'
@@ -879,6 +875,16 @@ switchLabel
 
 
 forControl options {k=3;}
+scope py_block;
+@init {
+    $py_block::block = block = self.factory('statement')
+    block.primaryExpression.left = 'for'
+
+}
+@after {
+    print '###', $py_block[PREV]::block.className
+    block.parent=$py_block[PREV]::block
+}
     :   enhancedForControl
     |   forInit? ';' expression? ';' forUpdate?
     ;
@@ -906,7 +912,8 @@ forUpdate
 parExpression
 scope py_expr;
 @init {
-    $py_expr::expr = expr = $py_expr[PREV]::nest(format='('+FS.lr+')', rule=ruleName())
+    expr = $py_expr[PREV]::nest(format='('+FS.lr+')', rule=ruleName())
+    $py_expr::expr = expr
     $py_expr::nest = expr.nestLeft
 }
 

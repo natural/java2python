@@ -7,7 +7,8 @@ interface Extra {
 
 
 class Implements implements Base, Extra {
-    int move(int dx, int dy) {
+    public int move(int dx, int dy) {
+    return 0;
     }
 
     public static void main(String[] args) {
