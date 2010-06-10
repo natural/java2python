@@ -40,6 +40,7 @@ commentPrefix = '## '
 modulePrologueHandlers = [
     'java2python.mods.simpleShebang',
     'java2python.mods.simpleDocString',
+    'java2python.mods.configImports',
     'java2python.mods.commentedImports',
     'java2python.mods.commentedPackageName',
 ]
@@ -55,10 +56,15 @@ moduleOutputHandlers = [
 ]
 
 
+
+
+
 methodDocStringHandlers = [
     'java2python.mods.simpleDocString',
 ]
 
+
+moduleStringImports = []
 
 moduleOutputSubs = [
 #    (r'(\.self\.)', '.'),
@@ -78,12 +84,15 @@ moduleOutputSubs = [
 
 
 modulePostParseHandlers = [
+    ## update top level classes, interfaces for overloaded methods.
+    'java2python.mods.overloadedClassMethods',
 
     ## You only need one of these:
     'java2python.mods.simpleInterfaces',
     #'java2python.mods.abcInterfaces',
     #'java2python.mods.zopeInterfaces',
 ]
+
 
 classDocStringHandlers = [
     'java2python.mods.simpleDocString',

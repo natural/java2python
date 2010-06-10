@@ -5,14 +5,16 @@
 ## lines written at the beginning of each generated module.  this value
 ## is cumulative, so when user-defined configuration modules specify
 ## this value, those lines are written after these.
-#modulePreamble = [
+modulePreamble = [
 #    'from threading import Lock',
 #    'from overloading import overloaded',
 #    'from java2python.config.examples import Annotation, Enum',
-#    ]
+    ]
 
 
-
+moduleStringImports = [
+    'from overloading import overloaded',
+]
 
 
 outputSubs = [

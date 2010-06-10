@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from re import sub as rxsub
-from java2python.blocks import Expression
 from functools import partial
+from itertools import chain
+from re import sub as rxsub
+
+from java2python.blocks import Expression
 
 
 def simpleShebang(module):
@@ -31,6 +33,11 @@ def commentedPackageName(block):
 	yield Expression(block.config, format=fmt, comment=value)
 
 
+def configImports(module):
+    for line in module.getHandler('StringImports'):
+	yield line
+
+
 def outputSubs(block, text):
     subsname = '{0}OutputSubs'.format(block.className.lower())
     subs = block.config.all(subsname, [])
@@ -38,6 +45,40 @@ def outputSubs(block, text):
 	for pattern, repl in sub:
 	    text = rxsub(pattern, repl, text)
     return text
+
+
+def overloadedClassMethods(module):
+    """
+
+    This function is post parse handler because we have to modify both
+    the decorators and the name of overloaded functions.
+
+    Because we have access to the module after it's parsed but before
+    it's written, we could insert an import for the overloading
+    module.  We don't do this so that the client may specify their own
+    overloading module and overloaded function..
+
+
+    NB: this implementation does not handle overloaded static (or
+    class) methods, only instance methods.
+    """
+    def scanOverloadedMethods(klass):
+	mmap = {}
+	for method in klass.methods:
+	    mmap.setdefault(method.name, []).append(method)
+	for mname, mobjs in mmap.items():
+	    if len(mobjs) > 1:
+		first, fname = mobjs[0], mobjs[0].name
+		first.addDecorator('overloaded')
+		for offset, meth in enumerate(mobjs[1:]):
+		    args = [p['type'] for p in meth.parameters]
+		    args = ', '.join(['object'] + args)
+		    meth.name = '{0}_{1}'.format(fname, offset)
+		    meth.addDecorator('{0}.register({1})'.format(fname, args))
+	for kls in chain(klass.classes, klass.interfaces):
+	    scanOverloadedMethods(kls)
+    for cls in chain(module.classes, module.interfaces):
+	scanOverloadedMethods(cls)
 
 
 scriptTemplate = """\n

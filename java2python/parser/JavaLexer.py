@@ -1,4 +1,4 @@
-# $ANTLR 3.1.1 Java.g 2010-06-07 10:50:14
+# $ANTLR 3.1.1 Java.g 2010-06-09 15:48:07
 
 import sys
 from antlr3 import *
@@ -132,15 +132,15 @@ class JavaLexer(Lexer):
             state = RecognizerSharedState()
         Lexer.__init__(self, input, state)
 
-        self.dfa18 = self.DFA18(
-            self, 18,
-            eot = self.DFA18_eot,
-            eof = self.DFA18_eof,
-            min = self.DFA18_min,
-            max = self.DFA18_max,
-            accept = self.DFA18_accept,
-            special = self.DFA18_special,
-            transition = self.DFA18_transition
+        self.dfa19 = self.DFA19(
+            self, 19,
+            eot = self.DFA19_eot,
+            eof = self.DFA19_eof,
+            min = self.DFA19_min,
+            max = self.DFA19_max,
+            accept = self.DFA19_accept,
+            special = self.DFA19_special,
+            transition = self.DFA19_transition
             )
 
         self.dfa30 = self.DFA30(
@@ -157,13 +157,6 @@ class JavaLexer(Lexer):
 
 
 
-                               
-    ##// composite grammar files like this one don't provide
-    ##// a way to indicate lexer base class so we implement
-    ##// the methods we need directly.
-    def addComment(self, start, stop, text):
-        self.comments.append((start, stop, text.split('\n')))
-
 
 
     # $ANTLR start "T__27"
@@ -173,8 +166,8 @@ class JavaLexer(Lexer):
             _type = T__27
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:15:7: ( 'package' )
-            # Java.g:15:9: 'package'
+            # Java.g:7:7: ( 'package' )
+            # Java.g:7:9: 'package'
             pass 
             self.match("package")
 
@@ -198,8 +191,8 @@ class JavaLexer(Lexer):
             _type = T__28
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:16:7: ( ';' )
-            # Java.g:16:9: ';'
+            # Java.g:8:7: ( ';' )
+            # Java.g:8:9: ';'
             pass 
             self.match(59)
 
@@ -223,8 +216,8 @@ class JavaLexer(Lexer):
             _type = T__29
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:17:7: ( 'import' )
-            # Java.g:17:9: 'import'
+            # Java.g:9:7: ( 'import' )
+            # Java.g:9:9: 'import'
             pass 
             self.match("import")
 
@@ -248,8 +241,8 @@ class JavaLexer(Lexer):
             _type = T__30
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:18:7: ( 'static' )
-            # Java.g:18:9: 'static'
+            # Java.g:10:7: ( 'static' )
+            # Java.g:10:9: 'static'
             pass 
             self.match("static")
 
@@ -273,8 +266,8 @@ class JavaLexer(Lexer):
             _type = T__31
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:19:7: ( '.' )
-            # Java.g:19:9: '.'
+            # Java.g:11:7: ( '.' )
+            # Java.g:11:9: '.'
             pass 
             self.match(46)
 
@@ -298,8 +291,8 @@ class JavaLexer(Lexer):
             _type = T__32
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:20:7: ( '*' )
-            # Java.g:20:9: '*'
+            # Java.g:12:7: ( '*' )
+            # Java.g:12:9: '*'
             pass 
             self.match(42)
 
@@ -323,8 +316,8 @@ class JavaLexer(Lexer):
             _type = T__33
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:21:7: ( 'public' )
-            # Java.g:21:9: 'public'
+            # Java.g:13:7: ( 'public' )
+            # Java.g:13:9: 'public'
             pass 
             self.match("public")
 
@@ -348,8 +341,8 @@ class JavaLexer(Lexer):
             _type = T__34
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:22:7: ( 'protected' )
-            # Java.g:22:9: 'protected'
+            # Java.g:14:7: ( 'protected' )
+            # Java.g:14:9: 'protected'
             pass 
             self.match("protected")
 
@@ -373,8 +366,8 @@ class JavaLexer(Lexer):
             _type = T__35
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:23:7: ( 'private' )
-            # Java.g:23:9: 'private'
+            # Java.g:15:7: ( 'private' )
+            # Java.g:15:9: 'private'
             pass 
             self.match("private")
 
@@ -398,8 +391,8 @@ class JavaLexer(Lexer):
             _type = T__36
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:24:7: ( 'abstract' )
-            # Java.g:24:9: 'abstract'
+            # Java.g:16:7: ( 'abstract' )
+            # Java.g:16:9: 'abstract'
             pass 
             self.match("abstract")
 
@@ -423,8 +416,8 @@ class JavaLexer(Lexer):
             _type = T__37
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:25:7: ( 'final' )
-            # Java.g:25:9: 'final'
+            # Java.g:17:7: ( 'final' )
+            # Java.g:17:9: 'final'
             pass 
             self.match("final")
 
@@ -448,8 +441,8 @@ class JavaLexer(Lexer):
             _type = T__38
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:26:7: ( 'strictfp' )
-            # Java.g:26:9: 'strictfp'
+            # Java.g:18:7: ( 'strictfp' )
+            # Java.g:18:9: 'strictfp'
             pass 
             self.match("strictfp")
 
@@ -473,8 +466,8 @@ class JavaLexer(Lexer):
             _type = T__39
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:27:7: ( 'class' )
-            # Java.g:27:9: 'class'
+            # Java.g:19:7: ( 'class' )
+            # Java.g:19:9: 'class'
             pass 
             self.match("class")
 
@@ -498,8 +491,8 @@ class JavaLexer(Lexer):
             _type = T__40
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:28:7: ( 'extends' )
-            # Java.g:28:9: 'extends'
+            # Java.g:20:7: ( 'extends' )
+            # Java.g:20:9: 'extends'
             pass 
             self.match("extends")
 
@@ -523,8 +516,8 @@ class JavaLexer(Lexer):
             _type = T__41
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:29:7: ( 'implements' )
-            # Java.g:29:9: 'implements'
+            # Java.g:21:7: ( 'implements' )
+            # Java.g:21:9: 'implements'
             pass 
             self.match("implements")
 
@@ -548,8 +541,8 @@ class JavaLexer(Lexer):
             _type = T__42
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:30:7: ( '<' )
-            # Java.g:30:9: '<'
+            # Java.g:22:7: ( '<' )
+            # Java.g:22:9: '<'
             pass 
             self.match(60)
 
@@ -573,8 +566,8 @@ class JavaLexer(Lexer):
             _type = T__43
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:31:7: ( ',' )
-            # Java.g:31:9: ','
+            # Java.g:23:7: ( ',' )
+            # Java.g:23:9: ','
             pass 
             self.match(44)
 
@@ -598,8 +591,8 @@ class JavaLexer(Lexer):
             _type = T__44
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:32:7: ( '>' )
-            # Java.g:32:9: '>'
+            # Java.g:24:7: ( '>' )
+            # Java.g:24:9: '>'
             pass 
             self.match(62)
 
@@ -623,8 +616,8 @@ class JavaLexer(Lexer):
             _type = T__45
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:33:7: ( '&' )
-            # Java.g:33:9: '&'
+            # Java.g:25:7: ( '&' )
+            # Java.g:25:9: '&'
             pass 
             self.match(38)
 
@@ -648,8 +641,8 @@ class JavaLexer(Lexer):
             _type = T__46
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:34:7: ( '{' )
-            # Java.g:34:9: '{'
+            # Java.g:26:7: ( '{' )
+            # Java.g:26:9: '{'
             pass 
             self.match(123)
 
@@ -673,8 +666,8 @@ class JavaLexer(Lexer):
             _type = T__47
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:35:7: ( '}' )
-            # Java.g:35:9: '}'
+            # Java.g:27:7: ( '}' )
+            # Java.g:27:9: '}'
             pass 
             self.match(125)
 
@@ -698,8 +691,8 @@ class JavaLexer(Lexer):
             _type = T__48
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:36:7: ( 'interface' )
-            # Java.g:36:9: 'interface'
+            # Java.g:28:7: ( 'interface' )
+            # Java.g:28:9: 'interface'
             pass 
             self.match("interface")
 
@@ -723,8 +716,8 @@ class JavaLexer(Lexer):
             _type = T__49
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:37:7: ( 'void' )
-            # Java.g:37:9: 'void'
+            # Java.g:29:7: ( 'void' )
+            # Java.g:29:9: 'void'
             pass 
             self.match("void")
 
@@ -748,8 +741,8 @@ class JavaLexer(Lexer):
             _type = T__50
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:38:7: ( '[' )
-            # Java.g:38:9: '['
+            # Java.g:30:7: ( '[' )
+            # Java.g:30:9: '['
             pass 
             self.match(91)
 
@@ -773,8 +766,8 @@ class JavaLexer(Lexer):
             _type = T__51
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:39:7: ( ']' )
-            # Java.g:39:9: ']'
+            # Java.g:31:7: ( ']' )
+            # Java.g:31:9: ']'
             pass 
             self.match(93)
 
@@ -798,8 +791,8 @@ class JavaLexer(Lexer):
             _type = T__52
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:40:7: ( 'throws' )
-            # Java.g:40:9: 'throws'
+            # Java.g:32:7: ( 'throws' )
+            # Java.g:32:9: 'throws'
             pass 
             self.match("throws")
 
@@ -823,8 +816,8 @@ class JavaLexer(Lexer):
             _type = T__53
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:41:7: ( '=' )
-            # Java.g:41:9: '='
+            # Java.g:33:7: ( '=' )
+            # Java.g:33:9: '='
             pass 
             self.match(61)
 
@@ -848,8 +841,8 @@ class JavaLexer(Lexer):
             _type = T__54
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:42:7: ( 'native' )
-            # Java.g:42:9: 'native'
+            # Java.g:34:7: ( 'native' )
+            # Java.g:34:9: 'native'
             pass 
             self.match("native")
 
@@ -873,8 +866,8 @@ class JavaLexer(Lexer):
             _type = T__55
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:43:7: ( 'synchronized' )
-            # Java.g:43:9: 'synchronized'
+            # Java.g:35:7: ( 'synchronized' )
+            # Java.g:35:9: 'synchronized'
             pass 
             self.match("synchronized")
 
@@ -898,8 +891,8 @@ class JavaLexer(Lexer):
             _type = T__56
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:44:7: ( 'transient' )
-            # Java.g:44:9: 'transient'
+            # Java.g:36:7: ( 'transient' )
+            # Java.g:36:9: 'transient'
             pass 
             self.match("transient")
 
@@ -923,8 +916,8 @@ class JavaLexer(Lexer):
             _type = T__57
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:45:7: ( 'volatile' )
-            # Java.g:45:9: 'volatile'
+            # Java.g:37:7: ( 'volatile' )
+            # Java.g:37:9: 'volatile'
             pass 
             self.match("volatile")
 
@@ -948,8 +941,8 @@ class JavaLexer(Lexer):
             _type = T__58
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:46:7: ( 'boolean' )
-            # Java.g:46:9: 'boolean'
+            # Java.g:38:7: ( 'boolean' )
+            # Java.g:38:9: 'boolean'
             pass 
             self.match("boolean")
 
@@ -973,8 +966,8 @@ class JavaLexer(Lexer):
             _type = T__59
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:47:7: ( 'char' )
-            # Java.g:47:9: 'char'
+            # Java.g:39:7: ( 'char' )
+            # Java.g:39:9: 'char'
             pass 
             self.match("char")
 
@@ -998,8 +991,8 @@ class JavaLexer(Lexer):
             _type = T__60
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:48:7: ( 'byte' )
-            # Java.g:48:9: 'byte'
+            # Java.g:40:7: ( 'byte' )
+            # Java.g:40:9: 'byte'
             pass 
             self.match("byte")
 
@@ -1023,8 +1016,8 @@ class JavaLexer(Lexer):
             _type = T__61
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:49:7: ( 'short' )
-            # Java.g:49:9: 'short'
+            # Java.g:41:7: ( 'short' )
+            # Java.g:41:9: 'short'
             pass 
             self.match("short")
 
@@ -1048,8 +1041,8 @@ class JavaLexer(Lexer):
             _type = T__62
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:50:7: ( 'int' )
-            # Java.g:50:9: 'int'
+            # Java.g:42:7: ( 'int' )
+            # Java.g:42:9: 'int'
             pass 
             self.match("int")
 
@@ -1073,8 +1066,8 @@ class JavaLexer(Lexer):
             _type = T__63
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:51:7: ( 'long' )
-            # Java.g:51:9: 'long'
+            # Java.g:43:7: ( 'long' )
+            # Java.g:43:9: 'long'
             pass 
             self.match("long")
 
@@ -1098,8 +1091,8 @@ class JavaLexer(Lexer):
             _type = T__64
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:52:7: ( 'float' )
-            # Java.g:52:9: 'float'
+            # Java.g:44:7: ( 'float' )
+            # Java.g:44:9: 'float'
             pass 
             self.match("float")
 
@@ -1123,8 +1116,8 @@ class JavaLexer(Lexer):
             _type = T__65
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:53:7: ( 'double' )
-            # Java.g:53:9: 'double'
+            # Java.g:45:7: ( 'double' )
+            # Java.g:45:9: 'double'
             pass 
             self.match("double")
 
@@ -1148,8 +1141,8 @@ class JavaLexer(Lexer):
             _type = T__66
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:54:7: ( '?' )
-            # Java.g:54:9: '?'
+            # Java.g:46:7: ( '?' )
+            # Java.g:46:9: '?'
             pass 
             self.match(63)
 
@@ -1173,8 +1166,8 @@ class JavaLexer(Lexer):
             _type = T__67
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:55:7: ( 'super' )
-            # Java.g:55:9: 'super'
+            # Java.g:47:7: ( 'super' )
+            # Java.g:47:9: 'super'
             pass 
             self.match("super")
 
@@ -1198,8 +1191,8 @@ class JavaLexer(Lexer):
             _type = T__68
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:56:7: ( '(' )
-            # Java.g:56:9: '('
+            # Java.g:48:7: ( '(' )
+            # Java.g:48:9: '('
             pass 
             self.match(40)
 
@@ -1223,8 +1216,8 @@ class JavaLexer(Lexer):
             _type = T__69
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:57:7: ( ')' )
-            # Java.g:57:9: ')'
+            # Java.g:49:7: ( ')' )
+            # Java.g:49:9: ')'
             pass 
             self.match(41)
 
@@ -1248,8 +1241,8 @@ class JavaLexer(Lexer):
             _type = T__70
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:58:7: ( '...' )
-            # Java.g:58:9: '...'
+            # Java.g:50:7: ( '...' )
+            # Java.g:50:9: '...'
             pass 
             self.match("...")
 
@@ -1273,8 +1266,8 @@ class JavaLexer(Lexer):
             _type = T__71
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:59:7: ( 'this' )
-            # Java.g:59:9: 'this'
+            # Java.g:51:7: ( 'this' )
+            # Java.g:51:9: 'this'
             pass 
             self.match("this")
 
@@ -1298,8 +1291,8 @@ class JavaLexer(Lexer):
             _type = T__72
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:60:7: ( '@' )
-            # Java.g:60:9: '@'
+            # Java.g:52:7: ( '@' )
+            # Java.g:52:9: '@'
             pass 
             self.match(64)
 
@@ -1323,8 +1316,8 @@ class JavaLexer(Lexer):
             _type = T__73
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:61:7: ( 'default' )
-            # Java.g:61:9: 'default'
+            # Java.g:53:7: ( 'default' )
+            # Java.g:53:9: 'default'
             pass 
             self.match("default")
 
@@ -1348,8 +1341,8 @@ class JavaLexer(Lexer):
             _type = T__74
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:62:7: ( ':' )
-            # Java.g:62:9: ':'
+            # Java.g:54:7: ( ':' )
+            # Java.g:54:9: ':'
             pass 
             self.match(58)
 
@@ -1373,8 +1366,8 @@ class JavaLexer(Lexer):
             _type = T__75
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:63:7: ( 'if' )
-            # Java.g:63:9: 'if'
+            # Java.g:55:7: ( 'if' )
+            # Java.g:55:9: 'if'
             pass 
             self.match("if")
 
@@ -1398,8 +1391,8 @@ class JavaLexer(Lexer):
             _type = T__76
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:64:7: ( 'else' )
-            # Java.g:64:9: 'else'
+            # Java.g:56:7: ( 'else' )
+            # Java.g:56:9: 'else'
             pass 
             self.match("else")
 
@@ -1423,8 +1416,8 @@ class JavaLexer(Lexer):
             _type = T__77
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:65:7: ( 'for' )
-            # Java.g:65:9: 'for'
+            # Java.g:57:7: ( 'for' )
+            # Java.g:57:9: 'for'
             pass 
             self.match("for")
 
@@ -1448,8 +1441,8 @@ class JavaLexer(Lexer):
             _type = T__78
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:66:7: ( 'while' )
-            # Java.g:66:9: 'while'
+            # Java.g:58:7: ( 'while' )
+            # Java.g:58:9: 'while'
             pass 
             self.match("while")
 
@@ -1473,8 +1466,8 @@ class JavaLexer(Lexer):
             _type = T__79
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:67:7: ( 'do' )
-            # Java.g:67:9: 'do'
+            # Java.g:59:7: ( 'do' )
+            # Java.g:59:9: 'do'
             pass 
             self.match("do")
 
@@ -1498,8 +1491,8 @@ class JavaLexer(Lexer):
             _type = T__80
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:68:7: ( 'try' )
-            # Java.g:68:9: 'try'
+            # Java.g:60:7: ( 'try' )
+            # Java.g:60:9: 'try'
             pass 
             self.match("try")
 
@@ -1523,8 +1516,8 @@ class JavaLexer(Lexer):
             _type = T__81
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:69:7: ( 'finally' )
-            # Java.g:69:9: 'finally'
+            # Java.g:61:7: ( 'finally' )
+            # Java.g:61:9: 'finally'
             pass 
             self.match("finally")
 
@@ -1548,8 +1541,8 @@ class JavaLexer(Lexer):
             _type = T__82
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:70:7: ( 'switch' )
-            # Java.g:70:9: 'switch'
+            # Java.g:62:7: ( 'switch' )
+            # Java.g:62:9: 'switch'
             pass 
             self.match("switch")
 
@@ -1573,8 +1566,8 @@ class JavaLexer(Lexer):
             _type = T__83
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:71:7: ( 'return' )
-            # Java.g:71:9: 'return'
+            # Java.g:63:7: ( 'return' )
+            # Java.g:63:9: 'return'
             pass 
             self.match("return")
 
@@ -1598,8 +1591,8 @@ class JavaLexer(Lexer):
             _type = T__84
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:72:7: ( 'throw' )
-            # Java.g:72:9: 'throw'
+            # Java.g:64:7: ( 'throw' )
+            # Java.g:64:9: 'throw'
             pass 
             self.match("throw")
 
@@ -1623,8 +1616,8 @@ class JavaLexer(Lexer):
             _type = T__85
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:73:7: ( 'break' )
-            # Java.g:73:9: 'break'
+            # Java.g:65:7: ( 'break' )
+            # Java.g:65:9: 'break'
             pass 
             self.match("break")
 
@@ -1648,8 +1641,8 @@ class JavaLexer(Lexer):
             _type = T__86
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:74:7: ( 'continue' )
-            # Java.g:74:9: 'continue'
+            # Java.g:66:7: ( 'continue' )
+            # Java.g:66:9: 'continue'
             pass 
             self.match("continue")
 
@@ -1673,8 +1666,8 @@ class JavaLexer(Lexer):
             _type = T__87
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:75:7: ( 'catch' )
-            # Java.g:75:9: 'catch'
+            # Java.g:67:7: ( 'catch' )
+            # Java.g:67:9: 'catch'
             pass 
             self.match("catch")
 
@@ -1698,8 +1691,8 @@ class JavaLexer(Lexer):
             _type = T__88
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:76:7: ( 'case' )
-            # Java.g:76:9: 'case'
+            # Java.g:68:7: ( 'case' )
+            # Java.g:68:9: 'case'
             pass 
             self.match("case")
 
@@ -1723,8 +1716,8 @@ class JavaLexer(Lexer):
             _type = T__89
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:77:7: ( '+=' )
-            # Java.g:77:9: '+='
+            # Java.g:69:7: ( '+=' )
+            # Java.g:69:9: '+='
             pass 
             self.match("+=")
 
@@ -1748,8 +1741,8 @@ class JavaLexer(Lexer):
             _type = T__90
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:78:7: ( '-=' )
-            # Java.g:78:9: '-='
+            # Java.g:70:7: ( '-=' )
+            # Java.g:70:9: '-='
             pass 
             self.match("-=")
 
@@ -1773,8 +1766,8 @@ class JavaLexer(Lexer):
             _type = T__91
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:79:7: ( '*=' )
-            # Java.g:79:9: '*='
+            # Java.g:71:7: ( '*=' )
+            # Java.g:71:9: '*='
             pass 
             self.match("*=")
 
@@ -1798,8 +1791,8 @@ class JavaLexer(Lexer):
             _type = T__92
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:80:7: ( '/=' )
-            # Java.g:80:9: '/='
+            # Java.g:72:7: ( '/=' )
+            # Java.g:72:9: '/='
             pass 
             self.match("/=")
 
@@ -1823,8 +1816,8 @@ class JavaLexer(Lexer):
             _type = T__93
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:81:7: ( '&=' )
-            # Java.g:81:9: '&='
+            # Java.g:73:7: ( '&=' )
+            # Java.g:73:9: '&='
             pass 
             self.match("&=")
 
@@ -1848,8 +1841,8 @@ class JavaLexer(Lexer):
             _type = T__94
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:82:7: ( '|=' )
-            # Java.g:82:9: '|='
+            # Java.g:74:7: ( '|=' )
+            # Java.g:74:9: '|='
             pass 
             self.match("|=")
 
@@ -1873,8 +1866,8 @@ class JavaLexer(Lexer):
             _type = T__95
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:83:7: ( '^=' )
-            # Java.g:83:9: '^='
+            # Java.g:75:7: ( '^=' )
+            # Java.g:75:9: '^='
             pass 
             self.match("^=")
 
@@ -1898,8 +1891,8 @@ class JavaLexer(Lexer):
             _type = T__96
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:84:7: ( '%=' )
-            # Java.g:84:9: '%='
+            # Java.g:76:7: ( '%=' )
+            # Java.g:76:9: '%='
             pass 
             self.match("%=")
 
@@ -1923,8 +1916,8 @@ class JavaLexer(Lexer):
             _type = T__97
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:85:7: ( '||' )
-            # Java.g:85:9: '||'
+            # Java.g:77:7: ( '||' )
+            # Java.g:77:9: '||'
             pass 
             self.match("||")
 
@@ -1948,8 +1941,8 @@ class JavaLexer(Lexer):
             _type = T__98
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:86:7: ( '&&' )
-            # Java.g:86:9: '&&'
+            # Java.g:78:7: ( '&&' )
+            # Java.g:78:9: '&&'
             pass 
             self.match("&&")
 
@@ -1973,8 +1966,8 @@ class JavaLexer(Lexer):
             _type = T__99
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:87:7: ( '|' )
-            # Java.g:87:9: '|'
+            # Java.g:79:7: ( '|' )
+            # Java.g:79:9: '|'
             pass 
             self.match(124)
 
@@ -1998,8 +1991,8 @@ class JavaLexer(Lexer):
             _type = T__100
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:88:8: ( '^' )
-            # Java.g:88:10: '^'
+            # Java.g:80:8: ( '^' )
+            # Java.g:80:10: '^'
             pass 
             self.match(94)
 
@@ -2023,8 +2016,8 @@ class JavaLexer(Lexer):
             _type = T__101
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:89:8: ( '==' )
-            # Java.g:89:10: '=='
+            # Java.g:81:8: ( '==' )
+            # Java.g:81:10: '=='
             pass 
             self.match("==")
 
@@ -2048,8 +2041,8 @@ class JavaLexer(Lexer):
             _type = T__102
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:90:8: ( '!=' )
-            # Java.g:90:10: '!='
+            # Java.g:82:8: ( '!=' )
+            # Java.g:82:10: '!='
             pass 
             self.match("!=")
 
@@ -2073,8 +2066,8 @@ class JavaLexer(Lexer):
             _type = T__103
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:91:8: ( 'instanceof' )
-            # Java.g:91:10: 'instanceof'
+            # Java.g:83:8: ( 'instanceof' )
+            # Java.g:83:10: 'instanceof'
             pass 
             self.match("instanceof")
 
@@ -2098,8 +2091,8 @@ class JavaLexer(Lexer):
             _type = T__104
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:92:8: ( '+' )
-            # Java.g:92:10: '+'
+            # Java.g:84:8: ( '+' )
+            # Java.g:84:10: '+'
             pass 
             self.match(43)
 
@@ -2123,8 +2116,8 @@ class JavaLexer(Lexer):
             _type = T__105
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:93:8: ( '-' )
-            # Java.g:93:10: '-'
+            # Java.g:85:8: ( '-' )
+            # Java.g:85:10: '-'
             pass 
             self.match(45)
 
@@ -2148,8 +2141,8 @@ class JavaLexer(Lexer):
             _type = T__106
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:94:8: ( '/' )
-            # Java.g:94:10: '/'
+            # Java.g:86:8: ( '/' )
+            # Java.g:86:10: '/'
             pass 
             self.match(47)
 
@@ -2173,8 +2166,8 @@ class JavaLexer(Lexer):
             _type = T__107
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:95:8: ( '%' )
-            # Java.g:95:10: '%'
+            # Java.g:87:8: ( '%' )
+            # Java.g:87:10: '%'
             pass 
             self.match(37)
 
@@ -2198,8 +2191,8 @@ class JavaLexer(Lexer):
             _type = T__108
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:96:8: ( '++' )
-            # Java.g:96:10: '++'
+            # Java.g:88:8: ( '++' )
+            # Java.g:88:10: '++'
             pass 
             self.match("++")
 
@@ -2223,8 +2216,8 @@ class JavaLexer(Lexer):
             _type = T__109
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:97:8: ( '--' )
-            # Java.g:97:10: '--'
+            # Java.g:89:8: ( '--' )
+            # Java.g:89:10: '--'
             pass 
             self.match("--")
 
@@ -2248,8 +2241,8 @@ class JavaLexer(Lexer):
             _type = T__110
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:98:8: ( '~' )
-            # Java.g:98:10: '~'
+            # Java.g:90:8: ( '~' )
+            # Java.g:90:10: '~'
             pass 
             self.match(126)
 
@@ -2273,8 +2266,8 @@ class JavaLexer(Lexer):
             _type = T__111
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:99:8: ( '!' )
-            # Java.g:99:10: '!'
+            # Java.g:91:8: ( '!' )
+            # Java.g:91:10: '!'
             pass 
             self.match(33)
 
@@ -2298,8 +2291,8 @@ class JavaLexer(Lexer):
             _type = T__112
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:100:8: ( 'new' )
-            # Java.g:100:10: 'new'
+            # Java.g:92:8: ( 'new' )
+            # Java.g:92:10: 'new'
             pass 
             self.match("new")
 
@@ -2316,6 +2309,74 @@ class JavaLexer(Lexer):
 
 
 
+    # $ANTLR start "BooleanLiteral"
+    def mBooleanLiteral(self, ):
+
+        try:
+            _type = BooleanLiteral
+            _channel = DEFAULT_CHANNEL
+
+            # Java.g:589:5: ( 'true' | 'false' )
+            alt1 = 2
+            LA1_0 = self.input.LA(1)
+
+            if (LA1_0 == 116) :
+                alt1 = 1
+            elif (LA1_0 == 102) :
+                alt1 = 2
+            else:
+                nvae = NoViableAltException("", 1, 0, self.input)
+
+                raise nvae
+
+            if alt1 == 1:
+                # Java.g:589:9: 'true'
+                pass 
+                self.match("true")
+
+
+            elif alt1 == 2:
+                # Java.g:590:9: 'false'
+                pass 
+                self.match("false")
+
+
+            self._state.type = _type
+            self._state.channel = _channel
+
+        finally:
+
+            pass
+
+    # $ANTLR end "BooleanLiteral"
+
+
+
+    # $ANTLR start "NullLiteral"
+    def mNullLiteral(self, ):
+
+        try:
+            _type = NullLiteral
+            _channel = DEFAULT_CHANNEL
+
+            # Java.g:595:5: ( 'null' )
+            # Java.g:595:9: 'null'
+            pass 
+            self.match("null")
+
+
+
+            self._state.type = _type
+            self._state.channel = _channel
+
+        finally:
+
+            pass
+
+    # $ANTLR end "NullLiteral"
+
+
+
     # $ANTLR start "HexLiteral"
     def mHexLiteral(self, ):
 
@@ -2323,8 +2384,8 @@ class JavaLexer(Lexer):
             _type = HexLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1451:12: ( '0' ( 'x' | 'X' ) ( HexDigit )+ ( IntegerTypeSuffix )? )
-            # Java.g:1451:14: '0' ( 'x' | 'X' ) ( HexDigit )+ ( IntegerTypeSuffix )?
+            # Java.g:1113:12: ( '0' ( 'x' | 'X' ) ( HexDigit )+ ( IntegerTypeSuffix )? )
+            # Java.g:1113:14: '0' ( 'x' | 'X' ) ( HexDigit )+ ( IntegerTypeSuffix )?
             pass 
             self.match(48)
             if self.input.LA(1) == 88 or self.input.LA(1) == 120:
@@ -2334,40 +2395,40 @@ class JavaLexer(Lexer):
                 self.recover(mse)
                 raise mse
 
-            # Java.g:1451:28: ( HexDigit )+
-            cnt1 = 0
-            while True: #loop1
-                alt1 = 2
-                LA1_0 = self.input.LA(1)
+            # Java.g:1113:28: ( HexDigit )+
+            cnt2 = 0
+            while True: #loop2
+                alt2 = 2
+                LA2_0 = self.input.LA(1)
 
-                if ((48 <= LA1_0 <= 57) or (65 <= LA1_0 <= 70) or (97 <= LA1_0 <= 102)) :
-                    alt1 = 1
+                if ((48 <= LA2_0 <= 57) or (65 <= LA2_0 <= 70) or (97 <= LA2_0 <= 102)) :
+                    alt2 = 1
 
 
-                if alt1 == 1:
-                    # Java.g:1451:28: HexDigit
+                if alt2 == 1:
+                    # Java.g:1113:28: HexDigit
                     pass 
                     self.mHexDigit()
 
 
                 else:
-                    if cnt1 >= 1:
-                        break #loop1
+                    if cnt2 >= 1:
+                        break #loop2
 
-                    eee = EarlyExitException(1, self.input)
+                    eee = EarlyExitException(2, self.input)
                     raise eee
 
-                cnt1 += 1
+                cnt2 += 1
 
 
-            # Java.g:1451:38: ( IntegerTypeSuffix )?
-            alt2 = 2
-            LA2_0 = self.input.LA(1)
+            # Java.g:1113:38: ( IntegerTypeSuffix )?
+            alt3 = 2
+            LA3_0 = self.input.LA(1)
 
-            if (LA2_0 == 76 or LA2_0 == 108) :
-                alt2 = 1
-            if alt2 == 1:
-                # Java.g:1451:38: IntegerTypeSuffix
+            if (LA3_0 == 76 or LA3_0 == 108) :
+                alt3 = 1
+            if alt3 == 1:
+                # Java.g:1113:38: IntegerTypeSuffix
                 pass 
                 self.mIntegerTypeSuffix()
 
@@ -2394,62 +2455,62 @@ class JavaLexer(Lexer):
             _type = DecimalLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1454:16: ( ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( IntegerTypeSuffix )? )
-            # Java.g:1454:18: ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( IntegerTypeSuffix )?
+            # Java.g:1116:16: ( ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( IntegerTypeSuffix )? )
+            # Java.g:1116:18: ( '0' | '1' .. '9' ( '0' .. '9' )* ) ( IntegerTypeSuffix )?
             pass 
-            # Java.g:1454:18: ( '0' | '1' .. '9' ( '0' .. '9' )* )
-            alt4 = 2
-            LA4_0 = self.input.LA(1)
+            # Java.g:1116:18: ( '0' | '1' .. '9' ( '0' .. '9' )* )
+            alt5 = 2
+            LA5_0 = self.input.LA(1)
 
-            if (LA4_0 == 48) :
-                alt4 = 1
-            elif ((49 <= LA4_0 <= 57)) :
-                alt4 = 2
+            if (LA5_0 == 48) :
+                alt5 = 1
+            elif ((49 <= LA5_0 <= 57)) :
+                alt5 = 2
             else:
-                nvae = NoViableAltException("", 4, 0, self.input)
+                nvae = NoViableAltException("", 5, 0, self.input)
 
                 raise nvae
 
-            if alt4 == 1:
-                # Java.g:1454:19: '0'
+            if alt5 == 1:
+                # Java.g:1116:19: '0'
                 pass 
                 self.match(48)
 
 
-            elif alt4 == 2:
-                # Java.g:1454:25: '1' .. '9' ( '0' .. '9' )*
+            elif alt5 == 2:
+                # Java.g:1116:25: '1' .. '9' ( '0' .. '9' )*
                 pass 
                 self.matchRange(49, 57)
-                # Java.g:1454:34: ( '0' .. '9' )*
-                while True: #loop3
-                    alt3 = 2
-                    LA3_0 = self.input.LA(1)
+                # Java.g:1116:34: ( '0' .. '9' )*
+                while True: #loop4
+                    alt4 = 2
+                    LA4_0 = self.input.LA(1)
 
-                    if ((48 <= LA3_0 <= 57)) :
-                        alt3 = 1
+                    if ((48 <= LA4_0 <= 57)) :
+                        alt4 = 1
 
 
-                    if alt3 == 1:
-                        # Java.g:1454:34: '0' .. '9'
+                    if alt4 == 1:
+                        # Java.g:1116:34: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
 
                     else:
-                        break #loop3
+                        break #loop4
 
 
 
 
 
-            # Java.g:1454:45: ( IntegerTypeSuffix )?
-            alt5 = 2
-            LA5_0 = self.input.LA(1)
+            # Java.g:1116:45: ( IntegerTypeSuffix )?
+            alt6 = 2
+            LA6_0 = self.input.LA(1)
 
-            if (LA5_0 == 76 or LA5_0 == 108) :
-                alt5 = 1
-            if alt5 == 1:
-                # Java.g:1454:45: IntegerTypeSuffix
+            if (LA6_0 == 76 or LA6_0 == 108) :
+                alt6 = 1
+            if alt6 == 1:
+                # Java.g:1116:45: IntegerTypeSuffix
                 pass 
                 self.mIntegerTypeSuffix()
 
@@ -2476,44 +2537,44 @@ class JavaLexer(Lexer):
             _type = OctalLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1457:14: ( '0' ( '0' .. '7' )+ ( IntegerTypeSuffix )? )
-            # Java.g:1457:16: '0' ( '0' .. '7' )+ ( IntegerTypeSuffix )?
+            # Java.g:1119:14: ( '0' ( '0' .. '7' )+ ( IntegerTypeSuffix )? )
+            # Java.g:1119:16: '0' ( '0' .. '7' )+ ( IntegerTypeSuffix )?
             pass 
             self.match(48)
-            # Java.g:1457:20: ( '0' .. '7' )+
-            cnt6 = 0
-            while True: #loop6
-                alt6 = 2
-                LA6_0 = self.input.LA(1)
+            # Java.g:1119:20: ( '0' .. '7' )+
+            cnt7 = 0
+            while True: #loop7
+                alt7 = 2
+                LA7_0 = self.input.LA(1)
 
-                if ((48 <= LA6_0 <= 55)) :
-                    alt6 = 1
+                if ((48 <= LA7_0 <= 55)) :
+                    alt7 = 1
 
 
-                if alt6 == 1:
-                    # Java.g:1457:21: '0' .. '7'
+                if alt7 == 1:
+                    # Java.g:1119:21: '0' .. '7'
                     pass 
                     self.matchRange(48, 55)
 
 
                 else:
-                    if cnt6 >= 1:
-                        break #loop6
+                    if cnt7 >= 1:
+                        break #loop7
 
-                    eee = EarlyExitException(6, self.input)
+                    eee = EarlyExitException(7, self.input)
                     raise eee
 
-                cnt6 += 1
+                cnt7 += 1
 
 
-            # Java.g:1457:32: ( IntegerTypeSuffix )?
-            alt7 = 2
-            LA7_0 = self.input.LA(1)
+            # Java.g:1119:32: ( IntegerTypeSuffix )?
+            alt8 = 2
+            LA8_0 = self.input.LA(1)
 
-            if (LA7_0 == 76 or LA7_0 == 108) :
-                alt7 = 1
-            if alt7 == 1:
-                # Java.g:1457:32: IntegerTypeSuffix
+            if (LA8_0 == 76 or LA8_0 == 108) :
+                alt8 = 1
+            if alt8 == 1:
+                # Java.g:1119:32: IntegerTypeSuffix
                 pass 
                 self.mIntegerTypeSuffix()
 
@@ -2537,8 +2598,8 @@ class JavaLexer(Lexer):
     def mHexDigit(self, ):
 
         try:
-            # Java.g:1461:10: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
-            # Java.g:1461:12: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
+            # Java.g:1123:10: ( ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' ) )
+            # Java.g:1123:12: ( '0' .. '9' | 'a' .. 'f' | 'A' .. 'F' )
             pass 
             if (48 <= self.input.LA(1) <= 57) or (65 <= self.input.LA(1) <= 70) or (97 <= self.input.LA(1) <= 102):
                 self.input.consume()
@@ -2563,8 +2624,8 @@ class JavaLexer(Lexer):
     def mIntegerTypeSuffix(self, ):
 
         try:
-            # Java.g:1465:19: ( ( 'l' | 'L' ) )
-            # Java.g:1465:21: ( 'l' | 'L' )
+            # Java.g:1127:19: ( ( 'l' | 'L' ) )
+            # Java.g:1127:21: ( 'l' | 'L' )
             pass 
             if self.input.LA(1) == 76 or self.input.LA(1) == 108:
                 self.input.consume()
@@ -2592,40 +2653,14 @@ class JavaLexer(Lexer):
             _type = FloatingPointLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1469:5: ( ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( Exponent )? ( FloatTypeSuffix )? | '.' ( '0' .. '9' )+ ( Exponent )? ( FloatTypeSuffix )? | ( '0' .. '9' )+ Exponent ( FloatTypeSuffix )? | ( '0' .. '9' )+ FloatTypeSuffix )
-            alt18 = 4
-            alt18 = self.dfa18.predict(self.input)
-            if alt18 == 1:
-                # Java.g:1469:9: ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( Exponent )? ( FloatTypeSuffix )?
+            # Java.g:1131:5: ( ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( Exponent )? ( FloatTypeSuffix )? | '.' ( '0' .. '9' )+ ( Exponent )? ( FloatTypeSuffix )? | ( '0' .. '9' )+ Exponent ( FloatTypeSuffix )? | ( '0' .. '9' )+ FloatTypeSuffix )
+            alt19 = 4
+            alt19 = self.dfa19.predict(self.input)
+            if alt19 == 1:
+                # Java.g:1131:9: ( '0' .. '9' )+ '.' ( '0' .. '9' )* ( Exponent )? ( FloatTypeSuffix )?
                 pass 
-                # Java.g:1469:9: ( '0' .. '9' )+
-                cnt8 = 0
-                while True: #loop8
-                    alt8 = 2
-                    LA8_0 = self.input.LA(1)
-
-                    if ((48 <= LA8_0 <= 57)) :
-                        alt8 = 1
-
-
-                    if alt8 == 1:
-                        # Java.g:1469:10: '0' .. '9'
-                        pass 
-                        self.matchRange(48, 57)
-
-
-                    else:
-                        if cnt8 >= 1:
-                            break #loop8
-
-                        eee = EarlyExitException(8, self.input)
-                        raise eee
-
-                    cnt8 += 1
-
-
-                self.match(46)
-                # Java.g:1469:25: ( '0' .. '9' )*
+                # Java.g:1131:9: ( '0' .. '9' )+
+                cnt9 = 0
                 while True: #loop9
                     alt9 = 2
                     LA9_0 = self.input.LA(1)
@@ -2635,94 +2670,120 @@ class JavaLexer(Lexer):
 
 
                     if alt9 == 1:
-                        # Java.g:1469:26: '0' .. '9'
+                        # Java.g:1131:10: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
 
                     else:
-                        break #loop9
+                        if cnt9 >= 1:
+                            break #loop9
+
+                        eee = EarlyExitException(9, self.input)
+                        raise eee
+
+                    cnt9 += 1
 
 
-                # Java.g:1469:37: ( Exponent )?
-                alt10 = 2
-                LA10_0 = self.input.LA(1)
+                self.match(46)
+                # Java.g:1131:25: ( '0' .. '9' )*
+                while True: #loop10
+                    alt10 = 2
+                    LA10_0 = self.input.LA(1)
 
-                if (LA10_0 == 69 or LA10_0 == 101) :
-                    alt10 = 1
-                if alt10 == 1:
-                    # Java.g:1469:37: Exponent
-                    pass 
-                    self.mExponent()
+                    if ((48 <= LA10_0 <= 57)) :
+                        alt10 = 1
 
 
+                    if alt10 == 1:
+                        # Java.g:1131:26: '0' .. '9'
+                        pass 
+                        self.matchRange(48, 57)
 
-                # Java.g:1469:47: ( FloatTypeSuffix )?
+
+                    else:
+                        break #loop10
+
+
+                # Java.g:1131:37: ( Exponent )?
                 alt11 = 2
                 LA11_0 = self.input.LA(1)
 
-                if (LA11_0 == 68 or LA11_0 == 70 or LA11_0 == 100 or LA11_0 == 102) :
+                if (LA11_0 == 69 or LA11_0 == 101) :
                     alt11 = 1
                 if alt11 == 1:
-                    # Java.g:1469:47: FloatTypeSuffix
-                    pass 
-                    self.mFloatTypeSuffix()
-
-
-
-
-
-            elif alt18 == 2:
-                # Java.g:1470:9: '.' ( '0' .. '9' )+ ( Exponent )? ( FloatTypeSuffix )?
-                pass 
-                self.match(46)
-                # Java.g:1470:13: ( '0' .. '9' )+
-                cnt12 = 0
-                while True: #loop12
-                    alt12 = 2
-                    LA12_0 = self.input.LA(1)
-
-                    if ((48 <= LA12_0 <= 57)) :
-                        alt12 = 1
-
-
-                    if alt12 == 1:
-                        # Java.g:1470:14: '0' .. '9'
-                        pass 
-                        self.matchRange(48, 57)
-
-
-                    else:
-                        if cnt12 >= 1:
-                            break #loop12
-
-                        eee = EarlyExitException(12, self.input)
-                        raise eee
-
-                    cnt12 += 1
-
-
-                # Java.g:1470:25: ( Exponent )?
-                alt13 = 2
-                LA13_0 = self.input.LA(1)
-
-                if (LA13_0 == 69 or LA13_0 == 101) :
-                    alt13 = 1
-                if alt13 == 1:
-                    # Java.g:1470:25: Exponent
+                    # Java.g:1131:37: Exponent
                     pass 
                     self.mExponent()
 
 
 
-                # Java.g:1470:35: ( FloatTypeSuffix )?
+                # Java.g:1131:47: ( FloatTypeSuffix )?
+                alt12 = 2
+                LA12_0 = self.input.LA(1)
+
+                if (LA12_0 == 68 or LA12_0 == 70 or LA12_0 == 100 or LA12_0 == 102) :
+                    alt12 = 1
+                if alt12 == 1:
+                    # Java.g:1131:47: FloatTypeSuffix
+                    pass 
+                    self.mFloatTypeSuffix()
+
+
+
+
+
+            elif alt19 == 2:
+                # Java.g:1132:9: '.' ( '0' .. '9' )+ ( Exponent )? ( FloatTypeSuffix )?
+                pass 
+                self.match(46)
+                # Java.g:1132:13: ( '0' .. '9' )+
+                cnt13 = 0
+                while True: #loop13
+                    alt13 = 2
+                    LA13_0 = self.input.LA(1)
+
+                    if ((48 <= LA13_0 <= 57)) :
+                        alt13 = 1
+
+
+                    if alt13 == 1:
+                        # Java.g:1132:14: '0' .. '9'
+                        pass 
+                        self.matchRange(48, 57)
+
+
+                    else:
+                        if cnt13 >= 1:
+                            break #loop13
+
+                        eee = EarlyExitException(13, self.input)
+                        raise eee
+
+                    cnt13 += 1
+
+
+                # Java.g:1132:25: ( Exponent )?
                 alt14 = 2
                 LA14_0 = self.input.LA(1)
 
-                if (LA14_0 == 68 or LA14_0 == 70 or LA14_0 == 100 or LA14_0 == 102) :
+                if (LA14_0 == 69 or LA14_0 == 101) :
                     alt14 = 1
                 if alt14 == 1:
-                    # Java.g:1470:35: FloatTypeSuffix
+                    # Java.g:1132:25: Exponent
+                    pass 
+                    self.mExponent()
+
+
+
+                # Java.g:1132:35: ( FloatTypeSuffix )?
+                alt15 = 2
+                LA15_0 = self.input.LA(1)
+
+                if (LA15_0 == 68 or LA15_0 == 70 or LA15_0 == 100 or LA15_0 == 102) :
+                    alt15 = 1
+                if alt15 == 1:
+                    # Java.g:1132:35: FloatTypeSuffix
                     pass 
                     self.mFloatTypeSuffix()
 
@@ -2730,44 +2791,44 @@ class JavaLexer(Lexer):
 
 
 
-            elif alt18 == 3:
-                # Java.g:1471:9: ( '0' .. '9' )+ Exponent ( FloatTypeSuffix )?
+            elif alt19 == 3:
+                # Java.g:1133:9: ( '0' .. '9' )+ Exponent ( FloatTypeSuffix )?
                 pass 
-                # Java.g:1471:9: ( '0' .. '9' )+
-                cnt15 = 0
-                while True: #loop15
-                    alt15 = 2
-                    LA15_0 = self.input.LA(1)
+                # Java.g:1133:9: ( '0' .. '9' )+
+                cnt16 = 0
+                while True: #loop16
+                    alt16 = 2
+                    LA16_0 = self.input.LA(1)
 
-                    if ((48 <= LA15_0 <= 57)) :
-                        alt15 = 1
+                    if ((48 <= LA16_0 <= 57)) :
+                        alt16 = 1
 
 
-                    if alt15 == 1:
-                        # Java.g:1471:10: '0' .. '9'
+                    if alt16 == 1:
+                        # Java.g:1133:10: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
 
                     else:
-                        if cnt15 >= 1:
-                            break #loop15
+                        if cnt16 >= 1:
+                            break #loop16
 
-                        eee = EarlyExitException(15, self.input)
+                        eee = EarlyExitException(16, self.input)
                         raise eee
 
-                    cnt15 += 1
+                    cnt16 += 1
 
 
                 self.mExponent()
-                # Java.g:1471:30: ( FloatTypeSuffix )?
-                alt16 = 2
-                LA16_0 = self.input.LA(1)
+                # Java.g:1133:30: ( FloatTypeSuffix )?
+                alt17 = 2
+                LA17_0 = self.input.LA(1)
 
-                if (LA16_0 == 68 or LA16_0 == 70 or LA16_0 == 100 or LA16_0 == 102) :
-                    alt16 = 1
-                if alt16 == 1:
-                    # Java.g:1471:30: FloatTypeSuffix
+                if (LA17_0 == 68 or LA17_0 == 70 or LA17_0 == 100 or LA17_0 == 102) :
+                    alt17 = 1
+                if alt17 == 1:
+                    # Java.g:1133:30: FloatTypeSuffix
                     pass 
                     self.mFloatTypeSuffix()
 
@@ -2775,33 +2836,33 @@ class JavaLexer(Lexer):
 
 
 
-            elif alt18 == 4:
-                # Java.g:1472:9: ( '0' .. '9' )+ FloatTypeSuffix
+            elif alt19 == 4:
+                # Java.g:1134:9: ( '0' .. '9' )+ FloatTypeSuffix
                 pass 
-                # Java.g:1472:9: ( '0' .. '9' )+
-                cnt17 = 0
-                while True: #loop17
-                    alt17 = 2
-                    LA17_0 = self.input.LA(1)
+                # Java.g:1134:9: ( '0' .. '9' )+
+                cnt18 = 0
+                while True: #loop18
+                    alt18 = 2
+                    LA18_0 = self.input.LA(1)
 
-                    if ((48 <= LA17_0 <= 57)) :
-                        alt17 = 1
+                    if ((48 <= LA18_0 <= 57)) :
+                        alt18 = 1
 
 
-                    if alt17 == 1:
-                        # Java.g:1472:10: '0' .. '9'
+                    if alt18 == 1:
+                        # Java.g:1134:10: '0' .. '9'
                         pass 
                         self.matchRange(48, 57)
 
 
                     else:
-                        if cnt17 >= 1:
-                            break #loop17
+                        if cnt18 >= 1:
+                            break #loop18
 
-                        eee = EarlyExitException(17, self.input)
+                        eee = EarlyExitException(18, self.input)
                         raise eee
 
-                    cnt17 += 1
+                    cnt18 += 1
 
 
                 self.mFloatTypeSuffix()
@@ -2818,80 +2879,12 @@ class JavaLexer(Lexer):
 
 
 
-    # $ANTLR start "NullLiteral"
-    def mNullLiteral(self, ):
-
-        try:
-            _type = NullLiteral
-            _channel = DEFAULT_CHANNEL
-
-            # Java.g:1477:5: ( 'null' )
-            # Java.g:1477:9: 'null'
-            pass 
-            self.match("null")
-
-
-
-            self._state.type = _type
-            self._state.channel = _channel
-
-        finally:
-
-            pass
-
-    # $ANTLR end "NullLiteral"
-
-
-
-    # $ANTLR start "BooleanLiteral"
-    def mBooleanLiteral(self, ):
-
-        try:
-            _type = BooleanLiteral
-            _channel = DEFAULT_CHANNEL
-
-            # Java.g:1481:5: ( 'true' | 'false' )
-            alt19 = 2
-            LA19_0 = self.input.LA(1)
-
-            if (LA19_0 == 116) :
-                alt19 = 1
-            elif (LA19_0 == 102) :
-                alt19 = 2
-            else:
-                nvae = NoViableAltException("", 19, 0, self.input)
-
-                raise nvae
-
-            if alt19 == 1:
-                # Java.g:1481:9: 'true'
-                pass 
-                self.match("true")
-
-
-            elif alt19 == 2:
-                # Java.g:1482:9: 'false'
-                pass 
-                self.match("false")
-
-
-            self._state.type = _type
-            self._state.channel = _channel
-
-        finally:
-
-            pass
-
-    # $ANTLR end "BooleanLiteral"
-
-
-
     # $ANTLR start "Exponent"
     def mExponent(self, ):
 
         try:
-            # Java.g:1487:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            # Java.g:1487:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            # Java.g:1138:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            # Java.g:1138:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             pass 
             if self.input.LA(1) == 69 or self.input.LA(1) == 101:
                 self.input.consume()
@@ -2900,7 +2893,7 @@ class JavaLexer(Lexer):
                 self.recover(mse)
                 raise mse
 
-            # Java.g:1487:22: ( '+' | '-' )?
+            # Java.g:1138:22: ( '+' | '-' )?
             alt20 = 2
             LA20_0 = self.input.LA(1)
 
@@ -2919,7 +2912,7 @@ class JavaLexer(Lexer):
 
 
 
-            # Java.g:1487:33: ( '0' .. '9' )+
+            # Java.g:1138:33: ( '0' .. '9' )+
             cnt21 = 0
             while True: #loop21
                 alt21 = 2
@@ -2930,7 +2923,7 @@ class JavaLexer(Lexer):
 
 
                 if alt21 == 1:
-                    # Java.g:1487:34: '0' .. '9'
+                    # Java.g:1138:34: '0' .. '9'
                     pass 
                     self.matchRange(48, 57)
 
@@ -2961,8 +2954,8 @@ class JavaLexer(Lexer):
     def mFloatTypeSuffix(self, ):
 
         try:
-            # Java.g:1491:17: ( ( 'f' | 'F' | 'd' | 'D' ) )
-            # Java.g:1491:19: ( 'f' | 'F' | 'd' | 'D' )
+            # Java.g:1141:17: ( ( 'f' | 'F' | 'd' | 'D' ) )
+            # Java.g:1141:19: ( 'f' | 'F' | 'd' | 'D' )
             pass 
             if self.input.LA(1) == 68 or self.input.LA(1) == 70 or self.input.LA(1) == 100 or self.input.LA(1) == 102:
                 self.input.consume()
@@ -2990,11 +2983,11 @@ class JavaLexer(Lexer):
             _type = CharacterLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1495:5: ( '\\'' ( EscapeSequence | ~ ( '\\'' | '\\\\' ) ) '\\'' )
-            # Java.g:1495:9: '\\'' ( EscapeSequence | ~ ( '\\'' | '\\\\' ) ) '\\''
+            # Java.g:1145:5: ( '\\'' ( EscapeSequence | ~ ( '\\'' | '\\\\' ) ) '\\'' )
+            # Java.g:1145:9: '\\'' ( EscapeSequence | ~ ( '\\'' | '\\\\' ) ) '\\''
             pass 
             self.match(39)
-            # Java.g:1495:14: ( EscapeSequence | ~ ( '\\'' | '\\\\' ) )
+            # Java.g:1145:14: ( EscapeSequence | ~ ( '\\'' | '\\\\' ) )
             alt22 = 2
             LA22_0 = self.input.LA(1)
 
@@ -3008,13 +3001,13 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt22 == 1:
-                # Java.g:1495:16: EscapeSequence
+                # Java.g:1145:16: EscapeSequence
                 pass 
                 self.mEscapeSequence()
 
 
             elif alt22 == 2:
-                # Java.g:1495:33: ~ ( '\\'' | '\\\\' )
+                # Java.g:1145:33: ~ ( '\\'' | '\\\\' )
                 pass 
                 if (0 <= self.input.LA(1) <= 38) or (40 <= self.input.LA(1) <= 91) or (93 <= self.input.LA(1) <= 65535):
                     self.input.consume()
@@ -3048,11 +3041,11 @@ class JavaLexer(Lexer):
             _type = StringLiteral
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1500:5: ( '\"' ( EscapeSequence | ~ ( '\\\\' | '\"' ) )* '\"' )
-            # Java.g:1500:8: '\"' ( EscapeSequence | ~ ( '\\\\' | '\"' ) )* '\"'
+            # Java.g:1150:5: ( '\"' ( EscapeSequence | ~ ( '\\\\' | '\"' ) )* '\"' )
+            # Java.g:1150:8: '\"' ( EscapeSequence | ~ ( '\\\\' | '\"' ) )* '\"'
             pass 
             self.match(34)
-            # Java.g:1500:12: ( EscapeSequence | ~ ( '\\\\' | '\"' ) )*
+            # Java.g:1150:12: ( EscapeSequence | ~ ( '\\\\' | '\"' ) )*
             while True: #loop23
                 alt23 = 3
                 LA23_0 = self.input.LA(1)
@@ -3064,13 +3057,13 @@ class JavaLexer(Lexer):
 
 
                 if alt23 == 1:
-                    # Java.g:1500:14: EscapeSequence
+                    # Java.g:1150:14: EscapeSequence
                     pass 
                     self.mEscapeSequence()
 
 
                 elif alt23 == 2:
-                    # Java.g:1500:31: ~ ( '\\\\' | '\"' )
+                    # Java.g:1150:31: ~ ( '\\\\' | '\"' )
                     pass 
                     if (0 <= self.input.LA(1) <= 33) or (35 <= self.input.LA(1) <= 91) or (93 <= self.input.LA(1) <= 65535):
                         self.input.consume()
@@ -3104,7 +3097,7 @@ class JavaLexer(Lexer):
     def mEscapeSequence(self, ):
 
         try:
-            # Java.g:1506:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UnicodeEscape | OctalEscape )
+            # Java.g:1156:5: ( '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' ) | UnicodeEscape | OctalEscape )
             alt24 = 3
             LA24_0 = self.input.LA(1)
 
@@ -3127,7 +3120,7 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt24 == 1:
-                # Java.g:1506:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
+                # Java.g:1156:9: '\\\\' ( 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\'' | '\\\\' )
                 pass 
                 self.match(92)
                 if self.input.LA(1) == 34 or self.input.LA(1) == 39 or self.input.LA(1) == 92 or self.input.LA(1) == 98 or self.input.LA(1) == 102 or self.input.LA(1) == 110 or self.input.LA(1) == 114 or self.input.LA(1) == 116:
@@ -3140,13 +3133,13 @@ class JavaLexer(Lexer):
 
 
             elif alt24 == 2:
-                # Java.g:1507:9: UnicodeEscape
+                # Java.g:1157:9: UnicodeEscape
                 pass 
                 self.mUnicodeEscape()
 
 
             elif alt24 == 3:
-                # Java.g:1508:9: OctalEscape
+                # Java.g:1158:9: OctalEscape
                 pass 
                 self.mOctalEscape()
 
@@ -3164,7 +3157,7 @@ class JavaLexer(Lexer):
     def mOctalEscape(self, ):
 
         try:
-            # Java.g:1514:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
+            # Java.g:1164:5: ( '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) ( '0' .. '7' ) | '\\\\' ( '0' .. '7' ) )
             alt25 = 3
             LA25_0 = self.input.LA(1)
 
@@ -3201,25 +3194,25 @@ class JavaLexer(Lexer):
                 raise nvae
 
             if alt25 == 1:
-                # Java.g:1514:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
+                # Java.g:1164:9: '\\\\' ( '0' .. '3' ) ( '0' .. '7' ) ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1514:14: ( '0' .. '3' )
-                # Java.g:1514:15: '0' .. '3'
+                # Java.g:1164:14: ( '0' .. '3' )
+                # Java.g:1164:15: '0' .. '3'
                 pass 
                 self.matchRange(48, 51)
 
 
 
-                # Java.g:1514:25: ( '0' .. '7' )
-                # Java.g:1514:26: '0' .. '7'
+                # Java.g:1164:25: ( '0' .. '7' )
+                # Java.g:1164:26: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
 
 
-                # Java.g:1514:36: ( '0' .. '7' )
-                # Java.g:1514:37: '0' .. '7'
+                # Java.g:1164:36: ( '0' .. '7' )
+                # Java.g:1164:37: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3228,18 +3221,18 @@ class JavaLexer(Lexer):
 
 
             elif alt25 == 2:
-                # Java.g:1515:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
+                # Java.g:1165:9: '\\\\' ( '0' .. '7' ) ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1515:14: ( '0' .. '7' )
-                # Java.g:1515:15: '0' .. '7'
+                # Java.g:1165:14: ( '0' .. '7' )
+                # Java.g:1165:15: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
 
 
-                # Java.g:1515:25: ( '0' .. '7' )
-                # Java.g:1515:26: '0' .. '7'
+                # Java.g:1165:25: ( '0' .. '7' )
+                # Java.g:1165:26: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3248,11 +3241,11 @@ class JavaLexer(Lexer):
 
 
             elif alt25 == 3:
-                # Java.g:1516:9: '\\\\' ( '0' .. '7' )
+                # Java.g:1166:9: '\\\\' ( '0' .. '7' )
                 pass 
                 self.match(92)
-                # Java.g:1516:14: ( '0' .. '7' )
-                # Java.g:1516:15: '0' .. '7'
+                # Java.g:1166:14: ( '0' .. '7' )
+                # Java.g:1166:15: '0' .. '7'
                 pass 
                 self.matchRange(48, 55)
 
@@ -3273,8 +3266,8 @@ class JavaLexer(Lexer):
     def mUnicodeEscape(self, ):
 
         try:
-            # Java.g:1522:5: ( '\\\\' 'u' HexDigit HexDigit HexDigit HexDigit )
-            # Java.g:1522:9: '\\\\' 'u' HexDigit HexDigit HexDigit HexDigit
+            # Java.g:1171:5: ( '\\\\' 'u' HexDigit HexDigit HexDigit HexDigit )
+            # Java.g:1171:9: '\\\\' 'u' HexDigit HexDigit HexDigit HexDigit
             pass 
             self.match(92)
             self.match(117)
@@ -3301,8 +3294,8 @@ class JavaLexer(Lexer):
             _type = ENUM
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1527:5: ( 'enum' )
-            # Java.g:1527:9: 'enum'
+            # Java.g:1176:5: ( 'enum' )
+            # Java.g:1176:9: 'enum'
             pass 
             self.match("enum")
 
@@ -3326,8 +3319,8 @@ class JavaLexer(Lexer):
             _type = ASSERT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1532:5: ( 'assert' )
-            # Java.g:1532:9: 'assert'
+            # Java.g:1181:5: ( 'assert' )
+            # Java.g:1181:9: 'assert'
             pass 
             self.match("assert")
 
@@ -3351,11 +3344,11 @@ class JavaLexer(Lexer):
             _type = Ident
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1537:5: ( Letter ( Letter | JavaIDDigit )* )
-            # Java.g:1537:9: Letter ( Letter | JavaIDDigit )*
+            # Java.g:1186:5: ( Letter ( Letter | JavaIDDigit )* )
+            # Java.g:1186:9: Letter ( Letter | JavaIDDigit )*
             pass 
             self.mLetter()
-            # Java.g:1537:16: ( Letter | JavaIDDigit )*
+            # Java.g:1186:16: ( Letter | JavaIDDigit )*
             while True: #loop26
                 alt26 = 2
                 LA26_0 = self.input.LA(1)
@@ -3398,7 +3391,7 @@ class JavaLexer(Lexer):
     def mLetter(self, ):
 
         try:
-            # Java.g:1543:5: ( '\\u0024' | '\\u0041' .. '\\u005a' | '\\u005f' | '\\u0061' .. '\\u007a' | '\\u00c0' .. '\\u00d6' | '\\u00d8' .. '\\u00f6' | '\\u00f8' .. '\\u00ff' | '\\u0100' .. '\\u1fff' | '\\u3040' .. '\\u318f' | '\\u3300' .. '\\u337f' | '\\u3400' .. '\\u3d2d' | '\\u4e00' .. '\\u9fff' | '\\uf900' .. '\\ufaff' )
+            # Java.g:1192:5: ( '\\u0024' | '\\u0041' .. '\\u005a' | '\\u005f' | '\\u0061' .. '\\u007a' | '\\u00c0' .. '\\u00d6' | '\\u00d8' .. '\\u00f6' | '\\u00f8' .. '\\u00ff' | '\\u0100' .. '\\u1fff' | '\\u3040' .. '\\u318f' | '\\u3300' .. '\\u337f' | '\\u3400' .. '\\u3d2d' | '\\u4e00' .. '\\u9fff' | '\\uf900' .. '\\ufaff' )
             # Java.g:
             pass 
             if self.input.LA(1) == 36 or (65 <= self.input.LA(1) <= 90) or self.input.LA(1) == 95 or (97 <= self.input.LA(1) <= 122) or (192 <= self.input.LA(1) <= 214) or (216 <= self.input.LA(1) <= 246) or (248 <= self.input.LA(1) <= 8191) or (12352 <= self.input.LA(1) <= 12687) or (13056 <= self.input.LA(1) <= 13183) or (13312 <= self.input.LA(1) <= 15661) or (19968 <= self.input.LA(1) <= 40959) or (63744 <= self.input.LA(1) <= 64255):
@@ -3424,7 +3417,7 @@ class JavaLexer(Lexer):
     def mJavaIDDigit(self, ):
 
         try:
-            # Java.g:1561:5: ( '\\u0030' .. '\\u0039' | '\\u0660' .. '\\u0669' | '\\u06f0' .. '\\u06f9' | '\\u0966' .. '\\u096f' | '\\u09e6' .. '\\u09ef' | '\\u0a66' .. '\\u0a6f' | '\\u0ae6' .. '\\u0aef' | '\\u0b66' .. '\\u0b6f' | '\\u0be7' .. '\\u0bef' | '\\u0c66' .. '\\u0c6f' | '\\u0ce6' .. '\\u0cef' | '\\u0d66' .. '\\u0d6f' | '\\u0e50' .. '\\u0e59' | '\\u0ed0' .. '\\u0ed9' | '\\u1040' .. '\\u1049' )
+            # Java.g:1210:5: ( '\\u0030' .. '\\u0039' | '\\u0660' .. '\\u0669' | '\\u06f0' .. '\\u06f9' | '\\u0966' .. '\\u096f' | '\\u09e6' .. '\\u09ef' | '\\u0a66' .. '\\u0a6f' | '\\u0ae6' .. '\\u0aef' | '\\u0b66' .. '\\u0b6f' | '\\u0be7' .. '\\u0bef' | '\\u0c66' .. '\\u0c6f' | '\\u0ce6' .. '\\u0cef' | '\\u0d66' .. '\\u0d6f' | '\\u0e50' .. '\\u0e59' | '\\u0ed0' .. '\\u0ed9' | '\\u1040' .. '\\u1049' )
             # Java.g:
             pass 
             if (48 <= self.input.LA(1) <= 57) or (1632 <= self.input.LA(1) <= 1641) or (1776 <= self.input.LA(1) <= 1785) or (2406 <= self.input.LA(1) <= 2415) or (2534 <= self.input.LA(1) <= 2543) or (2662 <= self.input.LA(1) <= 2671) or (2790 <= self.input.LA(1) <= 2799) or (2918 <= self.input.LA(1) <= 2927) or (3047 <= self.input.LA(1) <= 3055) or (3174 <= self.input.LA(1) <= 3183) or (3302 <= self.input.LA(1) <= 3311) or (3430 <= self.input.LA(1) <= 3439) or (3664 <= self.input.LA(1) <= 3673) or (3792 <= self.input.LA(1) <= 3801) or (4160 <= self.input.LA(1) <= 4169):
@@ -3453,8 +3446,8 @@ class JavaLexer(Lexer):
             _type = WS
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1579:5: ( ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' ) )
-            # Java.g:1579:8: ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' )
+            # Java.g:1228:5: ( ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' ) )
+            # Java.g:1228:8: ( ' ' | '\\r' | '\\t' | '\\u000C' | '\\n' )
             pass 
             if (9 <= self.input.LA(1) <= 10) or (12 <= self.input.LA(1) <= 13) or self.input.LA(1) == 32:
                 self.input.consume()
@@ -3487,11 +3480,11 @@ class JavaLexer(Lexer):
             _type = COMMENT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1584:5: ( '/*' ( options {greedy=false; } : . )* '*/' )
-            # Java.g:1584:9: '/*' ( options {greedy=false; } : . )* '*/'
+            # Java.g:1232:5: ( '/*' ( options {greedy=false; } : . )* '*/' )
+            # Java.g:1232:9: '/*' ( options {greedy=false; } : . )* '*/'
             pass 
             self.match("/*")
-            # Java.g:1584:14: ( options {greedy=false; } : . )*
+            # Java.g:1232:14: ( options {greedy=false; } : . )*
             while True: #loop27
                 alt27 = 2
                 LA27_0 = self.input.LA(1)
@@ -3510,7 +3503,7 @@ class JavaLexer(Lexer):
 
 
                 if alt27 == 1:
-                    # Java.g:1584:42: .
+                    # Java.g:1232:42: .
                     pass 
                     self.matchAny()
 
@@ -3521,10 +3514,7 @@ class JavaLexer(Lexer):
 
             self.match("*/")
             #action start
-                 
-            _channel = HIDDEN
-            self.addComment(self._state.tokenStartCharIndex, (self.getCharIndex()-1), self.text[2:-2])
-                
+            _channel=HIDDEN;
             #action end
 
 
@@ -3547,11 +3537,11 @@ class JavaLexer(Lexer):
             _type = LINE_COMMENT
             _channel = DEFAULT_CHANNEL
 
-            # Java.g:1593:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
-            # Java.g:1593:7: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
+            # Java.g:1236:5: ( '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n' )
+            # Java.g:1236:7: '//' (~ ( '\\n' | '\\r' ) )* ( '\\r' )? '\\n'
             pass 
             self.match("//")
-            # Java.g:1593:12: (~ ( '\\n' | '\\r' ) )*
+            # Java.g:1236:12: (~ ( '\\n' | '\\r' ) )*
             while True: #loop28
                 alt28 = 2
                 LA28_0 = self.input.LA(1)
@@ -3561,7 +3551,7 @@ class JavaLexer(Lexer):
 
 
                 if alt28 == 1:
-                    # Java.g:1593:12: ~ ( '\\n' | '\\r' )
+                    # Java.g:1236:12: ~ ( '\\n' | '\\r' )
                     pass 
                     if (0 <= self.input.LA(1) <= 9) or (11 <= self.input.LA(1) <= 12) or (14 <= self.input.LA(1) <= 65535):
                         self.input.consume()
@@ -3576,14 +3566,14 @@ class JavaLexer(Lexer):
                     break #loop28
 
 
-            # Java.g:1593:26: ( '\\r' )?
+            # Java.g:1236:26: ( '\\r' )?
             alt29 = 2
             LA29_0 = self.input.LA(1)
 
             if (LA29_0 == 13) :
                 alt29 = 1
             if alt29 == 1:
-                # Java.g:1593:26: '\\r'
+                # Java.g:1236:26: '\\r'
                 pass 
                 self.match(13)
 
@@ -3591,10 +3581,7 @@ class JavaLexer(Lexer):
 
             self.match(10)
             #action start
-                 
-            _channel = HIDDEN
-            self.addComment(self._state.tokenStartCharIndex, (self.getCharIndex()-1), self.text[2:])
-                
+            _channel=HIDDEN;
             #action end
 
 
@@ -3611,7 +3598,7 @@ class JavaLexer(Lexer):
 
 
     def mTokens(self):
-        # Java.g:1:8: ( T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | T__41 | T__42 | T__43 | T__44 | T__45 | T__46 | T__47 | T__48 | T__49 | T__50 | T__51 | T__52 | T__53 | T__54 | T__55 | T__56 | T__57 | T__58 | T__59 | T__60 | T__61 | T__62 | T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | T__100 | T__101 | T__102 | T__103 | T__104 | T__105 | T__106 | T__107 | T__108 | T__109 | T__110 | T__111 | T__112 | HexLiteral | DecimalLiteral | OctalLiteral | FloatingPointLiteral | NullLiteral | BooleanLiteral | CharacterLiteral | StringLiteral | ENUM | ASSERT | Ident | WS | COMMENT | LINE_COMMENT )
+        # Java.g:1:8: ( T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | T__40 | T__41 | T__42 | T__43 | T__44 | T__45 | T__46 | T__47 | T__48 | T__49 | T__50 | T__51 | T__52 | T__53 | T__54 | T__55 | T__56 | T__57 | T__58 | T__59 | T__60 | T__61 | T__62 | T__63 | T__64 | T__65 | T__66 | T__67 | T__68 | T__69 | T__70 | T__71 | T__72 | T__73 | T__74 | T__75 | T__76 | T__77 | T__78 | T__79 | T__80 | T__81 | T__82 | T__83 | T__84 | T__85 | T__86 | T__87 | T__88 | T__89 | T__90 | T__91 | T__92 | T__93 | T__94 | T__95 | T__96 | T__97 | T__98 | T__99 | T__100 | T__101 | T__102 | T__103 | T__104 | T__105 | T__106 | T__107 | T__108 | T__109 | T__110 | T__111 | T__112 | BooleanLiteral | NullLiteral | HexLiteral | DecimalLiteral | OctalLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | ENUM | ASSERT | Ident | WS | COMMENT | LINE_COMMENT )
         alt30 = 100
         alt30 = self.dfa30.predict(self.input)
         if alt30 == 1:
@@ -4131,39 +4118,39 @@ class JavaLexer(Lexer):
 
 
         elif alt30 == 87:
-            # Java.g:1:539: HexLiteral
+            # Java.g:1:539: BooleanLiteral
             pass 
-            self.mHexLiteral()
+            self.mBooleanLiteral()
 
 
         elif alt30 == 88:
-            # Java.g:1:550: DecimalLiteral
-            pass 
-            self.mDecimalLiteral()
-
-
-        elif alt30 == 89:
-            # Java.g:1:565: OctalLiteral
-            pass 
-            self.mOctalLiteral()
-
-
-        elif alt30 == 90:
-            # Java.g:1:578: FloatingPointLiteral
-            pass 
-            self.mFloatingPointLiteral()
-
-
-        elif alt30 == 91:
-            # Java.g:1:599: NullLiteral
+            # Java.g:1:554: NullLiteral
             pass 
             self.mNullLiteral()
 
 
-        elif alt30 == 92:
-            # Java.g:1:611: BooleanLiteral
+        elif alt30 == 89:
+            # Java.g:1:566: HexLiteral
             pass 
-            self.mBooleanLiteral()
+            self.mHexLiteral()
+
+
+        elif alt30 == 90:
+            # Java.g:1:577: DecimalLiteral
+            pass 
+            self.mDecimalLiteral()
+
+
+        elif alt30 == 91:
+            # Java.g:1:592: OctalLiteral
+            pass 
+            self.mOctalLiteral()
+
+
+        elif alt30 == 92:
+            # Java.g:1:605: FloatingPointLiteral
+            pass 
+            self.mFloatingPointLiteral()
 
 
         elif alt30 == 93:
@@ -4219,46 +4206,46 @@ class JavaLexer(Lexer):
 
 
 
-    # lookup tables for DFA #18
+    # lookup tables for DFA #19
 
-    DFA18_eot = DFA.unpack(
+    DFA19_eot = DFA.unpack(
         u"\6\uffff"
         )
 
-    DFA18_eof = DFA.unpack(
+    DFA19_eof = DFA.unpack(
         u"\6\uffff"
         )
 
-    DFA18_min = DFA.unpack(
+    DFA19_min = DFA.unpack(
         u"\2\56\4\uffff"
         )
 
-    DFA18_max = DFA.unpack(
+    DFA19_max = DFA.unpack(
         u"\1\71\1\146\4\uffff"
         )
 
-    DFA18_accept = DFA.unpack(
-        u"\2\uffff\1\2\1\1\1\4\1\3"
+    DFA19_accept = DFA.unpack(
+        u"\2\uffff\1\2\1\3\1\4\1\1"
         )
 
-    DFA18_special = DFA.unpack(
+    DFA19_special = DFA.unpack(
         u"\6\uffff"
         )
 
             
-    DFA18_transition = [
+    DFA19_transition = [
         DFA.unpack(u"\1\2\1\uffff\12\1"),
-        DFA.unpack(u"\1\3\1\uffff\12\1\12\uffff\1\4\1\5\1\4\35\uffff\1\4"
-        u"\1\5\1\4"),
+        DFA.unpack(u"\1\5\1\uffff\12\1\12\uffff\1\4\1\3\1\4\35\uffff\1\4"
+        u"\1\3\1\4"),
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u"")
     ]
 
-    # class definition for DFA #18
+    # class definition for DFA #19
 
-    DFA18 = DFA
+    DFA19 = DFA
     # lookup tables for DFA #30
 
     DFA30_eot = DFA.unpack(
@@ -4354,13 +4341,13 @@ class JavaLexer(Lexer):
     DFA30_accept = DFA.unpack(
         u"\2\uffff\1\2\10\uffff\1\20\1\21\1\22\1\uffff\1\24\1\25\1\uffff"
         u"\1\30\1\31\6\uffff\1\50\1\52\1\53\1\56\1\60\11\uffff\1\124\2\uffff"
-        u"\1\135\1\136\1\141\1\142\13\uffff\1\54\1\132\1\5\1\101\1\6\15\uffff"
+        u"\1\135\1\136\1\141\1\142\13\uffff\1\54\1\134\1\5\1\101\1\6\15\uffff"
         u"\1\103\1\110\1\23\3\uffff\1\113\1\33\13\uffff\1\77\1\122\1\116"
         u"\1\100\1\123\1\117\1\102\1\143\1\144\1\120\1\104\1\107\1\111\1"
-        u"\105\1\112\1\106\1\121\1\114\1\125\1\127\1\uffff\1\130\10\uffff"
-        u"\1\61\43\uffff\1\65\3\uffff\1\131\7\uffff\1\44\13\uffff\1\63\16"
+        u"\105\1\112\1\106\1\121\1\114\1\125\1\131\1\uffff\1\132\10\uffff"
+        u"\1\61\43\uffff\1\65\3\uffff\1\133\7\uffff\1\44\13\uffff\1\63\16"
         u"\uffff\1\66\2\uffff\1\126\35\uffff\1\41\2\uffff\1\76\1\uffff\1"
-        u"\62\1\137\1\27\2\uffff\1\55\1\uffff\1\134\1\uffff\1\133\1\uffff"
+        u"\62\1\137\1\27\2\uffff\1\55\1\uffff\1\127\1\uffff\1\130\1\uffff"
         u"\1\42\1\uffff\1\45\17\uffff\1\43\1\51\4\uffff\1\13\1\46\1\15\1"
         u"\uffff\1\75\3\uffff\1\72\3\uffff\1\73\2\uffff\1\64\2\uffff\1\7"
         u"\2\uffff\1\3\3\uffff\1\4\2\uffff\1\70\1\uffff\1\140\4\uffff\1\32"

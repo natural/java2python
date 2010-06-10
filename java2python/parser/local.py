@@ -136,33 +136,3 @@ class LocalTreeAdaptor(CommonTreeAdaptor):
 	    self.callback(node)
         return node
 
-
-class Formats:
-    l = '{left}'
-    r = '{right}'
-    c = '{center}'
-    t = '{type}'
-    lr = l + r
-    lsr = l + ' ' + r
-    cond = l + ' if ' + c + ' else ' + r
-    args = '(' + l + ')'
-    assign = l + ' = ' + r
-    tassign = l + ' = ' + t + '()'
-    instance = 'isinstance(' + l + ', (' + t + ', ))'
-
-    @classmethod
-    def op(cls, op):
-	if op == '>>>':
-	    return '({left} & (2**32+{left})) >> {right}'
-	if op == '>>>=':
-	    return '{left} = bsr({left}, {right})'
-	return cls.l + ' ' + op + ' ' + cls.r
-
-
-from sys import _getframe as getframe
-
-def ruleName(suffix='', depth=0):
-    name = getframe(depth+1).f_code.co_name
-    if suffix:
-	name += ':' + suffix
-    return name

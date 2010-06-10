@@ -8,7 +8,8 @@ import itertools
 import keyword
 import StringIO
 
-import java2python.lib.colortools as color
+from java2python.lib import colortools as color
+from java2python.lib import Formats as FS
 
 
 class Block(object):
@@ -119,6 +120,10 @@ class Block(object):
 	typeMap = lambda t:tm.get(t, t)
 	value = [typeMap(v) for v in value if v]
 	self.type = value
+
+    def addTypes(self, types):
+	for typ in types:
+	    self.addType(typ)
 
     def delType(self, value):
 	try:
@@ -400,7 +405,7 @@ class Block(object):
 	return self.config.handlers(name, all=True)
 
     def findVariable(self, name):
-	if self.isMethod and name in [str(p) for p in self.parameters]:
+	if self.isMethod and name in [p['name'] for p in self.parameters]:
 	    return name
 	elif self.isMethod and name in self.variables:
 	    return name
@@ -411,6 +416,30 @@ class Block(object):
 		return 'self.{0}'.format(name)
 	else:
 	    return name
+
+    def packExpr(self, expr):
+	parent = expr.parent
+	children = getattr(parent, 'children', [])
+	index = children.index(expr)
+	if expr.isRightFormat and expr.hasRight:
+	    children[index] = expr = self.toExpression(expr.right)
+	elif expr.isLeftFormat and expr.hasLeft:
+	    children[index] = expr = self.toExpression(expr.left)
+	#nestedPackExpr(expr, self.toExpression(expr.right))
+	#nestedPackExpr(expr, self.toExpression(expr.left))
+
+    def toExpression(self, value):
+	if getattr(value, 'isExpression', False):
+	    return value
+	return Expression(self.config, left=value, format=FS.l)
+
+
+def nestedPackExpr(parent, child):
+    if child.isRightFormat and child.hasRight:
+	parent.right = child.right
+    elif child.isLeftFormat and child.hasLeft:
+	parent.left = child.left
+
 
 class Module(Block):
     """ Module -> type of block for Python modules.
@@ -575,7 +604,6 @@ class Class(PostDeclDocString, Block):
 	    for line in handler(self):
 		yield line
 	else:
-	    ## nothing to do yet.
 	    pass
 
     @property
@@ -645,17 +673,22 @@ class Method(PostDeclDocString, Block):
 	    first = ['cls' if self.isStatic else 'self']
 	else:
 	    first = []
-	params = ', '.join(first + [str(p) for p in self.parameters])
+	params = ', '.join(first + [p['name'] for p in self.parameters])
 	yield 'def {0}({1}):'.format(self.name, params)
 
     def iterDecorators(self):
 	"""
 
 	"""
+	def maybeHandlers():
+	    for handler in self.getHandlers('PrologueHandlers'):
+		for line in handler(self):
+		    yield line
+
 	def maybeClassMethodDeco():
 	    if self.isStatic and 'classmethod' not in self.decorators:
 		yield 'classmethod'
-	return itertools.chain(self.decorators, maybeClassMethodDeco())
+	return itertools.chain(self.decorators, maybeClassMethodDeco(), maybeHandlers())
 
     @property
     def parameters(self):
@@ -671,13 +704,15 @@ class Method(PostDeclDocString, Block):
 	"""
 	self._parameters = value
 
-    def addParameter(self, name, dimensions=0, variadic=False):
+    def addParameter(self, name, type, dimensions=0, variadic=False):
 	""" Adds the given value to this methods parameter sequence.
 
 	"""
-	if variadic:
-	    name = '*{0}'.format(name)
-	self.parameters.append(name)
+	tm = self.config.last('typeSubstitutionMap', {})
+	type = tm.get(type, type)
+        name = '*{0}'.format(name) if variadic else name
+	param = dict(name=name, type=type, dimensions=dimensions)
+	self.parameters.append(param)
 
 
 class Statement(Block):
@@ -767,6 +802,7 @@ class Expression(Block):
 
 	"""
 	self.left = left = self.new(self.config, **kwds)
+	left.parent = self
 	return left
 
     def nestRight(self, **kwds):
@@ -774,6 +810,7 @@ class Expression(Block):
 
 	"""
 	self.right = right = self.new(self.config, **kwds)
+	right.parent = self
 	return right
 
     def addComment(self, comment):
@@ -818,6 +855,25 @@ class Expression(Block):
     def isEmpty(self):
 	return not any((self.left, self.right, self.type, self.comment))
 
+    @property
+    def hasLeft(self):
+	return bool(self.left)
+
+    @property
+    def hasRight(self):
+	return bool(self.right)
+
+    @property
+    def isLeftRightFormat(self):
+	return self.format == FS.lr
+
+    @property
+    def isLeftFormat(self):
+	return self.format == FS.l
+
+    @property
+    def isRightFormat(self):
+	return (self.format == FS.r) or (self.format == FS.args)
 
 class BlockFactory(object):
     """ BlockFactory -> objects for building block instances.
@@ -847,7 +903,13 @@ class BlockFactory(object):
 	    cls = self.types[typeName]
 	except (KeyError, ):
 	    raise TypeError('Unknown factory type: {0}'.format(typeName))
+	typ = kwds.pop('type', None)
+	mods = kwds.pop('modifiers', None)
 	block = cls(self.config, **kwds)
 	block.parent = parent
 	block.name = name
+	if typ is not None:
+	    block.addType(typ)
+	if mods is not None:
+	    block.modifiers.extend(mods)
 	return block

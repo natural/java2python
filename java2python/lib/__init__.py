@@ -4,6 +4,7 @@ from functools import partial
 from itertools import count, dropwhile
 from operator import not_
 from string import Template
+from sys import _getframe as getframe
 
 
 def expression(left='', right='', format='', **kwds):
@@ -128,6 +129,31 @@ def formatParameter(p):
     return Template(p['format']).substitute(p)
 
 
+def ruleName(depth=0, *paths):
+    path = '/'.join(str(p) for p in paths)
+    return getframe(1+depth).f_code.co_name + ('/' + path if path else '')
+
+
 class Formats:
-    comment = '{comment}'
-    left = '{left}'
+    l = '{left}'
+    r = '{right}'
+    c = '{center}'
+    t = '{type}'
+    tr = t + '(' + r + ')'
+    lr = l + r
+    lsr = l + ' ' + r
+    cond = l + ' if ' + c + ' else ' + r
+    args = '(' + r + ')'
+    assign = l + ' = ' + r
+    tassign = l + ' = ' + t + '()'
+    instance = 'isinstance(' + l + ', (' + t + ', ))'
+
+    @classmethod
+    def op(cls, op):
+	if op == '>>>':
+	    return '({left} & (2**32+{left})) >> {right}'
+	if op == '>>>=':
+	    return '{left} = bsr({left}, {right})'
+	return cls.l + ' ' + op + ' ' + cls.r
+
+
