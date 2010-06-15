@@ -1,4 +1,4 @@
-class Vars1 {
+class Class7 {
     static int a = 1;
     private static int b = 2;
     private int c;
@@ -19,9 +19,9 @@ class Vars1 {
 	System.out.println(a);
 	System.out.println(b);
 
-	Vars1 v = new Vars1();
-	v.x();
-	v.y();
-	v.z(3);
+	Class7 c = new Class7();
+	c.x();
+	c.y();
+	c.z(3);
     }
 }

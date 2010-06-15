@@ -1,4 +1,4 @@
-# $ANTLR 3.1.1 Java.g 2010-06-09 15:48:06
+# $ANTLR 3.1.1 Java.g 2010-06-15 11:31:30
 
 import sys
 from antlr3 import *
@@ -7,8 +7,11 @@ from antlr3.compat import set, frozenset
 from antlr3.tree import *
 
                  
-from java2python.lib import Formats as FS, ruleName as RN
+from functools import partial
+
+from java2python.lib import Formats as FS, ruleName as RN, ruleNames as RNS
 from java2python.parser.local import LocalParser
+
 TOP, PREV = -1, -2
 
 
@@ -148,16 +151,6 @@ tokenNames = [
     "'^='", "'%='", "'||'", "'&&'", "'|'", "'^'", "'=='", "'!='", "'instanceof'", 
     "'+'", "'-'", "'/'", "'%'", "'++'", "'--'", "'~'", "'!'", "'new'"
 ]
-class py_block_scope(object):
-    def __init__(self):
-        self.block = None
-class py_expr_scope(object):
-    def __init__(self):
-        self.expr = None
-        self.nest = None
-class py_module_scope(object):
-    def __init__(self):
-        self.module = None
 
 
 
@@ -364,10 +357,6 @@ class JavaParser(LocalParser):
             )
 
 
-        self.py_block_stack = []
-        self.py_expr_stack = []
-        self.py_module_stack = []
-
 
 
 
@@ -397,10 +386,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "compilationUnit"
-    # Java.g:53:1: compilationUnit returns [module] : ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) | ( packageDecl )? ( importDecl )* ( typeDecl )* );
+    # Java.g:50:1: compilationUnit returns [module] : ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) | ( packageDecl )? ( importDecl )* ( typeDecl )* );
     def compilationUnit(self, ):
-        self.py_module_stack.append(py_module_scope())
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.compilationUnit_return()
         retval.start = self.input.LT(1)
@@ -428,9 +415,8 @@ class JavaParser(LocalParser):
 
 
                
-        ##// the topmost block which is always a module
-        retval.module = self.py_module_stack[-1].module = self.py_block_stack[-1].block = self.factory('module')
-        ##// necessary to catch any leading comments before initial syntax
+        retval.module = module = self.factory('module')
+        self.scope.module.push(self.scope.block.push(module))
         self.checkCommentsLeading(retval.start)
 
         success = False
@@ -441,21 +427,21 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:66:5: ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) | ( packageDecl )? ( importDecl )* ( typeDecl )* )
+                # Java.g:62:5: ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) | ( packageDecl )? ( importDecl )* ( typeDecl )* )
                 alt8 = 2
                 alt8 = self.dfa8.predict(self.input)
                 if alt8 == 1:
-                    # Java.g:66:9: annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
+                    # Java.g:62:9: annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotations_in_compilationUnit123)
+                    self._state.following.append(self.FOLLOW_annotations_in_compilationUnit94)
                     annotations1 = self.annotations()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self._adaptor.addChild(root_0, annotations1.tree)
-                    # Java.g:67:9: ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
+                    # Java.g:63:9: ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
                     alt4 = 2
                     LA4_0 = self.input.LA(1)
 
@@ -472,15 +458,15 @@ class JavaParser(LocalParser):
                         raise nvae
 
                     if alt4 == 1:
-                        # Java.g:67:13: packageDecl ( importDecl )* ( typeDecl )*
+                        # Java.g:63:13: packageDecl ( importDecl )* ( typeDecl )*
                         pass 
-                        self._state.following.append(self.FOLLOW_packageDecl_in_compilationUnit137)
+                        self._state.following.append(self.FOLLOW_packageDecl_in_compilationUnit108)
                         packageDecl2 = self.packageDecl()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
                             self._adaptor.addChild(root_0, packageDecl2.tree)
-                        # Java.g:67:25: ( importDecl )*
+                        # Java.g:63:25: ( importDecl )*
                         while True: #loop1
                             alt1 = 2
                             LA1_0 = self.input.LA(1)
@@ -492,7 +478,7 @@ class JavaParser(LocalParser):
                             if alt1 == 1:
                                 # Java.g:0:0: importDecl
                                 pass 
-                                self._state.following.append(self.FOLLOW_importDecl_in_compilationUnit139)
+                                self._state.following.append(self.FOLLOW_importDecl_in_compilationUnit110)
                                 importDecl3 = self.importDecl()
 
                                 self._state.following.pop()
@@ -504,7 +490,7 @@ class JavaParser(LocalParser):
                                 break #loop1
 
 
-                        # Java.g:67:37: ( typeDecl )*
+                        # Java.g:63:37: ( typeDecl )*
                         while True: #loop2
                             alt2 = 2
                             LA2_0 = self.input.LA(1)
@@ -516,7 +502,7 @@ class JavaParser(LocalParser):
                             if alt2 == 1:
                                 # Java.g:0:0: typeDecl
                                 pass 
-                                self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit142)
+                                self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit113)
                                 typeDecl4 = self.typeDecl()
 
                                 self._state.following.pop()
@@ -531,15 +517,15 @@ class JavaParser(LocalParser):
 
 
                     elif alt4 == 2:
-                        # Java.g:68:13: classOrInterfaceDecl ( typeDecl )*
+                        # Java.g:64:13: classOrInterfaceDecl ( typeDecl )*
                         pass 
-                        self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_compilationUnit157)
+                        self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_compilationUnit128)
                         classOrInterfaceDecl5 = self.classOrInterfaceDecl()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
                             self._adaptor.addChild(root_0, classOrInterfaceDecl5.tree)
-                        # Java.g:68:34: ( typeDecl )*
+                        # Java.g:64:34: ( typeDecl )*
                         while True: #loop3
                             alt3 = 2
                             LA3_0 = self.input.LA(1)
@@ -551,7 +537,7 @@ class JavaParser(LocalParser):
                             if alt3 == 1:
                                 # Java.g:0:0: typeDecl
                                 pass 
-                                self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit159)
+                                self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit130)
                                 typeDecl6 = self.typeDecl()
 
                                 self._state.following.pop()
@@ -569,11 +555,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt8 == 2:
-                    # Java.g:70:9: ( packageDecl )? ( importDecl )* ( typeDecl )*
+                    # Java.g:66:9: ( packageDecl )? ( importDecl )* ( typeDecl )*
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:70:9: ( packageDecl )?
+                    # Java.g:66:9: ( packageDecl )?
                     alt5 = 2
                     LA5_0 = self.input.LA(1)
 
@@ -582,7 +568,7 @@ class JavaParser(LocalParser):
                     if alt5 == 1:
                         # Java.g:0:0: packageDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_packageDecl_in_compilationUnit180)
+                        self._state.following.append(self.FOLLOW_packageDecl_in_compilationUnit151)
                         packageDecl7 = self.packageDecl()
 
                         self._state.following.pop()
@@ -591,7 +577,7 @@ class JavaParser(LocalParser):
 
 
 
-                    # Java.g:70:22: ( importDecl )*
+                    # Java.g:66:22: ( importDecl )*
                     while True: #loop6
                         alt6 = 2
                         LA6_0 = self.input.LA(1)
@@ -603,7 +589,7 @@ class JavaParser(LocalParser):
                         if alt6 == 1:
                             # Java.g:0:0: importDecl
                             pass 
-                            self._state.following.append(self.FOLLOW_importDecl_in_compilationUnit183)
+                            self._state.following.append(self.FOLLOW_importDecl_in_compilationUnit154)
                             importDecl8 = self.importDecl()
 
                             self._state.following.pop()
@@ -615,7 +601,7 @@ class JavaParser(LocalParser):
                             break #loop6
 
 
-                    # Java.g:70:34: ( typeDecl )*
+                    # Java.g:66:34: ( typeDecl )*
                     while True: #loop7
                         alt7 = 2
                         LA7_0 = self.input.LA(1)
@@ -627,7 +613,7 @@ class JavaParser(LocalParser):
                         if alt7 == 1:
                             # Java.g:0:0: typeDecl
                             pass 
-                            self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit186)
+                            self._state.following.append(self.FOLLOW_typeDecl_in_compilationUnit157)
                             typeDecl9 = self.typeDecl()
 
                             self._state.following.pop()
@@ -650,10 +636,10 @@ class JavaParser(LocalParser):
 
                 if self._state.backtracking == 0:
                             
-                    ##// necessary to catch any trailing comments
                     self.checkCommentsTrailing()
-                    ##// message the module that the parsing is complete.
-                    retval.module.cleanup()
+                    module.cleanup()
+                    self.scope.block.pop()
+                    self.scope.module.pop()
 
 
 
@@ -665,9 +651,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 1, compilationUnit_StartIndex, success)
-
-            self.py_module_stack.pop()
-            self.py_block_stack.pop()
 
             pass
 
@@ -685,7 +668,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "packageDecl"
-    # Java.g:74:1: packageDecl : 'package' qualifiedName ';' ;
+    # Java.g:70:1: packageDecl : 'package' qualifiedName ';' ;
     def packageDecl(self, ):
 
         retval = self.packageDecl_return()
@@ -709,24 +692,24 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:75:5: ( 'package' qualifiedName ';' )
-                # Java.g:75:9: 'package' qualifiedName ';'
+                # Java.g:71:5: ( 'package' qualifiedName ';' )
+                # Java.g:71:9: 'package' qualifiedName ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal10=self.match(self.input, 27, self.FOLLOW_27_in_packageDecl207)
+                string_literal10=self.match(self.input, 27, self.FOLLOW_27_in_packageDecl178)
                 if self._state.backtracking == 0:
 
                     string_literal10_tree = self._adaptor.createWithPayload(string_literal10)
                     self._adaptor.addChild(root_0, string_literal10_tree)
 
-                self._state.following.append(self.FOLLOW_qualifiedName_in_packageDecl209)
+                self._state.following.append(self.FOLLOW_qualifiedName_in_packageDecl180)
                 qualifiedName11 = self.qualifiedName()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, qualifiedName11.tree)
-                char_literal12=self.match(self.input, 28, self.FOLLOW_28_in_packageDecl211)
+                char_literal12=self.match(self.input, 28, self.FOLLOW_28_in_packageDecl182)
                 if self._state.backtracking == 0:
 
                     char_literal12_tree = self._adaptor.createWithPayload(char_literal12)
@@ -768,7 +751,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "importDecl"
-    # Java.g:79:1: importDecl : 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';' ;
+    # Java.g:75:1: importDecl : 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';' ;
     def importDecl(self, ):
 
         retval = self.importDecl_return()
@@ -798,18 +781,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:80:5: ( 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';' )
-                # Java.g:80:9: 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';'
+                # Java.g:76:5: ( 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';' )
+                # Java.g:76:9: 'import' ( 'static' )? qualifiedName ( '.' '*' )? ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal13=self.match(self.input, 29, self.FOLLOW_29_in_importDecl231)
+                string_literal13=self.match(self.input, 29, self.FOLLOW_29_in_importDecl202)
                 if self._state.backtracking == 0:
 
                     string_literal13_tree = self._adaptor.createWithPayload(string_literal13)
                     self._adaptor.addChild(root_0, string_literal13_tree)
 
-                # Java.g:80:18: ( 'static' )?
+                # Java.g:76:18: ( 'static' )?
                 alt9 = 2
                 LA9_0 = self.input.LA(1)
 
@@ -818,7 +801,7 @@ class JavaParser(LocalParser):
                 if alt9 == 1:
                     # Java.g:0:0: 'static'
                     pass 
-                    string_literal14=self.match(self.input, 30, self.FOLLOW_30_in_importDecl233)
+                    string_literal14=self.match(self.input, 30, self.FOLLOW_30_in_importDecl204)
                     if self._state.backtracking == 0:
 
                         string_literal14_tree = self._adaptor.createWithPayload(string_literal14)
@@ -827,28 +810,28 @@ class JavaParser(LocalParser):
 
 
 
-                self._state.following.append(self.FOLLOW_qualifiedName_in_importDecl236)
+                self._state.following.append(self.FOLLOW_qualifiedName_in_importDecl207)
                 qualifiedName15 = self.qualifiedName()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, qualifiedName15.tree)
-                # Java.g:80:42: ( '.' '*' )?
+                # Java.g:76:42: ( '.' '*' )?
                 alt10 = 2
                 LA10_0 = self.input.LA(1)
 
                 if (LA10_0 == 31) :
                     alt10 = 1
                 if alt10 == 1:
-                    # Java.g:80:43: '.' '*'
+                    # Java.g:76:43: '.' '*'
                     pass 
-                    char_literal16=self.match(self.input, 31, self.FOLLOW_31_in_importDecl239)
+                    char_literal16=self.match(self.input, 31, self.FOLLOW_31_in_importDecl210)
                     if self._state.backtracking == 0:
 
                         char_literal16_tree = self._adaptor.createWithPayload(char_literal16)
                         self._adaptor.addChild(root_0, char_literal16_tree)
 
-                    char_literal17=self.match(self.input, 32, self.FOLLOW_32_in_importDecl241)
+                    char_literal17=self.match(self.input, 32, self.FOLLOW_32_in_importDecl212)
                     if self._state.backtracking == 0:
 
                         char_literal17_tree = self._adaptor.createWithPayload(char_literal17)
@@ -857,7 +840,7 @@ class JavaParser(LocalParser):
 
 
 
-                char_literal18=self.match(self.input, 28, self.FOLLOW_28_in_importDecl245)
+                char_literal18=self.match(self.input, 28, self.FOLLOW_28_in_importDecl216)
                 if self._state.backtracking == 0:
 
                     char_literal18_tree = self._adaptor.createWithPayload(char_literal18)
@@ -899,7 +882,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeDecl"
-    # Java.g:84:1: typeDecl : ( classOrInterfaceDecl | ';' );
+    # Java.g:80:1: typeDecl : ( classOrInterfaceDecl | ';' );
     def typeDecl(self, ):
 
         retval = self.typeDecl_return()
@@ -921,7 +904,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:85:5: ( classOrInterfaceDecl | ';' )
+                # Java.g:81:5: ( classOrInterfaceDecl | ';' )
                 alt11 = 2
                 LA11_0 = self.input.LA(1)
 
@@ -938,11 +921,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt11 == 1:
-                    # Java.g:85:9: classOrInterfaceDecl
+                    # Java.g:81:9: classOrInterfaceDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_typeDecl265)
+                    self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_typeDecl236)
                     classOrInterfaceDecl19 = self.classOrInterfaceDecl()
 
                     self._state.following.pop()
@@ -951,11 +934,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt11 == 2:
-                    # Java.g:86:9: ';'
+                    # Java.g:82:9: ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal20=self.match(self.input, 28, self.FOLLOW_28_in_typeDecl275)
+                    char_literal20=self.match(self.input, 28, self.FOLLOW_28_in_typeDecl246)
                     if self._state.backtracking == 0:
 
                         char_literal20_tree = self._adaptor.createWithPayload(char_literal20)
@@ -996,7 +979,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classOrInterfaceDecl"
-    # Java.g:90:1: classOrInterfaceDecl : classOrInterfaceModifiers ( classDecl | interfaceDecl ) ;
+    # Java.g:86:1: classOrInterfaceDecl : classOrInterfaceModifiers ( classDecl | interfaceDecl ) ;
     def classOrInterfaceDecl(self, ):
 
         retval = self.classOrInterfaceDecl_return()
@@ -1020,18 +1003,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:91:5: ( classOrInterfaceModifiers ( classDecl | interfaceDecl ) )
-                # Java.g:91:9: classOrInterfaceModifiers ( classDecl | interfaceDecl )
+                # Java.g:87:5: ( classOrInterfaceModifiers ( classDecl | interfaceDecl ) )
+                # Java.g:87:9: classOrInterfaceModifiers ( classDecl | interfaceDecl )
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_classOrInterfaceModifiers_in_classOrInterfaceDecl295)
+                self._state.following.append(self.FOLLOW_classOrInterfaceModifiers_in_classOrInterfaceDecl266)
                 classOrInterfaceModifiers21 = self.classOrInterfaceModifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, classOrInterfaceModifiers21.tree)
-                # Java.g:91:35: ( classDecl | interfaceDecl )
+                # Java.g:87:35: ( classDecl | interfaceDecl )
                 alt12 = 2
                 LA12_0 = self.input.LA(1)
 
@@ -1048,9 +1031,9 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt12 == 1:
-                    # Java.g:91:36: classDecl
+                    # Java.g:87:36: classDecl
                     pass 
-                    self._state.following.append(self.FOLLOW_classDecl_in_classOrInterfaceDecl298)
+                    self._state.following.append(self.FOLLOW_classDecl_in_classOrInterfaceDecl269)
                     classDecl22 = self.classDecl()
 
                     self._state.following.pop()
@@ -1059,9 +1042,9 @@ class JavaParser(LocalParser):
 
 
                 elif alt12 == 2:
-                    # Java.g:91:48: interfaceDecl
+                    # Java.g:87:48: interfaceDecl
                     pass 
-                    self._state.following.append(self.FOLLOW_interfaceDecl_in_classOrInterfaceDecl302)
+                    self._state.following.append(self.FOLLOW_interfaceDecl_in_classOrInterfaceDecl273)
                     interfaceDecl23 = self.interfaceDecl()
 
                     self._state.following.pop()
@@ -1106,7 +1089,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classOrInterfaceModifiers"
-    # Java.g:94:1: classOrInterfaceModifiers : ( classOrInterfaceModifier )* ;
+    # Java.g:90:1: classOrInterfaceModifiers : ( classOrInterfaceModifier )* ;
     def classOrInterfaceModifiers(self, ):
 
         retval = self.classOrInterfaceModifiers_return()
@@ -1126,12 +1109,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:95:5: ( ( classOrInterfaceModifier )* )
-                # Java.g:95:9: ( classOrInterfaceModifier )*
+                # Java.g:91:5: ( ( classOrInterfaceModifier )* )
+                # Java.g:91:9: ( classOrInterfaceModifier )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:95:9: ( classOrInterfaceModifier )*
+                # Java.g:91:9: ( classOrInterfaceModifier )*
                 while True: #loop13
                     alt13 = 2
                     LA13_0 = self.input.LA(1)
@@ -1150,7 +1133,7 @@ class JavaParser(LocalParser):
                     if alt13 == 1:
                         # Java.g:0:0: classOrInterfaceModifier
                         pass 
-                        self._state.following.append(self.FOLLOW_classOrInterfaceModifier_in_classOrInterfaceModifiers322)
+                        self._state.following.append(self.FOLLOW_classOrInterfaceModifier_in_classOrInterfaceModifiers293)
                         classOrInterfaceModifier24 = self.classOrInterfaceModifier()
 
                         self._state.following.pop()
@@ -1198,7 +1181,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classOrInterfaceModifier"
-    # Java.g:99:1: classOrInterfaceModifier : ( annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' );
+    # Java.g:95:1: classOrInterfaceModifier : ( annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' );
     def classOrInterfaceModifier(self, ):
 
         retval = self.classOrInterfaceModifier_return()
@@ -1232,7 +1215,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:100:5: ( annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' )
+                # Java.g:96:5: ( annotation | 'public' | 'protected' | 'private' | 'abstract' | 'static' | 'final' | 'strictfp' )
                 alt14 = 8
                 LA14 = self.input.LA(1)
                 if LA14 == 72:
@@ -1260,11 +1243,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt14 == 1:
-                    # Java.g:100:9: annotation
+                    # Java.g:96:9: annotation
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotation_in_classOrInterfaceModifier343)
+                    self._state.following.append(self.FOLLOW_annotation_in_classOrInterfaceModifier314)
                     annotation25 = self.annotation()
 
                     self._state.following.pop()
@@ -1273,11 +1256,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 2:
-                    # Java.g:101:9: 'public'
+                    # Java.g:97:9: 'public'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal26=self.match(self.input, 33, self.FOLLOW_33_in_classOrInterfaceModifier356)
+                    string_literal26=self.match(self.input, 33, self.FOLLOW_33_in_classOrInterfaceModifier327)
                     if self._state.backtracking == 0:
 
                         string_literal26_tree = self._adaptor.createWithPayload(string_literal26)
@@ -1286,11 +1269,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 3:
-                    # Java.g:102:9: 'protected'
+                    # Java.g:98:9: 'protected'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal27=self.match(self.input, 34, self.FOLLOW_34_in_classOrInterfaceModifier371)
+                    string_literal27=self.match(self.input, 34, self.FOLLOW_34_in_classOrInterfaceModifier342)
                     if self._state.backtracking == 0:
 
                         string_literal27_tree = self._adaptor.createWithPayload(string_literal27)
@@ -1299,11 +1282,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 4:
-                    # Java.g:103:9: 'private'
+                    # Java.g:99:9: 'private'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal28=self.match(self.input, 35, self.FOLLOW_35_in_classOrInterfaceModifier383)
+                    string_literal28=self.match(self.input, 35, self.FOLLOW_35_in_classOrInterfaceModifier354)
                     if self._state.backtracking == 0:
 
                         string_literal28_tree = self._adaptor.createWithPayload(string_literal28)
@@ -1312,11 +1295,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 5:
-                    # Java.g:104:9: 'abstract'
+                    # Java.g:100:9: 'abstract'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal29=self.match(self.input, 36, self.FOLLOW_36_in_classOrInterfaceModifier397)
+                    string_literal29=self.match(self.input, 36, self.FOLLOW_36_in_classOrInterfaceModifier368)
                     if self._state.backtracking == 0:
 
                         string_literal29_tree = self._adaptor.createWithPayload(string_literal29)
@@ -1325,11 +1308,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 6:
-                    # Java.g:105:9: 'static'
+                    # Java.g:101:9: 'static'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal30=self.match(self.input, 30, self.FOLLOW_30_in_classOrInterfaceModifier410)
+                    string_literal30=self.match(self.input, 30, self.FOLLOW_30_in_classOrInterfaceModifier381)
                     if self._state.backtracking == 0:
 
                         string_literal30_tree = self._adaptor.createWithPayload(string_literal30)
@@ -1338,11 +1321,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 7:
-                    # Java.g:106:9: 'final'
+                    # Java.g:102:9: 'final'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal31=self.match(self.input, 37, self.FOLLOW_37_in_classOrInterfaceModifier425)
+                    string_literal31=self.match(self.input, 37, self.FOLLOW_37_in_classOrInterfaceModifier396)
                     if self._state.backtracking == 0:
 
                         string_literal31_tree = self._adaptor.createWithPayload(string_literal31)
@@ -1351,11 +1334,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt14 == 8:
-                    # Java.g:107:9: 'strictfp'
+                    # Java.g:103:9: 'strictfp'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal32=self.match(self.input, 38, self.FOLLOW_38_in_classOrInterfaceModifier441)
+                    string_literal32=self.match(self.input, 38, self.FOLLOW_38_in_classOrInterfaceModifier412)
                     if self._state.backtracking == 0:
 
                         string_literal32_tree = self._adaptor.createWithPayload(string_literal32)
@@ -1397,7 +1380,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "modifiers"
-    # Java.g:111:1: modifiers returns [mods] : ( modifier )* ;
+    # Java.g:107:1: modifiers returns [mods] : ( modifier )* ;
     def modifiers(self, ):
 
         retval = self.modifiers_return()
@@ -1420,12 +1403,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:115:5: ( ( modifier )* )
-                # Java.g:115:9: ( modifier )*
+                # Java.g:111:5: ( ( modifier )* )
+                # Java.g:111:9: ( modifier )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:115:9: ( modifier )*
+                # Java.g:111:9: ( modifier )*
                 while True: #loop15
                     alt15 = 2
                     LA15_0 = self.input.LA(1)
@@ -1442,9 +1425,9 @@ class JavaParser(LocalParser):
 
 
                     if alt15 == 1:
-                        # Java.g:115:10: modifier
+                        # Java.g:111:10: modifier
                         pass 
-                        self._state.following.append(self.FOLLOW_modifier_in_modifiers474)
+                        self._state.following.append(self.FOLLOW_modifier_in_modifiers445)
                         modifier33 = self.modifier()
 
                         self._state.following.pop()
@@ -1495,9 +1478,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classDecl"
-    # Java.g:119:1: classDecl : ( normalClassDecl[block] | enumDecl[block] );
+    # Java.g:115:1: classDecl : ( normalClassDecl[block] | enumDecl[block] );
     def classDecl(self, ):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.classDecl_return()
         retval.start = self.input.LT(1)
@@ -1511,9 +1493,8 @@ class JavaParser(LocalParser):
 
 
                
-        parent = self.py_block_stack[PREV].block
-        block = self.factory('class', parent=parent)
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('class', parent=scope.top))
 
         success = False
         try:
@@ -1523,7 +1504,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:125:5: ( normalClassDecl[block] | enumDecl[block] )
+                # Java.g:123:5: ( normalClassDecl[block] | enumDecl[block] )
                 alt16 = 2
                 LA16_0 = self.input.LA(1)
 
@@ -1540,11 +1521,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt16 == 1:
-                    # Java.g:125:9: normalClassDecl[block]
+                    # Java.g:123:9: normalClassDecl[block]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_normalClassDecl_in_classDecl508)
+                    self._state.following.append(self.FOLLOW_normalClassDecl_in_classDecl479)
                     normalClassDecl34 = self.normalClassDecl(block)
 
                     self._state.following.pop()
@@ -1553,11 +1534,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt16 == 2:
-                    # Java.g:125:35: enumDecl[block]
+                    # Java.g:123:35: enumDecl[block]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_enumDecl_in_classDecl514)
+                    self._state.following.append(self.FOLLOW_enumDecl_in_classDecl485)
                     enumDecl35 = self.enumDecl(block)
 
                     self._state.following.pop()
@@ -1572,6 +1553,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -1581,8 +1567,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 9, classDecl_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -1600,7 +1584,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "normalClassDecl"
-    # Java.g:129:1: normalClassDecl[klass] : 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody ;
+    # Java.g:127:1: normalClassDecl[klass] : 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody ;
     def normalClassDecl(self, klass):
 
         retval = self.normalClassDecl_return()
@@ -1634,18 +1618,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:133:5: ( 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody )
-                # Java.g:133:9: 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody
+                # Java.g:131:5: ( 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody )
+                # Java.g:131:9: 'class' id0= Ident ( typeParameters )? ( 'extends' tp0= type )? ( 'implements' tl0= typeList )? classBody
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal36=self.match(self.input, 39, self.FOLLOW_39_in_normalClassDecl542)
+                string_literal36=self.match(self.input, 39, self.FOLLOW_39_in_normalClassDecl513)
                 if self._state.backtracking == 0:
 
                     string_literal36_tree = self._adaptor.createWithPayload(string_literal36)
                     self._adaptor.addChild(root_0, string_literal36_tree)
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_normalClassDecl546)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_normalClassDecl517)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
@@ -1654,7 +1638,7 @@ class JavaParser(LocalParser):
                 if self._state.backtracking == 0:
                     klass.name = id0.text 
 
-                # Java.g:133:54: ( typeParameters )?
+                # Java.g:131:54: ( typeParameters )?
                 alt17 = 2
                 LA17_0 = self.input.LA(1)
 
@@ -1663,7 +1647,7 @@ class JavaParser(LocalParser):
                 if alt17 == 1:
                     # Java.g:0:0: typeParameters
                     pass 
-                    self._state.following.append(self.FOLLOW_typeParameters_in_normalClassDecl550)
+                    self._state.following.append(self.FOLLOW_typeParameters_in_normalClassDecl521)
                     typeParameters37 = self.typeParameters()
 
                     self._state.following.pop()
@@ -1672,22 +1656,22 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:134:9: ( 'extends' tp0= type )?
+                # Java.g:132:9: ( 'extends' tp0= type )?
                 alt18 = 2
                 LA18_0 = self.input.LA(1)
 
                 if (LA18_0 == 40) :
                     alt18 = 1
                 if alt18 == 1:
-                    # Java.g:134:10: 'extends' tp0= type
+                    # Java.g:132:10: 'extends' tp0= type
                     pass 
-                    string_literal38=self.match(self.input, 40, self.FOLLOW_40_in_normalClassDecl562)
+                    string_literal38=self.match(self.input, 40, self.FOLLOW_40_in_normalClassDecl533)
                     if self._state.backtracking == 0:
 
                         string_literal38_tree = self._adaptor.createWithPayload(string_literal38)
                         self._adaptor.addChild(root_0, string_literal38_tree)
 
-                    self._state.following.append(self.FOLLOW_type_in_normalClassDecl566)
+                    self._state.following.append(self.FOLLOW_type_in_normalClassDecl537)
                     tp0 = self.type()
 
                     self._state.following.pop()
@@ -1699,22 +1683,22 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:135:9: ( 'implements' tl0= typeList )?
+                # Java.g:133:9: ( 'implements' tl0= typeList )?
                 alt19 = 2
                 LA19_0 = self.input.LA(1)
 
                 if (LA19_0 == 41) :
                     alt19 = 1
                 if alt19 == 1:
-                    # Java.g:135:10: 'implements' tl0= typeList
+                    # Java.g:133:10: 'implements' tl0= typeList
                     pass 
-                    string_literal39=self.match(self.input, 41, self.FOLLOW_41_in_normalClassDecl581)
+                    string_literal39=self.match(self.input, 41, self.FOLLOW_41_in_normalClassDecl552)
                     if self._state.backtracking == 0:
 
                         string_literal39_tree = self._adaptor.createWithPayload(string_literal39)
                         self._adaptor.addChild(root_0, string_literal39_tree)
 
-                    self._state.following.append(self.FOLLOW_typeList_in_normalClassDecl585)
+                    self._state.following.append(self.FOLLOW_typeList_in_normalClassDecl556)
                     tl0 = self.typeList()
 
                     self._state.following.pop()
@@ -1726,7 +1710,7 @@ class JavaParser(LocalParser):
 
 
 
-                self._state.following.append(self.FOLLOW_classBody_in_normalClassDecl599)
+                self._state.following.append(self.FOLLOW_classBody_in_normalClassDecl570)
                 classBody40 = self.classBody()
 
                 self._state.following.pop()
@@ -1744,7 +1728,7 @@ class JavaParser(LocalParser):
 
                 if self._state.backtracking == 0:
                             
-                    self.py_block_stack[-1].block.parent.addVariable(klass.name)
+                    klass.parent.addVariable(klass.name)
 
 
 
@@ -1773,7 +1757,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeParameters"
-    # Java.g:140:1: typeParameters : '<' typeParameter ( ',' typeParameter )* '>' ;
+    # Java.g:138:1: typeParameters : '<' typeParameter ( ',' typeParameter )* '>' ;
     def typeParameters(self, ):
 
         retval = self.typeParameters_return()
@@ -1801,24 +1785,24 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:141:5: ( '<' typeParameter ( ',' typeParameter )* '>' )
-                # Java.g:141:9: '<' typeParameter ( ',' typeParameter )* '>'
+                # Java.g:139:5: ( '<' typeParameter ( ',' typeParameter )* '>' )
+                # Java.g:139:9: '<' typeParameter ( ',' typeParameter )* '>'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal41=self.match(self.input, 42, self.FOLLOW_42_in_typeParameters619)
+                char_literal41=self.match(self.input, 42, self.FOLLOW_42_in_typeParameters590)
                 if self._state.backtracking == 0:
 
                     char_literal41_tree = self._adaptor.createWithPayload(char_literal41)
                     self._adaptor.addChild(root_0, char_literal41_tree)
 
-                self._state.following.append(self.FOLLOW_typeParameter_in_typeParameters621)
+                self._state.following.append(self.FOLLOW_typeParameter_in_typeParameters592)
                 typeParameter42 = self.typeParameter()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, typeParameter42.tree)
-                # Java.g:141:27: ( ',' typeParameter )*
+                # Java.g:139:27: ( ',' typeParameter )*
                 while True: #loop20
                     alt20 = 2
                     LA20_0 = self.input.LA(1)
@@ -1828,15 +1812,15 @@ class JavaParser(LocalParser):
 
 
                     if alt20 == 1:
-                        # Java.g:141:28: ',' typeParameter
+                        # Java.g:139:28: ',' typeParameter
                         pass 
-                        char_literal43=self.match(self.input, 43, self.FOLLOW_43_in_typeParameters624)
+                        char_literal43=self.match(self.input, 43, self.FOLLOW_43_in_typeParameters595)
                         if self._state.backtracking == 0:
 
                             char_literal43_tree = self._adaptor.createWithPayload(char_literal43)
                             self._adaptor.addChild(root_0, char_literal43_tree)
 
-                        self._state.following.append(self.FOLLOW_typeParameter_in_typeParameters626)
+                        self._state.following.append(self.FOLLOW_typeParameter_in_typeParameters597)
                         typeParameter44 = self.typeParameter()
 
                         self._state.following.pop()
@@ -1848,7 +1832,7 @@ class JavaParser(LocalParser):
                         break #loop20
 
 
-                char_literal45=self.match(self.input, 44, self.FOLLOW_44_in_typeParameters630)
+                char_literal45=self.match(self.input, 44, self.FOLLOW_44_in_typeParameters601)
                 if self._state.backtracking == 0:
 
                     char_literal45_tree = self._adaptor.createWithPayload(char_literal45)
@@ -1890,7 +1874,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeParameter"
-    # Java.g:145:1: typeParameter : Ident ( 'extends' typeBound )? ;
+    # Java.g:143:1: typeParameter : Ident ( 'extends' typeBound )? ;
     def typeParameter(self, ):
 
         retval = self.typeParameter_return()
@@ -1914,33 +1898,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:146:5: ( Ident ( 'extends' typeBound )? )
-                # Java.g:146:9: Ident ( 'extends' typeBound )?
+                # Java.g:144:5: ( Ident ( 'extends' typeBound )? )
+                # Java.g:144:9: Ident ( 'extends' typeBound )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident46=self.match(self.input, Ident, self.FOLLOW_Ident_in_typeParameter650)
+                Ident46=self.match(self.input, Ident, self.FOLLOW_Ident_in_typeParameter621)
                 if self._state.backtracking == 0:
 
                     Ident46_tree = self._adaptor.createWithPayload(Ident46)
                     self._adaptor.addChild(root_0, Ident46_tree)
 
-                # Java.g:146:15: ( 'extends' typeBound )?
+                # Java.g:144:15: ( 'extends' typeBound )?
                 alt21 = 2
                 LA21_0 = self.input.LA(1)
 
                 if (LA21_0 == 40) :
                     alt21 = 1
                 if alt21 == 1:
-                    # Java.g:146:16: 'extends' typeBound
+                    # Java.g:144:16: 'extends' typeBound
                     pass 
-                    string_literal47=self.match(self.input, 40, self.FOLLOW_40_in_typeParameter653)
+                    string_literal47=self.match(self.input, 40, self.FOLLOW_40_in_typeParameter624)
                     if self._state.backtracking == 0:
 
                         string_literal47_tree = self._adaptor.createWithPayload(string_literal47)
                         self._adaptor.addChild(root_0, string_literal47_tree)
 
-                    self._state.following.append(self.FOLLOW_typeBound_in_typeParameter655)
+                    self._state.following.append(self.FOLLOW_typeBound_in_typeParameter626)
                     typeBound48 = self.typeBound()
 
                     self._state.following.pop()
@@ -1985,7 +1969,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeBound"
-    # Java.g:150:1: typeBound : type ( '&' type )* ;
+    # Java.g:148:1: typeBound : type ( '&' type )* ;
     def typeBound(self, ):
 
         retval = self.typeBound_return()
@@ -2009,18 +1993,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:151:5: ( type ( '&' type )* )
-                # Java.g:151:9: type ( '&' type )*
+                # Java.g:149:5: ( type ( '&' type )* )
+                # Java.g:149:9: type ( '&' type )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_type_in_typeBound677)
+                self._state.following.append(self.FOLLOW_type_in_typeBound648)
                 type49 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, type49.tree)
-                # Java.g:151:14: ( '&' type )*
+                # Java.g:149:14: ( '&' type )*
                 while True: #loop22
                     alt22 = 2
                     LA22_0 = self.input.LA(1)
@@ -2030,15 +2014,15 @@ class JavaParser(LocalParser):
 
 
                     if alt22 == 1:
-                        # Java.g:151:15: '&' type
+                        # Java.g:149:15: '&' type
                         pass 
-                        char_literal50=self.match(self.input, 45, self.FOLLOW_45_in_typeBound680)
+                        char_literal50=self.match(self.input, 45, self.FOLLOW_45_in_typeBound651)
                         if self._state.backtracking == 0:
 
                             char_literal50_tree = self._adaptor.createWithPayload(char_literal50)
                             self._adaptor.addChild(root_0, char_literal50_tree)
 
-                        self._state.following.append(self.FOLLOW_type_in_typeBound682)
+                        self._state.following.append(self.FOLLOW_type_in_typeBound653)
                         type51 = self.type()
 
                         self._state.following.pop()
@@ -2086,7 +2070,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumDecl"
-    # Java.g:155:1: enumDecl[klass] : ENUM Ident ( 'implements' typeList )? enumBody ;
+    # Java.g:153:1: enumDecl[klass] : ENUM Ident ( 'implements' typeList )? enumBody ;
     def enumDecl(self, klass):
 
         retval = self.enumDecl_return()
@@ -2114,39 +2098,39 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:156:5: ( ENUM Ident ( 'implements' typeList )? enumBody )
-                # Java.g:156:9: ENUM Ident ( 'implements' typeList )? enumBody
+                # Java.g:154:5: ( ENUM Ident ( 'implements' typeList )? enumBody )
+                # Java.g:154:9: ENUM Ident ( 'implements' typeList )? enumBody
                 pass 
                 root_0 = self._adaptor.nil()
 
-                ENUM52=self.match(self.input, ENUM, self.FOLLOW_ENUM_in_enumDecl706)
+                ENUM52=self.match(self.input, ENUM, self.FOLLOW_ENUM_in_enumDecl677)
                 if self._state.backtracking == 0:
 
                     ENUM52_tree = self._adaptor.createWithPayload(ENUM52)
                     self._adaptor.addChild(root_0, ENUM52_tree)
 
-                Ident53=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumDecl708)
+                Ident53=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumDecl679)
                 if self._state.backtracking == 0:
 
                     Ident53_tree = self._adaptor.createWithPayload(Ident53)
                     self._adaptor.addChild(root_0, Ident53_tree)
 
-                # Java.g:156:20: ( 'implements' typeList )?
+                # Java.g:154:20: ( 'implements' typeList )?
                 alt23 = 2
                 LA23_0 = self.input.LA(1)
 
                 if (LA23_0 == 41) :
                     alt23 = 1
                 if alt23 == 1:
-                    # Java.g:156:21: 'implements' typeList
+                    # Java.g:154:21: 'implements' typeList
                     pass 
-                    string_literal54=self.match(self.input, 41, self.FOLLOW_41_in_enumDecl711)
+                    string_literal54=self.match(self.input, 41, self.FOLLOW_41_in_enumDecl682)
                     if self._state.backtracking == 0:
 
                         string_literal54_tree = self._adaptor.createWithPayload(string_literal54)
                         self._adaptor.addChild(root_0, string_literal54_tree)
 
-                    self._state.following.append(self.FOLLOW_typeList_in_enumDecl713)
+                    self._state.following.append(self.FOLLOW_typeList_in_enumDecl684)
                     typeList55 = self.typeList()
 
                     self._state.following.pop()
@@ -2155,7 +2139,7 @@ class JavaParser(LocalParser):
 
 
 
-                self._state.following.append(self.FOLLOW_enumBody_in_enumDecl717)
+                self._state.following.append(self.FOLLOW_enumBody_in_enumDecl688)
                 enumBody56 = self.enumBody()
 
                 self._state.following.pop()
@@ -2197,7 +2181,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumBody"
-    # Java.g:160:1: enumBody : '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}' ;
+    # Java.g:158:1: enumBody : '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}' ;
     def enumBody(self, ):
 
         retval = self.enumBody_return()
@@ -2225,18 +2209,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:161:5: ( '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}' )
-                # Java.g:161:9: '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}'
+                # Java.g:159:5: ( '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}' )
+                # Java.g:159:9: '{' ( enumConstants )? ( ',' )? ( enumBodyDecls )? '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal57=self.match(self.input, 46, self.FOLLOW_46_in_enumBody737)
+                char_literal57=self.match(self.input, 46, self.FOLLOW_46_in_enumBody708)
                 if self._state.backtracking == 0:
 
                     char_literal57_tree = self._adaptor.createWithPayload(char_literal57)
                     self._adaptor.addChild(root_0, char_literal57_tree)
 
-                # Java.g:161:13: ( enumConstants )?
+                # Java.g:159:13: ( enumConstants )?
                 alt24 = 2
                 LA24_0 = self.input.LA(1)
 
@@ -2245,7 +2229,7 @@ class JavaParser(LocalParser):
                 if alt24 == 1:
                     # Java.g:0:0: enumConstants
                     pass 
-                    self._state.following.append(self.FOLLOW_enumConstants_in_enumBody739)
+                    self._state.following.append(self.FOLLOW_enumConstants_in_enumBody710)
                     enumConstants58 = self.enumConstants()
 
                     self._state.following.pop()
@@ -2254,7 +2238,7 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:161:28: ( ',' )?
+                # Java.g:159:28: ( ',' )?
                 alt25 = 2
                 LA25_0 = self.input.LA(1)
 
@@ -2263,7 +2247,7 @@ class JavaParser(LocalParser):
                 if alt25 == 1:
                     # Java.g:0:0: ','
                     pass 
-                    char_literal59=self.match(self.input, 43, self.FOLLOW_43_in_enumBody742)
+                    char_literal59=self.match(self.input, 43, self.FOLLOW_43_in_enumBody713)
                     if self._state.backtracking == 0:
 
                         char_literal59_tree = self._adaptor.createWithPayload(char_literal59)
@@ -2272,7 +2256,7 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:161:33: ( enumBodyDecls )?
+                # Java.g:159:33: ( enumBodyDecls )?
                 alt26 = 2
                 LA26_0 = self.input.LA(1)
 
@@ -2281,7 +2265,7 @@ class JavaParser(LocalParser):
                 if alt26 == 1:
                     # Java.g:0:0: enumBodyDecls
                     pass 
-                    self._state.following.append(self.FOLLOW_enumBodyDecls_in_enumBody745)
+                    self._state.following.append(self.FOLLOW_enumBodyDecls_in_enumBody716)
                     enumBodyDecls60 = self.enumBodyDecls()
 
                     self._state.following.pop()
@@ -2290,7 +2274,7 @@ class JavaParser(LocalParser):
 
 
 
-                char_literal61=self.match(self.input, 47, self.FOLLOW_47_in_enumBody748)
+                char_literal61=self.match(self.input, 47, self.FOLLOW_47_in_enumBody719)
                 if self._state.backtracking == 0:
 
                     char_literal61_tree = self._adaptor.createWithPayload(char_literal61)
@@ -2332,7 +2316,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumConstants"
-    # Java.g:165:1: enumConstants : enumConstant ( ',' enumConstant )* ;
+    # Java.g:163:1: enumConstants : enumConstant ( ',' enumConstant )* ;
     def enumConstants(self, ):
 
         retval = self.enumConstants_return()
@@ -2356,18 +2340,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:166:5: ( enumConstant ( ',' enumConstant )* )
-                # Java.g:166:9: enumConstant ( ',' enumConstant )*
+                # Java.g:164:5: ( enumConstant ( ',' enumConstant )* )
+                # Java.g:164:9: enumConstant ( ',' enumConstant )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_enumConstant_in_enumConstants768)
+                self._state.following.append(self.FOLLOW_enumConstant_in_enumConstants739)
                 enumConstant62 = self.enumConstant()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, enumConstant62.tree)
-                # Java.g:166:22: ( ',' enumConstant )*
+                # Java.g:164:22: ( ',' enumConstant )*
                 while True: #loop27
                     alt27 = 2
                     LA27_0 = self.input.LA(1)
@@ -2382,15 +2366,15 @@ class JavaParser(LocalParser):
 
 
                     if alt27 == 1:
-                        # Java.g:166:23: ',' enumConstant
+                        # Java.g:164:23: ',' enumConstant
                         pass 
-                        char_literal63=self.match(self.input, 43, self.FOLLOW_43_in_enumConstants771)
+                        char_literal63=self.match(self.input, 43, self.FOLLOW_43_in_enumConstants742)
                         if self._state.backtracking == 0:
 
                             char_literal63_tree = self._adaptor.createWithPayload(char_literal63)
                             self._adaptor.addChild(root_0, char_literal63_tree)
 
-                        self._state.following.append(self.FOLLOW_enumConstant_in_enumConstants773)
+                        self._state.following.append(self.FOLLOW_enumConstant_in_enumConstants744)
                         enumConstant64 = self.enumConstant()
 
                         self._state.following.pop()
@@ -2438,7 +2422,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumConstant"
-    # Java.g:170:1: enumConstant : ( annotations )? Ident ( arguments )? ( classBody )? ;
+    # Java.g:168:1: enumConstant : ( annotations )? Ident ( arguments )? ( classBody )? ;
     def enumConstant(self, ):
 
         retval = self.enumConstant_return()
@@ -2464,12 +2448,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:171:5: ( ( annotations )? Ident ( arguments )? ( classBody )? )
-                # Java.g:171:9: ( annotations )? Ident ( arguments )? ( classBody )?
+                # Java.g:169:5: ( ( annotations )? Ident ( arguments )? ( classBody )? )
+                # Java.g:169:9: ( annotations )? Ident ( arguments )? ( classBody )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:171:9: ( annotations )?
+                # Java.g:169:9: ( annotations )?
                 alt28 = 2
                 LA28_0 = self.input.LA(1)
 
@@ -2478,7 +2462,7 @@ class JavaParser(LocalParser):
                 if alt28 == 1:
                     # Java.g:0:0: annotations
                     pass 
-                    self._state.following.append(self.FOLLOW_annotations_in_enumConstant795)
+                    self._state.following.append(self.FOLLOW_annotations_in_enumConstant766)
                     annotations65 = self.annotations()
 
                     self._state.following.pop()
@@ -2487,13 +2471,13 @@ class JavaParser(LocalParser):
 
 
 
-                Ident66=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumConstant798)
+                Ident66=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumConstant769)
                 if self._state.backtracking == 0:
 
                     Ident66_tree = self._adaptor.createWithPayload(Ident66)
                     self._adaptor.addChild(root_0, Ident66_tree)
 
-                # Java.g:171:28: ( arguments )?
+                # Java.g:169:28: ( arguments )?
                 alt29 = 2
                 LA29_0 = self.input.LA(1)
 
@@ -2502,7 +2486,7 @@ class JavaParser(LocalParser):
                 if alt29 == 1:
                     # Java.g:0:0: arguments
                     pass 
-                    self._state.following.append(self.FOLLOW_arguments_in_enumConstant800)
+                    self._state.following.append(self.FOLLOW_arguments_in_enumConstant771)
                     arguments67 = self.arguments()
 
                     self._state.following.pop()
@@ -2511,7 +2495,7 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:171:39: ( classBody )?
+                # Java.g:169:39: ( classBody )?
                 alt30 = 2
                 LA30_0 = self.input.LA(1)
 
@@ -2520,7 +2504,7 @@ class JavaParser(LocalParser):
                 if alt30 == 1:
                     # Java.g:0:0: classBody
                     pass 
-                    self._state.following.append(self.FOLLOW_classBody_in_enumConstant803)
+                    self._state.following.append(self.FOLLOW_classBody_in_enumConstant774)
                     classBody68 = self.classBody()
 
                     self._state.following.pop()
@@ -2565,7 +2549,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumBodyDecls"
-    # Java.g:175:1: enumBodyDecls : ';' ( classBodyDecl )* ;
+    # Java.g:173:1: enumBodyDecls : ';' ( classBodyDecl )* ;
     def enumBodyDecls(self, ):
 
         retval = self.enumBodyDecls_return()
@@ -2587,18 +2571,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:176:5: ( ';' ( classBodyDecl )* )
-                # Java.g:176:9: ';' ( classBodyDecl )*
+                # Java.g:174:5: ( ';' ( classBodyDecl )* )
+                # Java.g:174:9: ';' ( classBodyDecl )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal69=self.match(self.input, 28, self.FOLLOW_28_in_enumBodyDecls824)
+                char_literal69=self.match(self.input, 28, self.FOLLOW_28_in_enumBodyDecls795)
                 if self._state.backtracking == 0:
 
                     char_literal69_tree = self._adaptor.createWithPayload(char_literal69)
                     self._adaptor.addChild(root_0, char_literal69_tree)
 
-                # Java.g:176:13: ( classBodyDecl )*
+                # Java.g:174:13: ( classBodyDecl )*
                 while True: #loop31
                     alt31 = 2
                     LA31_0 = self.input.LA(1)
@@ -2608,9 +2592,9 @@ class JavaParser(LocalParser):
 
 
                     if alt31 == 1:
-                        # Java.g:176:14: classBodyDecl
+                        # Java.g:174:14: classBodyDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_classBodyDecl_in_enumBodyDecls827)
+                        self._state.following.append(self.FOLLOW_classBodyDecl_in_enumBodyDecls798)
                         classBodyDecl70 = self.classBodyDecl()
 
                         self._state.following.pop()
@@ -2658,9 +2642,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceDecl"
-    # Java.g:180:1: interfaceDecl : ( normalInterfaceDecl[block] | annotationTypeDecl );
+    # Java.g:178:1: interfaceDecl : ( normalInterfaceDecl[block] | annotationTypeDecl );
     def interfaceDecl(self, ):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.interfaceDecl_return()
         retval.start = self.input.LT(1)
@@ -2674,8 +2657,8 @@ class JavaParser(LocalParser):
 
 
                
-        block = self.factory('class', parent=self.py_block_stack[PREV].block)
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('class', parent=scope.top))
 
         success = False
         try:
@@ -2685,7 +2668,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:185:5: ( normalInterfaceDecl[block] | annotationTypeDecl )
+                # Java.g:186:5: ( normalInterfaceDecl[block] | annotationTypeDecl )
                 alt32 = 2
                 LA32_0 = self.input.LA(1)
 
@@ -2702,11 +2685,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt32 == 1:
-                    # Java.g:185:9: normalInterfaceDecl[block]
+                    # Java.g:186:9: normalInterfaceDecl[block]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_normalInterfaceDecl_in_interfaceDecl859)
+                    self._state.following.append(self.FOLLOW_normalInterfaceDecl_in_interfaceDecl830)
                     normalInterfaceDecl71 = self.normalInterfaceDecl(block)
 
                     self._state.following.pop()
@@ -2715,11 +2698,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt32 == 2:
-                    # Java.g:186:9: annotationTypeDecl
+                    # Java.g:187:9: annotationTypeDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotationTypeDecl_in_interfaceDecl870)
+                    self._state.following.append(self.FOLLOW_annotationTypeDecl_in_interfaceDecl841)
                     annotationTypeDecl72 = self.annotationTypeDecl()
 
                     self._state.following.pop()
@@ -2734,6 +2717,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -2743,8 +2731,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 19, interfaceDecl_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -2762,7 +2748,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "normalInterfaceDecl"
-    # Java.g:190:1: normalInterfaceDecl[iface] : 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody ;
+    # Java.g:191:1: normalInterfaceDecl[iface] : 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody ;
     def normalInterfaceDecl(self, iface):
 
         retval = self.normalInterfaceDecl_return()
@@ -2792,18 +2778,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:191:5: ( 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody )
-                # Java.g:191:9: 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody
+                # Java.g:192:5: ( 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody )
+                # Java.g:192:9: 'interface' id0= Ident ( typeParameters )? ( 'extends' tl0= typeList )? interfaceBody
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal73=self.match(self.input, 48, self.FOLLOW_48_in_normalInterfaceDecl892)
+                string_literal73=self.match(self.input, 48, self.FOLLOW_48_in_normalInterfaceDecl863)
                 if self._state.backtracking == 0:
 
                     string_literal73_tree = self._adaptor.createWithPayload(string_literal73)
                     self._adaptor.addChild(root_0, string_literal73_tree)
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_normalInterfaceDecl896)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_normalInterfaceDecl867)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
@@ -2812,7 +2798,7 @@ class JavaParser(LocalParser):
                 if self._state.backtracking == 0:
                     iface.name = id0.text 
 
-                # Java.g:192:10: ( typeParameters )?
+                # Java.g:193:10: ( typeParameters )?
                 alt33 = 2
                 LA33_0 = self.input.LA(1)
 
@@ -2821,7 +2807,7 @@ class JavaParser(LocalParser):
                 if alt33 == 1:
                     # Java.g:0:0: typeParameters
                     pass 
-                    self._state.following.append(self.FOLLOW_typeParameters_in_normalInterfaceDecl909)
+                    self._state.following.append(self.FOLLOW_typeParameters_in_normalInterfaceDecl880)
                     typeParameters74 = self.typeParameters()
 
                     self._state.following.pop()
@@ -2830,22 +2816,22 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:193:10: ( 'extends' tl0= typeList )?
+                # Java.g:194:10: ( 'extends' tl0= typeList )?
                 alt34 = 2
                 LA34_0 = self.input.LA(1)
 
                 if (LA34_0 == 40) :
                     alt34 = 1
                 if alt34 == 1:
-                    # Java.g:193:11: 'extends' tl0= typeList
+                    # Java.g:194:11: 'extends' tl0= typeList
                     pass 
-                    string_literal75=self.match(self.input, 40, self.FOLLOW_40_in_normalInterfaceDecl922)
+                    string_literal75=self.match(self.input, 40, self.FOLLOW_40_in_normalInterfaceDecl893)
                     if self._state.backtracking == 0:
 
                         string_literal75_tree = self._adaptor.createWithPayload(string_literal75)
                         self._adaptor.addChild(root_0, string_literal75_tree)
 
-                    self._state.following.append(self.FOLLOW_typeList_in_normalInterfaceDecl926)
+                    self._state.following.append(self.FOLLOW_typeList_in_normalInterfaceDecl897)
                     tl0 = self.typeList()
 
                     self._state.following.pop()
@@ -2857,7 +2843,7 @@ class JavaParser(LocalParser):
 
 
 
-                self._state.following.append(self.FOLLOW_interfaceBody_in_normalInterfaceDecl941)
+                self._state.following.append(self.FOLLOW_interfaceBody_in_normalInterfaceDecl912)
                 interfaceBody76 = self.interfaceBody()
 
                 self._state.following.pop()
@@ -2900,7 +2886,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeList"
-    # Java.g:198:1: typeList returns [types] : t0= type ( ',' t1= type )* ;
+    # Java.g:199:1: typeList returns [types] : t0= type ( ',' t1= type )* ;
     def typeList(self, ):
 
         retval = self.typeList_return()
@@ -2928,12 +2914,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:203:5: (t0= type ( ',' t1= type )* )
-                # Java.g:203:9: t0= type ( ',' t1= type )*
+                # Java.g:204:5: (t0= type ( ',' t1= type )* )
+                # Java.g:204:9: t0= type ( ',' t1= type )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_type_in_typeList972)
+                self._state.following.append(self.FOLLOW_type_in_typeList943)
                 t0 = self.type()
 
                 self._state.following.pop()
@@ -2942,7 +2928,7 @@ class JavaParser(LocalParser):
                 if self._state.backtracking == 0:
                     append(((t0 is not None) and [t0.value] or [None])[0]) 
 
-                # Java.g:203:39: ( ',' t1= type )*
+                # Java.g:204:39: ( ',' t1= type )*
                 while True: #loop35
                     alt35 = 2
                     LA35_0 = self.input.LA(1)
@@ -2952,15 +2938,15 @@ class JavaParser(LocalParser):
 
 
                     if alt35 == 1:
-                        # Java.g:203:40: ',' t1= type
+                        # Java.g:204:40: ',' t1= type
                         pass 
-                        char_literal77=self.match(self.input, 43, self.FOLLOW_43_in_typeList977)
+                        char_literal77=self.match(self.input, 43, self.FOLLOW_43_in_typeList948)
                         if self._state.backtracking == 0:
 
                             char_literal77_tree = self._adaptor.createWithPayload(char_literal77)
                             self._adaptor.addChild(root_0, char_literal77_tree)
 
-                        self._state.following.append(self.FOLLOW_type_in_typeList981)
+                        self._state.following.append(self.FOLLOW_type_in_typeList952)
                         t1 = self.type()
 
                         self._state.following.pop()
@@ -3011,7 +2997,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classBody"
-    # Java.g:207:1: classBody : '{' ( classBodyDecl )* '}' ;
+    # Java.g:208:1: classBody : '{' ( classBodyDecl )* '}' ;
     def classBody(self, ):
 
         retval = self.classBody_return()
@@ -3035,18 +3021,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:208:5: ( '{' ( classBodyDecl )* '}' )
-                # Java.g:208:9: '{' ( classBodyDecl )* '}'
+                # Java.g:209:5: ( '{' ( classBodyDecl )* '}' )
+                # Java.g:209:9: '{' ( classBodyDecl )* '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal78=self.match(self.input, 46, self.FOLLOW_46_in_classBody1005)
+                char_literal78=self.match(self.input, 46, self.FOLLOW_46_in_classBody976)
                 if self._state.backtracking == 0:
 
                     char_literal78_tree = self._adaptor.createWithPayload(char_literal78)
                     self._adaptor.addChild(root_0, char_literal78_tree)
 
-                # Java.g:208:13: ( classBodyDecl )*
+                # Java.g:209:13: ( classBodyDecl )*
                 while True: #loop36
                     alt36 = 2
                     LA36_0 = self.input.LA(1)
@@ -3058,7 +3044,7 @@ class JavaParser(LocalParser):
                     if alt36 == 1:
                         # Java.g:0:0: classBodyDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_classBodyDecl_in_classBody1007)
+                        self._state.following.append(self.FOLLOW_classBodyDecl_in_classBody978)
                         classBodyDecl79 = self.classBodyDecl()
 
                         self._state.following.pop()
@@ -3070,7 +3056,7 @@ class JavaParser(LocalParser):
                         break #loop36
 
 
-                char_literal80=self.match(self.input, 47, self.FOLLOW_47_in_classBody1010)
+                char_literal80=self.match(self.input, 47, self.FOLLOW_47_in_classBody981)
                 if self._state.backtracking == 0:
 
                     char_literal80_tree = self._adaptor.createWithPayload(char_literal80)
@@ -3112,7 +3098,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classBodyDecl"
-    # Java.g:212:1: classBodyDecl : ( ';' | ( 'static' )? block | md1= modifiers memberDecl[$md1.mods] );
+    # Java.g:213:1: classBodyDecl : ( ';' | ( 'static' )? block | md0= modifiers memberDecl[$md0.mods] );
     def classBodyDecl(self, ):
 
         retval = self.classBodyDecl_return()
@@ -3122,7 +3108,7 @@ class JavaParser(LocalParser):
 
         char_literal81 = None
         string_literal82 = None
-        md1 = None
+        md0 = None
 
         block83 = None
 
@@ -3140,7 +3126,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:213:5: ( ';' | ( 'static' )? block | md1= modifiers memberDecl[$md1.mods] )
+                # Java.g:214:5: ( ';' | ( 'static' )? block | md0= modifiers memberDecl[$md0.mods] )
                 alt38 = 3
                 LA38 = self.input.LA(1)
                 if LA38 == 28:
@@ -3173,11 +3159,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt38 == 1:
-                    # Java.g:213:9: ';'
+                    # Java.g:214:9: ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal81=self.match(self.input, 28, self.FOLLOW_28_in_classBodyDecl1030)
+                    char_literal81=self.match(self.input, 28, self.FOLLOW_28_in_classBodyDecl1001)
                     if self._state.backtracking == 0:
 
                         char_literal81_tree = self._adaptor.createWithPayload(char_literal81)
@@ -3186,11 +3172,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt38 == 2:
-                    # Java.g:214:9: ( 'static' )? block
+                    # Java.g:215:9: ( 'static' )? block
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:214:9: ( 'static' )?
+                    # Java.g:215:9: ( 'static' )?
                     alt37 = 2
                     LA37_0 = self.input.LA(1)
 
@@ -3199,7 +3185,7 @@ class JavaParser(LocalParser):
                     if alt37 == 1:
                         # Java.g:0:0: 'static'
                         pass 
-                        string_literal82=self.match(self.input, 30, self.FOLLOW_30_in_classBodyDecl1040)
+                        string_literal82=self.match(self.input, 30, self.FOLLOW_30_in_classBodyDecl1011)
                         if self._state.backtracking == 0:
 
                             string_literal82_tree = self._adaptor.createWithPayload(string_literal82)
@@ -3208,7 +3194,7 @@ class JavaParser(LocalParser):
 
 
 
-                    self._state.following.append(self.FOLLOW_block_in_classBodyDecl1043)
+                    self._state.following.append(self.FOLLOW_block_in_classBodyDecl1014)
                     block83 = self.block()
 
                     self._state.following.pop()
@@ -3217,18 +3203,18 @@ class JavaParser(LocalParser):
 
 
                 elif alt38 == 3:
-                    # Java.g:215:9: md1= modifiers memberDecl[$md1.mods]
+                    # Java.g:216:9: md0= modifiers memberDecl[$md0.mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_modifiers_in_classBodyDecl1055)
-                    md1 = self.modifiers()
+                    self._state.following.append(self.FOLLOW_modifiers_in_classBodyDecl1026)
+                    md0 = self.modifiers()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, md1.tree)
-                    self._state.following.append(self.FOLLOW_memberDecl_in_classBodyDecl1057)
-                    memberDecl84 = self.memberDecl(((md1 is not None) and [md1.mods] or [None])[0])
+                        self._adaptor.addChild(root_0, md0.tree)
+                    self._state.following.append(self.FOLLOW_memberDecl_in_classBodyDecl1028)
+                    memberDecl84 = self.memberDecl(((md0 is not None) and [md0.mods] or [None])[0])
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
@@ -3268,7 +3254,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "memberDecl"
-    # Java.g:219:1: memberDecl[mods] : ( genericMethodOrConstructorDecl | fieldOrMethodDecl[$mods] | 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods] | id1= Ident constructorDeclRest[$id1.text, $mods] | interfaceDecl | classDecl );
+    # Java.g:220:1: memberDecl[mods] : ( genericMethodOrConstructorDecl | fieldOrMethodDecl[$mods] | 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods] | id1= Ident constructorDeclRest[$id1.text, $mods] | interfaceDecl | classDecl );
     def memberDecl(self, mods):
 
         retval = self.memberDecl_return()
@@ -3304,7 +3290,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:220:5: ( genericMethodOrConstructorDecl | fieldOrMethodDecl[$mods] | 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods] | id1= Ident constructorDeclRest[$id1.text, $mods] | interfaceDecl | classDecl )
+                # Java.g:221:5: ( genericMethodOrConstructorDecl | fieldOrMethodDecl[$mods] | 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods] | id1= Ident constructorDeclRest[$id1.text, $mods] | interfaceDecl | classDecl )
                 alt39 = 6
                 LA39 = self.input.LA(1)
                 if LA39 == 42:
@@ -3312,10 +3298,10 @@ class JavaParser(LocalParser):
                 elif LA39 == Ident:
                     LA39_2 = self.input.LA(2)
 
-                    if (LA39_2 == 68) :
-                        alt39 = 4
-                    elif (LA39_2 == Ident or LA39_2 == 31 or LA39_2 == 42 or LA39_2 == 50) :
+                    if (LA39_2 == Ident or LA39_2 == 31 or LA39_2 == 42 or LA39_2 == 50) :
                         alt39 = 2
+                    elif (LA39_2 == 68) :
+                        alt39 = 4
                     else:
                         if self._state.backtracking > 0:
                             raise BacktrackingFailed
@@ -3341,11 +3327,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt39 == 1:
-                    # Java.g:220:9: genericMethodOrConstructorDecl
+                    # Java.g:221:9: genericMethodOrConstructorDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_genericMethodOrConstructorDecl_in_memberDecl1080)
+                    self._state.following.append(self.FOLLOW_genericMethodOrConstructorDecl_in_memberDecl1051)
                     genericMethodOrConstructorDecl85 = self.genericMethodOrConstructorDecl()
 
                     self._state.following.pop()
@@ -3354,11 +3340,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt39 == 2:
-                    # Java.g:221:9: fieldOrMethodDecl[$mods]
+                    # Java.g:222:9: fieldOrMethodDecl[$mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_fieldOrMethodDecl_in_memberDecl1090)
+                    self._state.following.append(self.FOLLOW_fieldOrMethodDecl_in_memberDecl1061)
                     fieldOrMethodDecl86 = self.fieldOrMethodDecl(mods)
 
                     self._state.following.pop()
@@ -3367,23 +3353,23 @@ class JavaParser(LocalParser):
 
 
                 elif alt39 == 3:
-                    # Java.g:222:9: 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods]
+                    # Java.g:223:9: 'void' id0= Ident voidMethodDeclRest[$id0.text, $mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal87=self.match(self.input, 49, self.FOLLOW_49_in_memberDecl1101)
+                    string_literal87=self.match(self.input, 49, self.FOLLOW_49_in_memberDecl1072)
                     if self._state.backtracking == 0:
 
                         string_literal87_tree = self._adaptor.createWithPayload(string_literal87)
                         self._adaptor.addChild(root_0, string_literal87_tree)
 
-                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_memberDecl1105)
+                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_memberDecl1076)
                     if self._state.backtracking == 0:
 
                         id0_tree = self._adaptor.createWithPayload(id0)
                         self._adaptor.addChild(root_0, id0_tree)
 
-                    self._state.following.append(self.FOLLOW_voidMethodDeclRest_in_memberDecl1107)
+                    self._state.following.append(self.FOLLOW_voidMethodDeclRest_in_memberDecl1078)
                     voidMethodDeclRest88 = self.voidMethodDeclRest(id0.text, mods)
 
                     self._state.following.pop()
@@ -3392,17 +3378,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt39 == 4:
-                    # Java.g:223:9: id1= Ident constructorDeclRest[$id1.text, $mods]
+                    # Java.g:224:9: id1= Ident constructorDeclRest[$id1.text, $mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_memberDecl1120)
+                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_memberDecl1091)
                     if self._state.backtracking == 0:
 
                         id1_tree = self._adaptor.createWithPayload(id1)
                         self._adaptor.addChild(root_0, id1_tree)
 
-                    self._state.following.append(self.FOLLOW_constructorDeclRest_in_memberDecl1122)
+                    self._state.following.append(self.FOLLOW_constructorDeclRest_in_memberDecl1093)
                     constructorDeclRest89 = self.constructorDeclRest(id1.text, mods)
 
                     self._state.following.pop()
@@ -3411,11 +3397,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt39 == 5:
-                    # Java.g:224:9: interfaceDecl
+                    # Java.g:225:9: interfaceDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_interfaceDecl_in_memberDecl1133)
+                    self._state.following.append(self.FOLLOW_interfaceDecl_in_memberDecl1104)
                     interfaceDecl90 = self.interfaceDecl()
 
                     self._state.following.pop()
@@ -3424,11 +3410,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt39 == 6:
-                    # Java.g:225:9: classDecl
+                    # Java.g:226:9: classDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classDecl_in_memberDecl1143)
+                    self._state.following.append(self.FOLLOW_classDecl_in_memberDecl1114)
                     classDecl91 = self.classDecl()
 
                     self._state.following.pop()
@@ -3469,7 +3455,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "fieldOrMethodDecl"
-    # Java.g:229:1: fieldOrMethodDecl[mods] : t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] ) ;
+    # Java.g:230:1: fieldOrMethodDecl[mods] : t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] ) ;
     def fieldOrMethodDecl(self, mods):
 
         retval = self.fieldOrMethodDecl_return()
@@ -3493,18 +3479,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:230:5: (t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] ) )
-                # Java.g:230:9: t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] )
+                # Java.g:231:5: (t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] ) )
+                # Java.g:231:9: t0= type ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] )
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_type_in_fieldOrMethodDecl1167)
+                self._state.following.append(self.FOLLOW_type_in_fieldOrMethodDecl1138)
                 t0 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, t0.tree)
-                # Java.g:230:17: ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] )
+                # Java.g:231:17: ( methodDecl[$t0.value, $mods] | fieldDecl[$t0.value, $mods] )
                 alt40 = 2
                 LA40_0 = self.input.LA(1)
 
@@ -3532,9 +3518,9 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt40 == 1:
-                    # Java.g:230:18: methodDecl[$t0.value, $mods]
+                    # Java.g:231:18: methodDecl[$t0.value, $mods]
                     pass 
-                    self._state.following.append(self.FOLLOW_methodDecl_in_fieldOrMethodDecl1170)
+                    self._state.following.append(self.FOLLOW_methodDecl_in_fieldOrMethodDecl1141)
                     methodDecl92 = self.methodDecl(((t0 is not None) and [t0.value] or [None])[0], mods)
 
                     self._state.following.pop()
@@ -3543,9 +3529,9 @@ class JavaParser(LocalParser):
 
 
                 elif alt40 == 2:
-                    # Java.g:230:49: fieldDecl[$t0.value, $mods]
+                    # Java.g:231:49: fieldDecl[$t0.value, $mods]
                     pass 
-                    self._state.following.append(self.FOLLOW_fieldDecl_in_fieldOrMethodDecl1175)
+                    self._state.following.append(self.FOLLOW_fieldDecl_in_fieldOrMethodDecl1146)
                     fieldDecl93 = self.fieldDecl(((t0 is not None) and [t0.value] or [None])[0], mods)
 
                     self._state.following.pop()
@@ -3590,7 +3576,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "genericMethodOrConstructorDecl"
-    # Java.g:234:1: genericMethodOrConstructorDecl : typeParameters genericMethodOrConstructorRest ;
+    # Java.g:235:1: genericMethodOrConstructorDecl : typeParameters genericMethodOrConstructorRest ;
     def genericMethodOrConstructorDecl(self, ):
 
         retval = self.genericMethodOrConstructorDecl_return()
@@ -3612,18 +3598,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:235:5: ( typeParameters genericMethodOrConstructorRest )
-                # Java.g:235:9: typeParameters genericMethodOrConstructorRest
+                # Java.g:236:5: ( typeParameters genericMethodOrConstructorRest )
+                # Java.g:236:9: typeParameters genericMethodOrConstructorRest
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_typeParameters_in_genericMethodOrConstructorDecl1197)
+                self._state.following.append(self.FOLLOW_typeParameters_in_genericMethodOrConstructorDecl1168)
                 typeParameters94 = self.typeParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, typeParameters94.tree)
-                self._state.following.append(self.FOLLOW_genericMethodOrConstructorRest_in_genericMethodOrConstructorDecl1199)
+                self._state.following.append(self.FOLLOW_genericMethodOrConstructorRest_in_genericMethodOrConstructorDecl1170)
                 genericMethodOrConstructorRest95 = self.genericMethodOrConstructorRest()
 
                 self._state.following.pop()
@@ -3665,7 +3651,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "genericMethodOrConstructorRest"
-    # Java.g:239:1: genericMethodOrConstructorRest : ( ( type | 'void' ) id0= Ident methodDeclRest[$id0.text] | id1= Ident constructorDeclRest[$id1.text] );
+    # Java.g:240:1: genericMethodOrConstructorRest : ( ( type | 'void' ) id0= Ident methodDeclRest[$id0.text] | id1= Ident constructorDeclRest[$id1.text] );
     def genericMethodOrConstructorRest(self, ):
 
         retval = self.genericMethodOrConstructorRest_return()
@@ -3695,7 +3681,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:240:5: ( ( type | 'void' ) id0= Ident methodDeclRest[$id0.text] | id1= Ident constructorDeclRest[$id1.text] )
+                # Java.g:241:5: ( ( type | 'void' ) id0= Ident methodDeclRest[$id0.text] | id1= Ident constructorDeclRest[$id1.text] )
                 alt42 = 2
                 LA42_0 = self.input.LA(1)
 
@@ -3725,11 +3711,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt42 == 1:
-                    # Java.g:240:9: ( type | 'void' ) id0= Ident methodDeclRest[$id0.text]
+                    # Java.g:241:9: ( type | 'void' ) id0= Ident methodDeclRest[$id0.text]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:240:9: ( type | 'void' )
+                    # Java.g:241:9: ( type | 'void' )
                     alt41 = 2
                     LA41_0 = self.input.LA(1)
 
@@ -3746,9 +3732,9 @@ class JavaParser(LocalParser):
                         raise nvae
 
                     if alt41 == 1:
-                        # Java.g:240:10: type
+                        # Java.g:241:10: type
                         pass 
-                        self._state.following.append(self.FOLLOW_type_in_genericMethodOrConstructorRest1220)
+                        self._state.following.append(self.FOLLOW_type_in_genericMethodOrConstructorRest1191)
                         type96 = self.type()
 
                         self._state.following.pop()
@@ -3757,9 +3743,9 @@ class JavaParser(LocalParser):
 
 
                     elif alt41 == 2:
-                        # Java.g:240:17: 'void'
+                        # Java.g:241:17: 'void'
                         pass 
-                        string_literal97=self.match(self.input, 49, self.FOLLOW_49_in_genericMethodOrConstructorRest1224)
+                        string_literal97=self.match(self.input, 49, self.FOLLOW_49_in_genericMethodOrConstructorRest1195)
                         if self._state.backtracking == 0:
 
                             string_literal97_tree = self._adaptor.createWithPayload(string_literal97)
@@ -3768,13 +3754,13 @@ class JavaParser(LocalParser):
 
 
 
-                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_genericMethodOrConstructorRest1229)
+                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_genericMethodOrConstructorRest1200)
                     if self._state.backtracking == 0:
 
                         id0_tree = self._adaptor.createWithPayload(id0)
                         self._adaptor.addChild(root_0, id0_tree)
 
-                    self._state.following.append(self.FOLLOW_methodDeclRest_in_genericMethodOrConstructorRest1231)
+                    self._state.following.append(self.FOLLOW_methodDeclRest_in_genericMethodOrConstructorRest1202)
                     methodDeclRest98 = self.methodDeclRest(id0.text)
 
                     self._state.following.pop()
@@ -3783,17 +3769,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt42 == 2:
-                    # Java.g:241:9: id1= Ident constructorDeclRest[$id1.text]
+                    # Java.g:242:9: id1= Ident constructorDeclRest[$id1.text]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_genericMethodOrConstructorRest1244)
+                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_genericMethodOrConstructorRest1215)
                     if self._state.backtracking == 0:
 
                         id1_tree = self._adaptor.createWithPayload(id1)
                         self._adaptor.addChild(root_0, id1_tree)
 
-                    self._state.following.append(self.FOLLOW_constructorDeclRest_in_genericMethodOrConstructorRest1246)
+                    self._state.following.append(self.FOLLOW_constructorDeclRest_in_genericMethodOrConstructorRest1217)
                     constructorDeclRest99 = self.constructorDeclRest(id1.text)
 
                     self._state.following.pop()
@@ -3834,9 +3820,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "methodDecl"
-    # Java.g:245:1: methodDecl[type, mods] : id0= Ident methodDeclRest[$id0.text, $mods] ;
+    # Java.g:246:1: methodDecl[type, mods] : id0= Ident methodDeclRest[$id0.text, $mods] ;
     def methodDecl(self, type, mods):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.methodDecl_return()
         retval.start = self.input.LT(1)
@@ -3850,8 +3835,8 @@ class JavaParser(LocalParser):
         id0_tree = None
 
                
-        self.py_block_stack[-1].block = \
-            self.factory('method', parent=self.py_block_stack[PREV].block, type=type)
+        scope = self.scope.block
+        block = scope.push(self.factory('method', parent=scope.top, type=type))
 
         success = False
         try:
@@ -3861,18 +3846,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:249:5: (id0= Ident methodDeclRest[$id0.text, $mods] )
-                # Java.g:249:9: id0= Ident methodDeclRest[$id0.text, $mods]
+                # Java.g:254:5: (id0= Ident methodDeclRest[$id0.text, $mods] )
+                # Java.g:254:9: id0= Ident methodDeclRest[$id0.text, $mods]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_methodDecl1281)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_methodDecl1252)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
                     self._adaptor.addChild(root_0, id0_tree)
 
-                self._state.following.append(self.FOLLOW_methodDeclRest_in_methodDecl1283)
+                self._state.following.append(self.FOLLOW_methodDeclRest_in_methodDecl1254)
                 methodDeclRest100 = self.methodDeclRest(id0.text, mods)
 
                 self._state.following.pop()
@@ -3888,6 +3873,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -3897,8 +3887,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 28, methodDecl_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -3916,9 +3904,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "fieldDecl"
-    # Java.g:253:1: fieldDecl[type, mods] : variableDecls ';' ;
+    # Java.g:258:1: fieldDecl[type, mods] : variableDecls[type] ';' ;
     def fieldDecl(self, type, mods):
-        self.py_expr_stack.append(py_expr_scope())
 
         retval = self.fieldDecl_return()
         retval.start = self.input.LT(1)
@@ -3931,13 +3918,6 @@ class JavaParser(LocalParser):
 
         char_literal102_tree = None
 
-               
-        block = self.py_block_stack[-1].block
-        expr = self.factory('expression', format=FS.tassign, parent=block,
-                            type=type, rule=RN())
-        self.py_expr_stack[-1].expr = expr
-        self.py_expr_stack[-1].nest = expr.nestRight
-
         success = False
         try:
             try:
@@ -3946,18 +3926,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:261:5: ( variableDecls ';' )
-                # Java.g:261:9: variableDecls ';'
+                # Java.g:259:5: ( variableDecls[type] ';' )
+                # Java.g:259:9: variableDecls[type] ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableDecls_in_fieldDecl1317)
-                variableDecls101 = self.variableDecls()
+                self._state.following.append(self.FOLLOW_variableDecls_in_fieldDecl1277)
+                variableDecls101 = self.variableDecls(type)
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, variableDecls101.tree)
-                char_literal102=self.match(self.input, 28, self.FOLLOW_28_in_fieldDecl1319)
+                char_literal102=self.match(self.input, 28, self.FOLLOW_28_in_fieldDecl1280)
                 if self._state.backtracking == 0:
 
                     char_literal102_tree = self._adaptor.createWithPayload(char_literal102)
@@ -3983,8 +3963,6 @@ class JavaParser(LocalParser):
             if self._state.backtracking > 0:
                 self.memoize(self.input, 29, fieldDecl_StartIndex, success)
 
-            self.py_expr_stack.pop()
-
             pass
 
         return retval
@@ -4001,7 +3979,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceBody"
-    # Java.g:265:1: interfaceBody : '{' ( interfaceBodyDecl )* '}' ;
+    # Java.g:263:1: interfaceBody : '{' ( interfaceBodyDecl )* '}' ;
     def interfaceBody(self, ):
 
         retval = self.interfaceBody_return()
@@ -4025,18 +4003,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:266:5: ( '{' ( interfaceBodyDecl )* '}' )
-                # Java.g:266:9: '{' ( interfaceBodyDecl )* '}'
+                # Java.g:264:5: ( '{' ( interfaceBodyDecl )* '}' )
+                # Java.g:264:9: '{' ( interfaceBodyDecl )* '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal103=self.match(self.input, 46, self.FOLLOW_46_in_interfaceBody1339)
+                char_literal103=self.match(self.input, 46, self.FOLLOW_46_in_interfaceBody1300)
                 if self._state.backtracking == 0:
 
                     char_literal103_tree = self._adaptor.createWithPayload(char_literal103)
                     self._adaptor.addChild(root_0, char_literal103_tree)
 
-                # Java.g:266:13: ( interfaceBodyDecl )*
+                # Java.g:264:13: ( interfaceBodyDecl )*
                 while True: #loop43
                     alt43 = 2
                     LA43_0 = self.input.LA(1)
@@ -4048,7 +4026,7 @@ class JavaParser(LocalParser):
                     if alt43 == 1:
                         # Java.g:0:0: interfaceBodyDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_interfaceBodyDecl_in_interfaceBody1341)
+                        self._state.following.append(self.FOLLOW_interfaceBodyDecl_in_interfaceBody1302)
                         interfaceBodyDecl104 = self.interfaceBodyDecl()
 
                         self._state.following.pop()
@@ -4060,7 +4038,7 @@ class JavaParser(LocalParser):
                         break #loop43
 
 
-                char_literal105=self.match(self.input, 47, self.FOLLOW_47_in_interfaceBody1344)
+                char_literal105=self.match(self.input, 47, self.FOLLOW_47_in_interfaceBody1305)
                 if self._state.backtracking == 0:
 
                     char_literal105_tree = self._adaptor.createWithPayload(char_literal105)
@@ -4102,7 +4080,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceBodyDecl"
-    # Java.g:270:1: interfaceBodyDecl : (md1= modifiers interfaceMemberDecl[$md1.mods] | ';' );
+    # Java.g:268:1: interfaceBodyDecl : (md0= modifiers interfaceMemberDecl[$md0.mods] | ';' );
     def interfaceBodyDecl(self, ):
 
         retval = self.interfaceBodyDecl_return()
@@ -4111,7 +4089,7 @@ class JavaParser(LocalParser):
         root_0 = None
 
         char_literal107 = None
-        md1 = None
+        md0 = None
 
         interfaceMemberDecl106 = None
 
@@ -4126,7 +4104,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:271:5: (md1= modifiers interfaceMemberDecl[$md1.mods] | ';' )
+                # Java.g:269:5: (md0= modifiers interfaceMemberDecl[$md0.mods] | ';' )
                 alt44 = 2
                 LA44_0 = self.input.LA(1)
 
@@ -4143,18 +4121,18 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt44 == 1:
-                    # Java.g:271:9: md1= modifiers interfaceMemberDecl[$md1.mods]
+                    # Java.g:269:9: md0= modifiers interfaceMemberDecl[$md0.mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_modifiers_in_interfaceBodyDecl1366)
-                    md1 = self.modifiers()
+                    self._state.following.append(self.FOLLOW_modifiers_in_interfaceBodyDecl1327)
+                    md0 = self.modifiers()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, md1.tree)
-                    self._state.following.append(self.FOLLOW_interfaceMemberDecl_in_interfaceBodyDecl1368)
-                    interfaceMemberDecl106 = self.interfaceMemberDecl(((md1 is not None) and [md1.mods] or [None])[0])
+                        self._adaptor.addChild(root_0, md0.tree)
+                    self._state.following.append(self.FOLLOW_interfaceMemberDecl_in_interfaceBodyDecl1329)
+                    interfaceMemberDecl106 = self.interfaceMemberDecl(((md0 is not None) and [md0.mods] or [None])[0])
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
@@ -4162,11 +4140,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt44 == 2:
-                    # Java.g:272:9: ';'
+                    # Java.g:270:9: ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal107=self.match(self.input, 28, self.FOLLOW_28_in_interfaceBodyDecl1379)
+                    char_literal107=self.match(self.input, 28, self.FOLLOW_28_in_interfaceBodyDecl1340)
                     if self._state.backtracking == 0:
 
                         char_literal107_tree = self._adaptor.createWithPayload(char_literal107)
@@ -4207,7 +4185,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceMemberDecl"
-    # Java.g:276:1: interfaceMemberDecl[mods] : ( interfaceMethodOrFieldDecl[mods] | interfaceGenericMethodDecl | 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods] | interfaceDecl | classDecl );
+    # Java.g:274:1: interfaceMemberDecl[mods] : ( interfaceMethodOrFieldDecl[mods] | interfaceGenericMethodDecl | 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods] | interfaceDecl | classDecl );
     def interfaceMemberDecl(self, mods):
 
         retval = self.interfaceMemberDecl_return()
@@ -4239,7 +4217,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:277:5: ( interfaceMethodOrFieldDecl[mods] | interfaceGenericMethodDecl | 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods] | interfaceDecl | classDecl )
+                # Java.g:275:5: ( interfaceMethodOrFieldDecl[mods] | interfaceGenericMethodDecl | 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods] | interfaceDecl | classDecl )
                 alt45 = 5
                 LA45 = self.input.LA(1)
                 if LA45 == Ident or LA45 == 58 or LA45 == 59 or LA45 == 60 or LA45 == 61 or LA45 == 62 or LA45 == 63 or LA45 == 64 or LA45 == 65:
@@ -4261,11 +4239,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt45 == 1:
-                    # Java.g:277:9: interfaceMethodOrFieldDecl[mods]
+                    # Java.g:275:9: interfaceMethodOrFieldDecl[mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_interfaceMethodOrFieldDecl_in_interfaceMemberDecl1401)
+                    self._state.following.append(self.FOLLOW_interfaceMethodOrFieldDecl_in_interfaceMemberDecl1362)
                     interfaceMethodOrFieldDecl108 = self.interfaceMethodOrFieldDecl(mods)
 
                     self._state.following.pop()
@@ -4274,11 +4252,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt45 == 2:
-                    # Java.g:278:9: interfaceGenericMethodDecl
+                    # Java.g:276:9: interfaceGenericMethodDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_interfaceGenericMethodDecl_in_interfaceMemberDecl1412)
+                    self._state.following.append(self.FOLLOW_interfaceGenericMethodDecl_in_interfaceMemberDecl1373)
                     interfaceGenericMethodDecl109 = self.interfaceGenericMethodDecl()
 
                     self._state.following.pop()
@@ -4287,23 +4265,23 @@ class JavaParser(LocalParser):
 
 
                 elif alt45 == 3:
-                    # Java.g:279:9: 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods]
+                    # Java.g:277:9: 'void' id0= Ident voidInterfaceMethodDeclRest[$id0.text, mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal110=self.match(self.input, 49, self.FOLLOW_49_in_interfaceMemberDecl1422)
+                    string_literal110=self.match(self.input, 49, self.FOLLOW_49_in_interfaceMemberDecl1383)
                     if self._state.backtracking == 0:
 
                         string_literal110_tree = self._adaptor.createWithPayload(string_literal110)
                         self._adaptor.addChild(root_0, string_literal110_tree)
 
-                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceMemberDecl1426)
+                    id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceMemberDecl1387)
                     if self._state.backtracking == 0:
 
                         id0_tree = self._adaptor.createWithPayload(id0)
                         self._adaptor.addChild(root_0, id0_tree)
 
-                    self._state.following.append(self.FOLLOW_voidInterfaceMethodDeclRest_in_interfaceMemberDecl1428)
+                    self._state.following.append(self.FOLLOW_voidInterfaceMethodDeclRest_in_interfaceMemberDecl1389)
                     voidInterfaceMethodDeclRest111 = self.voidInterfaceMethodDeclRest(id0.text, mods)
 
                     self._state.following.pop()
@@ -4312,11 +4290,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt45 == 4:
-                    # Java.g:280:9: interfaceDecl
+                    # Java.g:278:9: interfaceDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_interfaceDecl_in_interfaceMemberDecl1439)
+                    self._state.following.append(self.FOLLOW_interfaceDecl_in_interfaceMemberDecl1400)
                     interfaceDecl112 = self.interfaceDecl()
 
                     self._state.following.pop()
@@ -4325,11 +4303,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt45 == 5:
-                    # Java.g:281:9: classDecl
+                    # Java.g:279:9: classDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classDecl_in_interfaceMemberDecl1449)
+                    self._state.following.append(self.FOLLOW_classDecl_in_interfaceMemberDecl1410)
                     classDecl113 = self.classDecl()
 
                     self._state.following.pop()
@@ -4370,7 +4348,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceMethodOrFieldDecl"
-    # Java.g:285:1: interfaceMethodOrFieldDecl[mods] : type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods] ;
+    # Java.g:283:1: interfaceMethodOrFieldDecl[mods] : type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods] ;
     def interfaceMethodOrFieldDecl(self, mods):
 
         retval = self.interfaceMethodOrFieldDecl_return()
@@ -4394,24 +4372,24 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:286:5: ( type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods] )
-                # Java.g:286:9: type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods]
+                # Java.g:284:5: ( type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods] )
+                # Java.g:284:9: type id0= Ident interfaceMethodOrFieldRest[$id0.text, mods]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_type_in_interfaceMethodOrFieldDecl1471)
+                self._state.following.append(self.FOLLOW_type_in_interfaceMethodOrFieldDecl1432)
                 type114 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, type114.tree)
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceMethodOrFieldDecl1475)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceMethodOrFieldDecl1436)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
                     self._adaptor.addChild(root_0, id0_tree)
 
-                self._state.following.append(self.FOLLOW_interfaceMethodOrFieldRest_in_interfaceMethodOrFieldDecl1477)
+                self._state.following.append(self.FOLLOW_interfaceMethodOrFieldRest_in_interfaceMethodOrFieldDecl1438)
                 interfaceMethodOrFieldRest115 = self.interfaceMethodOrFieldRest(id0.text, mods)
 
                 self._state.following.pop()
@@ -4453,7 +4431,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceMethodOrFieldRest"
-    # Java.g:290:1: interfaceMethodOrFieldRest[name, mods] : ( constantDeclsRest ';' | interfaceMethodDeclRest[name, mods] );
+    # Java.g:288:1: interfaceMethodOrFieldRest[name, mods] : ( constantDeclsRest ';' | interfaceMethodDeclRest[name, mods] );
     def interfaceMethodOrFieldRest(self, name, mods):
 
         retval = self.interfaceMethodOrFieldRest_return()
@@ -4477,7 +4455,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:291:5: ( constantDeclsRest ';' | interfaceMethodDeclRest[name, mods] )
+                # Java.g:289:5: ( constantDeclsRest ';' | interfaceMethodDeclRest[name, mods] )
                 alt46 = 2
                 LA46_0 = self.input.LA(1)
 
@@ -4494,17 +4472,17 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt46 == 1:
-                    # Java.g:291:9: constantDeclsRest ';'
+                    # Java.g:289:9: constantDeclsRest ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_constantDeclsRest_in_interfaceMethodOrFieldRest1500)
+                    self._state.following.append(self.FOLLOW_constantDeclsRest_in_interfaceMethodOrFieldRest1461)
                     constantDeclsRest116 = self.constantDeclsRest()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self._adaptor.addChild(root_0, constantDeclsRest116.tree)
-                    char_literal117=self.match(self.input, 28, self.FOLLOW_28_in_interfaceMethodOrFieldRest1502)
+                    char_literal117=self.match(self.input, 28, self.FOLLOW_28_in_interfaceMethodOrFieldRest1463)
                     if self._state.backtracking == 0:
 
                         char_literal117_tree = self._adaptor.createWithPayload(char_literal117)
@@ -4513,11 +4491,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt46 == 2:
-                    # Java.g:292:9: interfaceMethodDeclRest[name, mods]
+                    # Java.g:290:9: interfaceMethodDeclRest[name, mods]
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_interfaceMethodDeclRest_in_interfaceMethodOrFieldRest1512)
+                    self._state.following.append(self.FOLLOW_interfaceMethodDeclRest_in_interfaceMethodOrFieldRest1473)
                     interfaceMethodDeclRest118 = self.interfaceMethodDeclRest(name, mods)
 
                     self._state.following.pop()
@@ -4558,7 +4536,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "methodDeclRest"
-    # Java.g:296:1: methodDeclRest[name, mods] : formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' ) ;
+    # Java.g:294:1: methodDeclRest[name, mods] : formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' ) ;
     def methodDeclRest(self, name, mods):
 
         retval = self.methodDeclRest_return()
@@ -4583,7 +4561,7 @@ class JavaParser(LocalParser):
         char_literal125_tree = None
 
                
-        method = self.py_block_stack[TOP].block
+        method = self.scope.block.top
         method.name = name
         method.modifiers.extend(mods)
 
@@ -4595,18 +4573,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:302:5: ( formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' ) )
-                # Java.g:302:9: formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' )
+                # Java.g:300:5: ( formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' ) )
+                # Java.g:300:9: formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ( methodBody | ';' )
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_formalParameters_in_methodDeclRest1540)
+                self._state.following.append(self.FOLLOW_formalParameters_in_methodDeclRest1501)
                 formalParameters119 = self.formalParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, formalParameters119.tree)
-                # Java.g:302:26: ( '[' ']' )*
+                # Java.g:300:26: ( '[' ']' )*
                 while True: #loop47
                     alt47 = 2
                     LA47_0 = self.input.LA(1)
@@ -4616,15 +4594,15 @@ class JavaParser(LocalParser):
 
 
                     if alt47 == 1:
-                        # Java.g:302:27: '[' ']'
+                        # Java.g:300:27: '[' ']'
                         pass 
-                        char_literal120=self.match(self.input, 50, self.FOLLOW_50_in_methodDeclRest1543)
+                        char_literal120=self.match(self.input, 50, self.FOLLOW_50_in_methodDeclRest1504)
                         if self._state.backtracking == 0:
 
                             char_literal120_tree = self._adaptor.createWithPayload(char_literal120)
                             self._adaptor.addChild(root_0, char_literal120_tree)
 
-                        char_literal121=self.match(self.input, 51, self.FOLLOW_51_in_methodDeclRest1545)
+                        char_literal121=self.match(self.input, 51, self.FOLLOW_51_in_methodDeclRest1506)
                         if self._state.backtracking == 0:
 
                             char_literal121_tree = self._adaptor.createWithPayload(char_literal121)
@@ -4636,22 +4614,22 @@ class JavaParser(LocalParser):
                         break #loop47
 
 
-                # Java.g:303:9: ( 'throws' qualifiedNameList )?
+                # Java.g:301:9: ( 'throws' qualifiedNameList )?
                 alt48 = 2
                 LA48_0 = self.input.LA(1)
 
                 if (LA48_0 == 52) :
                     alt48 = 1
                 if alt48 == 1:
-                    # Java.g:303:10: 'throws' qualifiedNameList
+                    # Java.g:301:10: 'throws' qualifiedNameList
                     pass 
-                    string_literal122=self.match(self.input, 52, self.FOLLOW_52_in_methodDeclRest1558)
+                    string_literal122=self.match(self.input, 52, self.FOLLOW_52_in_methodDeclRest1519)
                     if self._state.backtracking == 0:
 
                         string_literal122_tree = self._adaptor.createWithPayload(string_literal122)
                         self._adaptor.addChild(root_0, string_literal122_tree)
 
-                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_methodDeclRest1560)
+                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_methodDeclRest1521)
                     qualifiedNameList123 = self.qualifiedNameList()
 
                     self._state.following.pop()
@@ -4660,7 +4638,7 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:304:9: ( methodBody | ';' )
+                # Java.g:302:9: ( methodBody | ';' )
                 alt49 = 2
                 LA49_0 = self.input.LA(1)
 
@@ -4677,9 +4655,9 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt49 == 1:
-                    # Java.g:304:13: methodBody
+                    # Java.g:302:13: methodBody
                     pass 
-                    self._state.following.append(self.FOLLOW_methodBody_in_methodDeclRest1576)
+                    self._state.following.append(self.FOLLOW_methodBody_in_methodDeclRest1537)
                     methodBody124 = self.methodBody()
 
                     self._state.following.pop()
@@ -4688,9 +4666,9 @@ class JavaParser(LocalParser):
 
 
                 elif alt49 == 2:
-                    # Java.g:305:13: ';'
+                    # Java.g:303:13: ';'
                     pass 
-                    char_literal125=self.match(self.input, 28, self.FOLLOW_28_in_methodDeclRest1590)
+                    char_literal125=self.match(self.input, 28, self.FOLLOW_28_in_methodDeclRest1551)
                     if self._state.backtracking == 0:
 
                         char_literal125_tree = self._adaptor.createWithPayload(char_literal125)
@@ -4735,9 +4713,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "voidMethodDeclRest"
-    # Java.g:310:1: voidMethodDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? ( methodBody | ';' ) ;
+    # Java.g:308:1: voidMethodDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? ( methodBody | ';' ) ;
     def voidMethodDeclRest(self, name, mods):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.voidMethodDeclRest_return()
         retval.start = self.input.LT(1)
@@ -4757,10 +4734,9 @@ class JavaParser(LocalParser):
         char_literal130_tree = None
 
                
-        parent = self.py_block_stack[PREV].block
-        block = self.factory('method', name=name, parent=parent, modifiers=mods)
-        block.type = 'void'
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                        modifiers=mods, type='void'))
 
         success = False
         try:
@@ -4775,7 +4751,7 @@ class JavaParser(LocalParser):
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_formalParameters_in_voidMethodDeclRest1632)
+                self._state.following.append(self.FOLLOW_formalParameters_in_voidMethodDeclRest1593)
                 formalParameters126 = self.formalParameters()
 
                 self._state.following.pop()
@@ -4790,13 +4766,13 @@ class JavaParser(LocalParser):
                 if alt50 == 1:
                     # Java.g:317:27: 'throws' qualifiedNameList
                     pass 
-                    string_literal127=self.match(self.input, 52, self.FOLLOW_52_in_voidMethodDeclRest1635)
+                    string_literal127=self.match(self.input, 52, self.FOLLOW_52_in_voidMethodDeclRest1596)
                     if self._state.backtracking == 0:
 
                         string_literal127_tree = self._adaptor.createWithPayload(string_literal127)
                         self._adaptor.addChild(root_0, string_literal127_tree)
 
-                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_voidMethodDeclRest1637)
+                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_voidMethodDeclRest1598)
                     qualifiedNameList128 = self.qualifiedNameList()
 
                     self._state.following.pop()
@@ -4824,7 +4800,7 @@ class JavaParser(LocalParser):
                 if alt51 == 1:
                     # Java.g:318:13: methodBody
                     pass 
-                    self._state.following.append(self.FOLLOW_methodBody_in_voidMethodDeclRest1653)
+                    self._state.following.append(self.FOLLOW_methodBody_in_voidMethodDeclRest1614)
                     methodBody129 = self.methodBody()
 
                     self._state.following.pop()
@@ -4835,7 +4811,7 @@ class JavaParser(LocalParser):
                 elif alt51 == 2:
                     # Java.g:319:13: ';'
                     pass 
-                    char_literal130=self.match(self.input, 28, self.FOLLOW_28_in_voidMethodDeclRest1667)
+                    char_literal130=self.match(self.input, 28, self.FOLLOW_28_in_voidMethodDeclRest1628)
                     if self._state.backtracking == 0:
 
                         char_literal130_tree = self._adaptor.createWithPayload(char_literal130)
@@ -4854,6 +4830,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -4863,8 +4844,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 36, voidMethodDeclRest_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -4884,7 +4863,6 @@ class JavaParser(LocalParser):
     # $ANTLR start "interfaceMethodDeclRest"
     # Java.g:324:1: interfaceMethodDeclRest[name, mods] : formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ';' ;
     def interfaceMethodDeclRest(self, name, mods):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.interfaceMethodDeclRest_return()
         retval.start = self.input.LT(1)
@@ -4906,9 +4884,9 @@ class JavaParser(LocalParser):
         char_literal136_tree = None
 
                
-        parent = self.py_block_stack[PREV].block
-        block = self.factory('method', name=name, parent=parent, modifiers=mods)
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                        modifiers=mods))
 
         success = False
         try:
@@ -4918,18 +4896,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:330:5: ( formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ';' )
-                # Java.g:330:9: formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ';'
+                # Java.g:333:5: ( formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ';' )
+                # Java.g:333:9: formalParameters ( '[' ']' )* ( 'throws' qualifiedNameList )? ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_formalParameters_in_interfaceMethodDeclRest1709)
+                self._state.following.append(self.FOLLOW_formalParameters_in_interfaceMethodDeclRest1670)
                 formalParameters131 = self.formalParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, formalParameters131.tree)
-                # Java.g:330:26: ( '[' ']' )*
+                # Java.g:333:26: ( '[' ']' )*
                 while True: #loop52
                     alt52 = 2
                     LA52_0 = self.input.LA(1)
@@ -4939,15 +4917,15 @@ class JavaParser(LocalParser):
 
 
                     if alt52 == 1:
-                        # Java.g:330:27: '[' ']'
+                        # Java.g:333:27: '[' ']'
                         pass 
-                        char_literal132=self.match(self.input, 50, self.FOLLOW_50_in_interfaceMethodDeclRest1712)
+                        char_literal132=self.match(self.input, 50, self.FOLLOW_50_in_interfaceMethodDeclRest1673)
                         if self._state.backtracking == 0:
 
                             char_literal132_tree = self._adaptor.createWithPayload(char_literal132)
                             self._adaptor.addChild(root_0, char_literal132_tree)
 
-                        char_literal133=self.match(self.input, 51, self.FOLLOW_51_in_interfaceMethodDeclRest1714)
+                        char_literal133=self.match(self.input, 51, self.FOLLOW_51_in_interfaceMethodDeclRest1675)
                         if self._state.backtracking == 0:
 
                             char_literal133_tree = self._adaptor.createWithPayload(char_literal133)
@@ -4959,22 +4937,22 @@ class JavaParser(LocalParser):
                         break #loop52
 
 
-                # Java.g:330:37: ( 'throws' qualifiedNameList )?
+                # Java.g:333:37: ( 'throws' qualifiedNameList )?
                 alt53 = 2
                 LA53_0 = self.input.LA(1)
 
                 if (LA53_0 == 52) :
                     alt53 = 1
                 if alt53 == 1:
-                    # Java.g:330:38: 'throws' qualifiedNameList
+                    # Java.g:333:38: 'throws' qualifiedNameList
                     pass 
-                    string_literal134=self.match(self.input, 52, self.FOLLOW_52_in_interfaceMethodDeclRest1719)
+                    string_literal134=self.match(self.input, 52, self.FOLLOW_52_in_interfaceMethodDeclRest1680)
                     if self._state.backtracking == 0:
 
                         string_literal134_tree = self._adaptor.createWithPayload(string_literal134)
                         self._adaptor.addChild(root_0, string_literal134_tree)
 
-                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_interfaceMethodDeclRest1721)
+                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_interfaceMethodDeclRest1682)
                     qualifiedNameList135 = self.qualifiedNameList()
 
                     self._state.following.pop()
@@ -4983,7 +4961,7 @@ class JavaParser(LocalParser):
 
 
 
-                char_literal136=self.match(self.input, 28, self.FOLLOW_28_in_interfaceMethodDeclRest1725)
+                char_literal136=self.match(self.input, 28, self.FOLLOW_28_in_interfaceMethodDeclRest1686)
                 if self._state.backtracking == 0:
 
                     char_literal136_tree = self._adaptor.createWithPayload(char_literal136)
@@ -4999,6 +4977,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -5008,8 +4991,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 37, interfaceMethodDeclRest_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -5027,7 +5008,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "interfaceGenericMethodDecl"
-    # Java.g:334:1: interfaceGenericMethodDecl : typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None] ;
+    # Java.g:337:1: interfaceGenericMethodDecl : typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None] ;
     def interfaceGenericMethodDecl(self, ):
 
         retval = self.interfaceGenericMethodDecl_return()
@@ -5055,18 +5036,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:335:5: ( typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None] )
-                # Java.g:335:9: typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None]
+                # Java.g:338:5: ( typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None] )
+                # Java.g:338:9: typeParameters ( type | 'void' ) Ident interfaceMethodDeclRest[None, None]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_typeParameters_in_interfaceGenericMethodDecl1745)
+                self._state.following.append(self.FOLLOW_typeParameters_in_interfaceGenericMethodDecl1706)
                 typeParameters137 = self.typeParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, typeParameters137.tree)
-                # Java.g:335:24: ( type | 'void' )
+                # Java.g:338:24: ( type | 'void' )
                 alt54 = 2
                 LA54_0 = self.input.LA(1)
 
@@ -5083,9 +5064,9 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt54 == 1:
-                    # Java.g:335:25: type
+                    # Java.g:338:25: type
                     pass 
-                    self._state.following.append(self.FOLLOW_type_in_interfaceGenericMethodDecl1748)
+                    self._state.following.append(self.FOLLOW_type_in_interfaceGenericMethodDecl1709)
                     type138 = self.type()
 
                     self._state.following.pop()
@@ -5094,9 +5075,9 @@ class JavaParser(LocalParser):
 
 
                 elif alt54 == 2:
-                    # Java.g:335:32: 'void'
+                    # Java.g:338:32: 'void'
                     pass 
-                    string_literal139=self.match(self.input, 49, self.FOLLOW_49_in_interfaceGenericMethodDecl1752)
+                    string_literal139=self.match(self.input, 49, self.FOLLOW_49_in_interfaceGenericMethodDecl1713)
                     if self._state.backtracking == 0:
 
                         string_literal139_tree = self._adaptor.createWithPayload(string_literal139)
@@ -5105,13 +5086,13 @@ class JavaParser(LocalParser):
 
 
 
-                Ident140=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceGenericMethodDecl1755)
+                Ident140=self.match(self.input, Ident, self.FOLLOW_Ident_in_interfaceGenericMethodDecl1716)
                 if self._state.backtracking == 0:
 
                     Ident140_tree = self._adaptor.createWithPayload(Ident140)
                     self._adaptor.addChild(root_0, Ident140_tree)
 
-                self._state.following.append(self.FOLLOW_interfaceMethodDeclRest_in_interfaceGenericMethodDecl1765)
+                self._state.following.append(self.FOLLOW_interfaceMethodDeclRest_in_interfaceGenericMethodDecl1726)
                 interfaceMethodDeclRest141 = self.interfaceMethodDeclRest(None, None)
 
                 self._state.following.pop()
@@ -5153,9 +5134,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "voidInterfaceMethodDeclRest"
-    # Java.g:340:1: voidInterfaceMethodDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? ';' ;
+    # Java.g:343:1: voidInterfaceMethodDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? ';' ;
     def voidInterfaceMethodDeclRest(self, name, mods):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.voidInterfaceMethodDeclRest_return()
         retval.start = self.input.LT(1)
@@ -5173,10 +5153,9 @@ class JavaParser(LocalParser):
         char_literal145_tree = None
 
                
-        parent = self.py_block_stack[PREV].block
-        block = self.factory('method', name=name, parent=parent, modifiers=mods)
-        block.type = 'void'
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                        modifiers=mods, type='void'))
 
         success = False
         try:
@@ -5186,33 +5165,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:347:5: ( formalParameters ( 'throws' qualifiedNameList )? ';' )
-                # Java.g:347:9: formalParameters ( 'throws' qualifiedNameList )? ';'
+                # Java.g:352:5: ( formalParameters ( 'throws' qualifiedNameList )? ';' )
+                # Java.g:352:9: formalParameters ( 'throws' qualifiedNameList )? ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_formalParameters_in_voidInterfaceMethodDeclRest1798)
+                self._state.following.append(self.FOLLOW_formalParameters_in_voidInterfaceMethodDeclRest1759)
                 formalParameters142 = self.formalParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, formalParameters142.tree)
-                # Java.g:347:26: ( 'throws' qualifiedNameList )?
+                # Java.g:352:26: ( 'throws' qualifiedNameList )?
                 alt55 = 2
                 LA55_0 = self.input.LA(1)
 
                 if (LA55_0 == 52) :
                     alt55 = 1
                 if alt55 == 1:
-                    # Java.g:347:27: 'throws' qualifiedNameList
+                    # Java.g:352:27: 'throws' qualifiedNameList
                     pass 
-                    string_literal143=self.match(self.input, 52, self.FOLLOW_52_in_voidInterfaceMethodDeclRest1801)
+                    string_literal143=self.match(self.input, 52, self.FOLLOW_52_in_voidInterfaceMethodDeclRest1762)
                     if self._state.backtracking == 0:
 
                         string_literal143_tree = self._adaptor.createWithPayload(string_literal143)
                         self._adaptor.addChild(root_0, string_literal143_tree)
 
-                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_voidInterfaceMethodDeclRest1803)
+                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_voidInterfaceMethodDeclRest1764)
                     qualifiedNameList144 = self.qualifiedNameList()
 
                     self._state.following.pop()
@@ -5221,7 +5200,7 @@ class JavaParser(LocalParser):
 
 
 
-                char_literal145=self.match(self.input, 28, self.FOLLOW_28_in_voidInterfaceMethodDeclRest1807)
+                char_literal145=self.match(self.input, 28, self.FOLLOW_28_in_voidInterfaceMethodDeclRest1768)
                 if self._state.backtracking == 0:
 
                     char_literal145_tree = self._adaptor.createWithPayload(char_literal145)
@@ -5237,6 +5216,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -5246,8 +5230,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 39, voidInterfaceMethodDeclRest_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -5265,9 +5247,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constructorDeclRest"
-    # Java.g:351:1: constructorDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? constructorBody ;
+    # Java.g:356:1: constructorDeclRest[name, mods] : formalParameters ( 'throws' qualifiedNameList )? constructorBody ;
     def constructorDeclRest(self, name, mods):
-        self.py_block_stack.append(py_block_scope())
 
         retval = self.constructorDeclRest_return()
         retval.start = self.input.LT(1)
@@ -5285,10 +5266,9 @@ class JavaParser(LocalParser):
         string_literal147_tree = None
 
                
-        parent = self.py_block_stack[PREV].block
-        name = '__init__'
-        block = self.factory('method', name=name, parent=parent, modifiers=mods)
-        self.py_block_stack[-1].block = block
+        scope = self.scope.block
+        block = scope.push(self.factory('method', name='__init__',
+                                        parent=scope.top, modifiers=mods))
 
         success = False
         try:
@@ -5298,33 +5278,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:358:5: ( formalParameters ( 'throws' qualifiedNameList )? constructorBody )
-                # Java.g:358:9: formalParameters ( 'throws' qualifiedNameList )? constructorBody
+                # Java.g:365:5: ( formalParameters ( 'throws' qualifiedNameList )? constructorBody )
+                # Java.g:365:9: formalParameters ( 'throws' qualifiedNameList )? constructorBody
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_formalParameters_in_constructorDeclRest1839)
+                self._state.following.append(self.FOLLOW_formalParameters_in_constructorDeclRest1800)
                 formalParameters146 = self.formalParameters()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, formalParameters146.tree)
-                # Java.g:358:26: ( 'throws' qualifiedNameList )?
+                # Java.g:365:26: ( 'throws' qualifiedNameList )?
                 alt56 = 2
                 LA56_0 = self.input.LA(1)
 
                 if (LA56_0 == 52) :
                     alt56 = 1
                 if alt56 == 1:
-                    # Java.g:358:27: 'throws' qualifiedNameList
+                    # Java.g:365:27: 'throws' qualifiedNameList
                     pass 
-                    string_literal147=self.match(self.input, 52, self.FOLLOW_52_in_constructorDeclRest1842)
+                    string_literal147=self.match(self.input, 52, self.FOLLOW_52_in_constructorDeclRest1803)
                     if self._state.backtracking == 0:
 
                         string_literal147_tree = self._adaptor.createWithPayload(string_literal147)
                         self._adaptor.addChild(root_0, string_literal147_tree)
 
-                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_constructorDeclRest1844)
+                    self._state.following.append(self.FOLLOW_qualifiedNameList_in_constructorDeclRest1805)
                     qualifiedNameList148 = self.qualifiedNameList()
 
                     self._state.following.pop()
@@ -5333,7 +5313,7 @@ class JavaParser(LocalParser):
 
 
 
-                self._state.following.append(self.FOLLOW_constructorBody_in_constructorDeclRest1848)
+                self._state.following.append(self.FOLLOW_constructorBody_in_constructorDeclRest1809)
                 constructorBody149 = self.constructorBody()
 
                 self._state.following.pop()
@@ -5349,6 +5329,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -5358,8 +5343,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 40, constructorDeclRest_StartIndex, success)
-
-            self.py_block_stack.pop()
 
             pass
 
@@ -5377,7 +5360,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constantDecl"
-    # Java.g:362:1: constantDecl : Ident constantDeclRest ;
+    # Java.g:369:1: constantDecl : Ident constantDeclRest ;
     def constantDecl(self, ):
 
         retval = self.constantDecl_return()
@@ -5399,18 +5382,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:363:5: ( Ident constantDeclRest )
-                # Java.g:363:9: Ident constantDeclRest
+                # Java.g:370:5: ( Ident constantDeclRest )
+                # Java.g:370:9: Ident constantDeclRest
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident150=self.match(self.input, Ident, self.FOLLOW_Ident_in_constantDecl1868)
+                Ident150=self.match(self.input, Ident, self.FOLLOW_Ident_in_constantDecl1829)
                 if self._state.backtracking == 0:
 
                     Ident150_tree = self._adaptor.createWithPayload(Ident150)
                     self._adaptor.addChild(root_0, Ident150_tree)
 
-                self._state.following.append(self.FOLLOW_constantDeclRest_in_constantDecl1870)
+                self._state.following.append(self.FOLLOW_constantDeclRest_in_constantDecl1831)
                 constantDeclRest151 = self.constantDeclRest()
 
                 self._state.following.pop()
@@ -5452,8 +5435,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableDecls"
-    # Java.g:367:1: variableDecls : variableDecl ( ',' variableDecl )* ;
-    def variableDecls(self, ):
+    # Java.g:374:1: variableDecls[type] : variableDecl[type] ( ',' variableDecl[type] )* ;
+    def variableDecls(self, type):
 
         retval = self.variableDecls_return()
         retval.start = self.input.LT(1)
@@ -5468,16 +5451,6 @@ class JavaParser(LocalParser):
 
         char_literal153_tree = None
 
-               
-        blk = self.py_block_stack[-1].block
-        typ = self.py_expr_stack[-1].expr.type
-        fmt = FS.tassign
-
-        def pushVariableDecl():
-            expr = self.factory('expression', format=fmt, parent=blk, type=typ)
-            self.py_expr_stack[-1].expr = expr
-            self.py_expr_stack[-1].nest = expr.nestRight
-
         success = False
         try:
             try:
@@ -5486,18 +5459,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:378:5: ( variableDecl ( ',' variableDecl )* )
-                # Java.g:378:9: variableDecl ( ',' variableDecl )*
+                # Java.g:375:5: ( variableDecl[type] ( ',' variableDecl[type] )* )
+                # Java.g:375:9: variableDecl[type] ( ',' variableDecl[type] )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableDecl_in_variableDecls1895)
-                variableDecl152 = self.variableDecl()
+                self._state.following.append(self.FOLLOW_variableDecl_in_variableDecls1853)
+                variableDecl152 = self.variableDecl(type)
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, variableDecl152.tree)
-                # Java.g:378:22: ( ',' variableDecl )*
+                # Java.g:375:28: ( ',' variableDecl[type] )*
                 while True: #loop57
                     alt57 = 2
                     LA57_0 = self.input.LA(1)
@@ -5507,19 +5480,16 @@ class JavaParser(LocalParser):
 
 
                     if alt57 == 1:
-                        # Java.g:378:23: ',' variableDecl
+                        # Java.g:375:29: ',' variableDecl[type]
                         pass 
-                        char_literal153=self.match(self.input, 43, self.FOLLOW_43_in_variableDecls1898)
+                        char_literal153=self.match(self.input, 43, self.FOLLOW_43_in_variableDecls1857)
                         if self._state.backtracking == 0:
 
                             char_literal153_tree = self._adaptor.createWithPayload(char_literal153)
                             self._adaptor.addChild(root_0, char_literal153_tree)
 
-                        if self._state.backtracking == 0:
-                            pushVariableDecl() 
-
-                        self._state.following.append(self.FOLLOW_variableDecl_in_variableDecls1902)
-                        variableDecl154 = self.variableDecl()
+                        self._state.following.append(self.FOLLOW_variableDecl_in_variableDecls1859)
+                        variableDecl154 = self.variableDecl(type)
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
@@ -5566,8 +5536,8 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableDecl"
-    # Java.g:382:1: variableDecl : vd0= variableDeclId ( '=' variableInitializer )? ;
-    def variableDecl(self, ):
+    # Java.g:379:1: variableDecl[type] : vd0= variableDeclId ( '=' variableInitializer )? ;
+    def variableDecl(self, type):
 
         retval = self.variableDecl_return()
         retval.start = self.input.LT(1)
@@ -5583,8 +5553,7 @@ class JavaParser(LocalParser):
         char_literal155_tree = None
 
                
-        expr = etop = self.py_expr_stack[-1].expr
-        nest = self.py_expr_stack[-1].nest
+        scope = self.scope.block
 
         success = False
         try:
@@ -5594,12 +5563,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:387:5: (vd0= variableDeclId ( '=' variableInitializer )? )
-                # Java.g:387:9: vd0= variableDeclId ( '=' variableInitializer )?
+                # Java.g:383:5: (vd0= variableDeclId ( '=' variableInitializer )? )
+                # Java.g:383:9: vd0= variableDeclId ( '=' variableInitializer )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableDeclId_in_variableDecl1931)
+                self._state.following.append(self.FOLLOW_variableDeclId_in_variableDecl1892)
                 vd0 = self.variableDeclId()
 
                 self._state.following.pop()
@@ -5607,21 +5576,22 @@ class JavaParser(LocalParser):
                     self._adaptor.addChild(root_0, vd0.tree)
                 if self._state.backtracking == 0:
                              
-                    name = ((vd0 is not None) and [vd0.value] or [None])[0]['name']
-                    expr.update(left=name, rule=RN())
-                    self.py_block_stack[-1].block.addVariable(name)
+                    expr = scope.push(
+                        self.factory('expression', format=FS.assign, left=((vd0 is not None) and [self.input.toString(vd0.start,vd0.stop)] or [None])[0],
+                                     right='None', parent=scope.top, type=type)
+                    )
                             
 
-                # Java.g:393:9: ( '=' variableInitializer )?
+                # Java.g:390:9: ( '=' variableInitializer )?
                 alt58 = 2
                 LA58_0 = self.input.LA(1)
 
                 if (LA58_0 == 53) :
                     alt58 = 1
                 if alt58 == 1:
-                    # Java.g:393:10: '=' variableInitializer
+                    # Java.g:390:10: '=' variableInitializer
                     pass 
-                    char_literal155=self.match(self.input, 53, self.FOLLOW_53_in_variableDecl1952)
+                    char_literal155=self.match(self.input, 53, self.FOLLOW_53_in_variableDecl1913)
                     if self._state.backtracking == 0:
 
                         char_literal155_tree = self._adaptor.createWithPayload(char_literal155)
@@ -5629,20 +5599,33 @@ class JavaParser(LocalParser):
 
                     if self._state.backtracking == 0:
                                      
-                        expr.update(format=FS.assign)
-                        expr = nest(type=expr.type, format=FS.tr, rule=RN(0, 'assign'))
-                        self.py_expr_stack[-1].expr = expr
-                        self.py_expr_stack[-1].nest = expr.nestRight
+                        self.scope.expr.push(expr)
                                     
 
-                    self._state.following.append(self.FOLLOW_variableInitializer_in_variableDecl1980)
+                    self._state.following.append(self.FOLLOW_variableInitializer_in_variableDecl1941)
                     variableInitializer156 = self.variableInitializer()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self._adaptor.addChild(root_0, variableInitializer156.tree)
+                    if self._state.backtracking == 0:
+                                     
+                        self.scope.expr.pop()
+                        if 0: # expr and str(expr) and expr.isBaseType:
+                            expr.update(format=FS.r)
+                        ## also hacky but not as much
+                        if 0: # str(expr.right) == 'None':
+                            expr.update(format=FS.r)
+                        #scope.pop()
+                                    
 
 
+
+
+                if self._state.backtracking == 0:
+                             
+                    scope.pop()
+                            
 
 
 
@@ -5680,7 +5663,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constantDeclsRest"
-    # Java.g:405:1: constantDeclsRest : constantDeclRest ( ',' constantDecl )* ;
+    # Java.g:411:1: constantDeclsRest : constantDeclRest ( ',' constantDecl )* ;
     def constantDeclsRest(self, ):
 
         retval = self.constantDeclsRest_return()
@@ -5704,18 +5687,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:406:5: ( constantDeclRest ( ',' constantDecl )* )
-                # Java.g:406:9: constantDeclRest ( ',' constantDecl )*
+                # Java.g:412:5: ( constantDeclRest ( ',' constantDecl )* )
+                # Java.g:412:9: constantDeclRest ( ',' constantDecl )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_constantDeclRest_in_constantDeclsRest2011)
+                self._state.following.append(self.FOLLOW_constantDeclRest_in_constantDeclsRest1996)
                 constantDeclRest157 = self.constantDeclRest()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, constantDeclRest157.tree)
-                # Java.g:406:26: ( ',' constantDecl )*
+                # Java.g:412:26: ( ',' constantDecl )*
                 while True: #loop59
                     alt59 = 2
                     LA59_0 = self.input.LA(1)
@@ -5725,15 +5708,15 @@ class JavaParser(LocalParser):
 
 
                     if alt59 == 1:
-                        # Java.g:406:27: ',' constantDecl
+                        # Java.g:412:27: ',' constantDecl
                         pass 
-                        char_literal158=self.match(self.input, 43, self.FOLLOW_43_in_constantDeclsRest2014)
+                        char_literal158=self.match(self.input, 43, self.FOLLOW_43_in_constantDeclsRest1999)
                         if self._state.backtracking == 0:
 
                             char_literal158_tree = self._adaptor.createWithPayload(char_literal158)
                             self._adaptor.addChild(root_0, char_literal158_tree)
 
-                        self._state.following.append(self.FOLLOW_constantDecl_in_constantDeclsRest2016)
+                        self._state.following.append(self.FOLLOW_constantDecl_in_constantDeclsRest2001)
                         constantDecl159 = self.constantDecl()
 
                         self._state.following.pop()
@@ -5781,7 +5764,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constantDeclRest"
-    # Java.g:410:1: constantDeclRest : ( '[' ']' )* '=' variableInitializer ;
+    # Java.g:416:1: constantDeclRest : ( '[' ']' )* '=' variableInitializer ;
     def constantDeclRest(self, ):
 
         retval = self.constantDeclRest_return()
@@ -5807,12 +5790,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:411:5: ( ( '[' ']' )* '=' variableInitializer )
-                # Java.g:411:9: ( '[' ']' )* '=' variableInitializer
+                # Java.g:417:5: ( ( '[' ']' )* '=' variableInitializer )
+                # Java.g:417:9: ( '[' ']' )* '=' variableInitializer
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:411:9: ( '[' ']' )*
+                # Java.g:417:9: ( '[' ']' )*
                 while True: #loop60
                     alt60 = 2
                     LA60_0 = self.input.LA(1)
@@ -5822,15 +5805,15 @@ class JavaParser(LocalParser):
 
 
                     if alt60 == 1:
-                        # Java.g:411:10: '[' ']'
+                        # Java.g:417:10: '[' ']'
                         pass 
-                        char_literal160=self.match(self.input, 50, self.FOLLOW_50_in_constantDeclRest2039)
+                        char_literal160=self.match(self.input, 50, self.FOLLOW_50_in_constantDeclRest2024)
                         if self._state.backtracking == 0:
 
                             char_literal160_tree = self._adaptor.createWithPayload(char_literal160)
                             self._adaptor.addChild(root_0, char_literal160_tree)
 
-                        char_literal161=self.match(self.input, 51, self.FOLLOW_51_in_constantDeclRest2041)
+                        char_literal161=self.match(self.input, 51, self.FOLLOW_51_in_constantDeclRest2026)
                         if self._state.backtracking == 0:
 
                             char_literal161_tree = self._adaptor.createWithPayload(char_literal161)
@@ -5842,13 +5825,13 @@ class JavaParser(LocalParser):
                         break #loop60
 
 
-                char_literal162=self.match(self.input, 53, self.FOLLOW_53_in_constantDeclRest2045)
+                char_literal162=self.match(self.input, 53, self.FOLLOW_53_in_constantDeclRest2030)
                 if self._state.backtracking == 0:
 
                     char_literal162_tree = self._adaptor.createWithPayload(char_literal162)
                     self._adaptor.addChild(root_0, char_literal162_tree)
 
-                self._state.following.append(self.FOLLOW_variableInitializer_in_constantDeclRest2047)
+                self._state.following.append(self.FOLLOW_variableInitializer_in_constantDeclRest2032)
                 variableInitializer163 = self.variableInitializer()
 
                 self._state.following.pop()
@@ -5891,7 +5874,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableDeclId"
-    # Java.g:415:1: variableDeclId returns [value] : id0= Ident ( '[' ']' )* ;
+    # Java.g:421:1: variableDeclId returns [value] : id0= Ident ( '[' ']' )* ;
     def variableDeclId(self, ):
 
         retval = self.variableDeclId_return()
@@ -5918,12 +5901,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:419:5: (id0= Ident ( '[' ']' )* )
-                # Java.g:419:9: id0= Ident ( '[' ']' )*
+                # Java.g:425:5: (id0= Ident ( '[' ']' )* )
+                # Java.g:425:9: id0= Ident ( '[' ']' )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_variableDeclId2078)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_variableDeclId2063)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
@@ -5932,7 +5915,7 @@ class JavaParser(LocalParser):
                 if self._state.backtracking == 0:
                     retval.value['name'] = id0.text 
 
-                # Java.g:420:9: ( '[' ']' )*
+                # Java.g:426:9: ( '[' ']' )*
                 while True: #loop61
                     alt61 = 2
                     LA61_0 = self.input.LA(1)
@@ -5942,15 +5925,15 @@ class JavaParser(LocalParser):
 
 
                     if alt61 == 1:
-                        # Java.g:420:10: '[' ']'
+                        # Java.g:426:10: '[' ']'
                         pass 
-                        char_literal164=self.match(self.input, 50, self.FOLLOW_50_in_variableDeclId2091)
+                        char_literal164=self.match(self.input, 50, self.FOLLOW_50_in_variableDeclId2076)
                         if self._state.backtracking == 0:
 
                             char_literal164_tree = self._adaptor.createWithPayload(char_literal164)
                             self._adaptor.addChild(root_0, char_literal164_tree)
 
-                        char_literal165=self.match(self.input, 51, self.FOLLOW_51_in_variableDeclId2093)
+                        char_literal165=self.match(self.input, 51, self.FOLLOW_51_in_variableDeclId2078)
                         if self._state.backtracking == 0:
 
                             char_literal165_tree = self._adaptor.createWithPayload(char_literal165)
@@ -6001,7 +5984,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableInitializer"
-    # Java.g:424:1: variableInitializer : ( arrayInitializer | expression );
+    # Java.g:430:1: variableInitializer : ( arrayInitializer | expression );
     def variableInitializer(self, ):
 
         retval = self.variableInitializer_return()
@@ -6023,7 +6006,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:425:5: ( arrayInitializer | expression )
+                # Java.g:431:5: ( arrayInitializer | expression )
                 alt62 = 2
                 LA62_0 = self.input.LA(1)
 
@@ -6040,11 +6023,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt62 == 1:
-                    # Java.g:425:9: arrayInitializer
+                    # Java.g:431:9: arrayInitializer
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_arrayInitializer_in_variableInitializer2118)
+                    self._state.following.append(self.FOLLOW_arrayInitializer_in_variableInitializer2103)
                     arrayInitializer166 = self.arrayInitializer()
 
                     self._state.following.pop()
@@ -6053,11 +6036,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt62 == 2:
-                    # Java.g:426:9: expression
+                    # Java.g:432:9: expression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_expression_in_variableInitializer2128)
+                    self._state.following.append(self.FOLLOW_expression_in_variableInitializer2113)
                     expression167 = self.expression()
 
                     self._state.following.pop()
@@ -6098,7 +6081,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "arrayInitializer"
-    # Java.g:430:1: arrayInitializer : '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}' ;
+    # Java.g:436:1: arrayInitializer : '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}' ;
     def arrayInitializer(self, ):
 
         retval = self.arrayInitializer_return()
@@ -6128,33 +6111,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:431:5: ( '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}' )
-                # Java.g:431:9: '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}'
+                # Java.g:437:5: ( '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}' )
+                # Java.g:437:9: '{' ( variableInitializer ( ',' variableInitializer )* ( ',' )? )? '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal168=self.match(self.input, 46, self.FOLLOW_46_in_arrayInitializer2148)
+                char_literal168=self.match(self.input, 46, self.FOLLOW_46_in_arrayInitializer2133)
                 if self._state.backtracking == 0:
 
                     char_literal168_tree = self._adaptor.createWithPayload(char_literal168)
                     self._adaptor.addChild(root_0, char_literal168_tree)
 
-                # Java.g:431:13: ( variableInitializer ( ',' variableInitializer )* ( ',' )? )?
+                # Java.g:437:13: ( variableInitializer ( ',' variableInitializer )* ( ',' )? )?
                 alt65 = 2
                 LA65_0 = self.input.LA(1)
 
                 if (LA65_0 == Ident or (FloatingPointLiteral <= LA65_0 <= DecimalLiteral) or LA65_0 == 46 or LA65_0 == 49 or (58 <= LA65_0 <= 65) or (67 <= LA65_0 <= 68) or LA65_0 == 71 or (104 <= LA65_0 <= 105) or (108 <= LA65_0 <= 112)) :
                     alt65 = 1
                 if alt65 == 1:
-                    # Java.g:431:14: variableInitializer ( ',' variableInitializer )* ( ',' )?
+                    # Java.g:437:14: variableInitializer ( ',' variableInitializer )* ( ',' )?
                     pass 
-                    self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2151)
+                    self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2136)
                     variableInitializer169 = self.variableInitializer()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self._adaptor.addChild(root_0, variableInitializer169.tree)
-                    # Java.g:431:34: ( ',' variableInitializer )*
+                    # Java.g:437:34: ( ',' variableInitializer )*
                     while True: #loop63
                         alt63 = 2
                         LA63_0 = self.input.LA(1)
@@ -6169,15 +6152,15 @@ class JavaParser(LocalParser):
 
 
                         if alt63 == 1:
-                            # Java.g:431:35: ',' variableInitializer
+                            # Java.g:437:35: ',' variableInitializer
                             pass 
-                            char_literal170=self.match(self.input, 43, self.FOLLOW_43_in_arrayInitializer2154)
+                            char_literal170=self.match(self.input, 43, self.FOLLOW_43_in_arrayInitializer2139)
                             if self._state.backtracking == 0:
 
                                 char_literal170_tree = self._adaptor.createWithPayload(char_literal170)
                                 self._adaptor.addChild(root_0, char_literal170_tree)
 
-                            self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2156)
+                            self._state.following.append(self.FOLLOW_variableInitializer_in_arrayInitializer2141)
                             variableInitializer171 = self.variableInitializer()
 
                             self._state.following.pop()
@@ -6189,16 +6172,16 @@ class JavaParser(LocalParser):
                             break #loop63
 
 
-                    # Java.g:431:61: ( ',' )?
+                    # Java.g:437:61: ( ',' )?
                     alt64 = 2
                     LA64_0 = self.input.LA(1)
 
                     if (LA64_0 == 43) :
                         alt64 = 1
                     if alt64 == 1:
-                        # Java.g:431:62: ','
+                        # Java.g:437:62: ','
                         pass 
-                        char_literal172=self.match(self.input, 43, self.FOLLOW_43_in_arrayInitializer2161)
+                        char_literal172=self.match(self.input, 43, self.FOLLOW_43_in_arrayInitializer2146)
                         if self._state.backtracking == 0:
 
                             char_literal172_tree = self._adaptor.createWithPayload(char_literal172)
@@ -6210,7 +6193,7 @@ class JavaParser(LocalParser):
 
 
 
-                char_literal173=self.match(self.input, 47, self.FOLLOW_47_in_arrayInitializer2168)
+                char_literal173=self.match(self.input, 47, self.FOLLOW_47_in_arrayInitializer2153)
                 if self._state.backtracking == 0:
 
                     char_literal173_tree = self._adaptor.createWithPayload(char_literal173)
@@ -6253,7 +6236,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "modifier"
-    # Java.g:435:1: modifier returns [value] : ( annotation | 'public' | 'protected' | 'private' | 'static' | 'abstract' | 'final' | 'native' | 'synchronized' | 'transient' | 'volatile' | 'strictfp' );
+    # Java.g:441:1: modifier returns [value] : ( annotation | 'public' | 'protected' | 'private' | 'static' | 'abstract' | 'final' | 'native' | 'synchronized' | 'transient' | 'volatile' | 'strictfp' );
     def modifier(self, ):
 
         retval = self.modifier_return()
@@ -6296,7 +6279,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:440:5: ( annotation | 'public' | 'protected' | 'private' | 'static' | 'abstract' | 'final' | 'native' | 'synchronized' | 'transient' | 'volatile' | 'strictfp' )
+                # Java.g:446:5: ( annotation | 'public' | 'protected' | 'private' | 'static' | 'abstract' | 'final' | 'native' | 'synchronized' | 'transient' | 'volatile' | 'strictfp' )
                 alt66 = 12
                 LA66 = self.input.LA(1)
                 if LA66 == 72:
@@ -6332,11 +6315,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt66 == 1:
-                    # Java.g:440:9: annotation
+                    # Java.g:446:9: annotation
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotation_in_modifier2203)
+                    self._state.following.append(self.FOLLOW_annotation_in_modifier2188)
                     annotation174 = self.annotation()
 
                     self._state.following.pop()
@@ -6348,11 +6331,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 2:
-                    # Java.g:441:9: 'public'
+                    # Java.g:447:9: 'public'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal175=self.match(self.input, 33, self.FOLLOW_33_in_modifier2215)
+                    string_literal175=self.match(self.input, 33, self.FOLLOW_33_in_modifier2200)
                     if self._state.backtracking == 0:
 
                         string_literal175_tree = self._adaptor.createWithPayload(string_literal175)
@@ -6361,11 +6344,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 3:
-                    # Java.g:442:9: 'protected'
+                    # Java.g:448:9: 'protected'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal176=self.match(self.input, 34, self.FOLLOW_34_in_modifier2225)
+                    string_literal176=self.match(self.input, 34, self.FOLLOW_34_in_modifier2210)
                     if self._state.backtracking == 0:
 
                         string_literal176_tree = self._adaptor.createWithPayload(string_literal176)
@@ -6374,11 +6357,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 4:
-                    # Java.g:443:9: 'private'
+                    # Java.g:449:9: 'private'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal177=self.match(self.input, 35, self.FOLLOW_35_in_modifier2235)
+                    string_literal177=self.match(self.input, 35, self.FOLLOW_35_in_modifier2220)
                     if self._state.backtracking == 0:
 
                         string_literal177_tree = self._adaptor.createWithPayload(string_literal177)
@@ -6387,11 +6370,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 5:
-                    # Java.g:444:9: 'static'
+                    # Java.g:450:9: 'static'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal178=self.match(self.input, 30, self.FOLLOW_30_in_modifier2245)
+                    string_literal178=self.match(self.input, 30, self.FOLLOW_30_in_modifier2230)
                     if self._state.backtracking == 0:
 
                         string_literal178_tree = self._adaptor.createWithPayload(string_literal178)
@@ -6400,11 +6383,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 6:
-                    # Java.g:445:9: 'abstract'
+                    # Java.g:451:9: 'abstract'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal179=self.match(self.input, 36, self.FOLLOW_36_in_modifier2255)
+                    string_literal179=self.match(self.input, 36, self.FOLLOW_36_in_modifier2240)
                     if self._state.backtracking == 0:
 
                         string_literal179_tree = self._adaptor.createWithPayload(string_literal179)
@@ -6413,11 +6396,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 7:
-                    # Java.g:446:9: 'final'
+                    # Java.g:452:9: 'final'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal180=self.match(self.input, 37, self.FOLLOW_37_in_modifier2265)
+                    string_literal180=self.match(self.input, 37, self.FOLLOW_37_in_modifier2250)
                     if self._state.backtracking == 0:
 
                         string_literal180_tree = self._adaptor.createWithPayload(string_literal180)
@@ -6426,11 +6409,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 8:
-                    # Java.g:447:9: 'native'
+                    # Java.g:453:9: 'native'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal181=self.match(self.input, 54, self.FOLLOW_54_in_modifier2275)
+                    string_literal181=self.match(self.input, 54, self.FOLLOW_54_in_modifier2260)
                     if self._state.backtracking == 0:
 
                         string_literal181_tree = self._adaptor.createWithPayload(string_literal181)
@@ -6439,11 +6422,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 9:
-                    # Java.g:448:9: 'synchronized'
+                    # Java.g:454:9: 'synchronized'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal182=self.match(self.input, 55, self.FOLLOW_55_in_modifier2285)
+                    string_literal182=self.match(self.input, 55, self.FOLLOW_55_in_modifier2270)
                     if self._state.backtracking == 0:
 
                         string_literal182_tree = self._adaptor.createWithPayload(string_literal182)
@@ -6452,11 +6435,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 10:
-                    # Java.g:449:9: 'transient'
+                    # Java.g:455:9: 'transient'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal183=self.match(self.input, 56, self.FOLLOW_56_in_modifier2295)
+                    string_literal183=self.match(self.input, 56, self.FOLLOW_56_in_modifier2280)
                     if self._state.backtracking == 0:
 
                         string_literal183_tree = self._adaptor.createWithPayload(string_literal183)
@@ -6465,11 +6448,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 11:
-                    # Java.g:450:9: 'volatile'
+                    # Java.g:456:9: 'volatile'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal184=self.match(self.input, 57, self.FOLLOW_57_in_modifier2305)
+                    string_literal184=self.match(self.input, 57, self.FOLLOW_57_in_modifier2290)
                     if self._state.backtracking == 0:
 
                         string_literal184_tree = self._adaptor.createWithPayload(string_literal184)
@@ -6478,11 +6461,11 @@ class JavaParser(LocalParser):
 
 
                 elif alt66 == 12:
-                    # Java.g:451:9: 'strictfp'
+                    # Java.g:457:9: 'strictfp'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal185=self.match(self.input, 38, self.FOLLOW_38_in_modifier2315)
+                    string_literal185=self.match(self.input, 38, self.FOLLOW_38_in_modifier2300)
                     if self._state.backtracking == 0:
 
                         string_literal185_tree = self._adaptor.createWithPayload(string_literal185)
@@ -6499,7 +6482,7 @@ class JavaParser(LocalParser):
 
                 if self._state.backtracking == 0:
                             
-                    retval.value = self.input.toString(retval.start, self.input.LT(-1)) if not anno else None
+                    retval.value = None if anno else self.input.toString(retval.start, self.input.LT(-1))
 
 
 
@@ -6528,7 +6511,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "packageOrTypeName"
-    # Java.g:455:1: packageOrTypeName : qualifiedName ;
+    # Java.g:461:1: packageOrTypeName : qualifiedName ;
     def packageOrTypeName(self, ):
 
         retval = self.packageOrTypeName_return()
@@ -6548,12 +6531,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:456:5: ( qualifiedName )
-                # Java.g:456:9: qualifiedName
+                # Java.g:462:5: ( qualifiedName )
+                # Java.g:462:9: qualifiedName
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_qualifiedName_in_packageOrTypeName2335)
+                self._state.following.append(self.FOLLOW_qualifiedName_in_packageOrTypeName2320)
                 qualifiedName186 = self.qualifiedName()
 
                 self._state.following.pop()
@@ -6595,7 +6578,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enumConstantName"
-    # Java.g:460:1: enumConstantName : Ident ;
+    # Java.g:466:1: enumConstantName : Ident ;
     def enumConstantName(self, ):
 
         retval = self.enumConstantName_return()
@@ -6615,12 +6598,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:461:5: ( Ident )
-                # Java.g:461:9: Ident
+                # Java.g:467:5: ( Ident )
+                # Java.g:467:9: Ident
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident187=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumConstantName2355)
+                Ident187=self.match(self.input, Ident, self.FOLLOW_Ident_in_enumConstantName2340)
                 if self._state.backtracking == 0:
 
                     Ident187_tree = self._adaptor.createWithPayload(Ident187)
@@ -6662,7 +6645,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeName"
-    # Java.g:465:1: typeName : qualifiedName ;
+    # Java.g:471:1: typeName : qualifiedName ;
     def typeName(self, ):
 
         retval = self.typeName_return()
@@ -6682,12 +6665,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:466:5: ( qualifiedName )
-                # Java.g:466:9: qualifiedName
+                # Java.g:472:5: ( qualifiedName )
+                # Java.g:472:9: qualifiedName
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_qualifiedName_in_typeName2375)
+                self._state.following.append(self.FOLLOW_qualifiedName_in_typeName2360)
                 qualifiedName188 = self.qualifiedName()
 
                 self._state.following.pop()
@@ -6730,7 +6713,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "type"
-    # Java.g:470:1: type returns [value] : (ct0= classOrInterfaceType ( '[' ']' )* | primitiveType ( '[' ']' )* );
+    # Java.g:476:1: type returns [value] : (ct0= classOrInterfaceType ( '[' ']' )* | pt0= primitiveType ( '[' ']' )* );
     def type(self, ):
 
         retval = self.type_return()
@@ -6740,17 +6723,17 @@ class JavaParser(LocalParser):
 
         char_literal189 = None
         char_literal190 = None
+        char_literal191 = None
         char_literal192 = None
-        char_literal193 = None
         ct0 = None
 
-        primitiveType191 = None
+        pt0 = None
 
 
         char_literal189_tree = None
         char_literal190_tree = None
+        char_literal191_tree = None
         char_literal192_tree = None
-        char_literal193_tree = None
 
         success = False
         try:
@@ -6760,7 +6743,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:471:5: (ct0= classOrInterfaceType ( '[' ']' )* | primitiveType ( '[' ']' )* )
+                # Java.g:480:5: (ct0= classOrInterfaceType ( '[' ']' )* | pt0= primitiveType ( '[' ']' )* )
                 alt69 = 2
                 LA69_0 = self.input.LA(1)
 
@@ -6777,11 +6760,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt69 == 1:
-                    # Java.g:471:7: ct0= classOrInterfaceType ( '[' ']' )*
+                    # Java.g:480:7: ct0= classOrInterfaceType ( '[' ']' )*
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classOrInterfaceType_in_type2399)
+                    self._state.following.append(self.FOLLOW_classOrInterfaceType_in_type2389)
                     ct0 = self.classOrInterfaceType()
 
                     self._state.following.pop()
@@ -6790,7 +6773,7 @@ class JavaParser(LocalParser):
                     if self._state.backtracking == 0:
                         retval.value = ct0.value 
 
-                    # Java.g:471:55: ( '[' ']' )*
+                    # Java.g:480:55: ( '[' ']' )*
                     while True: #loop67
                         alt67 = 2
                         LA67_0 = self.input.LA(1)
@@ -6800,15 +6783,15 @@ class JavaParser(LocalParser):
 
 
                         if alt67 == 1:
-                            # Java.g:471:56: '[' ']'
+                            # Java.g:480:56: '[' ']'
                             pass 
-                            char_literal189=self.match(self.input, 50, self.FOLLOW_50_in_type2404)
+                            char_literal189=self.match(self.input, 50, self.FOLLOW_50_in_type2394)
                             if self._state.backtracking == 0:
 
                                 char_literal189_tree = self._adaptor.createWithPayload(char_literal189)
                                 self._adaptor.addChild(root_0, char_literal189_tree)
 
-                            char_literal190=self.match(self.input, 51, self.FOLLOW_51_in_type2406)
+                            char_literal190=self.match(self.input, 51, self.FOLLOW_51_in_type2396)
                             if self._state.backtracking == 0:
 
                                 char_literal190_tree = self._adaptor.createWithPayload(char_literal190)
@@ -6823,20 +6806,20 @@ class JavaParser(LocalParser):
 
 
                 elif alt69 == 2:
-                    # Java.g:472:7: primitiveType ( '[' ']' )*
+                    # Java.g:481:7: pt0= primitiveType ( '[' ']' )*
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_type2416)
-                    primitiveType191 = self.primitiveType()
+                    self._state.following.append(self.FOLLOW_primitiveType_in_type2408)
+                    pt0 = self.primitiveType()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primitiveType191.tree)
+                        self._adaptor.addChild(root_0, pt0.tree)
                     if self._state.backtracking == 0:
-                        retval.value = ((primitiveType191 is not None) and [self.input.toString(primitiveType191.start,primitiveType191.stop)] or [None])[0] 
+                        retval.value = ((pt0 is not None) and [self.input.toString(pt0.start,pt0.stop)] or [None])[0] 
 
-                    # Java.g:472:55: ( '[' ']' )*
+                    # Java.g:481:49: ( '[' ']' )*
                     while True: #loop68
                         alt68 = 2
                         LA68_0 = self.input.LA(1)
@@ -6846,19 +6829,19 @@ class JavaParser(LocalParser):
 
 
                         if alt68 == 1:
-                            # Java.g:472:56: '[' ']'
+                            # Java.g:481:50: '[' ']'
                             pass 
-                            char_literal192=self.match(self.input, 50, self.FOLLOW_50_in_type2422)
+                            char_literal191=self.match(self.input, 50, self.FOLLOW_50_in_type2414)
+                            if self._state.backtracking == 0:
+
+                                char_literal191_tree = self._adaptor.createWithPayload(char_literal191)
+                                self._adaptor.addChild(root_0, char_literal191_tree)
+
+                            char_literal192=self.match(self.input, 51, self.FOLLOW_51_in_type2416)
                             if self._state.backtracking == 0:
 
                                 char_literal192_tree = self._adaptor.createWithPayload(char_literal192)
                                 self._adaptor.addChild(root_0, char_literal192_tree)
-
-                            char_literal193=self.match(self.input, 51, self.FOLLOW_51_in_type2424)
-                            if self._state.backtracking == 0:
-
-                                char_literal193_tree = self._adaptor.createWithPayload(char_literal193)
-                                self._adaptor.addChild(root_0, char_literal193_tree)
 
 
 
@@ -6874,6 +6857,11 @@ class JavaParser(LocalParser):
 
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
+
+                if self._state.backtracking == 0:
+                            
+                    retval.value = self.scope.module.top.mapType(retval.value)
+
 
 
                 success = True
@@ -6902,7 +6890,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classOrInterfaceType"
-    # Java.g:476:1: classOrInterfaceType returns [value] : id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )* ;
+    # Java.g:485:1: classOrInterfaceType returns [value] : id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )* ;
     def classOrInterfaceType(self, ):
 
         retval = self.classOrInterfaceType_return()
@@ -6912,15 +6900,15 @@ class JavaParser(LocalParser):
 
         id0 = None
         id1 = None
-        char_literal195 = None
-        typeArguments194 = None
+        char_literal194 = None
+        typeArguments193 = None
 
-        typeArguments196 = None
+        typeArguments195 = None
 
 
         id0_tree = None
         id1_tree = None
-        char_literal195_tree = None
+        char_literal194_tree = None
 
                 
         retval.value = []
@@ -6933,12 +6921,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:486:5: (id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )* )
-                # Java.g:486:7: id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )*
+                # Java.g:495:5: (id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )* )
+                # Java.g:495:7: id0= Ident ( typeArguments )? ( '.' id1= Ident ( typeArguments )? )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_classOrInterfaceType2461)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_classOrInterfaceType2453)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
@@ -6947,7 +6935,7 @@ class JavaParser(LocalParser):
                 if self._state.backtracking == 0:
                     retval.value.append(id0.text) 
 
-                # Java.g:486:46: ( typeArguments )?
+                # Java.g:495:46: ( typeArguments )?
                 alt70 = 2
                 LA70_0 = self.input.LA(1)
 
@@ -6959,16 +6947,16 @@ class JavaParser(LocalParser):
                 if alt70 == 1:
                     # Java.g:0:0: typeArguments
                     pass 
-                    self._state.following.append(self.FOLLOW_typeArguments_in_classOrInterfaceType2465)
-                    typeArguments194 = self.typeArguments()
+                    self._state.following.append(self.FOLLOW_typeArguments_in_classOrInterfaceType2457)
+                    typeArguments193 = self.typeArguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, typeArguments194.tree)
+                        self._adaptor.addChild(root_0, typeArguments193.tree)
 
 
 
-                # Java.g:487:9: ( '.' id1= Ident ( typeArguments )? )*
+                # Java.g:496:9: ( '.' id1= Ident ( typeArguments )? )*
                 while True: #loop72
                     alt72 = 2
                     LA72_0 = self.input.LA(1)
@@ -6978,15 +6966,15 @@ class JavaParser(LocalParser):
 
 
                     if alt72 == 1:
-                        # Java.g:487:10: '.' id1= Ident ( typeArguments )?
+                        # Java.g:496:10: '.' id1= Ident ( typeArguments )?
                         pass 
-                        char_literal195=self.match(self.input, 31, self.FOLLOW_31_in_classOrInterfaceType2477)
+                        char_literal194=self.match(self.input, 31, self.FOLLOW_31_in_classOrInterfaceType2469)
                         if self._state.backtracking == 0:
 
-                            char_literal195_tree = self._adaptor.createWithPayload(char_literal195)
-                            self._adaptor.addChild(root_0, char_literal195_tree)
+                            char_literal194_tree = self._adaptor.createWithPayload(char_literal194)
+                            self._adaptor.addChild(root_0, char_literal194_tree)
 
-                        id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_classOrInterfaceType2481)
+                        id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_classOrInterfaceType2473)
                         if self._state.backtracking == 0:
 
                             id1_tree = self._adaptor.createWithPayload(id1)
@@ -6995,7 +6983,7 @@ class JavaParser(LocalParser):
                         if self._state.backtracking == 0:
                             retval.value.append(id1.text) 
 
-                        # Java.g:487:54: ( typeArguments )?
+                        # Java.g:496:54: ( typeArguments )?
                         alt71 = 2
                         LA71_0 = self.input.LA(1)
 
@@ -7007,12 +6995,12 @@ class JavaParser(LocalParser):
                         if alt71 == 1:
                             # Java.g:0:0: typeArguments
                             pass 
-                            self._state.following.append(self.FOLLOW_typeArguments_in_classOrInterfaceType2486)
-                            typeArguments196 = self.typeArguments()
+                            self._state.following.append(self.FOLLOW_typeArguments_in_classOrInterfaceType2478)
+                            typeArguments195 = self.typeArguments()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, typeArguments196.tree)
+                                self._adaptor.addChild(root_0, typeArguments195.tree)
 
 
 
@@ -7034,7 +7022,7 @@ class JavaParser(LocalParser):
 
                 if self._state.backtracking == 0:
                             
-                    find = self.py_block_stack[-1].block.findVariable
+                    find = self.scope.block.top.findVariable
                     retval.value = [find(v) for v in retval.value]
                     retval.value = '.'.join(retval.value)
                     retval.value = find(retval.value)
@@ -7067,7 +7055,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "primitiveType"
-    # Java.g:491:1: primitiveType returns [value] : ( 'boolean' | 'char' | 'byte' | 'short' | 'int' | 'long' | 'float' | 'double' );
+    # Java.g:500:1: primitiveType returns [value] : ( 'boolean' | 'char' | 'byte' | 'short' | 'int' | 'long' | 'float' | 'double' );
     def primitiveType(self, ):
 
         retval = self.primitiveType_return()
@@ -7075,9 +7063,9 @@ class JavaParser(LocalParser):
         primitiveType_StartIndex = self.input.index()
         root_0 = None
 
-        set197 = None
+        set196 = None
 
-        set197_tree = None
+        set196_tree = None
 
         success = False
         try:
@@ -7087,16 +7075,16 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:492:5: ( 'boolean' | 'char' | 'byte' | 'short' | 'int' | 'long' | 'float' | 'double' )
+                # Java.g:501:5: ( 'boolean' | 'char' | 'byte' | 'short' | 'int' | 'long' | 'float' | 'double' )
                 # Java.g:
                 pass 
                 root_0 = self._adaptor.nil()
 
-                set197 = self.input.LT(1)
+                set196 = self.input.LT(1)
                 if (58 <= self.input.LA(1) <= 65):
                     self.input.consume()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set197))
+                        self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set196))
                     self._state.errorRecovery = False
 
                 else:
@@ -7143,7 +7131,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableModifier"
-    # Java.g:503:1: variableModifier : ( 'final' | annotation );
+    # Java.g:512:1: variableModifier : ( 'final' | annotation );
     def variableModifier(self, ):
 
         retval = self.variableModifier_return()
@@ -7151,11 +7139,11 @@ class JavaParser(LocalParser):
         variableModifier_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal198 = None
-        annotation199 = None
+        string_literal197 = None
+        annotation198 = None
 
 
-        string_literal198_tree = None
+        string_literal197_tree = None
 
         success = False
         try:
@@ -7165,7 +7153,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:504:5: ( 'final' | annotation )
+                # Java.g:513:5: ( 'final' | annotation )
                 alt73 = 2
                 LA73_0 = self.input.LA(1)
 
@@ -7182,29 +7170,29 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt73 == 1:
-                    # Java.g:504:9: 'final'
+                    # Java.g:513:9: 'final'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal198=self.match(self.input, 37, self.FOLLOW_37_in_variableModifier2603)
+                    string_literal197=self.match(self.input, 37, self.FOLLOW_37_in_variableModifier2595)
                     if self._state.backtracking == 0:
 
-                        string_literal198_tree = self._adaptor.createWithPayload(string_literal198)
-                        self._adaptor.addChild(root_0, string_literal198_tree)
+                        string_literal197_tree = self._adaptor.createWithPayload(string_literal197)
+                        self._adaptor.addChild(root_0, string_literal197_tree)
 
 
 
                 elif alt73 == 2:
-                    # Java.g:505:9: annotation
+                    # Java.g:514:9: annotation
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotation_in_variableModifier2613)
-                    annotation199 = self.annotation()
+                    self._state.following.append(self.FOLLOW_annotation_in_variableModifier2605)
+                    annotation198 = self.annotation()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotation199.tree)
+                        self._adaptor.addChild(root_0, annotation198.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -7240,7 +7228,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeArguments"
-    # Java.g:509:1: typeArguments : '<' typeArgument ( ',' typeArgument )* '>' ;
+    # Java.g:518:1: typeArguments : '<' typeArgument ( ',' typeArgument )* '>' ;
     def typeArguments(self, ):
 
         retval = self.typeArguments_return()
@@ -7248,17 +7236,17 @@ class JavaParser(LocalParser):
         typeArguments_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal200 = None
-        char_literal202 = None
-        char_literal204 = None
-        typeArgument201 = None
+        char_literal199 = None
+        char_literal201 = None
+        char_literal203 = None
+        typeArgument200 = None
 
-        typeArgument203 = None
+        typeArgument202 = None
 
 
-        char_literal200_tree = None
-        char_literal202_tree = None
-        char_literal204_tree = None
+        char_literal199_tree = None
+        char_literal201_tree = None
+        char_literal203_tree = None
 
         success = False
         try:
@@ -7268,24 +7256,24 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:510:5: ( '<' typeArgument ( ',' typeArgument )* '>' )
-                # Java.g:510:9: '<' typeArgument ( ',' typeArgument )* '>'
+                # Java.g:519:5: ( '<' typeArgument ( ',' typeArgument )* '>' )
+                # Java.g:519:9: '<' typeArgument ( ',' typeArgument )* '>'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal200=self.match(self.input, 42, self.FOLLOW_42_in_typeArguments2633)
+                char_literal199=self.match(self.input, 42, self.FOLLOW_42_in_typeArguments2625)
                 if self._state.backtracking == 0:
 
-                    char_literal200_tree = self._adaptor.createWithPayload(char_literal200)
-                    self._adaptor.addChild(root_0, char_literal200_tree)
+                    char_literal199_tree = self._adaptor.createWithPayload(char_literal199)
+                    self._adaptor.addChild(root_0, char_literal199_tree)
 
-                self._state.following.append(self.FOLLOW_typeArgument_in_typeArguments2635)
-                typeArgument201 = self.typeArgument()
+                self._state.following.append(self.FOLLOW_typeArgument_in_typeArguments2627)
+                typeArgument200 = self.typeArgument()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, typeArgument201.tree)
-                # Java.g:510:26: ( ',' typeArgument )*
+                    self._adaptor.addChild(root_0, typeArgument200.tree)
+                # Java.g:519:26: ( ',' typeArgument )*
                 while True: #loop74
                     alt74 = 2
                     LA74_0 = self.input.LA(1)
@@ -7295,31 +7283,31 @@ class JavaParser(LocalParser):
 
 
                     if alt74 == 1:
-                        # Java.g:510:27: ',' typeArgument
+                        # Java.g:519:27: ',' typeArgument
                         pass 
-                        char_literal202=self.match(self.input, 43, self.FOLLOW_43_in_typeArguments2638)
+                        char_literal201=self.match(self.input, 43, self.FOLLOW_43_in_typeArguments2630)
                         if self._state.backtracking == 0:
 
-                            char_literal202_tree = self._adaptor.createWithPayload(char_literal202)
-                            self._adaptor.addChild(root_0, char_literal202_tree)
+                            char_literal201_tree = self._adaptor.createWithPayload(char_literal201)
+                            self._adaptor.addChild(root_0, char_literal201_tree)
 
-                        self._state.following.append(self.FOLLOW_typeArgument_in_typeArguments2640)
-                        typeArgument203 = self.typeArgument()
+                        self._state.following.append(self.FOLLOW_typeArgument_in_typeArguments2632)
+                        typeArgument202 = self.typeArgument()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, typeArgument203.tree)
+                            self._adaptor.addChild(root_0, typeArgument202.tree)
 
 
                     else:
                         break #loop74
 
 
-                char_literal204=self.match(self.input, 44, self.FOLLOW_44_in_typeArguments2644)
+                char_literal203=self.match(self.input, 44, self.FOLLOW_44_in_typeArguments2636)
                 if self._state.backtracking == 0:
 
-                    char_literal204_tree = self._adaptor.createWithPayload(char_literal204)
-                    self._adaptor.addChild(root_0, char_literal204_tree)
+                    char_literal203_tree = self._adaptor.createWithPayload(char_literal203)
+                    self._adaptor.addChild(root_0, char_literal203_tree)
 
 
 
@@ -7357,7 +7345,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "typeArgument"
-    # Java.g:514:1: typeArgument : ( type | '?' ( ( 'extends' | 'super' ) type )? );
+    # Java.g:523:1: typeArgument : ( type | '?' ( ( 'extends' | 'super' ) type )? );
     def typeArgument(self, ):
 
         retval = self.typeArgument_return()
@@ -7365,15 +7353,15 @@ class JavaParser(LocalParser):
         typeArgument_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal206 = None
-        set207 = None
-        type205 = None
+        char_literal205 = None
+        set206 = None
+        type204 = None
 
-        type208 = None
+        type207 = None
 
 
-        char_literal206_tree = None
-        set207_tree = None
+        char_literal205_tree = None
+        set206_tree = None
 
         success = False
         try:
@@ -7383,7 +7371,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:515:5: ( type | '?' ( ( 'extends' | 'super' ) type )? )
+                # Java.g:524:5: ( type | '?' ( ( 'extends' | 'super' ) type )? )
                 alt76 = 2
                 LA76_0 = self.input.LA(1)
 
@@ -7400,43 +7388,43 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt76 == 1:
-                    # Java.g:515:9: type
+                    # Java.g:524:9: type
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_type_in_typeArgument2664)
-                    type205 = self.type()
+                    self._state.following.append(self.FOLLOW_type_in_typeArgument2656)
+                    type204 = self.type()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, type205.tree)
+                        self._adaptor.addChild(root_0, type204.tree)
 
 
                 elif alt76 == 2:
-                    # Java.g:516:9: '?' ( ( 'extends' | 'super' ) type )?
+                    # Java.g:525:9: '?' ( ( 'extends' | 'super' ) type )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal206=self.match(self.input, 66, self.FOLLOW_66_in_typeArgument2674)
+                    char_literal205=self.match(self.input, 66, self.FOLLOW_66_in_typeArgument2666)
                     if self._state.backtracking == 0:
 
-                        char_literal206_tree = self._adaptor.createWithPayload(char_literal206)
-                        self._adaptor.addChild(root_0, char_literal206_tree)
+                        char_literal205_tree = self._adaptor.createWithPayload(char_literal205)
+                        self._adaptor.addChild(root_0, char_literal205_tree)
 
-                    # Java.g:516:13: ( ( 'extends' | 'super' ) type )?
+                    # Java.g:525:13: ( ( 'extends' | 'super' ) type )?
                     alt75 = 2
                     LA75_0 = self.input.LA(1)
 
                     if (LA75_0 == 40 or LA75_0 == 67) :
                         alt75 = 1
                     if alt75 == 1:
-                        # Java.g:516:14: ( 'extends' | 'super' ) type
+                        # Java.g:525:14: ( 'extends' | 'super' ) type
                         pass 
-                        set207 = self.input.LT(1)
+                        set206 = self.input.LT(1)
                         if self.input.LA(1) == 40 or self.input.LA(1) == 67:
                             self.input.consume()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set207))
+                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set206))
                             self._state.errorRecovery = False
 
                         else:
@@ -7447,12 +7435,12 @@ class JavaParser(LocalParser):
                             raise mse
 
 
-                        self._state.following.append(self.FOLLOW_type_in_typeArgument2685)
-                        type208 = self.type()
+                        self._state.following.append(self.FOLLOW_type_in_typeArgument2677)
+                        type207 = self.type()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, type208.tree)
+                            self._adaptor.addChild(root_0, type207.tree)
 
 
 
@@ -7491,7 +7479,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "qualifiedNameList"
-    # Java.g:520:1: qualifiedNameList : qualifiedName ( ',' qualifiedName )* ;
+    # Java.g:529:1: qualifiedNameList : qualifiedName ( ',' qualifiedName )* ;
     def qualifiedNameList(self, ):
 
         retval = self.qualifiedNameList_return()
@@ -7499,13 +7487,13 @@ class JavaParser(LocalParser):
         qualifiedNameList_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal210 = None
-        qualifiedName209 = None
+        char_literal209 = None
+        qualifiedName208 = None
 
-        qualifiedName211 = None
+        qualifiedName210 = None
 
 
-        char_literal210_tree = None
+        char_literal209_tree = None
 
         success = False
         try:
@@ -7515,18 +7503,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:521:5: ( qualifiedName ( ',' qualifiedName )* )
-                # Java.g:521:9: qualifiedName ( ',' qualifiedName )*
+                # Java.g:530:5: ( qualifiedName ( ',' qualifiedName )* )
+                # Java.g:530:9: qualifiedName ( ',' qualifiedName )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_qualifiedName_in_qualifiedNameList2707)
-                qualifiedName209 = self.qualifiedName()
+                self._state.following.append(self.FOLLOW_qualifiedName_in_qualifiedNameList2699)
+                qualifiedName208 = self.qualifiedName()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, qualifiedName209.tree)
-                # Java.g:521:23: ( ',' qualifiedName )*
+                    self._adaptor.addChild(root_0, qualifiedName208.tree)
+                # Java.g:530:23: ( ',' qualifiedName )*
                 while True: #loop77
                     alt77 = 2
                     LA77_0 = self.input.LA(1)
@@ -7536,20 +7524,20 @@ class JavaParser(LocalParser):
 
 
                     if alt77 == 1:
-                        # Java.g:521:24: ',' qualifiedName
+                        # Java.g:530:24: ',' qualifiedName
                         pass 
-                        char_literal210=self.match(self.input, 43, self.FOLLOW_43_in_qualifiedNameList2710)
+                        char_literal209=self.match(self.input, 43, self.FOLLOW_43_in_qualifiedNameList2702)
                         if self._state.backtracking == 0:
 
-                            char_literal210_tree = self._adaptor.createWithPayload(char_literal210)
-                            self._adaptor.addChild(root_0, char_literal210_tree)
+                            char_literal209_tree = self._adaptor.createWithPayload(char_literal209)
+                            self._adaptor.addChild(root_0, char_literal209_tree)
 
-                        self._state.following.append(self.FOLLOW_qualifiedName_in_qualifiedNameList2712)
-                        qualifiedName211 = self.qualifiedName()
+                        self._state.following.append(self.FOLLOW_qualifiedName_in_qualifiedNameList2704)
+                        qualifiedName210 = self.qualifiedName()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, qualifiedName211.tree)
+                            self._adaptor.addChild(root_0, qualifiedName210.tree)
 
 
                     else:
@@ -7592,7 +7580,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "formalParameters"
-    # Java.g:525:1: formalParameters : '(' ( formalParameterDecls )? ')' ;
+    # Java.g:534:1: formalParameters : '(' ( formalParameterDecls )? ')' ;
     def formalParameters(self, ):
 
         retval = self.formalParameters_return()
@@ -7600,13 +7588,13 @@ class JavaParser(LocalParser):
         formalParameters_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal212 = None
-        char_literal214 = None
-        formalParameterDecls213 = None
+        char_literal211 = None
+        char_literal213 = None
+        formalParameterDecls212 = None
 
 
-        char_literal212_tree = None
-        char_literal214_tree = None
+        char_literal211_tree = None
+        char_literal213_tree = None
 
         success = False
         try:
@@ -7616,18 +7604,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:526:5: ( '(' ( formalParameterDecls )? ')' )
-                # Java.g:526:9: '(' ( formalParameterDecls )? ')'
+                # Java.g:535:5: ( '(' ( formalParameterDecls )? ')' )
+                # Java.g:535:9: '(' ( formalParameterDecls )? ')'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal212=self.match(self.input, 68, self.FOLLOW_68_in_formalParameters2734)
+                char_literal211=self.match(self.input, 68, self.FOLLOW_68_in_formalParameters2726)
                 if self._state.backtracking == 0:
 
-                    char_literal212_tree = self._adaptor.createWithPayload(char_literal212)
-                    self._adaptor.addChild(root_0, char_literal212_tree)
+                    char_literal211_tree = self._adaptor.createWithPayload(char_literal211)
+                    self._adaptor.addChild(root_0, char_literal211_tree)
 
-                # Java.g:526:13: ( formalParameterDecls )?
+                # Java.g:535:13: ( formalParameterDecls )?
                 alt78 = 2
                 LA78_0 = self.input.LA(1)
 
@@ -7636,20 +7624,20 @@ class JavaParser(LocalParser):
                 if alt78 == 1:
                     # Java.g:0:0: formalParameterDecls
                     pass 
-                    self._state.following.append(self.FOLLOW_formalParameterDecls_in_formalParameters2736)
-                    formalParameterDecls213 = self.formalParameterDecls()
+                    self._state.following.append(self.FOLLOW_formalParameterDecls_in_formalParameters2728)
+                    formalParameterDecls212 = self.formalParameterDecls()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, formalParameterDecls213.tree)
+                        self._adaptor.addChild(root_0, formalParameterDecls212.tree)
 
 
 
-                char_literal214=self.match(self.input, 69, self.FOLLOW_69_in_formalParameters2739)
+                char_literal213=self.match(self.input, 69, self.FOLLOW_69_in_formalParameters2731)
                 if self._state.backtracking == 0:
 
-                    char_literal214_tree = self._adaptor.createWithPayload(char_literal214)
-                    self._adaptor.addChild(root_0, char_literal214_tree)
+                    char_literal213_tree = self._adaptor.createWithPayload(char_literal213)
+                    self._adaptor.addChild(root_0, char_literal213_tree)
 
 
 
@@ -7687,7 +7675,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "formalParameterDecls"
-    # Java.g:530:1: formalParameterDecls : variableModifiers t0= type formalParameterDeclsRest[$t0.value] ;
+    # Java.g:539:1: formalParameterDecls : variableModifiers t0= type formalParameterDeclsRest[$t0.value] ;
     def formalParameterDecls(self, ):
 
         retval = self.formalParameterDecls_return()
@@ -7697,9 +7685,9 @@ class JavaParser(LocalParser):
 
         t0 = None
 
-        variableModifiers215 = None
+        variableModifiers214 = None
 
-        formalParameterDeclsRest216 = None
+        formalParameterDeclsRest215 = None
 
 
 
@@ -7711,29 +7699,29 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:531:5: ( variableModifiers t0= type formalParameterDeclsRest[$t0.value] )
-                # Java.g:531:9: variableModifiers t0= type formalParameterDeclsRest[$t0.value]
+                # Java.g:540:5: ( variableModifiers t0= type formalParameterDeclsRest[$t0.value] )
+                # Java.g:540:9: variableModifiers t0= type formalParameterDeclsRest[$t0.value]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableModifiers_in_formalParameterDecls2759)
-                variableModifiers215 = self.variableModifiers()
+                self._state.following.append(self.FOLLOW_variableModifiers_in_formalParameterDecls2751)
+                variableModifiers214 = self.variableModifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableModifiers215.tree)
-                self._state.following.append(self.FOLLOW_type_in_formalParameterDecls2763)
+                    self._adaptor.addChild(root_0, variableModifiers214.tree)
+                self._state.following.append(self.FOLLOW_type_in_formalParameterDecls2755)
                 t0 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, t0.tree)
-                self._state.following.append(self.FOLLOW_formalParameterDeclsRest_in_formalParameterDecls2765)
-                formalParameterDeclsRest216 = self.formalParameterDeclsRest(((t0 is not None) and [t0.value] or [None])[0])
+                self._state.following.append(self.FOLLOW_formalParameterDeclsRest_in_formalParameterDecls2757)
+                formalParameterDeclsRest215 = self.formalParameterDeclsRest(((t0 is not None) and [t0.value] or [None])[0])
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, formalParameterDeclsRest216.tree)
+                    self._adaptor.addChild(root_0, formalParameterDeclsRest215.tree)
 
 
 
@@ -7770,7 +7758,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "formalParameterDeclsRest"
-    # Java.g:535:1: formalParameterDeclsRest[type] : (vd0= variableDeclId ( ',' formalParameterDecls )? | '...' vd1= variableDeclId );
+    # Java.g:544:1: formalParameterDeclsRest[type] : (vd0= variableDeclId ( ',' formalParameterDecls )? | '...' vd1= variableDeclId );
     def formalParameterDeclsRest(self, type):
 
         retval = self.formalParameterDeclsRest_return()
@@ -7778,20 +7766,20 @@ class JavaParser(LocalParser):
         formalParameterDeclsRest_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal217 = None
-        string_literal219 = None
+        char_literal216 = None
+        string_literal218 = None
         vd0 = None
 
         vd1 = None
 
-        formalParameterDecls218 = None
+        formalParameterDecls217 = None
 
 
-        char_literal217_tree = None
-        string_literal219_tree = None
+        char_literal216_tree = None
+        string_literal218_tree = None
 
                
-        add = self.py_block_stack[TOP].block.addParameter
+        add = self.scope.block.top.addParameter
 
         success = False
         try:
@@ -7801,7 +7789,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:539:5: (vd0= variableDeclId ( ',' formalParameterDecls )? | '...' vd1= variableDeclId )
+                # Java.g:548:5: (vd0= variableDeclId ( ',' formalParameterDecls )? | '...' vd1= variableDeclId )
                 alt80 = 2
                 LA80_0 = self.input.LA(1)
 
@@ -7818,11 +7806,11 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt80 == 1:
-                    # Java.g:539:9: vd0= variableDeclId ( ',' formalParameterDecls )?
+                    # Java.g:548:9: vd0= variableDeclId ( ',' formalParameterDecls )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameterDeclsRest2795)
+                    self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameterDeclsRest2787)
                     vd0 = self.variableDeclId()
 
                     self._state.following.pop()
@@ -7831,44 +7819,44 @@ class JavaParser(LocalParser):
                     if self._state.backtracking == 0:
                         add(type=type, **((vd0 is not None) and [vd0.value] or [None])[0]) 
 
-                    # Java.g:539:61: ( ',' formalParameterDecls )?
+                    # Java.g:548:61: ( ',' formalParameterDecls )?
                     alt79 = 2
                     LA79_0 = self.input.LA(1)
 
                     if (LA79_0 == 43) :
                         alt79 = 1
                     if alt79 == 1:
-                        # Java.g:539:62: ',' formalParameterDecls
+                        # Java.g:548:62: ',' formalParameterDecls
                         pass 
-                        char_literal217=self.match(self.input, 43, self.FOLLOW_43_in_formalParameterDeclsRest2800)
+                        char_literal216=self.match(self.input, 43, self.FOLLOW_43_in_formalParameterDeclsRest2792)
                         if self._state.backtracking == 0:
 
-                            char_literal217_tree = self._adaptor.createWithPayload(char_literal217)
-                            self._adaptor.addChild(root_0, char_literal217_tree)
+                            char_literal216_tree = self._adaptor.createWithPayload(char_literal216)
+                            self._adaptor.addChild(root_0, char_literal216_tree)
 
-                        self._state.following.append(self.FOLLOW_formalParameterDecls_in_formalParameterDeclsRest2802)
-                        formalParameterDecls218 = self.formalParameterDecls()
+                        self._state.following.append(self.FOLLOW_formalParameterDecls_in_formalParameterDeclsRest2794)
+                        formalParameterDecls217 = self.formalParameterDecls()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, formalParameterDecls218.tree)
+                            self._adaptor.addChild(root_0, formalParameterDecls217.tree)
 
 
 
 
 
                 elif alt80 == 2:
-                    # Java.g:540:9: '...' vd1= variableDeclId
+                    # Java.g:549:9: '...' vd1= variableDeclId
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal219=self.match(self.input, 70, self.FOLLOW_70_in_formalParameterDeclsRest2814)
+                    string_literal218=self.match(self.input, 70, self.FOLLOW_70_in_formalParameterDeclsRest2806)
                     if self._state.backtracking == 0:
 
-                        string_literal219_tree = self._adaptor.createWithPayload(string_literal219)
-                        self._adaptor.addChild(root_0, string_literal219_tree)
+                        string_literal218_tree = self._adaptor.createWithPayload(string_literal218)
+                        self._adaptor.addChild(root_0, string_literal218_tree)
 
-                    self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameterDeclsRest2818)
+                    self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameterDeclsRest2810)
                     vd1 = self.variableDeclId()
 
                     self._state.following.pop()
@@ -7912,7 +7900,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "methodBody"
-    # Java.g:544:1: methodBody : block ;
+    # Java.g:553:1: methodBody : block ;
     def methodBody(self, ):
 
         retval = self.methodBody_return()
@@ -7920,7 +7908,7 @@ class JavaParser(LocalParser):
         methodBody_StartIndex = self.input.index()
         root_0 = None
 
-        block220 = None
+        block219 = None
 
 
 
@@ -7932,17 +7920,17 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:545:5: ( block )
-                # Java.g:545:9: block
+                # Java.g:554:5: ( block )
+                # Java.g:554:9: block
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_block_in_methodBody2840)
-                block220 = self.block()
+                self._state.following.append(self.FOLLOW_block_in_methodBody2832)
+                block219 = self.block()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, block220.tree)
+                    self._adaptor.addChild(root_0, block219.tree)
 
 
 
@@ -7979,7 +7967,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constructorBody"
-    # Java.g:549:1: constructorBody : '{' ( explicitConstructorInvocation )? ( blockStatement )* '}' ;
+    # Java.g:558:1: constructorBody : '{' ( explicitConstructorInvocation )? ( blockStatement )* '}' ;
     def constructorBody(self, ):
 
         retval = self.constructorBody_return()
@@ -7987,15 +7975,15 @@ class JavaParser(LocalParser):
         constructorBody_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal221 = None
-        char_literal224 = None
-        explicitConstructorInvocation222 = None
+        char_literal220 = None
+        char_literal223 = None
+        explicitConstructorInvocation221 = None
 
-        blockStatement223 = None
+        blockStatement222 = None
 
 
-        char_literal221_tree = None
-        char_literal224_tree = None
+        char_literal220_tree = None
+        char_literal223_tree = None
 
         success = False
         try:
@@ -8005,33 +7993,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:550:5: ( '{' ( explicitConstructorInvocation )? ( blockStatement )* '}' )
-                # Java.g:550:9: '{' ( explicitConstructorInvocation )? ( blockStatement )* '}'
+                # Java.g:559:5: ( '{' ( explicitConstructorInvocation )? ( blockStatement )* '}' )
+                # Java.g:559:9: '{' ( explicitConstructorInvocation )? ( blockStatement )* '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal221=self.match(self.input, 46, self.FOLLOW_46_in_constructorBody2860)
+                char_literal220=self.match(self.input, 46, self.FOLLOW_46_in_constructorBody2852)
                 if self._state.backtracking == 0:
 
-                    char_literal221_tree = self._adaptor.createWithPayload(char_literal221)
-                    self._adaptor.addChild(root_0, char_literal221_tree)
+                    char_literal220_tree = self._adaptor.createWithPayload(char_literal220)
+                    self._adaptor.addChild(root_0, char_literal220_tree)
 
-                # Java.g:550:13: ( explicitConstructorInvocation )?
+                # Java.g:559:13: ( explicitConstructorInvocation )?
                 alt81 = 2
                 alt81 = self.dfa81.predict(self.input)
                 if alt81 == 1:
                     # Java.g:0:0: explicitConstructorInvocation
                     pass 
-                    self._state.following.append(self.FOLLOW_explicitConstructorInvocation_in_constructorBody2862)
-                    explicitConstructorInvocation222 = self.explicitConstructorInvocation()
+                    self._state.following.append(self.FOLLOW_explicitConstructorInvocation_in_constructorBody2854)
+                    explicitConstructorInvocation221 = self.explicitConstructorInvocation()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, explicitConstructorInvocation222.tree)
+                        self._adaptor.addChild(root_0, explicitConstructorInvocation221.tree)
 
 
 
-                # Java.g:550:44: ( blockStatement )*
+                # Java.g:559:44: ( blockStatement )*
                 while True: #loop82
                     alt82 = 2
                     LA82_0 = self.input.LA(1)
@@ -8043,23 +8031,23 @@ class JavaParser(LocalParser):
                     if alt82 == 1:
                         # Java.g:0:0: blockStatement
                         pass 
-                        self._state.following.append(self.FOLLOW_blockStatement_in_constructorBody2865)
-                        blockStatement223 = self.blockStatement()
+                        self._state.following.append(self.FOLLOW_blockStatement_in_constructorBody2857)
+                        blockStatement222 = self.blockStatement()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, blockStatement223.tree)
+                            self._adaptor.addChild(root_0, blockStatement222.tree)
 
 
                     else:
                         break #loop82
 
 
-                char_literal224=self.match(self.input, 47, self.FOLLOW_47_in_constructorBody2868)
+                char_literal223=self.match(self.input, 47, self.FOLLOW_47_in_constructorBody2860)
                 if self._state.backtracking == 0:
 
-                    char_literal224_tree = self._adaptor.createWithPayload(char_literal224)
-                    self._adaptor.addChild(root_0, char_literal224_tree)
+                    char_literal223_tree = self._adaptor.createWithPayload(char_literal223)
+                    self._adaptor.addChild(root_0, char_literal223_tree)
 
 
 
@@ -8097,42 +8085,39 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "explicitConstructorInvocation"
-    # Java.g:554:1: explicitConstructorInvocation : ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' | primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';' );
+    # Java.g:563:1: explicitConstructorInvocation : ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' | primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';' );
     def explicitConstructorInvocation(self, ):
-        self.py_expr_stack.append(py_expr_scope())
 
         retval = self.explicitConstructorInvocation_return()
         retval.start = self.input.LT(1)
         explicitConstructorInvocation_StartIndex = self.input.index()
         root_0 = None
 
-        set226 = None
-        char_literal228 = None
-        char_literal230 = None
-        string_literal232 = None
-        char_literal234 = None
-        nonWildcardTypeArguments225 = None
+        set225 = None
+        char_literal227 = None
+        char_literal229 = None
+        string_literal231 = None
+        char_literal233 = None
+        nonWildcardTypeArguments224 = None
 
-        arguments227 = None
+        arguments226 = None
 
-        primary229 = None
+        primary228 = None
 
-        nonWildcardTypeArguments231 = None
+        nonWildcardTypeArguments230 = None
 
-        arguments233 = None
+        arguments232 = None
 
 
-        set226_tree = None
-        char_literal228_tree = None
-        char_literal230_tree = None
-        string_literal232_tree = None
-        char_literal234_tree = None
+        set225_tree = None
+        char_literal227_tree = None
+        char_literal229_tree = None
+        string_literal231_tree = None
+        char_literal233_tree = None
 
                
-        block = self.py_block_stack[-1].block
-        expr = self.factory('expression', format=FS.r, rule=RN())
-        self.py_expr_stack[-1].expr = expr
-        self.py_expr_stack[-1].nest = expr.nestRight
+        scope = self.scope.expr
+        expr = scope.push(self.factory('expression', format=FS.r, rule=RN()))
 
         success = False
         try:
@@ -8142,15 +8127,15 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:561:5: ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' | primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';' )
+                # Java.g:571:5: ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' | primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';' )
                 alt85 = 2
                 alt85 = self.dfa85.predict(self.input)
                 if alt85 == 1:
-                    # Java.g:561:9: ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';'
+                    # Java.g:571:9: ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:561:9: ( nonWildcardTypeArguments )?
+                    # Java.g:571:9: ( nonWildcardTypeArguments )?
                     alt83 = 2
                     LA83_0 = self.input.LA(1)
 
@@ -8159,20 +8144,20 @@ class JavaParser(LocalParser):
                     if alt83 == 1:
                         # Java.g:0:0: nonWildcardTypeArguments
                         pass 
-                        self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2898)
-                        nonWildcardTypeArguments225 = self.nonWildcardTypeArguments()
+                        self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2890)
+                        nonWildcardTypeArguments224 = self.nonWildcardTypeArguments()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, nonWildcardTypeArguments225.tree)
+                            self._adaptor.addChild(root_0, nonWildcardTypeArguments224.tree)
 
 
 
-                    set226 = self.input.LT(1)
+                    set225 = self.input.LT(1)
                     if self.input.LA(1) == 67 or self.input.LA(1) == 71:
                         self.input.consume()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set226))
+                            self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set225))
                         self._state.errorRecovery = False
 
                     else:
@@ -8183,38 +8168,38 @@ class JavaParser(LocalParser):
                         raise mse
 
 
-                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorInvocation2909)
-                    arguments227 = self.arguments()
+                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorInvocation2901)
+                    arguments226 = self.arguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arguments227.tree)
-                    char_literal228=self.match(self.input, 28, self.FOLLOW_28_in_explicitConstructorInvocation2911)
+                        self._adaptor.addChild(root_0, arguments226.tree)
+                    char_literal227=self.match(self.input, 28, self.FOLLOW_28_in_explicitConstructorInvocation2903)
                     if self._state.backtracking == 0:
 
-                        char_literal228_tree = self._adaptor.createWithPayload(char_literal228)
-                        self._adaptor.addChild(root_0, char_literal228_tree)
+                        char_literal227_tree = self._adaptor.createWithPayload(char_literal227)
+                        self._adaptor.addChild(root_0, char_literal227_tree)
 
 
 
                 elif alt85 == 2:
-                    # Java.g:562:9: primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';'
+                    # Java.g:572:9: primary '.' ( nonWildcardTypeArguments )? 'super' arguments ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_primary_in_explicitConstructorInvocation2921)
-                    primary229 = self.primary()
+                    self._state.following.append(self.FOLLOW_primary_in_explicitConstructorInvocation2913)
+                    primary228 = self.primary()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primary229.tree)
-                    char_literal230=self.match(self.input, 31, self.FOLLOW_31_in_explicitConstructorInvocation2923)
+                        self._adaptor.addChild(root_0, primary228.tree)
+                    char_literal229=self.match(self.input, 31, self.FOLLOW_31_in_explicitConstructorInvocation2915)
                     if self._state.backtracking == 0:
 
-                        char_literal230_tree = self._adaptor.createWithPayload(char_literal230)
-                        self._adaptor.addChild(root_0, char_literal230_tree)
+                        char_literal229_tree = self._adaptor.createWithPayload(char_literal229)
+                        self._adaptor.addChild(root_0, char_literal229_tree)
 
-                    # Java.g:562:21: ( nonWildcardTypeArguments )?
+                    # Java.g:572:21: ( nonWildcardTypeArguments )?
                     alt84 = 2
                     LA84_0 = self.input.LA(1)
 
@@ -8223,32 +8208,32 @@ class JavaParser(LocalParser):
                     if alt84 == 1:
                         # Java.g:0:0: nonWildcardTypeArguments
                         pass 
-                        self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2925)
-                        nonWildcardTypeArguments231 = self.nonWildcardTypeArguments()
+                        self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2917)
+                        nonWildcardTypeArguments230 = self.nonWildcardTypeArguments()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, nonWildcardTypeArguments231.tree)
+                            self._adaptor.addChild(root_0, nonWildcardTypeArguments230.tree)
 
 
 
-                    string_literal232=self.match(self.input, 67, self.FOLLOW_67_in_explicitConstructorInvocation2928)
+                    string_literal231=self.match(self.input, 67, self.FOLLOW_67_in_explicitConstructorInvocation2920)
                     if self._state.backtracking == 0:
 
-                        string_literal232_tree = self._adaptor.createWithPayload(string_literal232)
-                        self._adaptor.addChild(root_0, string_literal232_tree)
+                        string_literal231_tree = self._adaptor.createWithPayload(string_literal231)
+                        self._adaptor.addChild(root_0, string_literal231_tree)
 
-                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorInvocation2930)
-                    arguments233 = self.arguments()
+                    self._state.following.append(self.FOLLOW_arguments_in_explicitConstructorInvocation2922)
+                    arguments232 = self.arguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arguments233.tree)
-                    char_literal234=self.match(self.input, 28, self.FOLLOW_28_in_explicitConstructorInvocation2932)
+                        self._adaptor.addChild(root_0, arguments232.tree)
+                    char_literal233=self.match(self.input, 28, self.FOLLOW_28_in_explicitConstructorInvocation2924)
                     if self._state.backtracking == 0:
 
-                        char_literal234_tree = self._adaptor.createWithPayload(char_literal234)
-                        self._adaptor.addChild(root_0, char_literal234_tree)
+                        char_literal233_tree = self._adaptor.createWithPayload(char_literal233)
+                        self._adaptor.addChild(root_0, char_literal233_tree)
 
 
 
@@ -8259,6 +8244,11 @@ class JavaParser(LocalParser):
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
 
+                if self._state.backtracking == 0:
+                            
+                    scope.pop()
+
+
 
                 success = True
             except RecognitionException, re:
@@ -8268,8 +8258,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 65, explicitConstructorInvocation_StartIndex, success)
-
-            self.py_expr_stack.pop()
 
             pass
 
@@ -8287,7 +8275,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "qualifiedName"
-    # Java.g:566:1: qualifiedName : Ident ( '.' Ident )* ;
+    # Java.g:576:1: qualifiedName : Ident ( '.' Ident )* ;
     def qualifiedName(self, ):
 
         retval = self.qualifiedName_return()
@@ -8295,13 +8283,13 @@ class JavaParser(LocalParser):
         qualifiedName_StartIndex = self.input.index()
         root_0 = None
 
-        Ident235 = None
-        char_literal236 = None
-        Ident237 = None
+        Ident234 = None
+        char_literal235 = None
+        Ident236 = None
 
-        Ident235_tree = None
-        char_literal236_tree = None
-        Ident237_tree = None
+        Ident234_tree = None
+        char_literal235_tree = None
+        Ident236_tree = None
 
         success = False
         try:
@@ -8311,18 +8299,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:567:5: ( Ident ( '.' Ident )* )
-                # Java.g:567:9: Ident ( '.' Ident )*
+                # Java.g:577:5: ( Ident ( '.' Ident )* )
+                # Java.g:577:9: Ident ( '.' Ident )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident235=self.match(self.input, Ident, self.FOLLOW_Ident_in_qualifiedName2952)
+                Ident234=self.match(self.input, Ident, self.FOLLOW_Ident_in_qualifiedName2944)
                 if self._state.backtracking == 0:
 
-                    Ident235_tree = self._adaptor.createWithPayload(Ident235)
-                    self._adaptor.addChild(root_0, Ident235_tree)
+                    Ident234_tree = self._adaptor.createWithPayload(Ident234)
+                    self._adaptor.addChild(root_0, Ident234_tree)
 
-                # Java.g:567:15: ( '.' Ident )*
+                # Java.g:577:15: ( '.' Ident )*
                 while True: #loop86
                     alt86 = 2
                     LA86_0 = self.input.LA(1)
@@ -8337,19 +8325,19 @@ class JavaParser(LocalParser):
 
 
                     if alt86 == 1:
-                        # Java.g:567:16: '.' Ident
+                        # Java.g:577:16: '.' Ident
                         pass 
-                        char_literal236=self.match(self.input, 31, self.FOLLOW_31_in_qualifiedName2955)
+                        char_literal235=self.match(self.input, 31, self.FOLLOW_31_in_qualifiedName2947)
                         if self._state.backtracking == 0:
 
-                            char_literal236_tree = self._adaptor.createWithPayload(char_literal236)
-                            self._adaptor.addChild(root_0, char_literal236_tree)
+                            char_literal235_tree = self._adaptor.createWithPayload(char_literal235)
+                            self._adaptor.addChild(root_0, char_literal235_tree)
 
-                        Ident237=self.match(self.input, Ident, self.FOLLOW_Ident_in_qualifiedName2957)
+                        Ident236=self.match(self.input, Ident, self.FOLLOW_Ident_in_qualifiedName2949)
                         if self._state.backtracking == 0:
 
-                            Ident237_tree = self._adaptor.createWithPayload(Ident237)
-                            self._adaptor.addChild(root_0, Ident237_tree)
+                            Ident236_tree = self._adaptor.createWithPayload(Ident236)
+                            self._adaptor.addChild(root_0, Ident236_tree)
 
 
 
@@ -8393,7 +8381,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "literal"
-    # Java.g:571:1: literal : ( integerLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | BooleanLiteral | NullLiteral );
+    # Java.g:581:1: literal : ( integerLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | BooleanLiteral | NullLiteral );
     def literal(self, ):
 
         retval = self.literal_return()
@@ -8401,19 +8389,19 @@ class JavaParser(LocalParser):
         literal_StartIndex = self.input.index()
         root_0 = None
 
-        FloatingPointLiteral239 = None
-        CharacterLiteral240 = None
-        StringLiteral241 = None
-        BooleanLiteral242 = None
-        NullLiteral243 = None
-        integerLiteral238 = None
+        FloatingPointLiteral238 = None
+        CharacterLiteral239 = None
+        StringLiteral240 = None
+        BooleanLiteral241 = None
+        NullLiteral242 = None
+        integerLiteral237 = None
 
 
-        FloatingPointLiteral239_tree = None
-        CharacterLiteral240_tree = None
-        StringLiteral241_tree = None
-        BooleanLiteral242_tree = None
-        NullLiteral243_tree = None
+        FloatingPointLiteral238_tree = None
+        CharacterLiteral239_tree = None
+        StringLiteral240_tree = None
+        BooleanLiteral241_tree = None
+        NullLiteral242_tree = None
 
         success = False
         try:
@@ -8423,7 +8411,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:572:5: ( integerLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | BooleanLiteral | NullLiteral )
+                # Java.g:582:5: ( integerLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | BooleanLiteral | NullLiteral )
                 alt87 = 6
                 LA87 = self.input.LA(1)
                 if LA87 == HexLiteral or LA87 == OctalLiteral or LA87 == DecimalLiteral:
@@ -8447,80 +8435,80 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt87 == 1:
-                    # Java.g:572:9: integerLiteral
+                    # Java.g:582:9: integerLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_integerLiteral_in_literal2979)
-                    integerLiteral238 = self.integerLiteral()
+                    self._state.following.append(self.FOLLOW_integerLiteral_in_literal2971)
+                    integerLiteral237 = self.integerLiteral()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, integerLiteral238.tree)
+                        self._adaptor.addChild(root_0, integerLiteral237.tree)
 
 
                 elif alt87 == 2:
-                    # Java.g:573:9: FloatingPointLiteral
+                    # Java.g:583:9: FloatingPointLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    FloatingPointLiteral239=self.match(self.input, FloatingPointLiteral, self.FOLLOW_FloatingPointLiteral_in_literal2989)
+                    FloatingPointLiteral238=self.match(self.input, FloatingPointLiteral, self.FOLLOW_FloatingPointLiteral_in_literal2981)
                     if self._state.backtracking == 0:
 
-                        FloatingPointLiteral239_tree = self._adaptor.createWithPayload(FloatingPointLiteral239)
-                        self._adaptor.addChild(root_0, FloatingPointLiteral239_tree)
+                        FloatingPointLiteral238_tree = self._adaptor.createWithPayload(FloatingPointLiteral238)
+                        self._adaptor.addChild(root_0, FloatingPointLiteral238_tree)
 
 
 
                 elif alt87 == 3:
-                    # Java.g:574:9: CharacterLiteral
+                    # Java.g:584:9: CharacterLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    CharacterLiteral240=self.match(self.input, CharacterLiteral, self.FOLLOW_CharacterLiteral_in_literal2999)
+                    CharacterLiteral239=self.match(self.input, CharacterLiteral, self.FOLLOW_CharacterLiteral_in_literal2991)
                     if self._state.backtracking == 0:
 
-                        CharacterLiteral240_tree = self._adaptor.createWithPayload(CharacterLiteral240)
-                        self._adaptor.addChild(root_0, CharacterLiteral240_tree)
+                        CharacterLiteral239_tree = self._adaptor.createWithPayload(CharacterLiteral239)
+                        self._adaptor.addChild(root_0, CharacterLiteral239_tree)
 
 
 
                 elif alt87 == 4:
-                    # Java.g:575:9: StringLiteral
+                    # Java.g:585:9: StringLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    StringLiteral241=self.match(self.input, StringLiteral, self.FOLLOW_StringLiteral_in_literal3009)
+                    StringLiteral240=self.match(self.input, StringLiteral, self.FOLLOW_StringLiteral_in_literal3001)
                     if self._state.backtracking == 0:
 
-                        StringLiteral241_tree = self._adaptor.createWithPayload(StringLiteral241)
-                        self._adaptor.addChild(root_0, StringLiteral241_tree)
+                        StringLiteral240_tree = self._adaptor.createWithPayload(StringLiteral240)
+                        self._adaptor.addChild(root_0, StringLiteral240_tree)
 
 
 
                 elif alt87 == 5:
-                    # Java.g:576:9: BooleanLiteral
+                    # Java.g:586:9: BooleanLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    BooleanLiteral242=self.match(self.input, BooleanLiteral, self.FOLLOW_BooleanLiteral_in_literal3019)
+                    BooleanLiteral241=self.match(self.input, BooleanLiteral, self.FOLLOW_BooleanLiteral_in_literal3011)
                     if self._state.backtracking == 0:
 
-                        BooleanLiteral242_tree = self._adaptor.createWithPayload(BooleanLiteral242)
-                        self._adaptor.addChild(root_0, BooleanLiteral242_tree)
+                        BooleanLiteral241_tree = self._adaptor.createWithPayload(BooleanLiteral241)
+                        self._adaptor.addChild(root_0, BooleanLiteral241_tree)
 
 
 
                 elif alt87 == 6:
-                    # Java.g:577:9: NullLiteral
+                    # Java.g:587:9: NullLiteral
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    NullLiteral243=self.match(self.input, NullLiteral, self.FOLLOW_NullLiteral_in_literal3029)
+                    NullLiteral242=self.match(self.input, NullLiteral, self.FOLLOW_NullLiteral_in_literal3021)
                     if self._state.backtracking == 0:
 
-                        NullLiteral243_tree = self._adaptor.createWithPayload(NullLiteral243)
-                        self._adaptor.addChild(root_0, NullLiteral243_tree)
+                        NullLiteral242_tree = self._adaptor.createWithPayload(NullLiteral242)
+                        self._adaptor.addChild(root_0, NullLiteral242_tree)
 
 
 
@@ -8557,7 +8545,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "integerLiteral"
-    # Java.g:581:1: integerLiteral : ( HexLiteral | OctalLiteral | DecimalLiteral );
+    # Java.g:591:1: integerLiteral : ( HexLiteral | OctalLiteral | DecimalLiteral );
     def integerLiteral(self, ):
 
         retval = self.integerLiteral_return()
@@ -8565,9 +8553,9 @@ class JavaParser(LocalParser):
         integerLiteral_StartIndex = self.input.index()
         root_0 = None
 
-        set244 = None
+        set243 = None
 
-        set244_tree = None
+        set243_tree = None
 
         success = False
         try:
@@ -8577,16 +8565,16 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:582:5: ( HexLiteral | OctalLiteral | DecimalLiteral )
+                # Java.g:592:5: ( HexLiteral | OctalLiteral | DecimalLiteral )
                 # Java.g:
                 pass 
                 root_0 = self._adaptor.nil()
 
-                set244 = self.input.LT(1)
+                set243 = self.input.LT(1)
                 if (HexLiteral <= self.input.LA(1) <= DecimalLiteral):
                     self.input.consume()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set244))
+                        self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set243))
                     self._state.errorRecovery = False
 
                 else:
@@ -8633,7 +8621,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotations"
-    # Java.g:602:1: annotations : ( annotation )+ ;
+    # Java.g:612:1: annotations : ( annotation )+ ;
     def annotations(self, ):
 
         retval = self.annotations_return()
@@ -8641,7 +8629,7 @@ class JavaParser(LocalParser):
         annotations_StartIndex = self.input.index()
         root_0 = None
 
-        annotation245 = None
+        annotation244 = None
 
 
 
@@ -8653,12 +8641,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:603:5: ( ( annotation )+ )
-                # Java.g:603:9: ( annotation )+
+                # Java.g:613:5: ( ( annotation )+ )
+                # Java.g:613:9: ( annotation )+
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:603:9: ( annotation )+
+                # Java.g:613:9: ( annotation )+
                 cnt88 = 0
                 while True: #loop88
                     alt88 = 2
@@ -8681,12 +8669,12 @@ class JavaParser(LocalParser):
                     if alt88 == 1:
                         # Java.g:0:0: annotation
                         pass 
-                        self._state.following.append(self.FOLLOW_annotation_in_annotations3142)
-                        annotation245 = self.annotation()
+                        self._state.following.append(self.FOLLOW_annotation_in_annotations3134)
+                        annotation244 = self.annotation()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, annotation245.tree)
+                            self._adaptor.addChild(root_0, annotation244.tree)
 
 
                     else:
@@ -8738,7 +8726,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotation"
-    # Java.g:607:1: annotation : '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )? ;
+    # Java.g:617:1: annotation : '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )? ;
     def annotation(self, ):
 
         retval = self.annotation_return()
@@ -8746,19 +8734,19 @@ class JavaParser(LocalParser):
         annotation_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal246 = None
-        char_literal248 = None
-        char_literal251 = None
-        annotationName247 = None
+        char_literal245 = None
+        char_literal247 = None
+        char_literal250 = None
+        annotationName246 = None
 
-        elementValuePairs249 = None
+        elementValuePairs248 = None
 
-        elementValue250 = None
+        elementValue249 = None
 
 
-        char_literal246_tree = None
-        char_literal248_tree = None
-        char_literal251_tree = None
+        char_literal245_tree = None
+        char_literal247_tree = None
+        char_literal250_tree = None
 
         success = False
         try:
@@ -8768,39 +8756,39 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:608:5: ( '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )? )
-                # Java.g:608:9: '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )?
+                # Java.g:618:5: ( '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )? )
+                # Java.g:618:9: '@' annotationName ( '(' ( elementValuePairs | elementValue )? ')' )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal246=self.match(self.input, 72, self.FOLLOW_72_in_annotation3163)
+                char_literal245=self.match(self.input, 72, self.FOLLOW_72_in_annotation3155)
                 if self._state.backtracking == 0:
 
-                    char_literal246_tree = self._adaptor.createWithPayload(char_literal246)
-                    self._adaptor.addChild(root_0, char_literal246_tree)
+                    char_literal245_tree = self._adaptor.createWithPayload(char_literal245)
+                    self._adaptor.addChild(root_0, char_literal245_tree)
 
-                self._state.following.append(self.FOLLOW_annotationName_in_annotation3165)
-                annotationName247 = self.annotationName()
+                self._state.following.append(self.FOLLOW_annotationName_in_annotation3157)
+                annotationName246 = self.annotationName()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, annotationName247.tree)
-                # Java.g:608:28: ( '(' ( elementValuePairs | elementValue )? ')' )?
+                    self._adaptor.addChild(root_0, annotationName246.tree)
+                # Java.g:618:28: ( '(' ( elementValuePairs | elementValue )? ')' )?
                 alt90 = 2
                 LA90_0 = self.input.LA(1)
 
                 if (LA90_0 == 68) :
                     alt90 = 1
                 if alt90 == 1:
-                    # Java.g:608:30: '(' ( elementValuePairs | elementValue )? ')'
+                    # Java.g:618:30: '(' ( elementValuePairs | elementValue )? ')'
                     pass 
-                    char_literal248=self.match(self.input, 68, self.FOLLOW_68_in_annotation3169)
+                    char_literal247=self.match(self.input, 68, self.FOLLOW_68_in_annotation3161)
                     if self._state.backtracking == 0:
 
-                        char_literal248_tree = self._adaptor.createWithPayload(char_literal248)
-                        self._adaptor.addChild(root_0, char_literal248_tree)
+                        char_literal247_tree = self._adaptor.createWithPayload(char_literal247)
+                        self._adaptor.addChild(root_0, char_literal247_tree)
 
-                    # Java.g:608:34: ( elementValuePairs | elementValue )?
+                    # Java.g:618:34: ( elementValuePairs | elementValue )?
                     alt89 = 3
                     LA89_0 = self.input.LA(1)
 
@@ -8814,33 +8802,33 @@ class JavaParser(LocalParser):
                     elif ((FloatingPointLiteral <= LA89_0 <= DecimalLiteral) or LA89_0 == 46 or LA89_0 == 49 or (58 <= LA89_0 <= 65) or (67 <= LA89_0 <= 68) or (71 <= LA89_0 <= 72) or (104 <= LA89_0 <= 105) or (108 <= LA89_0 <= 112)) :
                         alt89 = 2
                     if alt89 == 1:
-                        # Java.g:608:36: elementValuePairs
+                        # Java.g:618:36: elementValuePairs
                         pass 
-                        self._state.following.append(self.FOLLOW_elementValuePairs_in_annotation3173)
-                        elementValuePairs249 = self.elementValuePairs()
+                        self._state.following.append(self.FOLLOW_elementValuePairs_in_annotation3165)
+                        elementValuePairs248 = self.elementValuePairs()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, elementValuePairs249.tree)
+                            self._adaptor.addChild(root_0, elementValuePairs248.tree)
 
 
                     elif alt89 == 2:
-                        # Java.g:608:56: elementValue
+                        # Java.g:618:56: elementValue
                         pass 
-                        self._state.following.append(self.FOLLOW_elementValue_in_annotation3177)
-                        elementValue250 = self.elementValue()
+                        self._state.following.append(self.FOLLOW_elementValue_in_annotation3169)
+                        elementValue249 = self.elementValue()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, elementValue250.tree)
+                            self._adaptor.addChild(root_0, elementValue249.tree)
 
 
 
-                    char_literal251=self.match(self.input, 69, self.FOLLOW_69_in_annotation3182)
+                    char_literal250=self.match(self.input, 69, self.FOLLOW_69_in_annotation3174)
                     if self._state.backtracking == 0:
 
-                        char_literal251_tree = self._adaptor.createWithPayload(char_literal251)
-                        self._adaptor.addChild(root_0, char_literal251_tree)
+                        char_literal250_tree = self._adaptor.createWithPayload(char_literal250)
+                        self._adaptor.addChild(root_0, char_literal250_tree)
 
 
 
@@ -8881,7 +8869,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationName"
-    # Java.g:612:1: annotationName : Ident ( '.' Ident )* ;
+    # Java.g:622:1: annotationName : Ident ( '.' Ident )* ;
     def annotationName(self, ):
 
         retval = self.annotationName_return()
@@ -8889,13 +8877,13 @@ class JavaParser(LocalParser):
         annotationName_StartIndex = self.input.index()
         root_0 = None
 
-        Ident252 = None
-        char_literal253 = None
-        Ident254 = None
+        Ident251 = None
+        char_literal252 = None
+        Ident253 = None
 
-        Ident252_tree = None
-        char_literal253_tree = None
-        Ident254_tree = None
+        Ident251_tree = None
+        char_literal252_tree = None
+        Ident253_tree = None
 
         success = False
         try:
@@ -8905,18 +8893,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:613:5: ( Ident ( '.' Ident )* )
-                # Java.g:613:7: Ident ( '.' Ident )*
+                # Java.g:623:5: ( Ident ( '.' Ident )* )
+                # Java.g:623:7: Ident ( '.' Ident )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident252=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationName3203)
+                Ident251=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationName3195)
                 if self._state.backtracking == 0:
 
-                    Ident252_tree = self._adaptor.createWithPayload(Ident252)
-                    self._adaptor.addChild(root_0, Ident252_tree)
+                    Ident251_tree = self._adaptor.createWithPayload(Ident251)
+                    self._adaptor.addChild(root_0, Ident251_tree)
 
-                # Java.g:613:13: ( '.' Ident )*
+                # Java.g:623:13: ( '.' Ident )*
                 while True: #loop91
                     alt91 = 2
                     LA91_0 = self.input.LA(1)
@@ -8926,19 +8914,19 @@ class JavaParser(LocalParser):
 
 
                     if alt91 == 1:
-                        # Java.g:613:14: '.' Ident
+                        # Java.g:623:14: '.' Ident
                         pass 
-                        char_literal253=self.match(self.input, 31, self.FOLLOW_31_in_annotationName3206)
+                        char_literal252=self.match(self.input, 31, self.FOLLOW_31_in_annotationName3198)
                         if self._state.backtracking == 0:
 
-                            char_literal253_tree = self._adaptor.createWithPayload(char_literal253)
-                            self._adaptor.addChild(root_0, char_literal253_tree)
+                            char_literal252_tree = self._adaptor.createWithPayload(char_literal252)
+                            self._adaptor.addChild(root_0, char_literal252_tree)
 
-                        Ident254=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationName3208)
+                        Ident253=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationName3200)
                         if self._state.backtracking == 0:
 
-                            Ident254_tree = self._adaptor.createWithPayload(Ident254)
-                            self._adaptor.addChild(root_0, Ident254_tree)
+                            Ident253_tree = self._adaptor.createWithPayload(Ident253)
+                            self._adaptor.addChild(root_0, Ident253_tree)
 
 
 
@@ -8982,7 +8970,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "elementValuePairs"
-    # Java.g:617:1: elementValuePairs : elementValuePair ( ',' elementValuePair )* ;
+    # Java.g:627:1: elementValuePairs : elementValuePair ( ',' elementValuePair )* ;
     def elementValuePairs(self, ):
 
         retval = self.elementValuePairs_return()
@@ -8990,13 +8978,13 @@ class JavaParser(LocalParser):
         elementValuePairs_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal256 = None
-        elementValuePair255 = None
+        char_literal255 = None
+        elementValuePair254 = None
 
-        elementValuePair257 = None
+        elementValuePair256 = None
 
 
-        char_literal256_tree = None
+        char_literal255_tree = None
 
         success = False
         try:
@@ -9006,18 +8994,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:618:5: ( elementValuePair ( ',' elementValuePair )* )
-                # Java.g:618:9: elementValuePair ( ',' elementValuePair )*
+                # Java.g:628:5: ( elementValuePair ( ',' elementValuePair )* )
+                # Java.g:628:9: elementValuePair ( ',' elementValuePair )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_elementValuePair_in_elementValuePairs3230)
-                elementValuePair255 = self.elementValuePair()
+                self._state.following.append(self.FOLLOW_elementValuePair_in_elementValuePairs3222)
+                elementValuePair254 = self.elementValuePair()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, elementValuePair255.tree)
-                # Java.g:618:26: ( ',' elementValuePair )*
+                    self._adaptor.addChild(root_0, elementValuePair254.tree)
+                # Java.g:628:26: ( ',' elementValuePair )*
                 while True: #loop92
                     alt92 = 2
                     LA92_0 = self.input.LA(1)
@@ -9027,20 +9015,20 @@ class JavaParser(LocalParser):
 
 
                     if alt92 == 1:
-                        # Java.g:618:27: ',' elementValuePair
+                        # Java.g:628:27: ',' elementValuePair
                         pass 
-                        char_literal256=self.match(self.input, 43, self.FOLLOW_43_in_elementValuePairs3233)
+                        char_literal255=self.match(self.input, 43, self.FOLLOW_43_in_elementValuePairs3225)
                         if self._state.backtracking == 0:
 
-                            char_literal256_tree = self._adaptor.createWithPayload(char_literal256)
-                            self._adaptor.addChild(root_0, char_literal256_tree)
+                            char_literal255_tree = self._adaptor.createWithPayload(char_literal255)
+                            self._adaptor.addChild(root_0, char_literal255_tree)
 
-                        self._state.following.append(self.FOLLOW_elementValuePair_in_elementValuePairs3235)
-                        elementValuePair257 = self.elementValuePair()
+                        self._state.following.append(self.FOLLOW_elementValuePair_in_elementValuePairs3227)
+                        elementValuePair256 = self.elementValuePair()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, elementValuePair257.tree)
+                            self._adaptor.addChild(root_0, elementValuePair256.tree)
 
 
                     else:
@@ -9083,7 +9071,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "elementValuePair"
-    # Java.g:622:1: elementValuePair : Ident '=' elementValue ;
+    # Java.g:632:1: elementValuePair : Ident '=' elementValue ;
     def elementValuePair(self, ):
 
         retval = self.elementValuePair_return()
@@ -9091,13 +9079,13 @@ class JavaParser(LocalParser):
         elementValuePair_StartIndex = self.input.index()
         root_0 = None
 
-        Ident258 = None
-        char_literal259 = None
-        elementValue260 = None
+        Ident257 = None
+        char_literal258 = None
+        elementValue259 = None
 
 
-        Ident258_tree = None
-        char_literal259_tree = None
+        Ident257_tree = None
+        char_literal258_tree = None
 
         success = False
         try:
@@ -9107,29 +9095,29 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:623:5: ( Ident '=' elementValue )
-                # Java.g:623:9: Ident '=' elementValue
+                # Java.g:633:5: ( Ident '=' elementValue )
+                # Java.g:633:9: Ident '=' elementValue
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident258=self.match(self.input, Ident, self.FOLLOW_Ident_in_elementValuePair3257)
+                Ident257=self.match(self.input, Ident, self.FOLLOW_Ident_in_elementValuePair3249)
                 if self._state.backtracking == 0:
 
-                    Ident258_tree = self._adaptor.createWithPayload(Ident258)
-                    self._adaptor.addChild(root_0, Ident258_tree)
+                    Ident257_tree = self._adaptor.createWithPayload(Ident257)
+                    self._adaptor.addChild(root_0, Ident257_tree)
 
-                char_literal259=self.match(self.input, 53, self.FOLLOW_53_in_elementValuePair3259)
+                char_literal258=self.match(self.input, 53, self.FOLLOW_53_in_elementValuePair3251)
                 if self._state.backtracking == 0:
 
-                    char_literal259_tree = self._adaptor.createWithPayload(char_literal259)
-                    self._adaptor.addChild(root_0, char_literal259_tree)
+                    char_literal258_tree = self._adaptor.createWithPayload(char_literal258)
+                    self._adaptor.addChild(root_0, char_literal258_tree)
 
-                self._state.following.append(self.FOLLOW_elementValue_in_elementValuePair3261)
-                elementValue260 = self.elementValue()
+                self._state.following.append(self.FOLLOW_elementValue_in_elementValuePair3253)
+                elementValue259 = self.elementValue()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, elementValue260.tree)
+                    self._adaptor.addChild(root_0, elementValue259.tree)
 
 
 
@@ -9166,7 +9154,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "elementValue"
-    # Java.g:627:1: elementValue : ( conditionalExpression | annotation | elementValueArrayInitializer );
+    # Java.g:637:1: elementValue : ( conditionalExpression | annotation | elementValueArrayInitializer );
     def elementValue(self, ):
 
         retval = self.elementValue_return()
@@ -9174,11 +9162,11 @@ class JavaParser(LocalParser):
         elementValue_StartIndex = self.input.index()
         root_0 = None
 
-        conditionalExpression261 = None
+        conditionalExpression260 = None
 
-        annotation262 = None
+        annotation261 = None
 
-        elementValueArrayInitializer263 = None
+        elementValueArrayInitializer262 = None
 
 
 
@@ -9190,7 +9178,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:628:5: ( conditionalExpression | annotation | elementValueArrayInitializer )
+                # Java.g:638:5: ( conditionalExpression | annotation | elementValueArrayInitializer )
                 alt93 = 3
                 LA93 = self.input.LA(1)
                 if LA93 == Ident or LA93 == FloatingPointLiteral or LA93 == CharacterLiteral or LA93 == StringLiteral or LA93 == BooleanLiteral or LA93 == NullLiteral or LA93 == HexLiteral or LA93 == OctalLiteral or LA93 == DecimalLiteral or LA93 == 49 or LA93 == 58 or LA93 == 59 or LA93 == 60 or LA93 == 61 or LA93 == 62 or LA93 == 63 or LA93 == 64 or LA93 == 65 or LA93 == 67 or LA93 == 68 or LA93 == 71 or LA93 == 104 or LA93 == 105 or LA93 == 108 or LA93 == 109 or LA93 == 110 or LA93 == 111 or LA93 == 112:
@@ -9208,42 +9196,42 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt93 == 1:
-                    # Java.g:628:9: conditionalExpression
+                    # Java.g:638:9: conditionalExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_conditionalExpression_in_elementValue3281)
-                    conditionalExpression261 = self.conditionalExpression()
+                    self._state.following.append(self.FOLLOW_conditionalExpression_in_elementValue3273)
+                    conditionalExpression260 = self.conditionalExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, conditionalExpression261.tree)
+                        self._adaptor.addChild(root_0, conditionalExpression260.tree)
 
 
                 elif alt93 == 2:
-                    # Java.g:629:9: annotation
+                    # Java.g:639:9: annotation
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotation_in_elementValue3291)
-                    annotation262 = self.annotation()
+                    self._state.following.append(self.FOLLOW_annotation_in_elementValue3283)
+                    annotation261 = self.annotation()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotation262.tree)
+                        self._adaptor.addChild(root_0, annotation261.tree)
 
 
                 elif alt93 == 3:
-                    # Java.g:630:9: elementValueArrayInitializer
+                    # Java.g:640:9: elementValueArrayInitializer
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_elementValueArrayInitializer_in_elementValue3301)
-                    elementValueArrayInitializer263 = self.elementValueArrayInitializer()
+                    self._state.following.append(self.FOLLOW_elementValueArrayInitializer_in_elementValue3293)
+                    elementValueArrayInitializer262 = self.elementValueArrayInitializer()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, elementValueArrayInitializer263.tree)
+                        self._adaptor.addChild(root_0, elementValueArrayInitializer262.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -9279,7 +9267,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "elementValueArrayInitializer"
-    # Java.g:634:1: elementValueArrayInitializer : '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}' ;
+    # Java.g:644:1: elementValueArrayInitializer : '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}' ;
     def elementValueArrayInitializer(self, ):
 
         retval = self.elementValueArrayInitializer_return()
@@ -9287,19 +9275,19 @@ class JavaParser(LocalParser):
         elementValueArrayInitializer_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal264 = None
-        char_literal266 = None
+        char_literal263 = None
+        char_literal265 = None
+        char_literal267 = None
         char_literal268 = None
-        char_literal269 = None
-        elementValue265 = None
+        elementValue264 = None
 
-        elementValue267 = None
+        elementValue266 = None
 
 
-        char_literal264_tree = None
-        char_literal266_tree = None
+        char_literal263_tree = None
+        char_literal265_tree = None
+        char_literal267_tree = None
         char_literal268_tree = None
-        char_literal269_tree = None
 
         success = False
         try:
@@ -9309,33 +9297,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:635:5: ( '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}' )
-                # Java.g:635:9: '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}'
+                # Java.g:645:5: ( '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}' )
+                # Java.g:645:9: '{' ( elementValue ( ',' elementValue )* )? ( ',' )? '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal264=self.match(self.input, 46, self.FOLLOW_46_in_elementValueArrayInitializer3321)
+                char_literal263=self.match(self.input, 46, self.FOLLOW_46_in_elementValueArrayInitializer3313)
                 if self._state.backtracking == 0:
 
-                    char_literal264_tree = self._adaptor.createWithPayload(char_literal264)
-                    self._adaptor.addChild(root_0, char_literal264_tree)
+                    char_literal263_tree = self._adaptor.createWithPayload(char_literal263)
+                    self._adaptor.addChild(root_0, char_literal263_tree)
 
-                # Java.g:635:13: ( elementValue ( ',' elementValue )* )?
+                # Java.g:645:13: ( elementValue ( ',' elementValue )* )?
                 alt95 = 2
                 LA95_0 = self.input.LA(1)
 
                 if (LA95_0 == Ident or (FloatingPointLiteral <= LA95_0 <= DecimalLiteral) or LA95_0 == 46 or LA95_0 == 49 or (58 <= LA95_0 <= 65) or (67 <= LA95_0 <= 68) or (71 <= LA95_0 <= 72) or (104 <= LA95_0 <= 105) or (108 <= LA95_0 <= 112)) :
                     alt95 = 1
                 if alt95 == 1:
-                    # Java.g:635:14: elementValue ( ',' elementValue )*
+                    # Java.g:645:14: elementValue ( ',' elementValue )*
                     pass 
-                    self._state.following.append(self.FOLLOW_elementValue_in_elementValueArrayInitializer3324)
-                    elementValue265 = self.elementValue()
+                    self._state.following.append(self.FOLLOW_elementValue_in_elementValueArrayInitializer3316)
+                    elementValue264 = self.elementValue()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, elementValue265.tree)
-                    # Java.g:635:27: ( ',' elementValue )*
+                        self._adaptor.addChild(root_0, elementValue264.tree)
+                    # Java.g:645:27: ( ',' elementValue )*
                     while True: #loop94
                         alt94 = 2
                         LA94_0 = self.input.LA(1)
@@ -9350,20 +9338,20 @@ class JavaParser(LocalParser):
 
 
                         if alt94 == 1:
-                            # Java.g:635:28: ',' elementValue
+                            # Java.g:645:28: ',' elementValue
                             pass 
-                            char_literal266=self.match(self.input, 43, self.FOLLOW_43_in_elementValueArrayInitializer3327)
+                            char_literal265=self.match(self.input, 43, self.FOLLOW_43_in_elementValueArrayInitializer3319)
                             if self._state.backtracking == 0:
 
-                                char_literal266_tree = self._adaptor.createWithPayload(char_literal266)
-                                self._adaptor.addChild(root_0, char_literal266_tree)
+                                char_literal265_tree = self._adaptor.createWithPayload(char_literal265)
+                                self._adaptor.addChild(root_0, char_literal265_tree)
 
-                            self._state.following.append(self.FOLLOW_elementValue_in_elementValueArrayInitializer3329)
-                            elementValue267 = self.elementValue()
+                            self._state.following.append(self.FOLLOW_elementValue_in_elementValueArrayInitializer3321)
+                            elementValue266 = self.elementValue()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, elementValue267.tree)
+                                self._adaptor.addChild(root_0, elementValue266.tree)
 
 
                         else:
@@ -9373,29 +9361,29 @@ class JavaParser(LocalParser):
 
 
 
-                # Java.g:635:49: ( ',' )?
+                # Java.g:645:49: ( ',' )?
                 alt96 = 2
                 LA96_0 = self.input.LA(1)
 
                 if (LA96_0 == 43) :
                     alt96 = 1
                 if alt96 == 1:
-                    # Java.g:635:50: ','
+                    # Java.g:645:50: ','
                     pass 
-                    char_literal268=self.match(self.input, 43, self.FOLLOW_43_in_elementValueArrayInitializer3336)
+                    char_literal267=self.match(self.input, 43, self.FOLLOW_43_in_elementValueArrayInitializer3328)
                     if self._state.backtracking == 0:
 
-                        char_literal268_tree = self._adaptor.createWithPayload(char_literal268)
-                        self._adaptor.addChild(root_0, char_literal268_tree)
+                        char_literal267_tree = self._adaptor.createWithPayload(char_literal267)
+                        self._adaptor.addChild(root_0, char_literal267_tree)
 
 
 
 
-                char_literal269=self.match(self.input, 47, self.FOLLOW_47_in_elementValueArrayInitializer3340)
+                char_literal268=self.match(self.input, 47, self.FOLLOW_47_in_elementValueArrayInitializer3332)
                 if self._state.backtracking == 0:
 
-                    char_literal269_tree = self._adaptor.createWithPayload(char_literal269)
-                    self._adaptor.addChild(root_0, char_literal269_tree)
+                    char_literal268_tree = self._adaptor.createWithPayload(char_literal268)
+                    self._adaptor.addChild(root_0, char_literal268_tree)
 
 
 
@@ -9433,7 +9421,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationTypeDecl"
-    # Java.g:639:1: annotationTypeDecl : '@' 'interface' Ident annotationTypeBody ;
+    # Java.g:649:1: annotationTypeDecl : '@' 'interface' Ident annotationTypeBody ;
     def annotationTypeDecl(self, ):
 
         retval = self.annotationTypeDecl_return()
@@ -9441,15 +9429,15 @@ class JavaParser(LocalParser):
         annotationTypeDecl_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal270 = None
-        string_literal271 = None
-        Ident272 = None
-        annotationTypeBody273 = None
+        char_literal269 = None
+        string_literal270 = None
+        Ident271 = None
+        annotationTypeBody272 = None
 
 
-        char_literal270_tree = None
-        string_literal271_tree = None
-        Ident272_tree = None
+        char_literal269_tree = None
+        string_literal270_tree = None
+        Ident271_tree = None
 
         success = False
         try:
@@ -9459,35 +9447,35 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:640:5: ( '@' 'interface' Ident annotationTypeBody )
-                # Java.g:640:9: '@' 'interface' Ident annotationTypeBody
+                # Java.g:650:5: ( '@' 'interface' Ident annotationTypeBody )
+                # Java.g:650:9: '@' 'interface' Ident annotationTypeBody
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal270=self.match(self.input, 72, self.FOLLOW_72_in_annotationTypeDecl3360)
+                char_literal269=self.match(self.input, 72, self.FOLLOW_72_in_annotationTypeDecl3352)
                 if self._state.backtracking == 0:
 
-                    char_literal270_tree = self._adaptor.createWithPayload(char_literal270)
-                    self._adaptor.addChild(root_0, char_literal270_tree)
+                    char_literal269_tree = self._adaptor.createWithPayload(char_literal269)
+                    self._adaptor.addChild(root_0, char_literal269_tree)
 
-                string_literal271=self.match(self.input, 48, self.FOLLOW_48_in_annotationTypeDecl3362)
+                string_literal270=self.match(self.input, 48, self.FOLLOW_48_in_annotationTypeDecl3354)
                 if self._state.backtracking == 0:
 
-                    string_literal271_tree = self._adaptor.createWithPayload(string_literal271)
-                    self._adaptor.addChild(root_0, string_literal271_tree)
+                    string_literal270_tree = self._adaptor.createWithPayload(string_literal270)
+                    self._adaptor.addChild(root_0, string_literal270_tree)
 
-                Ident272=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationTypeDecl3364)
+                Ident271=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationTypeDecl3356)
                 if self._state.backtracking == 0:
 
-                    Ident272_tree = self._adaptor.createWithPayload(Ident272)
-                    self._adaptor.addChild(root_0, Ident272_tree)
+                    Ident271_tree = self._adaptor.createWithPayload(Ident271)
+                    self._adaptor.addChild(root_0, Ident271_tree)
 
-                self._state.following.append(self.FOLLOW_annotationTypeBody_in_annotationTypeDecl3366)
-                annotationTypeBody273 = self.annotationTypeBody()
+                self._state.following.append(self.FOLLOW_annotationTypeBody_in_annotationTypeDecl3358)
+                annotationTypeBody272 = self.annotationTypeBody()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, annotationTypeBody273.tree)
+                    self._adaptor.addChild(root_0, annotationTypeBody272.tree)
 
 
 
@@ -9524,7 +9512,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationTypeBody"
-    # Java.g:644:1: annotationTypeBody : '{' ( annotationTypeElementDecl )* '}' ;
+    # Java.g:654:1: annotationTypeBody : '{' ( annotationTypeElementDecl )* '}' ;
     def annotationTypeBody(self, ):
 
         retval = self.annotationTypeBody_return()
@@ -9532,13 +9520,13 @@ class JavaParser(LocalParser):
         annotationTypeBody_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal274 = None
-        char_literal276 = None
-        annotationTypeElementDecl275 = None
+        char_literal273 = None
+        char_literal275 = None
+        annotationTypeElementDecl274 = None
 
 
-        char_literal274_tree = None
-        char_literal276_tree = None
+        char_literal273_tree = None
+        char_literal275_tree = None
 
         success = False
         try:
@@ -9548,18 +9536,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:645:5: ( '{' ( annotationTypeElementDecl )* '}' )
-                # Java.g:645:9: '{' ( annotationTypeElementDecl )* '}'
+                # Java.g:655:5: ( '{' ( annotationTypeElementDecl )* '}' )
+                # Java.g:655:9: '{' ( annotationTypeElementDecl )* '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal274=self.match(self.input, 46, self.FOLLOW_46_in_annotationTypeBody3386)
+                char_literal273=self.match(self.input, 46, self.FOLLOW_46_in_annotationTypeBody3378)
                 if self._state.backtracking == 0:
 
-                    char_literal274_tree = self._adaptor.createWithPayload(char_literal274)
-                    self._adaptor.addChild(root_0, char_literal274_tree)
+                    char_literal273_tree = self._adaptor.createWithPayload(char_literal273)
+                    self._adaptor.addChild(root_0, char_literal273_tree)
 
-                # Java.g:645:13: ( annotationTypeElementDecl )*
+                # Java.g:655:13: ( annotationTypeElementDecl )*
                 while True: #loop97
                     alt97 = 2
                     LA97_0 = self.input.LA(1)
@@ -9569,25 +9557,25 @@ class JavaParser(LocalParser):
 
 
                     if alt97 == 1:
-                        # Java.g:645:14: annotationTypeElementDecl
+                        # Java.g:655:14: annotationTypeElementDecl
                         pass 
-                        self._state.following.append(self.FOLLOW_annotationTypeElementDecl_in_annotationTypeBody3389)
-                        annotationTypeElementDecl275 = self.annotationTypeElementDecl()
+                        self._state.following.append(self.FOLLOW_annotationTypeElementDecl_in_annotationTypeBody3381)
+                        annotationTypeElementDecl274 = self.annotationTypeElementDecl()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, annotationTypeElementDecl275.tree)
+                            self._adaptor.addChild(root_0, annotationTypeElementDecl274.tree)
 
 
                     else:
                         break #loop97
 
 
-                char_literal276=self.match(self.input, 47, self.FOLLOW_47_in_annotationTypeBody3393)
+                char_literal275=self.match(self.input, 47, self.FOLLOW_47_in_annotationTypeBody3385)
                 if self._state.backtracking == 0:
 
-                    char_literal276_tree = self._adaptor.createWithPayload(char_literal276)
-                    self._adaptor.addChild(root_0, char_literal276_tree)
+                    char_literal275_tree = self._adaptor.createWithPayload(char_literal275)
+                    self._adaptor.addChild(root_0, char_literal275_tree)
 
 
 
@@ -9625,7 +9613,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationTypeElementDecl"
-    # Java.g:649:1: annotationTypeElementDecl : modifiers annotationTypeElementRest ;
+    # Java.g:659:1: annotationTypeElementDecl : modifiers annotationTypeElementRest ;
     def annotationTypeElementDecl(self, ):
 
         retval = self.annotationTypeElementDecl_return()
@@ -9633,9 +9621,9 @@ class JavaParser(LocalParser):
         annotationTypeElementDecl_StartIndex = self.input.index()
         root_0 = None
 
-        modifiers277 = None
+        modifiers276 = None
 
-        annotationTypeElementRest278 = None
+        annotationTypeElementRest277 = None
 
 
 
@@ -9647,23 +9635,23 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:650:5: ( modifiers annotationTypeElementRest )
-                # Java.g:650:9: modifiers annotationTypeElementRest
+                # Java.g:660:5: ( modifiers annotationTypeElementRest )
+                # Java.g:660:9: modifiers annotationTypeElementRest
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_modifiers_in_annotationTypeElementDecl3413)
-                modifiers277 = self.modifiers()
+                self._state.following.append(self.FOLLOW_modifiers_in_annotationTypeElementDecl3405)
+                modifiers276 = self.modifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, modifiers277.tree)
-                self._state.following.append(self.FOLLOW_annotationTypeElementRest_in_annotationTypeElementDecl3415)
-                annotationTypeElementRest278 = self.annotationTypeElementRest()
+                    self._adaptor.addChild(root_0, modifiers276.tree)
+                self._state.following.append(self.FOLLOW_annotationTypeElementRest_in_annotationTypeElementDecl3407)
+                annotationTypeElementRest277 = self.annotationTypeElementRest()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, annotationTypeElementRest278.tree)
+                    self._adaptor.addChild(root_0, annotationTypeElementRest277.tree)
 
 
 
@@ -9700,7 +9688,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationTypeElementRest"
-    # Java.g:654:1: annotationTypeElementRest : ( type annotationMethodOrConstantRest ';' | normalClassDecl[None] ( ';' )? | normalInterfaceDecl[None] ( ';' )? | enumDecl[None] ( ';' )? | annotationTypeDecl ( ';' )? );
+    # Java.g:664:1: annotationTypeElementRest : ( type annotationMethodOrConstantRest ';' | normalClassDecl[None] ( ';' )? | normalInterfaceDecl[None] ( ';' )? | enumDecl[None] ( ';' )? | annotationTypeDecl ( ';' )? );
     def annotationTypeElementRest(self, ):
 
         retval = self.annotationTypeElementRest_return()
@@ -9708,29 +9696,29 @@ class JavaParser(LocalParser):
         annotationTypeElementRest_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal281 = None
-        char_literal283 = None
-        char_literal285 = None
-        char_literal287 = None
-        char_literal289 = None
-        type279 = None
+        char_literal280 = None
+        char_literal282 = None
+        char_literal284 = None
+        char_literal286 = None
+        char_literal288 = None
+        type278 = None
 
-        annotationMethodOrConstantRest280 = None
+        annotationMethodOrConstantRest279 = None
 
-        normalClassDecl282 = None
+        normalClassDecl281 = None
 
-        normalInterfaceDecl284 = None
+        normalInterfaceDecl283 = None
 
-        enumDecl286 = None
+        enumDecl285 = None
 
-        annotationTypeDecl288 = None
+        annotationTypeDecl287 = None
 
 
-        char_literal281_tree = None
-        char_literal283_tree = None
-        char_literal285_tree = None
-        char_literal287_tree = None
-        char_literal289_tree = None
+        char_literal280_tree = None
+        char_literal282_tree = None
+        char_literal284_tree = None
+        char_literal286_tree = None
+        char_literal288_tree = None
 
         success = False
         try:
@@ -9740,7 +9728,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:655:5: ( type annotationMethodOrConstantRest ';' | normalClassDecl[None] ( ';' )? | normalInterfaceDecl[None] ( ';' )? | enumDecl[None] ( ';' )? | annotationTypeDecl ( ';' )? )
+                # Java.g:665:5: ( type annotationMethodOrConstantRest ';' | normalClassDecl[None] ( ';' )? | normalInterfaceDecl[None] ( ';' )? | enumDecl[None] ( ';' )? | annotationTypeDecl ( ';' )? )
                 alt102 = 5
                 LA102 = self.input.LA(1)
                 if LA102 == Ident or LA102 == 58 or LA102 == 59 or LA102 == 60 or LA102 == 61 or LA102 == 62 or LA102 == 63 or LA102 == 64 or LA102 == 65:
@@ -9762,42 +9750,42 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt102 == 1:
-                    # Java.g:655:9: type annotationMethodOrConstantRest ';'
+                    # Java.g:665:9: type annotationMethodOrConstantRest ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_type_in_annotationTypeElementRest3435)
-                    type279 = self.type()
+                    self._state.following.append(self.FOLLOW_type_in_annotationTypeElementRest3427)
+                    type278 = self.type()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, type279.tree)
-                    self._state.following.append(self.FOLLOW_annotationMethodOrConstantRest_in_annotationTypeElementRest3437)
-                    annotationMethodOrConstantRest280 = self.annotationMethodOrConstantRest()
+                        self._adaptor.addChild(root_0, type278.tree)
+                    self._state.following.append(self.FOLLOW_annotationMethodOrConstantRest_in_annotationTypeElementRest3429)
+                    annotationMethodOrConstantRest279 = self.annotationMethodOrConstantRest()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotationMethodOrConstantRest280.tree)
-                    char_literal281=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3439)
+                        self._adaptor.addChild(root_0, annotationMethodOrConstantRest279.tree)
+                    char_literal280=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3431)
                     if self._state.backtracking == 0:
 
-                        char_literal281_tree = self._adaptor.createWithPayload(char_literal281)
-                        self._adaptor.addChild(root_0, char_literal281_tree)
+                        char_literal280_tree = self._adaptor.createWithPayload(char_literal280)
+                        self._adaptor.addChild(root_0, char_literal280_tree)
 
 
 
                 elif alt102 == 2:
-                    # Java.g:656:9: normalClassDecl[None] ( ';' )?
+                    # Java.g:666:9: normalClassDecl[None] ( ';' )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_normalClassDecl_in_annotationTypeElementRest3449)
-                    normalClassDecl282 = self.normalClassDecl(None)
+                    self._state.following.append(self.FOLLOW_normalClassDecl_in_annotationTypeElementRest3441)
+                    normalClassDecl281 = self.normalClassDecl(None)
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, normalClassDecl282.tree)
-                    # Java.g:656:31: ( ';' )?
+                        self._adaptor.addChild(root_0, normalClassDecl281.tree)
+                    # Java.g:666:31: ( ';' )?
                     alt98 = 2
                     LA98_0 = self.input.LA(1)
 
@@ -9806,11 +9794,11 @@ class JavaParser(LocalParser):
                     if alt98 == 1:
                         # Java.g:0:0: ';'
                         pass 
-                        char_literal283=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3452)
+                        char_literal282=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3444)
                         if self._state.backtracking == 0:
 
-                            char_literal283_tree = self._adaptor.createWithPayload(char_literal283)
-                            self._adaptor.addChild(root_0, char_literal283_tree)
+                            char_literal282_tree = self._adaptor.createWithPayload(char_literal282)
+                            self._adaptor.addChild(root_0, char_literal282_tree)
 
 
 
@@ -9818,17 +9806,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt102 == 3:
-                    # Java.g:657:9: normalInterfaceDecl[None] ( ';' )?
+                    # Java.g:667:9: normalInterfaceDecl[None] ( ';' )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_normalInterfaceDecl_in_annotationTypeElementRest3463)
-                    normalInterfaceDecl284 = self.normalInterfaceDecl(None)
+                    self._state.following.append(self.FOLLOW_normalInterfaceDecl_in_annotationTypeElementRest3455)
+                    normalInterfaceDecl283 = self.normalInterfaceDecl(None)
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, normalInterfaceDecl284.tree)
-                    # Java.g:657:35: ( ';' )?
+                        self._adaptor.addChild(root_0, normalInterfaceDecl283.tree)
+                    # Java.g:667:35: ( ';' )?
                     alt99 = 2
                     LA99_0 = self.input.LA(1)
 
@@ -9837,11 +9825,11 @@ class JavaParser(LocalParser):
                     if alt99 == 1:
                         # Java.g:0:0: ';'
                         pass 
-                        char_literal285=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3466)
+                        char_literal284=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3458)
                         if self._state.backtracking == 0:
 
-                            char_literal285_tree = self._adaptor.createWithPayload(char_literal285)
-                            self._adaptor.addChild(root_0, char_literal285_tree)
+                            char_literal284_tree = self._adaptor.createWithPayload(char_literal284)
+                            self._adaptor.addChild(root_0, char_literal284_tree)
 
 
 
@@ -9849,17 +9837,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt102 == 4:
-                    # Java.g:658:9: enumDecl[None] ( ';' )?
+                    # Java.g:668:9: enumDecl[None] ( ';' )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_enumDecl_in_annotationTypeElementRest3477)
-                    enumDecl286 = self.enumDecl(None)
+                    self._state.following.append(self.FOLLOW_enumDecl_in_annotationTypeElementRest3469)
+                    enumDecl285 = self.enumDecl(None)
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, enumDecl286.tree)
-                    # Java.g:658:24: ( ';' )?
+                        self._adaptor.addChild(root_0, enumDecl285.tree)
+                    # Java.g:668:24: ( ';' )?
                     alt100 = 2
                     LA100_0 = self.input.LA(1)
 
@@ -9868,11 +9856,11 @@ class JavaParser(LocalParser):
                     if alt100 == 1:
                         # Java.g:0:0: ';'
                         pass 
-                        char_literal287=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3480)
+                        char_literal286=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3472)
                         if self._state.backtracking == 0:
 
-                            char_literal287_tree = self._adaptor.createWithPayload(char_literal287)
-                            self._adaptor.addChild(root_0, char_literal287_tree)
+                            char_literal286_tree = self._adaptor.createWithPayload(char_literal286)
+                            self._adaptor.addChild(root_0, char_literal286_tree)
 
 
 
@@ -9880,17 +9868,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt102 == 5:
-                    # Java.g:659:9: annotationTypeDecl ( ';' )?
+                    # Java.g:669:9: annotationTypeDecl ( ';' )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotationTypeDecl_in_annotationTypeElementRest3491)
-                    annotationTypeDecl288 = self.annotationTypeDecl()
+                    self._state.following.append(self.FOLLOW_annotationTypeDecl_in_annotationTypeElementRest3483)
+                    annotationTypeDecl287 = self.annotationTypeDecl()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotationTypeDecl288.tree)
-                    # Java.g:659:28: ( ';' )?
+                        self._adaptor.addChild(root_0, annotationTypeDecl287.tree)
+                    # Java.g:669:28: ( ';' )?
                     alt101 = 2
                     LA101_0 = self.input.LA(1)
 
@@ -9899,11 +9887,11 @@ class JavaParser(LocalParser):
                     if alt101 == 1:
                         # Java.g:0:0: ';'
                         pass 
-                        char_literal289=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3493)
+                        char_literal288=self.match(self.input, 28, self.FOLLOW_28_in_annotationTypeElementRest3485)
                         if self._state.backtracking == 0:
 
-                            char_literal289_tree = self._adaptor.createWithPayload(char_literal289)
-                            self._adaptor.addChild(root_0, char_literal289_tree)
+                            char_literal288_tree = self._adaptor.createWithPayload(char_literal288)
+                            self._adaptor.addChild(root_0, char_literal288_tree)
 
 
 
@@ -9943,7 +9931,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationMethodOrConstantRest"
-    # Java.g:663:1: annotationMethodOrConstantRest : ( annotationMethodRest | annotationConstantRest );
+    # Java.g:673:1: annotationMethodOrConstantRest : ( annotationMethodRest | annotationConstantRest );
     def annotationMethodOrConstantRest(self, ):
 
         retval = self.annotationMethodOrConstantRest_return()
@@ -9951,9 +9939,9 @@ class JavaParser(LocalParser):
         annotationMethodOrConstantRest_StartIndex = self.input.index()
         root_0 = None
 
-        annotationMethodRest290 = None
+        annotationMethodRest289 = None
 
-        annotationConstantRest291 = None
+        annotationConstantRest290 = None
 
 
 
@@ -9965,7 +9953,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:664:5: ( annotationMethodRest | annotationConstantRest )
+                # Java.g:674:5: ( annotationMethodRest | annotationConstantRest )
                 alt103 = 2
                 LA103_0 = self.input.LA(1)
 
@@ -9993,29 +9981,29 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt103 == 1:
-                    # Java.g:664:9: annotationMethodRest
+                    # Java.g:674:9: annotationMethodRest
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotationMethodRest_in_annotationMethodOrConstantRest3514)
-                    annotationMethodRest290 = self.annotationMethodRest()
+                    self._state.following.append(self.FOLLOW_annotationMethodRest_in_annotationMethodOrConstantRest3506)
+                    annotationMethodRest289 = self.annotationMethodRest()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotationMethodRest290.tree)
+                        self._adaptor.addChild(root_0, annotationMethodRest289.tree)
 
 
                 elif alt103 == 2:
-                    # Java.g:665:9: annotationConstantRest
+                    # Java.g:675:9: annotationConstantRest
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_annotationConstantRest_in_annotationMethodOrConstantRest3524)
-                    annotationConstantRest291 = self.annotationConstantRest()
+                    self._state.following.append(self.FOLLOW_annotationConstantRest_in_annotationMethodOrConstantRest3516)
+                    annotationConstantRest290 = self.annotationConstantRest()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, annotationConstantRest291.tree)
+                        self._adaptor.addChild(root_0, annotationConstantRest290.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -10051,7 +10039,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationMethodRest"
-    # Java.g:669:1: annotationMethodRest : Ident '(' ')' ( defaultValue )? ;
+    # Java.g:679:1: annotationMethodRest : Ident '(' ')' ( defaultValue )? ;
     def annotationMethodRest(self, ):
 
         retval = self.annotationMethodRest_return()
@@ -10059,15 +10047,15 @@ class JavaParser(LocalParser):
         annotationMethodRest_StartIndex = self.input.index()
         root_0 = None
 
-        Ident292 = None
+        Ident291 = None
+        char_literal292 = None
         char_literal293 = None
-        char_literal294 = None
-        defaultValue295 = None
+        defaultValue294 = None
 
 
-        Ident292_tree = None
+        Ident291_tree = None
+        char_literal292_tree = None
         char_literal293_tree = None
-        char_literal294_tree = None
 
         success = False
         try:
@@ -10077,30 +10065,30 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:670:5: ( Ident '(' ')' ( defaultValue )? )
-                # Java.g:670:9: Ident '(' ')' ( defaultValue )?
+                # Java.g:680:5: ( Ident '(' ')' ( defaultValue )? )
+                # Java.g:680:9: Ident '(' ')' ( defaultValue )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                Ident292=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationMethodRest3544)
+                Ident291=self.match(self.input, Ident, self.FOLLOW_Ident_in_annotationMethodRest3536)
                 if self._state.backtracking == 0:
 
-                    Ident292_tree = self._adaptor.createWithPayload(Ident292)
-                    self._adaptor.addChild(root_0, Ident292_tree)
+                    Ident291_tree = self._adaptor.createWithPayload(Ident291)
+                    self._adaptor.addChild(root_0, Ident291_tree)
 
-                char_literal293=self.match(self.input, 68, self.FOLLOW_68_in_annotationMethodRest3546)
+                char_literal292=self.match(self.input, 68, self.FOLLOW_68_in_annotationMethodRest3538)
+                if self._state.backtracking == 0:
+
+                    char_literal292_tree = self._adaptor.createWithPayload(char_literal292)
+                    self._adaptor.addChild(root_0, char_literal292_tree)
+
+                char_literal293=self.match(self.input, 69, self.FOLLOW_69_in_annotationMethodRest3540)
                 if self._state.backtracking == 0:
 
                     char_literal293_tree = self._adaptor.createWithPayload(char_literal293)
                     self._adaptor.addChild(root_0, char_literal293_tree)
 
-                char_literal294=self.match(self.input, 69, self.FOLLOW_69_in_annotationMethodRest3548)
-                if self._state.backtracking == 0:
-
-                    char_literal294_tree = self._adaptor.createWithPayload(char_literal294)
-                    self._adaptor.addChild(root_0, char_literal294_tree)
-
-                # Java.g:670:23: ( defaultValue )?
+                # Java.g:680:23: ( defaultValue )?
                 alt104 = 2
                 LA104_0 = self.input.LA(1)
 
@@ -10109,12 +10097,12 @@ class JavaParser(LocalParser):
                 if alt104 == 1:
                     # Java.g:0:0: defaultValue
                     pass 
-                    self._state.following.append(self.FOLLOW_defaultValue_in_annotationMethodRest3550)
-                    defaultValue295 = self.defaultValue()
+                    self._state.following.append(self.FOLLOW_defaultValue_in_annotationMethodRest3542)
+                    defaultValue294 = self.defaultValue()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, defaultValue295.tree)
+                        self._adaptor.addChild(root_0, defaultValue294.tree)
 
 
 
@@ -10154,7 +10142,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "annotationConstantRest"
-    # Java.g:674:1: annotationConstantRest : variableDecls ;
+    # Java.g:684:1: annotationConstantRest : variableDecls[None] ;
     def annotationConstantRest(self, ):
 
         retval = self.annotationConstantRest_return()
@@ -10162,7 +10150,7 @@ class JavaParser(LocalParser):
         annotationConstantRest_StartIndex = self.input.index()
         root_0 = None
 
-        variableDecls296 = None
+        variableDecls295 = None
 
 
 
@@ -10174,17 +10162,17 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:675:5: ( variableDecls )
-                # Java.g:675:9: variableDecls
+                # Java.g:685:5: ( variableDecls[None] )
+                # Java.g:685:9: variableDecls[None]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableDecls_in_annotationConstantRest3571)
-                variableDecls296 = self.variableDecls()
+                self._state.following.append(self.FOLLOW_variableDecls_in_annotationConstantRest3563)
+                variableDecls295 = self.variableDecls(None)
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableDecls296.tree)
+                    self._adaptor.addChild(root_0, variableDecls295.tree)
 
 
 
@@ -10221,7 +10209,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "defaultValue"
-    # Java.g:679:1: defaultValue : 'default' elementValue ;
+    # Java.g:689:1: defaultValue : 'default' elementValue ;
     def defaultValue(self, ):
 
         retval = self.defaultValue_return()
@@ -10229,11 +10217,11 @@ class JavaParser(LocalParser):
         defaultValue_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal297 = None
-        elementValue298 = None
+        string_literal296 = None
+        elementValue297 = None
 
 
-        string_literal297_tree = None
+        string_literal296_tree = None
 
         success = False
         try:
@@ -10243,23 +10231,23 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:680:5: ( 'default' elementValue )
-                # Java.g:680:9: 'default' elementValue
+                # Java.g:690:5: ( 'default' elementValue )
+                # Java.g:690:9: 'default' elementValue
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal297=self.match(self.input, 73, self.FOLLOW_73_in_defaultValue3591)
+                string_literal296=self.match(self.input, 73, self.FOLLOW_73_in_defaultValue3584)
                 if self._state.backtracking == 0:
 
-                    string_literal297_tree = self._adaptor.createWithPayload(string_literal297)
-                    self._adaptor.addChild(root_0, string_literal297_tree)
+                    string_literal296_tree = self._adaptor.createWithPayload(string_literal296)
+                    self._adaptor.addChild(root_0, string_literal296_tree)
 
-                self._state.following.append(self.FOLLOW_elementValue_in_defaultValue3593)
-                elementValue298 = self.elementValue()
+                self._state.following.append(self.FOLLOW_elementValue_in_defaultValue3586)
+                elementValue297 = self.elementValue()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, elementValue298.tree)
+                    self._adaptor.addChild(root_0, elementValue297.tree)
 
 
 
@@ -10296,7 +10284,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "block"
-    # Java.g:687:1: block : '{' ( blockStatement )* '}' ;
+    # Java.g:697:1: block : '{' ( blockStatement )* '}' ;
     def block(self, ):
 
         retval = self.block_return()
@@ -10304,13 +10292,13 @@ class JavaParser(LocalParser):
         block_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal299 = None
-        char_literal301 = None
-        blockStatement300 = None
+        char_literal298 = None
+        char_literal300 = None
+        blockStatement299 = None
 
 
-        char_literal299_tree = None
-        char_literal301_tree = None
+        char_literal298_tree = None
+        char_literal300_tree = None
 
         success = False
         try:
@@ -10320,18 +10308,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:688:5: ( '{' ( blockStatement )* '}' )
-                # Java.g:688:9: '{' ( blockStatement )* '}'
+                # Java.g:698:5: ( '{' ( blockStatement )* '}' )
+                # Java.g:698:9: '{' ( blockStatement )* '}'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal299=self.match(self.input, 46, self.FOLLOW_46_in_block3616)
+                char_literal298=self.match(self.input, 46, self.FOLLOW_46_in_block3609)
                 if self._state.backtracking == 0:
 
-                    char_literal299_tree = self._adaptor.createWithPayload(char_literal299)
-                    self._adaptor.addChild(root_0, char_literal299_tree)
+                    char_literal298_tree = self._adaptor.createWithPayload(char_literal298)
+                    self._adaptor.addChild(root_0, char_literal298_tree)
 
-                # Java.g:688:13: ( blockStatement )*
+                # Java.g:698:13: ( blockStatement )*
                 while True: #loop105
                     alt105 = 2
                     LA105_0 = self.input.LA(1)
@@ -10343,23 +10331,23 @@ class JavaParser(LocalParser):
                     if alt105 == 1:
                         # Java.g:0:0: blockStatement
                         pass 
-                        self._state.following.append(self.FOLLOW_blockStatement_in_block3618)
-                        blockStatement300 = self.blockStatement()
+                        self._state.following.append(self.FOLLOW_blockStatement_in_block3611)
+                        blockStatement299 = self.blockStatement()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, blockStatement300.tree)
+                            self._adaptor.addChild(root_0, blockStatement299.tree)
 
 
                     else:
                         break #loop105
 
 
-                char_literal301=self.match(self.input, 47, self.FOLLOW_47_in_block3621)
+                char_literal300=self.match(self.input, 47, self.FOLLOW_47_in_block3614)
                 if self._state.backtracking == 0:
 
-                    char_literal301_tree = self._adaptor.createWithPayload(char_literal301)
-                    self._adaptor.addChild(root_0, char_literal301_tree)
+                    char_literal300_tree = self._adaptor.createWithPayload(char_literal300)
+                    self._adaptor.addChild(root_0, char_literal300_tree)
 
 
 
@@ -10397,28 +10385,21 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "blockStatement"
-    # Java.g:692:1: blockStatement : ( localVariableDeclStatement | classOrInterfaceDecl | statement );
+    # Java.g:702:1: blockStatement : ( localVariableDeclStatement | classOrInterfaceDecl | statement );
     def blockStatement(self, ):
-        self.py_expr_stack.append(py_expr_scope())
 
         retval = self.blockStatement_return()
         retval.start = self.input.LT(1)
         blockStatement_StartIndex = self.input.index()
         root_0 = None
 
-        localVariableDeclStatement302 = None
+        localVariableDeclStatement301 = None
 
-        classOrInterfaceDecl303 = None
+        classOrInterfaceDecl302 = None
 
-        statement304 = None
+        statement303 = None
 
 
-
-               
-        block = self.py_block_stack[-1].block
-        expr = self.factory('expression', format=FS.r, parent=block, rule=RN())
-        self.py_expr_stack[-1].expr = expr
-        self.py_expr_stack[-1].nest = expr.nestRight
 
         success = False
         try:
@@ -10428,46 +10409,46 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:702:5: ( localVariableDeclStatement | classOrInterfaceDecl | statement )
+                # Java.g:703:5: ( localVariableDeclStatement | classOrInterfaceDecl | statement )
                 alt106 = 3
                 alt106 = self.dfa106.predict(self.input)
                 if alt106 == 1:
-                    # Java.g:702:9: localVariableDeclStatement
+                    # Java.g:703:9: localVariableDeclStatement
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_localVariableDeclStatement_in_blockStatement3656)
-                    localVariableDeclStatement302 = self.localVariableDeclStatement()
+                    self._state.following.append(self.FOLLOW_localVariableDeclStatement_in_blockStatement3634)
+                    localVariableDeclStatement301 = self.localVariableDeclStatement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, localVariableDeclStatement302.tree)
+                        self._adaptor.addChild(root_0, localVariableDeclStatement301.tree)
 
 
                 elif alt106 == 2:
-                    # Java.g:703:9: classOrInterfaceDecl
+                    # Java.g:704:9: classOrInterfaceDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_blockStatement3666)
-                    classOrInterfaceDecl303 = self.classOrInterfaceDecl()
+                    self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_blockStatement3644)
+                    classOrInterfaceDecl302 = self.classOrInterfaceDecl()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, classOrInterfaceDecl303.tree)
+                        self._adaptor.addChild(root_0, classOrInterfaceDecl302.tree)
 
 
                 elif alt106 == 3:
-                    # Java.g:704:9: statement
+                    # Java.g:705:9: statement
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_statement_in_blockStatement3676)
-                    statement304 = self.statement()
+                    self._state.following.append(self.FOLLOW_statement_in_blockStatement3654)
+                    statement303 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement304.tree)
+                        self._adaptor.addChild(root_0, statement303.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -10476,11 +10457,6 @@ class JavaParser(LocalParser):
 
                     retval.tree = self._adaptor.rulePostProcessing(root_0)
                     self._adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop)
-
-                if self._state.backtracking == 0:
-                            
-                    block.packExpr(expr)
-
 
 
                 success = True
@@ -10491,8 +10467,6 @@ class JavaParser(LocalParser):
         finally:
             if self._state.backtracking > 0:
                 self.memoize(self.input, 85, blockStatement_StartIndex, success)
-
-            self.py_expr_stack.pop()
 
             pass
 
@@ -10510,7 +10484,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "localVariableDeclStatement"
-    # Java.g:708:1: localVariableDeclStatement : localVariableDecl ';' ;
+    # Java.g:709:1: localVariableDeclStatement : localVariableDecl ';' ;
     def localVariableDeclStatement(self, ):
 
         retval = self.localVariableDeclStatement_return()
@@ -10518,11 +10492,11 @@ class JavaParser(LocalParser):
         localVariableDeclStatement_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal306 = None
-        localVariableDecl305 = None
+        char_literal305 = None
+        localVariableDecl304 = None
 
 
-        char_literal306_tree = None
+        char_literal305_tree = None
 
         success = False
         try:
@@ -10532,22 +10506,22 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:709:5: ( localVariableDecl ';' )
-                # Java.g:709:10: localVariableDecl ';'
+                # Java.g:710:5: ( localVariableDecl ';' )
+                # Java.g:710:10: localVariableDecl ';'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_localVariableDecl_in_localVariableDeclStatement3697)
-                localVariableDecl305 = self.localVariableDecl()
+                self._state.following.append(self.FOLLOW_localVariableDecl_in_localVariableDeclStatement3675)
+                localVariableDecl304 = self.localVariableDecl()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, localVariableDecl305.tree)
-                char_literal306=self.match(self.input, 28, self.FOLLOW_28_in_localVariableDeclStatement3699)
+                    self._adaptor.addChild(root_0, localVariableDecl304.tree)
+                char_literal305=self.match(self.input, 28, self.FOLLOW_28_in_localVariableDeclStatement3677)
                 if self._state.backtracking == 0:
 
-                    char_literal306_tree = self._adaptor.createWithPayload(char_literal306)
-                    self._adaptor.addChild(root_0, char_literal306_tree)
+                    char_literal305_tree = self._adaptor.createWithPayload(char_literal305)
+                    self._adaptor.addChild(root_0, char_literal305_tree)
 
 
 
@@ -10585,7 +10559,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "localVariableDecl"
-    # Java.g:713:1: localVariableDecl : variableModifiers t0= type variableDecls ;
+    # Java.g:714:1: localVariableDecl : variableModifiers t0= type variableDecls[$t0.value] ;
     def localVariableDecl(self, ):
 
         retval = self.localVariableDecl_return()
@@ -10595,14 +10569,11 @@ class JavaParser(LocalParser):
 
         t0 = None
 
-        variableModifiers307 = None
+        variableModifiers306 = None
 
-        variableDecls308 = None
+        variableDecls307 = None
 
 
-
-               
-        expr = self.py_expr_stack[-1].expr
 
         success = False
         try:
@@ -10612,32 +10583,29 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:717:5: ( variableModifiers t0= type variableDecls )
-                # Java.g:717:9: variableModifiers t0= type variableDecls
+                # Java.g:715:5: ( variableModifiers t0= type variableDecls[$t0.value] )
+                # Java.g:715:9: variableModifiers t0= type variableDecls[$t0.value]
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableModifiers_in_localVariableDecl3724)
-                variableModifiers307 = self.variableModifiers()
+                self._state.following.append(self.FOLLOW_variableModifiers_in_localVariableDecl3697)
+                variableModifiers306 = self.variableModifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableModifiers307.tree)
-                self._state.following.append(self.FOLLOW_type_in_localVariableDecl3736)
+                    self._adaptor.addChild(root_0, variableModifiers306.tree)
+                self._state.following.append(self.FOLLOW_type_in_localVariableDecl3709)
                 t0 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
                     self._adaptor.addChild(root_0, t0.tree)
-                if self._state.backtracking == 0:
-                    expr.update(type=((t0 is not None) and [t0.value] or [None])[0], format=FS.tassign, rule=RN()) 
-
-                self._state.following.append(self.FOLLOW_variableDecls_in_localVariableDecl3748)
-                variableDecls308 = self.variableDecls()
+                self._state.following.append(self.FOLLOW_variableDecls_in_localVariableDecl3719)
+                variableDecls307 = self.variableDecls(((t0 is not None) and [t0.value] or [None])[0])
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableDecls308.tree)
+                    self._adaptor.addChild(root_0, variableDecls307.tree)
 
 
 
@@ -10674,7 +10642,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "variableModifiers"
-    # Java.g:723:1: variableModifiers : ( variableModifier )* ;
+    # Java.g:721:1: variableModifiers : ( variableModifier )* ;
     def variableModifiers(self, ):
 
         retval = self.variableModifiers_return()
@@ -10682,7 +10650,7 @@ class JavaParser(LocalParser):
         variableModifiers_StartIndex = self.input.index()
         root_0 = None
 
-        variableModifier309 = None
+        variableModifier308 = None
 
 
 
@@ -10694,12 +10662,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:724:5: ( ( variableModifier )* )
-                # Java.g:724:9: ( variableModifier )*
+                # Java.g:722:5: ( ( variableModifier )* )
+                # Java.g:722:9: ( variableModifier )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:724:9: ( variableModifier )*
+                # Java.g:722:9: ( variableModifier )*
                 while True: #loop107
                     alt107 = 2
                     LA107_0 = self.input.LA(1)
@@ -10711,12 +10679,12 @@ class JavaParser(LocalParser):
                     if alt107 == 1:
                         # Java.g:0:0: variableModifier
                         pass 
-                        self._state.following.append(self.FOLLOW_variableModifier_in_variableModifiers3768)
-                        variableModifier309 = self.variableModifier()
+                        self._state.following.append(self.FOLLOW_variableModifier_in_variableModifiers3740)
+                        variableModifier308 = self.variableModifier()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, variableModifier309.tree)
+                            self._adaptor.addChild(root_0, variableModifier308.tree)
 
 
                     else:
@@ -10759,137 +10727,131 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "statement"
-    # Java.g:728:1: statement : ( block | ASSERT expression ( ':' expression )? ';' | 'if' parExpression statement ( options {k=1; } : 'else' statement )? | 'for' '(' forControl ')' statement | 'while' parExpression statement | 'do' statement 'while' parExpression ';' | 'try' block ( catches 'finally' block | catches | 'finally' block ) | 'switch' parExpression '{' switchBlockStatementGroups '}' | 'synchronized' parExpression block | 'return' ( expression )? ';' | 'throw' expression ';' | 'break' ( Ident )? ';' | 'continue' ( Ident )? ';' | ';' | statementExpression ';' | Ident ':' statement );
+    # Java.g:726:1: statement : ( block | ASSERT expression ( ':' expression )? ';' | 'if' parExpression statement ( options {k=1; } : 'else' statement )? | 'for' '(' forControl ')' statement | 'while' parExpression statement | 'do' statement 'while' parExpression ';' | 'try' block ( catches 'finally' block | catches | 'finally' block ) | 'switch' parExpression '{' switchBlockStatementGroups '}' | 'synchronized' parExpression block | 'return' ( expression )? ';' | 'throw' expression ';' | 'break' ( Ident )? ';' | 'continue' ( Ident )? ';' | ';' | statementExpression ';' | Ident ':' statement );
     def statement(self, ):
-        self.py_expr_stack.append(py_expr_scope())
 
         retval = self.statement_return()
         retval.start = self.input.LT(1)
         statement_StartIndex = self.input.index()
         root_0 = None
 
-        ASSERT311 = None
-        char_literal313 = None
-        char_literal315 = None
-        string_literal316 = None
-        string_literal319 = None
-        string_literal321 = None
-        char_literal322 = None
-        char_literal324 = None
-        string_literal326 = None
-        string_literal329 = None
-        string_literal331 = None
-        char_literal333 = None
-        string_literal334 = None
-        string_literal337 = None
-        string_literal340 = None
-        string_literal342 = None
-        char_literal344 = None
-        char_literal346 = None
-        string_literal347 = None
-        string_literal350 = None
-        char_literal352 = None
-        string_literal353 = None
-        char_literal355 = None
-        string_literal356 = None
-        Ident357 = None
-        char_literal358 = None
-        string_literal359 = None
-        Ident360 = None
+        ASSERT310 = None
+        char_literal312 = None
+        char_literal314 = None
+        string_literal315 = None
+        string_literal318 = None
+        string_literal320 = None
+        char_literal321 = None
+        char_literal323 = None
+        string_literal325 = None
+        string_literal328 = None
+        string_literal330 = None
+        char_literal332 = None
+        string_literal333 = None
+        string_literal336 = None
+        string_literal339 = None
+        string_literal341 = None
+        char_literal343 = None
+        char_literal345 = None
+        string_literal346 = None
+        string_literal349 = None
+        char_literal351 = None
+        string_literal352 = None
+        char_literal354 = None
+        string_literal355 = None
+        Ident356 = None
+        char_literal357 = None
+        string_literal358 = None
+        Ident359 = None
+        char_literal360 = None
         char_literal361 = None
-        char_literal362 = None
-        char_literal364 = None
-        Ident365 = None
-        char_literal366 = None
-        block310 = None
+        char_literal363 = None
+        Ident364 = None
+        char_literal365 = None
+        block309 = None
 
-        expression312 = None
+        expression311 = None
 
-        expression314 = None
+        expression313 = None
 
-        parExpression317 = None
+        parExpression316 = None
 
-        statement318 = None
+        statement317 = None
 
-        statement320 = None
+        statement319 = None
 
-        forControl323 = None
+        forControl322 = None
 
-        statement325 = None
+        statement324 = None
 
-        parExpression327 = None
+        parExpression326 = None
 
-        statement328 = None
+        statement327 = None
 
-        statement330 = None
+        statement329 = None
 
-        parExpression332 = None
+        parExpression331 = None
 
-        block335 = None
+        block334 = None
 
-        catches336 = None
+        catches335 = None
 
-        block338 = None
+        block337 = None
 
-        catches339 = None
+        catches338 = None
 
-        block341 = None
+        block340 = None
 
-        parExpression343 = None
+        parExpression342 = None
 
-        switchBlockStatementGroups345 = None
+        switchBlockStatementGroups344 = None
 
-        parExpression348 = None
+        parExpression347 = None
 
-        block349 = None
+        block348 = None
 
-        expression351 = None
+        expression350 = None
 
-        expression354 = None
+        expression353 = None
 
-        statementExpression363 = None
+        statementExpression362 = None
 
-        statement367 = None
+        statement366 = None
 
 
-        ASSERT311_tree = None
-        char_literal313_tree = None
-        char_literal315_tree = None
-        string_literal316_tree = None
-        string_literal319_tree = None
-        string_literal321_tree = None
-        char_literal322_tree = None
-        char_literal324_tree = None
-        string_literal326_tree = None
-        string_literal329_tree = None
-        string_literal331_tree = None
-        char_literal333_tree = None
-        string_literal334_tree = None
-        string_literal337_tree = None
-        string_literal340_tree = None
-        string_literal342_tree = None
-        char_literal344_tree = None
-        char_literal346_tree = None
-        string_literal347_tree = None
-        string_literal350_tree = None
-        char_literal352_tree = None
-        string_literal353_tree = None
-        char_literal355_tree = None
-        string_literal356_tree = None
-        Ident357_tree = None
-        char_literal358_tree = None
-        string_literal359_tree = None
-        Ident360_tree = None
+        ASSERT310_tree = None
+        char_literal312_tree = None
+        char_literal314_tree = None
+        string_literal315_tree = None
+        string_literal318_tree = None
+        string_literal320_tree = None
+        char_literal321_tree = None
+        char_literal323_tree = None
+        string_literal325_tree = None
+        string_literal328_tree = None
+        string_literal330_tree = None
+        char_literal332_tree = None
+        string_literal333_tree = None
+        string_literal336_tree = None
+        string_literal339_tree = None
+        string_literal341_tree = None
+        char_literal343_tree = None
+        char_literal345_tree = None
+        string_literal346_tree = None
+        string_literal349_tree = None
+        char_literal351_tree = None
+        string_literal352_tree = None
+        char_literal354_tree = None
+        string_literal355_tree = None
+        Ident356_tree = None
+        char_literal357_tree = None
+        string_literal358_tree = None
+        Ident359_tree = None
+        char_literal360_tree = None
         char_literal361_tree = None
-        char_literal362_tree = None
-        char_literal364_tree = None
-        Ident365_tree = None
-        char_literal366_tree = None
-
-               
-        expr = self.py_expr_stack[PREV].nest(format=FS.lr, rule=RN())
-        self.py_expr_stack[-1].expr = expr
-        self.py_expr_stack[-1].nest = nest = expr.nestRight
+        char_literal363_tree = None
+        Ident364_tree = None
+        char_literal365_tree = None
 
         success = False
         try:
@@ -10899,240 +10861,240 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:734:5: ( block | ASSERT expression ( ':' expression )? ';' | 'if' parExpression statement ( options {k=1; } : 'else' statement )? | 'for' '(' forControl ')' statement | 'while' parExpression statement | 'do' statement 'while' parExpression ';' | 'try' block ( catches 'finally' block | catches | 'finally' block ) | 'switch' parExpression '{' switchBlockStatementGroups '}' | 'synchronized' parExpression block | 'return' ( expression )? ';' | 'throw' expression ';' | 'break' ( Ident )? ';' | 'continue' ( Ident )? ';' | ';' | statementExpression ';' | Ident ':' statement )
+                # Java.g:727:5: ( block | ASSERT expression ( ':' expression )? ';' | 'if' parExpression statement ( options {k=1; } : 'else' statement )? | 'for' '(' forControl ')' statement | 'while' parExpression statement | 'do' statement 'while' parExpression ';' | 'try' block ( catches 'finally' block | catches | 'finally' block ) | 'switch' parExpression '{' switchBlockStatementGroups '}' | 'synchronized' parExpression block | 'return' ( expression )? ';' | 'throw' expression ';' | 'break' ( Ident )? ';' | 'continue' ( Ident )? ';' | ';' | statementExpression ';' | Ident ':' statement )
                 alt114 = 16
                 alt114 = self.dfa114.predict(self.input)
                 if alt114 == 1:
-                    # Java.g:734:9: block
+                    # Java.g:727:9: block
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_block_in_statement3799)
-                    block310 = self.block()
+                    self._state.following.append(self.FOLLOW_block_in_statement3761)
+                    block309 = self.block()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, block310.tree)
+                        self._adaptor.addChild(root_0, block309.tree)
 
 
                 elif alt114 == 2:
-                    # Java.g:735:9: ASSERT expression ( ':' expression )? ';'
+                    # Java.g:728:9: ASSERT expression ( ':' expression )? ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    ASSERT311=self.match(self.input, ASSERT, self.FOLLOW_ASSERT_in_statement3809)
+                    ASSERT310=self.match(self.input, ASSERT, self.FOLLOW_ASSERT_in_statement3771)
                     if self._state.backtracking == 0:
 
-                        ASSERT311_tree = self._adaptor.createWithPayload(ASSERT311)
-                        self._adaptor.addChild(root_0, ASSERT311_tree)
+                        ASSERT310_tree = self._adaptor.createWithPayload(ASSERT310)
+                        self._adaptor.addChild(root_0, ASSERT310_tree)
 
-                    self._state.following.append(self.FOLLOW_expression_in_statement3811)
-                    expression312 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_statement3773)
+                    expression311 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression312.tree)
-                    # Java.g:735:27: ( ':' expression )?
+                        self._adaptor.addChild(root_0, expression311.tree)
+                    # Java.g:728:27: ( ':' expression )?
                     alt108 = 2
                     LA108_0 = self.input.LA(1)
 
                     if (LA108_0 == 74) :
                         alt108 = 1
                     if alt108 == 1:
-                        # Java.g:735:28: ':' expression
+                        # Java.g:728:28: ':' expression
                         pass 
-                        char_literal313=self.match(self.input, 74, self.FOLLOW_74_in_statement3814)
+                        char_literal312=self.match(self.input, 74, self.FOLLOW_74_in_statement3776)
                         if self._state.backtracking == 0:
 
-                            char_literal313_tree = self._adaptor.createWithPayload(char_literal313)
-                            self._adaptor.addChild(root_0, char_literal313_tree)
+                            char_literal312_tree = self._adaptor.createWithPayload(char_literal312)
+                            self._adaptor.addChild(root_0, char_literal312_tree)
 
-                        self._state.following.append(self.FOLLOW_expression_in_statement3816)
-                        expression314 = self.expression()
+                        self._state.following.append(self.FOLLOW_expression_in_statement3778)
+                        expression313 = self.expression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, expression314.tree)
+                            self._adaptor.addChild(root_0, expression313.tree)
 
 
 
-                    char_literal315=self.match(self.input, 28, self.FOLLOW_28_in_statement3820)
+                    char_literal314=self.match(self.input, 28, self.FOLLOW_28_in_statement3782)
                     if self._state.backtracking == 0:
 
-                        char_literal315_tree = self._adaptor.createWithPayload(char_literal315)
-                        self._adaptor.addChild(root_0, char_literal315_tree)
+                        char_literal314_tree = self._adaptor.createWithPayload(char_literal314)
+                        self._adaptor.addChild(root_0, char_literal314_tree)
 
 
 
                 elif alt114 == 3:
-                    # Java.g:736:9: 'if' parExpression statement ( options {k=1; } : 'else' statement )?
+                    # Java.g:729:9: 'if' parExpression statement ( options {k=1; } : 'else' statement )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal316=self.match(self.input, 75, self.FOLLOW_75_in_statement3830)
+                    string_literal315=self.match(self.input, 75, self.FOLLOW_75_in_statement3792)
                     if self._state.backtracking == 0:
 
-                        string_literal316_tree = self._adaptor.createWithPayload(string_literal316)
-                        self._adaptor.addChild(root_0, string_literal316_tree)
+                        string_literal315_tree = self._adaptor.createWithPayload(string_literal315)
+                        self._adaptor.addChild(root_0, string_literal315_tree)
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_statement3832)
-                    parExpression317 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_statement3794)
+                    parExpression316 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression317.tree)
-                    self._state.following.append(self.FOLLOW_statement_in_statement3834)
-                    statement318 = self.statement()
+                        self._adaptor.addChild(root_0, parExpression316.tree)
+                    self._state.following.append(self.FOLLOW_statement_in_statement3796)
+                    statement317 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement318.tree)
-                    # Java.g:736:38: ( options {k=1; } : 'else' statement )?
+                        self._adaptor.addChild(root_0, statement317.tree)
+                    # Java.g:729:38: ( options {k=1; } : 'else' statement )?
                     alt109 = 2
                     LA109_0 = self.input.LA(1)
 
                     if (LA109_0 == 76) :
-                        LA109_2 = self.input.LA(2)
+                        LA109_1 = self.input.LA(2)
 
                         if (self.synpred156_Java()) :
                             alt109 = 1
                     if alt109 == 1:
-                        # Java.g:736:54: 'else' statement
+                        # Java.g:729:54: 'else' statement
                         pass 
-                        string_literal319=self.match(self.input, 76, self.FOLLOW_76_in_statement3844)
+                        string_literal318=self.match(self.input, 76, self.FOLLOW_76_in_statement3806)
                         if self._state.backtracking == 0:
 
-                            string_literal319_tree = self._adaptor.createWithPayload(string_literal319)
-                            self._adaptor.addChild(root_0, string_literal319_tree)
+                            string_literal318_tree = self._adaptor.createWithPayload(string_literal318)
+                            self._adaptor.addChild(root_0, string_literal318_tree)
 
-                        self._state.following.append(self.FOLLOW_statement_in_statement3846)
-                        statement320 = self.statement()
+                        self._state.following.append(self.FOLLOW_statement_in_statement3808)
+                        statement319 = self.statement()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, statement320.tree)
+                            self._adaptor.addChild(root_0, statement319.tree)
 
 
 
 
 
                 elif alt114 == 4:
-                    # Java.g:737:9: 'for' '(' forControl ')' statement
+                    # Java.g:730:9: 'for' '(' forControl ')' statement
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal321=self.match(self.input, 77, self.FOLLOW_77_in_statement3858)
+                    string_literal320=self.match(self.input, 77, self.FOLLOW_77_in_statement3820)
                     if self._state.backtracking == 0:
 
-                        string_literal321_tree = self._adaptor.createWithPayload(string_literal321)
-                        self._adaptor.addChild(root_0, string_literal321_tree)
+                        string_literal320_tree = self._adaptor.createWithPayload(string_literal320)
+                        self._adaptor.addChild(root_0, string_literal320_tree)
 
-                    char_literal322=self.match(self.input, 68, self.FOLLOW_68_in_statement3860)
+                    char_literal321=self.match(self.input, 68, self.FOLLOW_68_in_statement3822)
                     if self._state.backtracking == 0:
 
-                        char_literal322_tree = self._adaptor.createWithPayload(char_literal322)
-                        self._adaptor.addChild(root_0, char_literal322_tree)
+                        char_literal321_tree = self._adaptor.createWithPayload(char_literal321)
+                        self._adaptor.addChild(root_0, char_literal321_tree)
 
-                    self._state.following.append(self.FOLLOW_forControl_in_statement3862)
-                    forControl323 = self.forControl()
+                    self._state.following.append(self.FOLLOW_forControl_in_statement3824)
+                    forControl322 = self.forControl()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, forControl323.tree)
-                    char_literal324=self.match(self.input, 69, self.FOLLOW_69_in_statement3864)
+                        self._adaptor.addChild(root_0, forControl322.tree)
+                    char_literal323=self.match(self.input, 69, self.FOLLOW_69_in_statement3826)
                     if self._state.backtracking == 0:
 
-                        char_literal324_tree = self._adaptor.createWithPayload(char_literal324)
-                        self._adaptor.addChild(root_0, char_literal324_tree)
+                        char_literal323_tree = self._adaptor.createWithPayload(char_literal323)
+                        self._adaptor.addChild(root_0, char_literal323_tree)
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement3866)
-                    statement325 = self.statement()
+                    self._state.following.append(self.FOLLOW_statement_in_statement3828)
+                    statement324 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement325.tree)
+                        self._adaptor.addChild(root_0, statement324.tree)
 
 
                 elif alt114 == 5:
-                    # Java.g:738:9: 'while' parExpression statement
+                    # Java.g:731:9: 'while' parExpression statement
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal326=self.match(self.input, 78, self.FOLLOW_78_in_statement3876)
+                    string_literal325=self.match(self.input, 78, self.FOLLOW_78_in_statement3838)
                     if self._state.backtracking == 0:
 
-                        string_literal326_tree = self._adaptor.createWithPayload(string_literal326)
-                        self._adaptor.addChild(root_0, string_literal326_tree)
+                        string_literal325_tree = self._adaptor.createWithPayload(string_literal325)
+                        self._adaptor.addChild(root_0, string_literal325_tree)
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_statement3878)
-                    parExpression327 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_statement3840)
+                    parExpression326 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression327.tree)
-                    self._state.following.append(self.FOLLOW_statement_in_statement3880)
-                    statement328 = self.statement()
+                        self._adaptor.addChild(root_0, parExpression326.tree)
+                    self._state.following.append(self.FOLLOW_statement_in_statement3842)
+                    statement327 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement328.tree)
+                        self._adaptor.addChild(root_0, statement327.tree)
 
 
                 elif alt114 == 6:
-                    # Java.g:739:9: 'do' statement 'while' parExpression ';'
+                    # Java.g:732:9: 'do' statement 'while' parExpression ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal329=self.match(self.input, 79, self.FOLLOW_79_in_statement3890)
+                    string_literal328=self.match(self.input, 79, self.FOLLOW_79_in_statement3852)
                     if self._state.backtracking == 0:
 
-                        string_literal329_tree = self._adaptor.createWithPayload(string_literal329)
-                        self._adaptor.addChild(root_0, string_literal329_tree)
+                        string_literal328_tree = self._adaptor.createWithPayload(string_literal328)
+                        self._adaptor.addChild(root_0, string_literal328_tree)
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement3892)
-                    statement330 = self.statement()
+                    self._state.following.append(self.FOLLOW_statement_in_statement3854)
+                    statement329 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement330.tree)
-                    string_literal331=self.match(self.input, 78, self.FOLLOW_78_in_statement3894)
+                        self._adaptor.addChild(root_0, statement329.tree)
+                    string_literal330=self.match(self.input, 78, self.FOLLOW_78_in_statement3856)
                     if self._state.backtracking == 0:
 
-                        string_literal331_tree = self._adaptor.createWithPayload(string_literal331)
-                        self._adaptor.addChild(root_0, string_literal331_tree)
+                        string_literal330_tree = self._adaptor.createWithPayload(string_literal330)
+                        self._adaptor.addChild(root_0, string_literal330_tree)
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_statement3896)
-                    parExpression332 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_statement3858)
+                    parExpression331 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression332.tree)
-                    char_literal333=self.match(self.input, 28, self.FOLLOW_28_in_statement3898)
+                        self._adaptor.addChild(root_0, parExpression331.tree)
+                    char_literal332=self.match(self.input, 28, self.FOLLOW_28_in_statement3860)
                     if self._state.backtracking == 0:
 
-                        char_literal333_tree = self._adaptor.createWithPayload(char_literal333)
-                        self._adaptor.addChild(root_0, char_literal333_tree)
+                        char_literal332_tree = self._adaptor.createWithPayload(char_literal332)
+                        self._adaptor.addChild(root_0, char_literal332_tree)
 
 
 
                 elif alt114 == 7:
-                    # Java.g:740:9: 'try' block ( catches 'finally' block | catches | 'finally' block )
+                    # Java.g:733:9: 'try' block ( catches 'finally' block | catches | 'finally' block )
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal334=self.match(self.input, 80, self.FOLLOW_80_in_statement3908)
+                    string_literal333=self.match(self.input, 80, self.FOLLOW_80_in_statement3870)
                     if self._state.backtracking == 0:
 
-                        string_literal334_tree = self._adaptor.createWithPayload(string_literal334)
-                        self._adaptor.addChild(root_0, string_literal334_tree)
+                        string_literal333_tree = self._adaptor.createWithPayload(string_literal333)
+                        self._adaptor.addChild(root_0, string_literal333_tree)
 
-                    self._state.following.append(self.FOLLOW_block_in_statement3910)
-                    block335 = self.block()
+                    self._state.following.append(self.FOLLOW_block_in_statement3872)
+                    block334 = self.block()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, block335.tree)
-                    # Java.g:741:9: ( catches 'finally' block | catches | 'finally' block )
+                        self._adaptor.addChild(root_0, block334.tree)
+                    # Java.g:734:9: ( catches 'finally' block | catches | 'finally' block )
                     alt110 = 3
                     LA110_0 = self.input.LA(1)
 
@@ -11162,140 +11124,133 @@ class JavaParser(LocalParser):
                         raise nvae
 
                     if alt110 == 1:
-                        # Java.g:741:13: catches 'finally' block
+                        # Java.g:734:13: catches 'finally' block
                         pass 
-                        self._state.following.append(self.FOLLOW_catches_in_statement3924)
-                        catches336 = self.catches()
+                        self._state.following.append(self.FOLLOW_catches_in_statement3886)
+                        catches335 = self.catches()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, catches336.tree)
-                        string_literal337=self.match(self.input, 81, self.FOLLOW_81_in_statement3926)
+                            self._adaptor.addChild(root_0, catches335.tree)
+                        string_literal336=self.match(self.input, 81, self.FOLLOW_81_in_statement3888)
                         if self._state.backtracking == 0:
 
-                            string_literal337_tree = self._adaptor.createWithPayload(string_literal337)
-                            self._adaptor.addChild(root_0, string_literal337_tree)
+                            string_literal336_tree = self._adaptor.createWithPayload(string_literal336)
+                            self._adaptor.addChild(root_0, string_literal336_tree)
 
-                        self._state.following.append(self.FOLLOW_block_in_statement3928)
-                        block338 = self.block()
+                        self._state.following.append(self.FOLLOW_block_in_statement3890)
+                        block337 = self.block()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, block338.tree)
+                            self._adaptor.addChild(root_0, block337.tree)
 
 
                     elif alt110 == 2:
-                        # Java.g:742:13: catches
+                        # Java.g:735:13: catches
                         pass 
-                        self._state.following.append(self.FOLLOW_catches_in_statement3942)
-                        catches339 = self.catches()
+                        self._state.following.append(self.FOLLOW_catches_in_statement3904)
+                        catches338 = self.catches()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, catches339.tree)
+                            self._adaptor.addChild(root_0, catches338.tree)
 
 
                     elif alt110 == 3:
-                        # Java.g:743:13: 'finally' block
+                        # Java.g:736:13: 'finally' block
                         pass 
-                        string_literal340=self.match(self.input, 81, self.FOLLOW_81_in_statement3956)
+                        string_literal339=self.match(self.input, 81, self.FOLLOW_81_in_statement3918)
                         if self._state.backtracking == 0:
 
-                            string_literal340_tree = self._adaptor.createWithPayload(string_literal340)
-                            self._adaptor.addChild(root_0, string_literal340_tree)
+                            string_literal339_tree = self._adaptor.createWithPayload(string_literal339)
+                            self._adaptor.addChild(root_0, string_literal339_tree)
 
-                        self._state.following.append(self.FOLLOW_block_in_statement3958)
-                        block341 = self.block()
+                        self._state.following.append(self.FOLLOW_block_in_statement3920)
+                        block340 = self.block()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, block341.tree)
+                            self._adaptor.addChild(root_0, block340.tree)
 
 
 
 
 
                 elif alt114 == 8:
-                    # Java.g:745:9: 'switch' parExpression '{' switchBlockStatementGroups '}'
+                    # Java.g:738:9: 'switch' parExpression '{' switchBlockStatementGroups '}'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal342=self.match(self.input, 82, self.FOLLOW_82_in_statement3978)
+                    string_literal341=self.match(self.input, 82, self.FOLLOW_82_in_statement3940)
                     if self._state.backtracking == 0:
 
-                        string_literal342_tree = self._adaptor.createWithPayload(string_literal342)
-                        self._adaptor.addChild(root_0, string_literal342_tree)
+                        string_literal341_tree = self._adaptor.createWithPayload(string_literal341)
+                        self._adaptor.addChild(root_0, string_literal341_tree)
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_statement3980)
-                    parExpression343 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_statement3942)
+                    parExpression342 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression343.tree)
-                    char_literal344=self.match(self.input, 46, self.FOLLOW_46_in_statement3982)
+                        self._adaptor.addChild(root_0, parExpression342.tree)
+                    char_literal343=self.match(self.input, 46, self.FOLLOW_46_in_statement3944)
                     if self._state.backtracking == 0:
 
-                        char_literal344_tree = self._adaptor.createWithPayload(char_literal344)
-                        self._adaptor.addChild(root_0, char_literal344_tree)
+                        char_literal343_tree = self._adaptor.createWithPayload(char_literal343)
+                        self._adaptor.addChild(root_0, char_literal343_tree)
 
-                    self._state.following.append(self.FOLLOW_switchBlockStatementGroups_in_statement3984)
-                    switchBlockStatementGroups345 = self.switchBlockStatementGroups()
+                    self._state.following.append(self.FOLLOW_switchBlockStatementGroups_in_statement3946)
+                    switchBlockStatementGroups344 = self.switchBlockStatementGroups()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, switchBlockStatementGroups345.tree)
-                    char_literal346=self.match(self.input, 47, self.FOLLOW_47_in_statement3986)
+                        self._adaptor.addChild(root_0, switchBlockStatementGroups344.tree)
+                    char_literal345=self.match(self.input, 47, self.FOLLOW_47_in_statement3948)
                     if self._state.backtracking == 0:
 
-                        char_literal346_tree = self._adaptor.createWithPayload(char_literal346)
-                        self._adaptor.addChild(root_0, char_literal346_tree)
+                        char_literal345_tree = self._adaptor.createWithPayload(char_literal345)
+                        self._adaptor.addChild(root_0, char_literal345_tree)
 
 
 
                 elif alt114 == 9:
-                    # Java.g:746:9: 'synchronized' parExpression block
+                    # Java.g:739:9: 'synchronized' parExpression block
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal347=self.match(self.input, 55, self.FOLLOW_55_in_statement3996)
+                    string_literal346=self.match(self.input, 55, self.FOLLOW_55_in_statement3958)
                     if self._state.backtracking == 0:
 
-                        string_literal347_tree = self._adaptor.createWithPayload(string_literal347)
-                        self._adaptor.addChild(root_0, string_literal347_tree)
+                        string_literal346_tree = self._adaptor.createWithPayload(string_literal346)
+                        self._adaptor.addChild(root_0, string_literal346_tree)
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_statement3998)
-                    parExpression348 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_statement3960)
+                    parExpression347 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression348.tree)
-                    self._state.following.append(self.FOLLOW_block_in_statement4000)
-                    block349 = self.block()
+                        self._adaptor.addChild(root_0, parExpression347.tree)
+                    self._state.following.append(self.FOLLOW_block_in_statement3962)
+                    block348 = self.block()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, block349.tree)
+                        self._adaptor.addChild(root_0, block348.tree)
 
 
                 elif alt114 == 10:
-                    # Java.g:747:9: 'return' ( expression )? ';'
+                    # Java.g:740:9: 'return' ( expression )? ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal350=self.match(self.input, 83, self.FOLLOW_83_in_statement4010)
+                    string_literal349=self.match(self.input, 83, self.FOLLOW_83_in_statement3972)
                     if self._state.backtracking == 0:
 
-                        string_literal350_tree = self._adaptor.createWithPayload(string_literal350)
-                        self._adaptor.addChild(root_0, string_literal350_tree)
+                        string_literal349_tree = self._adaptor.createWithPayload(string_literal349)
+                        self._adaptor.addChild(root_0, string_literal349_tree)
 
-                    if self._state.backtracking == 0:
-                                  
-                        expr.update(format='return ' + FS.r)
-                        self.py_expr_stack[-1].expr = expr = nest(format=FS.r)
-                        self.py_expr_stack[-1].nest = expr.nestRight
-                                 
-
-                    # Java.g:753:10: ( expression )?
+                    # Java.g:741:10: ( expression )?
                     alt111 = 2
                     LA111_0 = self.input.LA(1)
 
@@ -11304,60 +11259,60 @@ class JavaParser(LocalParser):
                     if alt111 == 1:
                         # Java.g:0:0: expression
                         pass 
-                        self._state.following.append(self.FOLLOW_expression_in_statement4032)
-                        expression351 = self.expression()
+                        self._state.following.append(self.FOLLOW_expression_in_statement3983)
+                        expression350 = self.expression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, expression351.tree)
+                            self._adaptor.addChild(root_0, expression350.tree)
 
 
 
-                    char_literal352=self.match(self.input, 28, self.FOLLOW_28_in_statement4035)
+                    char_literal351=self.match(self.input, 28, self.FOLLOW_28_in_statement3986)
                     if self._state.backtracking == 0:
 
-                        char_literal352_tree = self._adaptor.createWithPayload(char_literal352)
-                        self._adaptor.addChild(root_0, char_literal352_tree)
+                        char_literal351_tree = self._adaptor.createWithPayload(char_literal351)
+                        self._adaptor.addChild(root_0, char_literal351_tree)
 
 
 
                 elif alt114 == 11:
-                    # Java.g:754:9: 'throw' expression ';'
+                    # Java.g:742:9: 'throw' expression ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal353=self.match(self.input, 84, self.FOLLOW_84_in_statement4045)
+                    string_literal352=self.match(self.input, 84, self.FOLLOW_84_in_statement3996)
                     if self._state.backtracking == 0:
 
-                        string_literal353_tree = self._adaptor.createWithPayload(string_literal353)
-                        self._adaptor.addChild(root_0, string_literal353_tree)
+                        string_literal352_tree = self._adaptor.createWithPayload(string_literal352)
+                        self._adaptor.addChild(root_0, string_literal352_tree)
 
-                    self._state.following.append(self.FOLLOW_expression_in_statement4047)
-                    expression354 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_statement3998)
+                    expression353 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression354.tree)
-                    char_literal355=self.match(self.input, 28, self.FOLLOW_28_in_statement4049)
+                        self._adaptor.addChild(root_0, expression353.tree)
+                    char_literal354=self.match(self.input, 28, self.FOLLOW_28_in_statement4000)
                     if self._state.backtracking == 0:
 
-                        char_literal355_tree = self._adaptor.createWithPayload(char_literal355)
-                        self._adaptor.addChild(root_0, char_literal355_tree)
+                        char_literal354_tree = self._adaptor.createWithPayload(char_literal354)
+                        self._adaptor.addChild(root_0, char_literal354_tree)
 
 
 
                 elif alt114 == 12:
-                    # Java.g:755:9: 'break' ( Ident )? ';'
+                    # Java.g:743:9: 'break' ( Ident )? ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal356=self.match(self.input, 85, self.FOLLOW_85_in_statement4059)
+                    string_literal355=self.match(self.input, 85, self.FOLLOW_85_in_statement4010)
                     if self._state.backtracking == 0:
 
-                        string_literal356_tree = self._adaptor.createWithPayload(string_literal356)
-                        self._adaptor.addChild(root_0, string_literal356_tree)
+                        string_literal355_tree = self._adaptor.createWithPayload(string_literal355)
+                        self._adaptor.addChild(root_0, string_literal355_tree)
 
-                    # Java.g:755:17: ( Ident )?
+                    # Java.g:743:17: ( Ident )?
                     alt112 = 2
                     LA112_0 = self.input.LA(1)
 
@@ -11366,35 +11321,35 @@ class JavaParser(LocalParser):
                     if alt112 == 1:
                         # Java.g:0:0: Ident
                         pass 
-                        Ident357=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4061)
+                        Ident356=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4012)
                         if self._state.backtracking == 0:
 
-                            Ident357_tree = self._adaptor.createWithPayload(Ident357)
-                            self._adaptor.addChild(root_0, Ident357_tree)
+                            Ident356_tree = self._adaptor.createWithPayload(Ident356)
+                            self._adaptor.addChild(root_0, Ident356_tree)
 
 
 
 
-                    char_literal358=self.match(self.input, 28, self.FOLLOW_28_in_statement4064)
+                    char_literal357=self.match(self.input, 28, self.FOLLOW_28_in_statement4015)
                     if self._state.backtracking == 0:
 
-                        char_literal358_tree = self._adaptor.createWithPayload(char_literal358)
-                        self._adaptor.addChild(root_0, char_literal358_tree)
+                        char_literal357_tree = self._adaptor.createWithPayload(char_literal357)
+                        self._adaptor.addChild(root_0, char_literal357_tree)
 
 
 
                 elif alt114 == 13:
-                    # Java.g:756:9: 'continue' ( Ident )? ';'
+                    # Java.g:744:9: 'continue' ( Ident )? ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal359=self.match(self.input, 86, self.FOLLOW_86_in_statement4074)
+                    string_literal358=self.match(self.input, 86, self.FOLLOW_86_in_statement4025)
                     if self._state.backtracking == 0:
 
-                        string_literal359_tree = self._adaptor.createWithPayload(string_literal359)
-                        self._adaptor.addChild(root_0, string_literal359_tree)
+                        string_literal358_tree = self._adaptor.createWithPayload(string_literal358)
+                        self._adaptor.addChild(root_0, string_literal358_tree)
 
-                    # Java.g:756:20: ( Ident )?
+                    # Java.g:744:20: ( Ident )?
                     alt113 = 2
                     LA113_0 = self.input.LA(1)
 
@@ -11403,16 +11358,29 @@ class JavaParser(LocalParser):
                     if alt113 == 1:
                         # Java.g:0:0: Ident
                         pass 
-                        Ident360=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4076)
+                        Ident359=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4027)
                         if self._state.backtracking == 0:
 
-                            Ident360_tree = self._adaptor.createWithPayload(Ident360)
-                            self._adaptor.addChild(root_0, Ident360_tree)
+                            Ident359_tree = self._adaptor.createWithPayload(Ident359)
+                            self._adaptor.addChild(root_0, Ident359_tree)
 
 
 
 
-                    char_literal361=self.match(self.input, 28, self.FOLLOW_28_in_statement4079)
+                    char_literal360=self.match(self.input, 28, self.FOLLOW_28_in_statement4030)
+                    if self._state.backtracking == 0:
+
+                        char_literal360_tree = self._adaptor.createWithPayload(char_literal360)
+                        self._adaptor.addChild(root_0, char_literal360_tree)
+
+
+
+                elif alt114 == 14:
+                    # Java.g:745:9: ';'
+                    pass 
+                    root_0 = self._adaptor.nil()
+
+                    char_literal361=self.match(self.input, 28, self.FOLLOW_28_in_statement4040)
                     if self._state.backtracking == 0:
 
                         char_literal361_tree = self._adaptor.createWithPayload(char_literal361)
@@ -11420,61 +11388,48 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt114 == 14:
-                    # Java.g:757:9: ';'
-                    pass 
-                    root_0 = self._adaptor.nil()
-
-                    char_literal362=self.match(self.input, 28, self.FOLLOW_28_in_statement4089)
-                    if self._state.backtracking == 0:
-
-                        char_literal362_tree = self._adaptor.createWithPayload(char_literal362)
-                        self._adaptor.addChild(root_0, char_literal362_tree)
-
-
-
                 elif alt114 == 15:
-                    # Java.g:758:9: statementExpression ';'
+                    # Java.g:746:9: statementExpression ';'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_statementExpression_in_statement4099)
-                    statementExpression363 = self.statementExpression()
+                    self._state.following.append(self.FOLLOW_statementExpression_in_statement4050)
+                    statementExpression362 = self.statementExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statementExpression363.tree)
-                    char_literal364=self.match(self.input, 28, self.FOLLOW_28_in_statement4101)
+                        self._adaptor.addChild(root_0, statementExpression362.tree)
+                    char_literal363=self.match(self.input, 28, self.FOLLOW_28_in_statement4052)
                     if self._state.backtracking == 0:
 
-                        char_literal364_tree = self._adaptor.createWithPayload(char_literal364)
-                        self._adaptor.addChild(root_0, char_literal364_tree)
+                        char_literal363_tree = self._adaptor.createWithPayload(char_literal363)
+                        self._adaptor.addChild(root_0, char_literal363_tree)
 
 
 
                 elif alt114 == 16:
-                    # Java.g:759:9: Ident ':' statement
+                    # Java.g:747:9: Ident ':' statement
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    Ident365=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4111)
+                    Ident364=self.match(self.input, Ident, self.FOLLOW_Ident_in_statement4062)
                     if self._state.backtracking == 0:
 
-                        Ident365_tree = self._adaptor.createWithPayload(Ident365)
-                        self._adaptor.addChild(root_0, Ident365_tree)
+                        Ident364_tree = self._adaptor.createWithPayload(Ident364)
+                        self._adaptor.addChild(root_0, Ident364_tree)
 
-                    char_literal366=self.match(self.input, 74, self.FOLLOW_74_in_statement4113)
+                    char_literal365=self.match(self.input, 74, self.FOLLOW_74_in_statement4064)
                     if self._state.backtracking == 0:
 
-                        char_literal366_tree = self._adaptor.createWithPayload(char_literal366)
-                        self._adaptor.addChild(root_0, char_literal366_tree)
+                        char_literal365_tree = self._adaptor.createWithPayload(char_literal365)
+                        self._adaptor.addChild(root_0, char_literal365_tree)
 
-                    self._state.following.append(self.FOLLOW_statement_in_statement4115)
-                    statement367 = self.statement()
+                    self._state.following.append(self.FOLLOW_statement_in_statement4066)
+                    statement366 = self.statement()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, statement367.tree)
+                        self._adaptor.addChild(root_0, statement366.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -11494,8 +11449,6 @@ class JavaParser(LocalParser):
             if self._state.backtracking > 0:
                 self.memoize(self.input, 89, statement_StartIndex, success)
 
-            self.py_expr_stack.pop()
-
             pass
 
         return retval
@@ -11512,7 +11465,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "catches"
-    # Java.g:763:1: catches : catchClause ( catchClause )* ;
+    # Java.g:751:1: catches : catchClause ( catchClause )* ;
     def catches(self, ):
 
         retval = self.catches_return()
@@ -11520,9 +11473,9 @@ class JavaParser(LocalParser):
         catches_StartIndex = self.input.index()
         root_0 = None
 
-        catchClause368 = None
+        catchClause367 = None
 
-        catchClause369 = None
+        catchClause368 = None
 
 
 
@@ -11534,18 +11487,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:764:5: ( catchClause ( catchClause )* )
-                # Java.g:764:9: catchClause ( catchClause )*
+                # Java.g:752:5: ( catchClause ( catchClause )* )
+                # Java.g:752:9: catchClause ( catchClause )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_catchClause_in_catches4135)
-                catchClause368 = self.catchClause()
+                self._state.following.append(self.FOLLOW_catchClause_in_catches4086)
+                catchClause367 = self.catchClause()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, catchClause368.tree)
-                # Java.g:764:21: ( catchClause )*
+                    self._adaptor.addChild(root_0, catchClause367.tree)
+                # Java.g:752:21: ( catchClause )*
                 while True: #loop115
                     alt115 = 2
                     LA115_0 = self.input.LA(1)
@@ -11555,14 +11508,14 @@ class JavaParser(LocalParser):
 
 
                     if alt115 == 1:
-                        # Java.g:764:22: catchClause
+                        # Java.g:752:22: catchClause
                         pass 
-                        self._state.following.append(self.FOLLOW_catchClause_in_catches4138)
-                        catchClause369 = self.catchClause()
+                        self._state.following.append(self.FOLLOW_catchClause_in_catches4089)
+                        catchClause368 = self.catchClause()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, catchClause369.tree)
+                            self._adaptor.addChild(root_0, catchClause368.tree)
 
 
                     else:
@@ -11605,7 +11558,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "catchClause"
-    # Java.g:768:1: catchClause : 'catch' '(' formalParameter ')' block ;
+    # Java.g:756:1: catchClause : 'catch' '(' formalParameter ')' block ;
     def catchClause(self, ):
 
         retval = self.catchClause_return()
@@ -11613,17 +11566,17 @@ class JavaParser(LocalParser):
         catchClause_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal370 = None
-        char_literal371 = None
-        char_literal373 = None
-        formalParameter372 = None
+        string_literal369 = None
+        char_literal370 = None
+        char_literal372 = None
+        formalParameter371 = None
 
-        block374 = None
+        block373 = None
 
 
-        string_literal370_tree = None
-        char_literal371_tree = None
-        char_literal373_tree = None
+        string_literal369_tree = None
+        char_literal370_tree = None
+        char_literal372_tree = None
 
         success = False
         try:
@@ -11633,41 +11586,41 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:769:5: ( 'catch' '(' formalParameter ')' block )
-                # Java.g:769:9: 'catch' '(' formalParameter ')' block
+                # Java.g:757:5: ( 'catch' '(' formalParameter ')' block )
+                # Java.g:757:9: 'catch' '(' formalParameter ')' block
                 pass 
                 root_0 = self._adaptor.nil()
 
-                string_literal370=self.match(self.input, 87, self.FOLLOW_87_in_catchClause4160)
+                string_literal369=self.match(self.input, 87, self.FOLLOW_87_in_catchClause4111)
                 if self._state.backtracking == 0:
 
-                    string_literal370_tree = self._adaptor.createWithPayload(string_literal370)
-                    self._adaptor.addChild(root_0, string_literal370_tree)
+                    string_literal369_tree = self._adaptor.createWithPayload(string_literal369)
+                    self._adaptor.addChild(root_0, string_literal369_tree)
 
-                char_literal371=self.match(self.input, 68, self.FOLLOW_68_in_catchClause4162)
+                char_literal370=self.match(self.input, 68, self.FOLLOW_68_in_catchClause4113)
                 if self._state.backtracking == 0:
 
-                    char_literal371_tree = self._adaptor.createWithPayload(char_literal371)
-                    self._adaptor.addChild(root_0, char_literal371_tree)
+                    char_literal370_tree = self._adaptor.createWithPayload(char_literal370)
+                    self._adaptor.addChild(root_0, char_literal370_tree)
 
-                self._state.following.append(self.FOLLOW_formalParameter_in_catchClause4164)
-                formalParameter372 = self.formalParameter()
+                self._state.following.append(self.FOLLOW_formalParameter_in_catchClause4115)
+                formalParameter371 = self.formalParameter()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, formalParameter372.tree)
-                char_literal373=self.match(self.input, 69, self.FOLLOW_69_in_catchClause4166)
+                    self._adaptor.addChild(root_0, formalParameter371.tree)
+                char_literal372=self.match(self.input, 69, self.FOLLOW_69_in_catchClause4117)
                 if self._state.backtracking == 0:
 
-                    char_literal373_tree = self._adaptor.createWithPayload(char_literal373)
-                    self._adaptor.addChild(root_0, char_literal373_tree)
+                    char_literal372_tree = self._adaptor.createWithPayload(char_literal372)
+                    self._adaptor.addChild(root_0, char_literal372_tree)
 
-                self._state.following.append(self.FOLLOW_block_in_catchClause4168)
-                block374 = self.block()
+                self._state.following.append(self.FOLLOW_block_in_catchClause4119)
+                block373 = self.block()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, block374.tree)
+                    self._adaptor.addChild(root_0, block373.tree)
 
 
 
@@ -11704,7 +11657,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "formalParameter"
-    # Java.g:773:1: formalParameter : variableModifiers type variableDeclId ;
+    # Java.g:761:1: formalParameter : variableModifiers type variableDeclId ;
     def formalParameter(self, ):
 
         retval = self.formalParameter_return()
@@ -11712,11 +11665,11 @@ class JavaParser(LocalParser):
         formalParameter_StartIndex = self.input.index()
         root_0 = None
 
-        variableModifiers375 = None
+        variableModifiers374 = None
 
-        type376 = None
+        type375 = None
 
-        variableDeclId377 = None
+        variableDeclId376 = None
 
 
 
@@ -11728,29 +11681,29 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:774:5: ( variableModifiers type variableDeclId )
-                # Java.g:774:9: variableModifiers type variableDeclId
+                # Java.g:762:5: ( variableModifiers type variableDeclId )
+                # Java.g:762:9: variableModifiers type variableDeclId
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableModifiers_in_formalParameter4188)
-                variableModifiers375 = self.variableModifiers()
+                self._state.following.append(self.FOLLOW_variableModifiers_in_formalParameter4139)
+                variableModifiers374 = self.variableModifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableModifiers375.tree)
-                self._state.following.append(self.FOLLOW_type_in_formalParameter4190)
-                type376 = self.type()
+                    self._adaptor.addChild(root_0, variableModifiers374.tree)
+                self._state.following.append(self.FOLLOW_type_in_formalParameter4141)
+                type375 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, type376.tree)
-                self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameter4192)
-                variableDeclId377 = self.variableDeclId()
+                    self._adaptor.addChild(root_0, type375.tree)
+                self._state.following.append(self.FOLLOW_variableDeclId_in_formalParameter4143)
+                variableDeclId376 = self.variableDeclId()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableDeclId377.tree)
+                    self._adaptor.addChild(root_0, variableDeclId376.tree)
 
 
 
@@ -11787,7 +11740,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "switchBlockStatementGroups"
-    # Java.g:778:1: switchBlockStatementGroups : ( switchBlockStatementGroup )* ;
+    # Java.g:766:1: switchBlockStatementGroups : ( switchBlockStatementGroup )* ;
     def switchBlockStatementGroups(self, ):
 
         retval = self.switchBlockStatementGroups_return()
@@ -11795,7 +11748,7 @@ class JavaParser(LocalParser):
         switchBlockStatementGroups_StartIndex = self.input.index()
         root_0 = None
 
-        switchBlockStatementGroup378 = None
+        switchBlockStatementGroup377 = None
 
 
 
@@ -11807,12 +11760,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:779:5: ( ( switchBlockStatementGroup )* )
-                # Java.g:779:9: ( switchBlockStatementGroup )*
+                # Java.g:767:5: ( ( switchBlockStatementGroup )* )
+                # Java.g:767:9: ( switchBlockStatementGroup )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:779:9: ( switchBlockStatementGroup )*
+                # Java.g:767:9: ( switchBlockStatementGroup )*
                 while True: #loop116
                     alt116 = 2
                     LA116_0 = self.input.LA(1)
@@ -11822,14 +11775,14 @@ class JavaParser(LocalParser):
 
 
                     if alt116 == 1:
-                        # Java.g:779:10: switchBlockStatementGroup
+                        # Java.g:767:10: switchBlockStatementGroup
                         pass 
-                        self._state.following.append(self.FOLLOW_switchBlockStatementGroup_in_switchBlockStatementGroups4213)
-                        switchBlockStatementGroup378 = self.switchBlockStatementGroup()
+                        self._state.following.append(self.FOLLOW_switchBlockStatementGroup_in_switchBlockStatementGroups4164)
+                        switchBlockStatementGroup377 = self.switchBlockStatementGroup()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, switchBlockStatementGroup378.tree)
+                            self._adaptor.addChild(root_0, switchBlockStatementGroup377.tree)
 
 
                     else:
@@ -11872,7 +11825,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "switchBlockStatementGroup"
-    # Java.g:783:1: switchBlockStatementGroup : ( switchLabel )+ ( blockStatement )* ;
+    # Java.g:771:1: switchBlockStatementGroup : ( switchLabel )+ ( blockStatement )* ;
     def switchBlockStatementGroup(self, ):
 
         retval = self.switchBlockStatementGroup_return()
@@ -11880,9 +11833,9 @@ class JavaParser(LocalParser):
         switchBlockStatementGroup_StartIndex = self.input.index()
         root_0 = None
 
-        switchLabel379 = None
+        switchLabel378 = None
 
-        blockStatement380 = None
+        blockStatement379 = None
 
 
 
@@ -11894,12 +11847,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:784:5: ( ( switchLabel )+ ( blockStatement )* )
-                # Java.g:784:9: ( switchLabel )+ ( blockStatement )*
+                # Java.g:772:5: ( ( switchLabel )+ ( blockStatement )* )
+                # Java.g:772:9: ( switchLabel )+ ( blockStatement )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:784:9: ( switchLabel )+
+                # Java.g:772:9: ( switchLabel )+
                 cnt117 = 0
                 while True: #loop117
                     alt117 = 2
@@ -11924,12 +11877,12 @@ class JavaParser(LocalParser):
                     if alt117 == 1:
                         # Java.g:0:0: switchLabel
                         pass 
-                        self._state.following.append(self.FOLLOW_switchLabel_in_switchBlockStatementGroup4235)
-                        switchLabel379 = self.switchLabel()
+                        self._state.following.append(self.FOLLOW_switchLabel_in_switchBlockStatementGroup4186)
+                        switchLabel378 = self.switchLabel()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, switchLabel379.tree)
+                            self._adaptor.addChild(root_0, switchLabel378.tree)
 
 
                     else:
@@ -11945,7 +11898,7 @@ class JavaParser(LocalParser):
                     cnt117 += 1
 
 
-                # Java.g:784:22: ( blockStatement )*
+                # Java.g:772:22: ( blockStatement )*
                 while True: #loop118
                     alt118 = 2
                     LA118_0 = self.input.LA(1)
@@ -11957,12 +11910,12 @@ class JavaParser(LocalParser):
                     if alt118 == 1:
                         # Java.g:0:0: blockStatement
                         pass 
-                        self._state.following.append(self.FOLLOW_blockStatement_in_switchBlockStatementGroup4238)
-                        blockStatement380 = self.blockStatement()
+                        self._state.following.append(self.FOLLOW_blockStatement_in_switchBlockStatementGroup4189)
+                        blockStatement379 = self.blockStatement()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, blockStatement380.tree)
+                            self._adaptor.addChild(root_0, blockStatement379.tree)
 
 
                     else:
@@ -12005,7 +11958,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "switchLabel"
-    # Java.g:788:1: switchLabel : ( 'case' constantExpression ':' | 'case' enumConstantName ':' | 'default' ':' );
+    # Java.g:776:1: switchLabel : ( 'case' constantExpression ':' | 'case' enumConstantName ':' | 'default' ':' );
     def switchLabel(self, ):
 
         retval = self.switchLabel_return()
@@ -12013,23 +11966,23 @@ class JavaParser(LocalParser):
         switchLabel_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal381 = None
-        char_literal383 = None
-        string_literal384 = None
-        char_literal386 = None
-        string_literal387 = None
-        char_literal388 = None
-        constantExpression382 = None
+        string_literal380 = None
+        char_literal382 = None
+        string_literal383 = None
+        char_literal385 = None
+        string_literal386 = None
+        char_literal387 = None
+        constantExpression381 = None
 
-        enumConstantName385 = None
+        enumConstantName384 = None
 
 
-        string_literal381_tree = None
-        char_literal383_tree = None
-        string_literal384_tree = None
-        char_literal386_tree = None
-        string_literal387_tree = None
-        char_literal388_tree = None
+        string_literal380_tree = None
+        char_literal382_tree = None
+        string_literal383_tree = None
+        char_literal385_tree = None
+        string_literal386_tree = None
+        char_literal387_tree = None
 
         success = False
         try:
@@ -12039,19 +11992,19 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:789:5: ( 'case' constantExpression ':' | 'case' enumConstantName ':' | 'default' ':' )
+                # Java.g:777:5: ( 'case' constantExpression ':' | 'case' enumConstantName ':' | 'default' ':' )
                 alt119 = 3
                 LA119_0 = self.input.LA(1)
 
                 if (LA119_0 == 88) :
                     LA119_1 = self.input.LA(2)
 
-                    if ((FloatingPointLiteral <= LA119_1 <= DecimalLiteral) or LA119_1 == 49 or (58 <= LA119_1 <= 65) or (67 <= LA119_1 <= 68) or LA119_1 == 71 or (104 <= LA119_1 <= 105) or (108 <= LA119_1 <= 112)) :
-                        alt119 = 1
-                    elif (LA119_1 == Ident) :
-                        LA119_4 = self.input.LA(3)
+                    if (LA119_1 == Ident) :
+                        LA119_3 = self.input.LA(3)
 
-                        if (LA119_4 == 74) :
+                        if ((31 <= LA119_3 <= 32) or LA119_3 == 42 or (44 <= LA119_3 <= 45) or LA119_3 == 50 or LA119_3 == 53 or LA119_3 == 66 or LA119_3 == 68 or (89 <= LA119_3 <= 109)) :
+                            alt119 = 1
+                        elif (LA119_3 == 74) :
                             LA119_5 = self.input.LA(4)
 
                             if (self.synpred179_Java()) :
@@ -12066,16 +12019,16 @@ class JavaParser(LocalParser):
 
                                 raise nvae
 
-                        elif ((31 <= LA119_4 <= 32) or LA119_4 == 42 or (44 <= LA119_4 <= 45) or LA119_4 == 50 or LA119_4 == 53 or LA119_4 == 66 or LA119_4 == 68 or (89 <= LA119_4 <= 109)) :
-                            alt119 = 1
                         else:
                             if self._state.backtracking > 0:
                                 raise BacktrackingFailed
 
-                            nvae = NoViableAltException("", 119, 4, self.input)
+                            nvae = NoViableAltException("", 119, 3, self.input)
 
                             raise nvae
 
+                    elif ((FloatingPointLiteral <= LA119_1 <= DecimalLiteral) or LA119_1 == 49 or (58 <= LA119_1 <= 65) or (67 <= LA119_1 <= 68) or LA119_1 == 71 or (104 <= LA119_1 <= 105) or (108 <= LA119_1 <= 112)) :
+                        alt119 = 1
                     else:
                         if self._state.backtracking > 0:
                             raise BacktrackingFailed
@@ -12095,71 +12048,71 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt119 == 1:
-                    # Java.g:789:9: 'case' constantExpression ':'
+                    # Java.g:777:9: 'case' constantExpression ':'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal381=self.match(self.input, 88, self.FOLLOW_88_in_switchLabel4259)
+                    string_literal380=self.match(self.input, 88, self.FOLLOW_88_in_switchLabel4210)
                     if self._state.backtracking == 0:
 
-                        string_literal381_tree = self._adaptor.createWithPayload(string_literal381)
-                        self._adaptor.addChild(root_0, string_literal381_tree)
+                        string_literal380_tree = self._adaptor.createWithPayload(string_literal380)
+                        self._adaptor.addChild(root_0, string_literal380_tree)
 
-                    self._state.following.append(self.FOLLOW_constantExpression_in_switchLabel4261)
-                    constantExpression382 = self.constantExpression()
+                    self._state.following.append(self.FOLLOW_constantExpression_in_switchLabel4212)
+                    constantExpression381 = self.constantExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, constantExpression382.tree)
-                    char_literal383=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4263)
+                        self._adaptor.addChild(root_0, constantExpression381.tree)
+                    char_literal382=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4214)
                     if self._state.backtracking == 0:
 
-                        char_literal383_tree = self._adaptor.createWithPayload(char_literal383)
-                        self._adaptor.addChild(root_0, char_literal383_tree)
+                        char_literal382_tree = self._adaptor.createWithPayload(char_literal382)
+                        self._adaptor.addChild(root_0, char_literal382_tree)
 
 
 
                 elif alt119 == 2:
-                    # Java.g:790:9: 'case' enumConstantName ':'
+                    # Java.g:778:9: 'case' enumConstantName ':'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal384=self.match(self.input, 88, self.FOLLOW_88_in_switchLabel4273)
+                    string_literal383=self.match(self.input, 88, self.FOLLOW_88_in_switchLabel4224)
                     if self._state.backtracking == 0:
 
-                        string_literal384_tree = self._adaptor.createWithPayload(string_literal384)
-                        self._adaptor.addChild(root_0, string_literal384_tree)
+                        string_literal383_tree = self._adaptor.createWithPayload(string_literal383)
+                        self._adaptor.addChild(root_0, string_literal383_tree)
 
-                    self._state.following.append(self.FOLLOW_enumConstantName_in_switchLabel4275)
-                    enumConstantName385 = self.enumConstantName()
+                    self._state.following.append(self.FOLLOW_enumConstantName_in_switchLabel4226)
+                    enumConstantName384 = self.enumConstantName()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, enumConstantName385.tree)
-                    char_literal386=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4277)
+                        self._adaptor.addChild(root_0, enumConstantName384.tree)
+                    char_literal385=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4228)
                     if self._state.backtracking == 0:
 
-                        char_literal386_tree = self._adaptor.createWithPayload(char_literal386)
-                        self._adaptor.addChild(root_0, char_literal386_tree)
+                        char_literal385_tree = self._adaptor.createWithPayload(char_literal385)
+                        self._adaptor.addChild(root_0, char_literal385_tree)
 
 
 
                 elif alt119 == 3:
-                    # Java.g:791:9: 'default' ':'
+                    # Java.g:779:9: 'default' ':'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal387=self.match(self.input, 73, self.FOLLOW_73_in_switchLabel4287)
+                    string_literal386=self.match(self.input, 73, self.FOLLOW_73_in_switchLabel4238)
                     if self._state.backtracking == 0:
 
-                        string_literal387_tree = self._adaptor.createWithPayload(string_literal387)
-                        self._adaptor.addChild(root_0, string_literal387_tree)
+                        string_literal386_tree = self._adaptor.createWithPayload(string_literal386)
+                        self._adaptor.addChild(root_0, string_literal386_tree)
 
-                    char_literal388=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4289)
+                    char_literal387=self.match(self.input, 74, self.FOLLOW_74_in_switchLabel4240)
                     if self._state.backtracking == 0:
 
-                        char_literal388_tree = self._adaptor.createWithPayload(char_literal388)
-                        self._adaptor.addChild(root_0, char_literal388_tree)
+                        char_literal387_tree = self._adaptor.createWithPayload(char_literal387)
+                        self._adaptor.addChild(root_0, char_literal387_tree)
 
 
 
@@ -12196,7 +12149,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "forControl"
-    # Java.g:795:1: forControl options {k=3; } : ( enhancedForControl | ( forInit )? ';' ( expression )? ';' ( forUpdate )? );
+    # Java.g:783:1: forControl options {k=3; } : ( enhancedForControl | ( forInit )? ';' ( expression )? ';' ( forUpdate )? );
     def forControl(self, ):
 
         retval = self.forControl_return()
@@ -12204,19 +12157,19 @@ class JavaParser(LocalParser):
         forControl_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal391 = None
-        char_literal393 = None
-        enhancedForControl389 = None
+        char_literal390 = None
+        char_literal392 = None
+        enhancedForControl388 = None
 
-        forInit390 = None
+        forInit389 = None
 
-        expression392 = None
+        expression391 = None
 
-        forUpdate394 = None
+        forUpdate393 = None
 
 
-        char_literal391_tree = None
-        char_literal393_tree = None
+        char_literal390_tree = None
+        char_literal392_tree = None
 
         success = False
         try:
@@ -12226,28 +12179,28 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:797:5: ( enhancedForControl | ( forInit )? ';' ( expression )? ';' ( forUpdate )? )
+                # Java.g:785:5: ( enhancedForControl | ( forInit )? ';' ( expression )? ';' ( forUpdate )? )
                 alt123 = 2
                 alt123 = self.dfa123.predict(self.input)
                 if alt123 == 1:
-                    # Java.g:797:9: enhancedForControl
+                    # Java.g:785:9: enhancedForControl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_enhancedForControl_in_forControl4317)
-                    enhancedForControl389 = self.enhancedForControl()
+                    self._state.following.append(self.FOLLOW_enhancedForControl_in_forControl4268)
+                    enhancedForControl388 = self.enhancedForControl()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, enhancedForControl389.tree)
+                        self._adaptor.addChild(root_0, enhancedForControl388.tree)
 
 
                 elif alt123 == 2:
-                    # Java.g:798:9: ( forInit )? ';' ( expression )? ';' ( forUpdate )?
+                    # Java.g:786:9: ( forInit )? ';' ( expression )? ';' ( forUpdate )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:798:9: ( forInit )?
+                    # Java.g:786:9: ( forInit )?
                     alt120 = 2
                     LA120_0 = self.input.LA(1)
 
@@ -12256,22 +12209,22 @@ class JavaParser(LocalParser):
                     if alt120 == 1:
                         # Java.g:0:0: forInit
                         pass 
-                        self._state.following.append(self.FOLLOW_forInit_in_forControl4327)
-                        forInit390 = self.forInit()
+                        self._state.following.append(self.FOLLOW_forInit_in_forControl4278)
+                        forInit389 = self.forInit()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, forInit390.tree)
+                            self._adaptor.addChild(root_0, forInit389.tree)
 
 
 
-                    char_literal391=self.match(self.input, 28, self.FOLLOW_28_in_forControl4330)
+                    char_literal390=self.match(self.input, 28, self.FOLLOW_28_in_forControl4281)
                     if self._state.backtracking == 0:
 
-                        char_literal391_tree = self._adaptor.createWithPayload(char_literal391)
-                        self._adaptor.addChild(root_0, char_literal391_tree)
+                        char_literal390_tree = self._adaptor.createWithPayload(char_literal390)
+                        self._adaptor.addChild(root_0, char_literal390_tree)
 
-                    # Java.g:798:22: ( expression )?
+                    # Java.g:786:22: ( expression )?
                     alt121 = 2
                     LA121_0 = self.input.LA(1)
 
@@ -12280,22 +12233,22 @@ class JavaParser(LocalParser):
                     if alt121 == 1:
                         # Java.g:0:0: expression
                         pass 
-                        self._state.following.append(self.FOLLOW_expression_in_forControl4332)
-                        expression392 = self.expression()
+                        self._state.following.append(self.FOLLOW_expression_in_forControl4283)
+                        expression391 = self.expression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, expression392.tree)
+                            self._adaptor.addChild(root_0, expression391.tree)
 
 
 
-                    char_literal393=self.match(self.input, 28, self.FOLLOW_28_in_forControl4335)
+                    char_literal392=self.match(self.input, 28, self.FOLLOW_28_in_forControl4286)
                     if self._state.backtracking == 0:
 
-                        char_literal393_tree = self._adaptor.createWithPayload(char_literal393)
-                        self._adaptor.addChild(root_0, char_literal393_tree)
+                        char_literal392_tree = self._adaptor.createWithPayload(char_literal392)
+                        self._adaptor.addChild(root_0, char_literal392_tree)
 
-                    # Java.g:798:38: ( forUpdate )?
+                    # Java.g:786:38: ( forUpdate )?
                     alt122 = 2
                     LA122_0 = self.input.LA(1)
 
@@ -12304,12 +12257,12 @@ class JavaParser(LocalParser):
                     if alt122 == 1:
                         # Java.g:0:0: forUpdate
                         pass 
-                        self._state.following.append(self.FOLLOW_forUpdate_in_forControl4337)
-                        forUpdate394 = self.forUpdate()
+                        self._state.following.append(self.FOLLOW_forUpdate_in_forControl4288)
+                        forUpdate393 = self.forUpdate()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, forUpdate394.tree)
+                            self._adaptor.addChild(root_0, forUpdate393.tree)
 
 
 
@@ -12348,7 +12301,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "forInit"
-    # Java.g:802:1: forInit : ( localVariableDecl | expressionList );
+    # Java.g:790:1: forInit : ( localVariableDecl | expressionList );
     def forInit(self, ):
 
         retval = self.forInit_return()
@@ -12356,9 +12309,9 @@ class JavaParser(LocalParser):
         forInit_StartIndex = self.input.index()
         root_0 = None
 
-        localVariableDecl395 = None
+        localVariableDecl394 = None
 
-        expressionList396 = None
+        expressionList395 = None
 
 
 
@@ -12370,33 +12323,33 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:803:5: ( localVariableDecl | expressionList )
+                # Java.g:791:5: ( localVariableDecl | expressionList )
                 alt124 = 2
                 alt124 = self.dfa124.predict(self.input)
                 if alt124 == 1:
-                    # Java.g:803:9: localVariableDecl
+                    # Java.g:791:9: localVariableDecl
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_localVariableDecl_in_forInit4358)
-                    localVariableDecl395 = self.localVariableDecl()
+                    self._state.following.append(self.FOLLOW_localVariableDecl_in_forInit4309)
+                    localVariableDecl394 = self.localVariableDecl()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, localVariableDecl395.tree)
+                        self._adaptor.addChild(root_0, localVariableDecl394.tree)
 
 
                 elif alt124 == 2:
-                    # Java.g:804:9: expressionList
+                    # Java.g:792:9: expressionList
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_expressionList_in_forInit4368)
-                    expressionList396 = self.expressionList()
+                    self._state.following.append(self.FOLLOW_expressionList_in_forInit4319)
+                    expressionList395 = self.expressionList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expressionList396.tree)
+                        self._adaptor.addChild(root_0, expressionList395.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -12432,7 +12385,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "enhancedForControl"
-    # Java.g:808:1: enhancedForControl : variableModifiers type Ident ':' expression ;
+    # Java.g:796:1: enhancedForControl : variableModifiers type Ident ':' expression ;
     def enhancedForControl(self, ):
 
         retval = self.enhancedForControl_return()
@@ -12440,17 +12393,17 @@ class JavaParser(LocalParser):
         enhancedForControl_StartIndex = self.input.index()
         root_0 = None
 
-        Ident399 = None
-        char_literal400 = None
-        variableModifiers397 = None
+        Ident398 = None
+        char_literal399 = None
+        variableModifiers396 = None
 
-        type398 = None
+        type397 = None
 
-        expression401 = None
+        expression400 = None
 
 
-        Ident399_tree = None
-        char_literal400_tree = None
+        Ident398_tree = None
+        char_literal399_tree = None
 
         success = False
         try:
@@ -12460,41 +12413,41 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:809:5: ( variableModifiers type Ident ':' expression )
-                # Java.g:809:9: variableModifiers type Ident ':' expression
+                # Java.g:797:5: ( variableModifiers type Ident ':' expression )
+                # Java.g:797:9: variableModifiers type Ident ':' expression
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_variableModifiers_in_enhancedForControl4388)
-                variableModifiers397 = self.variableModifiers()
+                self._state.following.append(self.FOLLOW_variableModifiers_in_enhancedForControl4339)
+                variableModifiers396 = self.variableModifiers()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, variableModifiers397.tree)
-                self._state.following.append(self.FOLLOW_type_in_enhancedForControl4390)
-                type398 = self.type()
+                    self._adaptor.addChild(root_0, variableModifiers396.tree)
+                self._state.following.append(self.FOLLOW_type_in_enhancedForControl4341)
+                type397 = self.type()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, type398.tree)
-                Ident399=self.match(self.input, Ident, self.FOLLOW_Ident_in_enhancedForControl4392)
+                    self._adaptor.addChild(root_0, type397.tree)
+                Ident398=self.match(self.input, Ident, self.FOLLOW_Ident_in_enhancedForControl4343)
                 if self._state.backtracking == 0:
 
-                    Ident399_tree = self._adaptor.createWithPayload(Ident399)
-                    self._adaptor.addChild(root_0, Ident399_tree)
+                    Ident398_tree = self._adaptor.createWithPayload(Ident398)
+                    self._adaptor.addChild(root_0, Ident398_tree)
 
-                char_literal400=self.match(self.input, 74, self.FOLLOW_74_in_enhancedForControl4394)
+                char_literal399=self.match(self.input, 74, self.FOLLOW_74_in_enhancedForControl4345)
                 if self._state.backtracking == 0:
 
-                    char_literal400_tree = self._adaptor.createWithPayload(char_literal400)
-                    self._adaptor.addChild(root_0, char_literal400_tree)
+                    char_literal399_tree = self._adaptor.createWithPayload(char_literal399)
+                    self._adaptor.addChild(root_0, char_literal399_tree)
 
-                self._state.following.append(self.FOLLOW_expression_in_enhancedForControl4396)
-                expression401 = self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_enhancedForControl4347)
+                expression400 = self.expression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expression401.tree)
+                    self._adaptor.addChild(root_0, expression400.tree)
 
 
 
@@ -12531,7 +12484,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "forUpdate"
-    # Java.g:813:1: forUpdate : expressionList ;
+    # Java.g:801:1: forUpdate : expressionList ;
     def forUpdate(self, ):
 
         retval = self.forUpdate_return()
@@ -12539,7 +12492,7 @@ class JavaParser(LocalParser):
         forUpdate_StartIndex = self.input.index()
         root_0 = None
 
-        expressionList402 = None
+        expressionList401 = None
 
 
 
@@ -12551,17 +12504,17 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:814:5: ( expressionList )
-                # Java.g:814:9: expressionList
+                # Java.g:802:5: ( expressionList )
+                # Java.g:802:9: expressionList
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_expressionList_in_forUpdate4416)
-                expressionList402 = self.expressionList()
+                self._state.following.append(self.FOLLOW_expressionList_in_forUpdate4367)
+                expressionList401 = self.expressionList()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expressionList402.tree)
+                    self._adaptor.addChild(root_0, expressionList401.tree)
 
 
 
@@ -12598,7 +12551,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "parExpression"
-    # Java.g:821:1: parExpression : '(' expression ')' ;
+    # Java.g:809:1: parExpression : '(' expression ')' ;
     def parExpression(self, ):
 
         retval = self.parExpression_return()
@@ -12606,13 +12559,13 @@ class JavaParser(LocalParser):
         parExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal403 = None
-        char_literal405 = None
-        expression404 = None
+        char_literal402 = None
+        char_literal404 = None
+        expression403 = None
 
 
-        char_literal403_tree = None
-        char_literal405_tree = None
+        char_literal402_tree = None
+        char_literal404_tree = None
 
         success = False
         try:
@@ -12622,28 +12575,28 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:822:5: ( '(' expression ')' )
-                # Java.g:822:9: '(' expression ')'
+                # Java.g:810:5: ( '(' expression ')' )
+                # Java.g:810:9: '(' expression ')'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal403=self.match(self.input, 68, self.FOLLOW_68_in_parExpression4439)
+                char_literal402=self.match(self.input, 68, self.FOLLOW_68_in_parExpression4390)
                 if self._state.backtracking == 0:
 
-                    char_literal403_tree = self._adaptor.createWithPayload(char_literal403)
-                    self._adaptor.addChild(root_0, char_literal403_tree)
+                    char_literal402_tree = self._adaptor.createWithPayload(char_literal402)
+                    self._adaptor.addChild(root_0, char_literal402_tree)
 
-                self._state.following.append(self.FOLLOW_expression_in_parExpression4441)
-                expression404 = self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_parExpression4392)
+                expression403 = self.expression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expression404.tree)
-                char_literal405=self.match(self.input, 69, self.FOLLOW_69_in_parExpression4443)
+                    self._adaptor.addChild(root_0, expression403.tree)
+                char_literal404=self.match(self.input, 69, self.FOLLOW_69_in_parExpression4394)
                 if self._state.backtracking == 0:
 
-                    char_literal405_tree = self._adaptor.createWithPayload(char_literal405)
-                    self._adaptor.addChild(root_0, char_literal405_tree)
+                    char_literal404_tree = self._adaptor.createWithPayload(char_literal404)
+                    self._adaptor.addChild(root_0, char_literal404_tree)
 
 
 
@@ -12681,7 +12634,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "expressionList"
-    # Java.g:826:1: expressionList : expression ( ',' expression )* ;
+    # Java.g:814:1: expressionList : expression ( ',' expression )* ;
     def expressionList(self, ):
 
         retval = self.expressionList_return()
@@ -12689,13 +12642,13 @@ class JavaParser(LocalParser):
         expressionList_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal407 = None
-        expression406 = None
+        char_literal406 = None
+        expression405 = None
 
-        expression408 = None
+        expression407 = None
 
 
-        char_literal407_tree = None
+        char_literal406_tree = None
 
         success = False
         try:
@@ -12705,18 +12658,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:827:5: ( expression ( ',' expression )* )
-                # Java.g:827:9: expression ( ',' expression )*
+                # Java.g:815:5: ( expression ( ',' expression )* )
+                # Java.g:815:9: expression ( ',' expression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_expression_in_expressionList4463)
-                expression406 = self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_expressionList4414)
+                expression405 = self.expression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expression406.tree)
-                # Java.g:827:20: ( ',' expression )*
+                    self._adaptor.addChild(root_0, expression405.tree)
+                # Java.g:815:20: ( ',' expression )*
                 while True: #loop125
                     alt125 = 2
                     LA125_0 = self.input.LA(1)
@@ -12726,20 +12679,20 @@ class JavaParser(LocalParser):
 
 
                     if alt125 == 1:
-                        # Java.g:827:21: ',' expression
+                        # Java.g:815:21: ',' expression
                         pass 
-                        char_literal407=self.match(self.input, 43, self.FOLLOW_43_in_expressionList4466)
+                        char_literal406=self.match(self.input, 43, self.FOLLOW_43_in_expressionList4417)
                         if self._state.backtracking == 0:
 
-                            char_literal407_tree = self._adaptor.createWithPayload(char_literal407)
-                            self._adaptor.addChild(root_0, char_literal407_tree)
+                            char_literal406_tree = self._adaptor.createWithPayload(char_literal406)
+                            self._adaptor.addChild(root_0, char_literal406_tree)
 
-                        self._state.following.append(self.FOLLOW_expression_in_expressionList4468)
-                        expression408 = self.expression()
+                        self._state.following.append(self.FOLLOW_expression_in_expressionList4419)
+                        expression407 = self.expression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, expression408.tree)
+                            self._adaptor.addChild(root_0, expression407.tree)
 
 
                     else:
@@ -12782,7 +12735,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "statementExpression"
-    # Java.g:831:1: statementExpression : expression ;
+    # Java.g:819:1: statementExpression : expression ;
     def statementExpression(self, ):
 
         retval = self.statementExpression_return()
@@ -12790,7 +12743,7 @@ class JavaParser(LocalParser):
         statementExpression_StartIndex = self.input.index()
         root_0 = None
 
-        expression409 = None
+        expression408 = None
 
 
 
@@ -12802,17 +12755,17 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:832:5: ( expression )
-                # Java.g:832:9: expression
+                # Java.g:820:5: ( expression )
+                # Java.g:820:9: expression
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_expression_in_statementExpression4490)
-                expression409 = self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_statementExpression4441)
+                expression408 = self.expression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expression409.tree)
+                    self._adaptor.addChild(root_0, expression408.tree)
 
 
 
@@ -12849,7 +12802,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "constantExpression"
-    # Java.g:836:1: constantExpression : expression ;
+    # Java.g:824:1: constantExpression : expression ;
     def constantExpression(self, ):
 
         retval = self.constantExpression_return()
@@ -12857,7 +12810,7 @@ class JavaParser(LocalParser):
         constantExpression_StartIndex = self.input.index()
         root_0 = None
 
-        expression410 = None
+        expression409 = None
 
 
 
@@ -12869,17 +12822,17 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:837:5: ( expression )
-                # Java.g:837:9: expression
+                # Java.g:825:5: ( expression )
+                # Java.g:825:9: expression
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_expression_in_constantExpression4510)
-                expression410 = self.expression()
+                self._state.following.append(self.FOLLOW_expression_in_constantExpression4461)
+                expression409 = self.expression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, expression410.tree)
+                    self._adaptor.addChild(root_0, expression409.tree)
 
 
 
@@ -12916,7 +12869,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "expression"
-    # Java.g:841:1: expression : conditionalExpression (a0= assignmentOperator expression )? ;
+    # Java.g:829:1: expression : conditionalExpression (a0= assignmentOperator expression )? ;
     def expression(self, ):
 
         retval = self.expression_return()
@@ -12926,9 +12879,9 @@ class JavaParser(LocalParser):
 
         a0 = None
 
-        conditionalExpression411 = None
+        conditionalExpression410 = None
 
-        expression412 = None
+        expression411 = None
 
 
 
@@ -12940,44 +12893,35 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:842:5: ( conditionalExpression (a0= assignmentOperator expression )? )
-                # Java.g:842:9: conditionalExpression (a0= assignmentOperator expression )?
+                # Java.g:830:5: ( conditionalExpression (a0= assignmentOperator expression )? )
+                # Java.g:830:9: conditionalExpression (a0= assignmentOperator expression )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_conditionalExpression_in_expression4530)
-                conditionalExpression411 = self.conditionalExpression()
+                self._state.following.append(self.FOLLOW_conditionalExpression_in_expression4481)
+                conditionalExpression410 = self.conditionalExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, conditionalExpression411.tree)
-                # Java.g:843:9: (a0= assignmentOperator expression )?
+                    self._adaptor.addChild(root_0, conditionalExpression410.tree)
+                # Java.g:830:31: (a0= assignmentOperator expression )?
                 alt126 = 2
                 alt126 = self.dfa126.predict(self.input)
                 if alt126 == 1:
-                    # Java.g:843:10: a0= assignmentOperator expression
+                    # Java.g:830:32: a0= assignmentOperator expression
                     pass 
-                    self._state.following.append(self.FOLLOW_assignmentOperator_in_expression4543)
+                    self._state.following.append(self.FOLLOW_assignmentOperator_in_expression4486)
                     a0 = self.assignmentOperator()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
                         self._adaptor.addChild(root_0, a0.tree)
-                    if self._state.backtracking == 0:
-                                 
-                        op = ((a0 is not None) and [self.input.toString(a0.start,a0.stop)] or [None])[0]
-                        self.py_expr_stack[TOP].expr.update(format=FS.op(op))
-                        if op == '>>>=':
-                            self.py_module_stack[-1].module.addBsrSource()
-
-                                
-
-                    self._state.following.append(self.FOLLOW_expression_in_expression4563)
-                    expression412 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_expression4488)
+                    expression411 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression412.tree)
+                        self._adaptor.addChild(root_0, expression411.tree)
 
 
 
@@ -13017,7 +12961,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "assignmentOperator"
-    # Java.g:856:1: assignmentOperator : ( '=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '%=' | ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}? | ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}? | ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?);
+    # Java.g:834:1: assignmentOperator : ( '=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '%=' | ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}? | ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}? | ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?);
     def assignmentOperator(self, ):
 
         retval = self.assignmentOperator_return()
@@ -13029,7 +12973,8 @@ class JavaParser(LocalParser):
         t2 = None
         t3 = None
         t4 = None
-        char_literal413 = None
+        char_literal412 = None
+        string_literal413 = None
         string_literal414 = None
         string_literal415 = None
         string_literal416 = None
@@ -13037,13 +12982,13 @@ class JavaParser(LocalParser):
         string_literal418 = None
         string_literal419 = None
         string_literal420 = None
-        string_literal421 = None
 
         t1_tree = None
         t2_tree = None
         t3_tree = None
         t4_tree = None
-        char_literal413_tree = None
+        char_literal412_tree = None
+        string_literal413_tree = None
         string_literal414_tree = None
         string_literal415_tree = None
         string_literal416_tree = None
@@ -13051,7 +12996,6 @@ class JavaParser(LocalParser):
         string_literal418_tree = None
         string_literal419_tree = None
         string_literal420_tree = None
-        string_literal421_tree = None
 
         success = False
         try:
@@ -13061,28 +13005,41 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:857:5: ( '=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '%=' | ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}? | ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}? | ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?)
+                # Java.g:835:5: ( '=' | '+=' | '-=' | '*=' | '/=' | '&=' | '|=' | '^=' | '%=' | ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}? | ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}? | ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?)
                 alt127 = 12
                 alt127 = self.dfa127.predict(self.input)
                 if alt127 == 1:
-                    # Java.g:857:9: '='
+                    # Java.g:835:9: '='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal413=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4594)
+                    char_literal412=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4510)
                     if self._state.backtracking == 0:
 
-                        char_literal413_tree = self._adaptor.createWithPayload(char_literal413)
-                        self._adaptor.addChild(root_0, char_literal413_tree)
+                        char_literal412_tree = self._adaptor.createWithPayload(char_literal412)
+                        self._adaptor.addChild(root_0, char_literal412_tree)
 
 
 
                 elif alt127 == 2:
-                    # Java.g:858:9: '+='
+                    # Java.g:836:9: '+='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal414=self.match(self.input, 89, self.FOLLOW_89_in_assignmentOperator4604)
+                    string_literal413=self.match(self.input, 89, self.FOLLOW_89_in_assignmentOperator4520)
+                    if self._state.backtracking == 0:
+
+                        string_literal413_tree = self._adaptor.createWithPayload(string_literal413)
+                        self._adaptor.addChild(root_0, string_literal413_tree)
+
+
+
+                elif alt127 == 3:
+                    # Java.g:837:9: '-='
+                    pass 
+                    root_0 = self._adaptor.nil()
+
+                    string_literal414=self.match(self.input, 90, self.FOLLOW_90_in_assignmentOperator4530)
                     if self._state.backtracking == 0:
 
                         string_literal414_tree = self._adaptor.createWithPayload(string_literal414)
@@ -13090,12 +13047,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 3:
-                    # Java.g:859:9: '-='
+                elif alt127 == 4:
+                    # Java.g:838:9: '*='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal415=self.match(self.input, 90, self.FOLLOW_90_in_assignmentOperator4614)
+                    string_literal415=self.match(self.input, 91, self.FOLLOW_91_in_assignmentOperator4540)
                     if self._state.backtracking == 0:
 
                         string_literal415_tree = self._adaptor.createWithPayload(string_literal415)
@@ -13103,12 +13060,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 4:
-                    # Java.g:860:9: '*='
+                elif alt127 == 5:
+                    # Java.g:839:9: '/='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal416=self.match(self.input, 91, self.FOLLOW_91_in_assignmentOperator4624)
+                    string_literal416=self.match(self.input, 92, self.FOLLOW_92_in_assignmentOperator4550)
                     if self._state.backtracking == 0:
 
                         string_literal416_tree = self._adaptor.createWithPayload(string_literal416)
@@ -13116,12 +13073,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 5:
-                    # Java.g:861:9: '/='
+                elif alt127 == 6:
+                    # Java.g:840:9: '&='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal417=self.match(self.input, 92, self.FOLLOW_92_in_assignmentOperator4634)
+                    string_literal417=self.match(self.input, 93, self.FOLLOW_93_in_assignmentOperator4560)
                     if self._state.backtracking == 0:
 
                         string_literal417_tree = self._adaptor.createWithPayload(string_literal417)
@@ -13129,12 +13086,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 6:
-                    # Java.g:862:9: '&='
+                elif alt127 == 7:
+                    # Java.g:841:9: '|='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal418=self.match(self.input, 93, self.FOLLOW_93_in_assignmentOperator4644)
+                    string_literal418=self.match(self.input, 94, self.FOLLOW_94_in_assignmentOperator4570)
                     if self._state.backtracking == 0:
 
                         string_literal418_tree = self._adaptor.createWithPayload(string_literal418)
@@ -13142,12 +13099,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 7:
-                    # Java.g:863:9: '|='
+                elif alt127 == 8:
+                    # Java.g:842:9: '^='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal419=self.match(self.input, 94, self.FOLLOW_94_in_assignmentOperator4654)
+                    string_literal419=self.match(self.input, 95, self.FOLLOW_95_in_assignmentOperator4580)
                     if self._state.backtracking == 0:
 
                         string_literal419_tree = self._adaptor.createWithPayload(string_literal419)
@@ -13155,12 +13112,12 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 8:
-                    # Java.g:864:9: '^='
+                elif alt127 == 9:
+                    # Java.g:843:9: '%='
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal420=self.match(self.input, 95, self.FOLLOW_95_in_assignmentOperator4664)
+                    string_literal420=self.match(self.input, 96, self.FOLLOW_96_in_assignmentOperator4590)
                     if self._state.backtracking == 0:
 
                         string_literal420_tree = self._adaptor.createWithPayload(string_literal420)
@@ -13168,37 +13125,24 @@ class JavaParser(LocalParser):
 
 
 
-                elif alt127 == 9:
-                    # Java.g:865:9: '%='
-                    pass 
-                    root_0 = self._adaptor.nil()
-
-                    string_literal421=self.match(self.input, 96, self.FOLLOW_96_in_assignmentOperator4674)
-                    if self._state.backtracking == 0:
-
-                        string_literal421_tree = self._adaptor.createWithPayload(string_literal421)
-                        self._adaptor.addChild(root_0, string_literal421_tree)
-
-
-
                 elif alt127 == 10:
-                    # Java.g:866:9: ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}?
+                    # Java.g:844:9: ( '<' '<' '=' )=>t1= '<' t2= '<' t3= '=' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 42, self.FOLLOW_42_in_assignmentOperator4695)
+                    t1=self.match(self.input, 42, self.FOLLOW_42_in_assignmentOperator4611)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 42, self.FOLLOW_42_in_assignmentOperator4699)
+                    t2=self.match(self.input, 42, self.FOLLOW_42_in_assignmentOperator4615)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
                         self._adaptor.addChild(root_0, t2_tree)
 
-                    t3=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4703)
+                    t3=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4619)
                     if self._state.backtracking == 0:
 
                         t3_tree = self._adaptor.createWithPayload(t3)
@@ -13216,29 +13160,29 @@ class JavaParser(LocalParser):
 
 
                 elif alt127 == 11:
-                    # Java.g:868:9: ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}?
+                    # Java.g:846:9: ( '>' '>' '>' '=' )=>t1= '>' t2= '>' t3= '>' t4= '=' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4736)
+                    t1=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4652)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4740)
+                    t2=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4656)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
                         self._adaptor.addChild(root_0, t2_tree)
 
-                    t3=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4744)
+                    t3=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4660)
                     if self._state.backtracking == 0:
 
                         t3_tree = self._adaptor.createWithPayload(t3)
                         self._adaptor.addChild(root_0, t3_tree)
 
-                    t4=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4748)
+                    t4=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4664)
                     if self._state.backtracking == 0:
 
                         t4_tree = self._adaptor.createWithPayload(t4)
@@ -13258,23 +13202,23 @@ class JavaParser(LocalParser):
 
 
                 elif alt127 == 12:
-                    # Java.g:870:9: ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?
+                    # Java.g:848:9: ( '>' '>' '=' )=>t1= '>' t2= '>' t3= '=' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4779)
+                    t1=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4695)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4783)
+                    t2=self.match(self.input, 44, self.FOLLOW_44_in_assignmentOperator4699)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
                         self._adaptor.addChild(root_0, t2_tree)
 
-                    t3=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4787)
+                    t3=self.match(self.input, 53, self.FOLLOW_53_in_assignmentOperator4703)
                     if self._state.backtracking == 0:
 
                         t3_tree = self._adaptor.createWithPayload(t3)
@@ -13324,7 +13268,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "conditionalExpression"
-    # Java.g:875:1: conditionalExpression : conditionalOrExpression ( '?' expression ':' expression )? ;
+    # Java.g:853:1: conditionalExpression : conditionalOrExpression ( '?' expression ':' expression )? ;
     def conditionalExpression(self, ):
 
         retval = self.conditionalExpression_return()
@@ -13332,17 +13276,17 @@ class JavaParser(LocalParser):
         conditionalExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal423 = None
-        char_literal425 = None
-        conditionalOrExpression422 = None
+        char_literal422 = None
+        char_literal424 = None
+        conditionalOrExpression421 = None
 
-        expression424 = None
+        expression423 = None
 
-        expression426 = None
+        expression425 = None
 
 
-        char_literal423_tree = None
-        char_literal425_tree = None
+        char_literal422_tree = None
+        char_literal424_tree = None
 
         success = False
         try:
@@ -13352,50 +13296,50 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:876:5: ( conditionalOrExpression ( '?' expression ':' expression )? )
-                # Java.g:876:9: conditionalOrExpression ( '?' expression ':' expression )?
+                # Java.g:854:5: ( conditionalOrExpression ( '?' expression ':' expression )? )
+                # Java.g:854:9: conditionalOrExpression ( '?' expression ':' expression )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_conditionalOrExpression_in_conditionalExpression4817)
-                conditionalOrExpression422 = self.conditionalOrExpression()
+                self._state.following.append(self.FOLLOW_conditionalOrExpression_in_conditionalExpression4733)
+                conditionalOrExpression421 = self.conditionalOrExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, conditionalOrExpression422.tree)
-                # Java.g:876:33: ( '?' expression ':' expression )?
+                    self._adaptor.addChild(root_0, conditionalOrExpression421.tree)
+                # Java.g:854:33: ( '?' expression ':' expression )?
                 alt128 = 2
                 LA128_0 = self.input.LA(1)
 
                 if (LA128_0 == 66) :
                     alt128 = 1
                 if alt128 == 1:
-                    # Java.g:876:35: '?' expression ':' expression
+                    # Java.g:854:34: '?' expression ':' expression
                     pass 
-                    char_literal423=self.match(self.input, 66, self.FOLLOW_66_in_conditionalExpression4821)
+                    char_literal422=self.match(self.input, 66, self.FOLLOW_66_in_conditionalExpression4736)
                     if self._state.backtracking == 0:
 
-                        char_literal423_tree = self._adaptor.createWithPayload(char_literal423)
-                        self._adaptor.addChild(root_0, char_literal423_tree)
+                        char_literal422_tree = self._adaptor.createWithPayload(char_literal422)
+                        self._adaptor.addChild(root_0, char_literal422_tree)
 
-                    self._state.following.append(self.FOLLOW_expression_in_conditionalExpression4823)
-                    expression424 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_conditionalExpression4738)
+                    expression423 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression424.tree)
-                    char_literal425=self.match(self.input, 74, self.FOLLOW_74_in_conditionalExpression4825)
+                        self._adaptor.addChild(root_0, expression423.tree)
+                    char_literal424=self.match(self.input, 74, self.FOLLOW_74_in_conditionalExpression4740)
                     if self._state.backtracking == 0:
 
-                        char_literal425_tree = self._adaptor.createWithPayload(char_literal425)
-                        self._adaptor.addChild(root_0, char_literal425_tree)
+                        char_literal424_tree = self._adaptor.createWithPayload(char_literal424)
+                        self._adaptor.addChild(root_0, char_literal424_tree)
 
-                    self._state.following.append(self.FOLLOW_expression_in_conditionalExpression4827)
-                    expression426 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_conditionalExpression4742)
+                    expression425 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression426.tree)
+                        self._adaptor.addChild(root_0, expression425.tree)
 
 
 
@@ -13435,7 +13379,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "conditionalOrExpression"
-    # Java.g:880:1: conditionalOrExpression : conditionalAndExpression ( '||' conditionalAndExpression )* ;
+    # Java.g:858:1: conditionalOrExpression : conditionalAndExpression ( '||' conditionalAndExpression )* ;
     def conditionalOrExpression(self, ):
 
         retval = self.conditionalOrExpression_return()
@@ -13443,13 +13387,13 @@ class JavaParser(LocalParser):
         conditionalOrExpression_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal428 = None
-        conditionalAndExpression427 = None
+        string_literal427 = None
+        conditionalAndExpression426 = None
 
-        conditionalAndExpression429 = None
+        conditionalAndExpression428 = None
 
 
-        string_literal428_tree = None
+        string_literal427_tree = None
 
         success = False
         try:
@@ -13459,18 +13403,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:881:5: ( conditionalAndExpression ( '||' conditionalAndExpression )* )
-                # Java.g:881:9: conditionalAndExpression ( '||' conditionalAndExpression )*
+                # Java.g:859:5: ( conditionalAndExpression ( '||' conditionalAndExpression )* )
+                # Java.g:859:9: conditionalAndExpression ( '||' conditionalAndExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_conditionalAndExpression_in_conditionalOrExpression4850)
-                conditionalAndExpression427 = self.conditionalAndExpression()
+                self._state.following.append(self.FOLLOW_conditionalAndExpression_in_conditionalOrExpression4765)
+                conditionalAndExpression426 = self.conditionalAndExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, conditionalAndExpression427.tree)
-                # Java.g:881:34: ( '||' conditionalAndExpression )*
+                    self._adaptor.addChild(root_0, conditionalAndExpression426.tree)
+                # Java.g:859:34: ( '||' conditionalAndExpression )*
                 while True: #loop129
                     alt129 = 2
                     LA129_0 = self.input.LA(1)
@@ -13480,20 +13424,20 @@ class JavaParser(LocalParser):
 
 
                     if alt129 == 1:
-                        # Java.g:881:36: '||' conditionalAndExpression
+                        # Java.g:859:36: '||' conditionalAndExpression
                         pass 
-                        string_literal428=self.match(self.input, 97, self.FOLLOW_97_in_conditionalOrExpression4854)
+                        string_literal427=self.match(self.input, 97, self.FOLLOW_97_in_conditionalOrExpression4769)
                         if self._state.backtracking == 0:
 
-                            string_literal428_tree = self._adaptor.createWithPayload(string_literal428)
-                            self._adaptor.addChild(root_0, string_literal428_tree)
+                            string_literal427_tree = self._adaptor.createWithPayload(string_literal427)
+                            self._adaptor.addChild(root_0, string_literal427_tree)
 
-                        self._state.following.append(self.FOLLOW_conditionalAndExpression_in_conditionalOrExpression4856)
-                        conditionalAndExpression429 = self.conditionalAndExpression()
+                        self._state.following.append(self.FOLLOW_conditionalAndExpression_in_conditionalOrExpression4771)
+                        conditionalAndExpression428 = self.conditionalAndExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, conditionalAndExpression429.tree)
+                            self._adaptor.addChild(root_0, conditionalAndExpression428.tree)
 
 
                     else:
@@ -13536,7 +13480,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "conditionalAndExpression"
-    # Java.g:885:1: conditionalAndExpression : inclusiveOrExpression ( '&&' inclusiveOrExpression )* ;
+    # Java.g:863:1: conditionalAndExpression : inclusiveOrExpression ( '&&' inclusiveOrExpression )* ;
     def conditionalAndExpression(self, ):
 
         retval = self.conditionalAndExpression_return()
@@ -13544,13 +13488,13 @@ class JavaParser(LocalParser):
         conditionalAndExpression_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal431 = None
-        inclusiveOrExpression430 = None
+        string_literal430 = None
+        inclusiveOrExpression429 = None
 
-        inclusiveOrExpression432 = None
+        inclusiveOrExpression431 = None
 
 
-        string_literal431_tree = None
+        string_literal430_tree = None
 
         success = False
         try:
@@ -13560,18 +13504,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:886:5: ( inclusiveOrExpression ( '&&' inclusiveOrExpression )* )
-                # Java.g:886:9: inclusiveOrExpression ( '&&' inclusiveOrExpression )*
+                # Java.g:864:5: ( inclusiveOrExpression ( '&&' inclusiveOrExpression )* )
+                # Java.g:864:9: inclusiveOrExpression ( '&&' inclusiveOrExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4879)
-                inclusiveOrExpression430 = self.inclusiveOrExpression()
+                self._state.following.append(self.FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4794)
+                inclusiveOrExpression429 = self.inclusiveOrExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, inclusiveOrExpression430.tree)
-                # Java.g:886:31: ( '&&' inclusiveOrExpression )*
+                    self._adaptor.addChild(root_0, inclusiveOrExpression429.tree)
+                # Java.g:864:31: ( '&&' inclusiveOrExpression )*
                 while True: #loop130
                     alt130 = 2
                     LA130_0 = self.input.LA(1)
@@ -13581,20 +13525,20 @@ class JavaParser(LocalParser):
 
 
                     if alt130 == 1:
-                        # Java.g:886:33: '&&' inclusiveOrExpression
+                        # Java.g:864:33: '&&' inclusiveOrExpression
                         pass 
-                        string_literal431=self.match(self.input, 98, self.FOLLOW_98_in_conditionalAndExpression4883)
+                        string_literal430=self.match(self.input, 98, self.FOLLOW_98_in_conditionalAndExpression4798)
                         if self._state.backtracking == 0:
 
-                            string_literal431_tree = self._adaptor.createWithPayload(string_literal431)
-                            self._adaptor.addChild(root_0, string_literal431_tree)
+                            string_literal430_tree = self._adaptor.createWithPayload(string_literal430)
+                            self._adaptor.addChild(root_0, string_literal430_tree)
 
-                        self._state.following.append(self.FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4885)
-                        inclusiveOrExpression432 = self.inclusiveOrExpression()
+                        self._state.following.append(self.FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4800)
+                        inclusiveOrExpression431 = self.inclusiveOrExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, inclusiveOrExpression432.tree)
+                            self._adaptor.addChild(root_0, inclusiveOrExpression431.tree)
 
 
                     else:
@@ -13637,7 +13581,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "inclusiveOrExpression"
-    # Java.g:890:1: inclusiveOrExpression : exclusiveOrExpression ( '|' exclusiveOrExpression )* ;
+    # Java.g:868:1: inclusiveOrExpression : exclusiveOrExpression ( '|' exclusiveOrExpression )* ;
     def inclusiveOrExpression(self, ):
 
         retval = self.inclusiveOrExpression_return()
@@ -13645,13 +13589,13 @@ class JavaParser(LocalParser):
         inclusiveOrExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal434 = None
-        exclusiveOrExpression433 = None
+        char_literal433 = None
+        exclusiveOrExpression432 = None
 
-        exclusiveOrExpression435 = None
+        exclusiveOrExpression434 = None
 
 
-        char_literal434_tree = None
+        char_literal433_tree = None
 
         success = False
         try:
@@ -13661,18 +13605,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:891:5: ( exclusiveOrExpression ( '|' exclusiveOrExpression )* )
-                # Java.g:891:9: exclusiveOrExpression ( '|' exclusiveOrExpression )*
+                # Java.g:869:5: ( exclusiveOrExpression ( '|' exclusiveOrExpression )* )
+                # Java.g:869:9: exclusiveOrExpression ( '|' exclusiveOrExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4908)
-                exclusiveOrExpression433 = self.exclusiveOrExpression()
+                self._state.following.append(self.FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4823)
+                exclusiveOrExpression432 = self.exclusiveOrExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, exclusiveOrExpression433.tree)
-                # Java.g:891:31: ( '|' exclusiveOrExpression )*
+                    self._adaptor.addChild(root_0, exclusiveOrExpression432.tree)
+                # Java.g:869:31: ( '|' exclusiveOrExpression )*
                 while True: #loop131
                     alt131 = 2
                     LA131_0 = self.input.LA(1)
@@ -13682,20 +13626,20 @@ class JavaParser(LocalParser):
 
 
                     if alt131 == 1:
-                        # Java.g:891:33: '|' exclusiveOrExpression
+                        # Java.g:869:33: '|' exclusiveOrExpression
                         pass 
-                        char_literal434=self.match(self.input, 99, self.FOLLOW_99_in_inclusiveOrExpression4912)
+                        char_literal433=self.match(self.input, 99, self.FOLLOW_99_in_inclusiveOrExpression4827)
                         if self._state.backtracking == 0:
 
-                            char_literal434_tree = self._adaptor.createWithPayload(char_literal434)
-                            self._adaptor.addChild(root_0, char_literal434_tree)
+                            char_literal433_tree = self._adaptor.createWithPayload(char_literal433)
+                            self._adaptor.addChild(root_0, char_literal433_tree)
 
-                        self._state.following.append(self.FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4914)
-                        exclusiveOrExpression435 = self.exclusiveOrExpression()
+                        self._state.following.append(self.FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4829)
+                        exclusiveOrExpression434 = self.exclusiveOrExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, exclusiveOrExpression435.tree)
+                            self._adaptor.addChild(root_0, exclusiveOrExpression434.tree)
 
 
                     else:
@@ -13738,7 +13682,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "exclusiveOrExpression"
-    # Java.g:895:1: exclusiveOrExpression : andExpression ( '^' andExpression )* ;
+    # Java.g:873:1: exclusiveOrExpression : andExpression ( '^' andExpression )* ;
     def exclusiveOrExpression(self, ):
 
         retval = self.exclusiveOrExpression_return()
@@ -13746,13 +13690,13 @@ class JavaParser(LocalParser):
         exclusiveOrExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal437 = None
-        andExpression436 = None
+        char_literal436 = None
+        andExpression435 = None
 
-        andExpression438 = None
+        andExpression437 = None
 
 
-        char_literal437_tree = None
+        char_literal436_tree = None
 
         success = False
         try:
@@ -13762,18 +13706,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:896:5: ( andExpression ( '^' andExpression )* )
-                # Java.g:896:9: andExpression ( '^' andExpression )*
+                # Java.g:874:5: ( andExpression ( '^' andExpression )* )
+                # Java.g:874:9: andExpression ( '^' andExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_andExpression_in_exclusiveOrExpression4937)
-                andExpression436 = self.andExpression()
+                self._state.following.append(self.FOLLOW_andExpression_in_exclusiveOrExpression4852)
+                andExpression435 = self.andExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, andExpression436.tree)
-                # Java.g:896:23: ( '^' andExpression )*
+                    self._adaptor.addChild(root_0, andExpression435.tree)
+                # Java.g:874:23: ( '^' andExpression )*
                 while True: #loop132
                     alt132 = 2
                     LA132_0 = self.input.LA(1)
@@ -13783,20 +13727,20 @@ class JavaParser(LocalParser):
 
 
                     if alt132 == 1:
-                        # Java.g:896:25: '^' andExpression
+                        # Java.g:874:25: '^' andExpression
                         pass 
-                        char_literal437=self.match(self.input, 100, self.FOLLOW_100_in_exclusiveOrExpression4941)
+                        char_literal436=self.match(self.input, 100, self.FOLLOW_100_in_exclusiveOrExpression4856)
                         if self._state.backtracking == 0:
 
-                            char_literal437_tree = self._adaptor.createWithPayload(char_literal437)
-                            self._adaptor.addChild(root_0, char_literal437_tree)
+                            char_literal436_tree = self._adaptor.createWithPayload(char_literal436)
+                            self._adaptor.addChild(root_0, char_literal436_tree)
 
-                        self._state.following.append(self.FOLLOW_andExpression_in_exclusiveOrExpression4943)
-                        andExpression438 = self.andExpression()
+                        self._state.following.append(self.FOLLOW_andExpression_in_exclusiveOrExpression4858)
+                        andExpression437 = self.andExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, andExpression438.tree)
+                            self._adaptor.addChild(root_0, andExpression437.tree)
 
 
                     else:
@@ -13839,7 +13783,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "andExpression"
-    # Java.g:900:1: andExpression : equalityExpression ( '&' equalityExpression )* ;
+    # Java.g:878:1: andExpression : equalityExpression ( '&' equalityExpression )* ;
     def andExpression(self, ):
 
         retval = self.andExpression_return()
@@ -13847,13 +13791,13 @@ class JavaParser(LocalParser):
         andExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal440 = None
-        equalityExpression439 = None
+        char_literal439 = None
+        equalityExpression438 = None
 
-        equalityExpression441 = None
+        equalityExpression440 = None
 
 
-        char_literal440_tree = None
+        char_literal439_tree = None
 
         success = False
         try:
@@ -13863,18 +13807,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:901:5: ( equalityExpression ( '&' equalityExpression )* )
-                # Java.g:901:9: equalityExpression ( '&' equalityExpression )*
+                # Java.g:879:5: ( equalityExpression ( '&' equalityExpression )* )
+                # Java.g:879:9: equalityExpression ( '&' equalityExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_equalityExpression_in_andExpression4966)
-                equalityExpression439 = self.equalityExpression()
+                self._state.following.append(self.FOLLOW_equalityExpression_in_andExpression4881)
+                equalityExpression438 = self.equalityExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, equalityExpression439.tree)
-                # Java.g:901:28: ( '&' equalityExpression )*
+                    self._adaptor.addChild(root_0, equalityExpression438.tree)
+                # Java.g:879:28: ( '&' equalityExpression )*
                 while True: #loop133
                     alt133 = 2
                     LA133_0 = self.input.LA(1)
@@ -13884,20 +13828,20 @@ class JavaParser(LocalParser):
 
 
                     if alt133 == 1:
-                        # Java.g:901:30: '&' equalityExpression
+                        # Java.g:879:30: '&' equalityExpression
                         pass 
-                        char_literal440=self.match(self.input, 45, self.FOLLOW_45_in_andExpression4970)
+                        char_literal439=self.match(self.input, 45, self.FOLLOW_45_in_andExpression4885)
                         if self._state.backtracking == 0:
 
-                            char_literal440_tree = self._adaptor.createWithPayload(char_literal440)
-                            self._adaptor.addChild(root_0, char_literal440_tree)
+                            char_literal439_tree = self._adaptor.createWithPayload(char_literal439)
+                            self._adaptor.addChild(root_0, char_literal439_tree)
 
-                        self._state.following.append(self.FOLLOW_equalityExpression_in_andExpression4972)
-                        equalityExpression441 = self.equalityExpression()
+                        self._state.following.append(self.FOLLOW_equalityExpression_in_andExpression4887)
+                        equalityExpression440 = self.equalityExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, equalityExpression441.tree)
+                            self._adaptor.addChild(root_0, equalityExpression440.tree)
 
 
                     else:
@@ -13940,7 +13884,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "equalityExpression"
-    # Java.g:905:1: equalityExpression : instanceOfExpression ( ( '==' | '!=' ) instanceOfExpression )* ;
+    # Java.g:883:1: equalityExpression : instanceOfExpression (eq0= ( '==' | '!=' ) instanceOfExpression )* ;
     def equalityExpression(self, ):
 
         retval = self.equalityExpression_return()
@@ -13948,13 +13892,13 @@ class JavaParser(LocalParser):
         equalityExpression_StartIndex = self.input.index()
         root_0 = None
 
-        set443 = None
+        eq0 = None
+        instanceOfExpression441 = None
+
         instanceOfExpression442 = None
 
-        instanceOfExpression444 = None
 
-
-        set443_tree = None
+        eq0_tree = None
 
         success = False
         try:
@@ -13964,18 +13908,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:906:5: ( instanceOfExpression ( ( '==' | '!=' ) instanceOfExpression )* )
-                # Java.g:906:9: instanceOfExpression ( ( '==' | '!=' ) instanceOfExpression )*
+                # Java.g:884:5: ( instanceOfExpression (eq0= ( '==' | '!=' ) instanceOfExpression )* )
+                # Java.g:884:9: instanceOfExpression (eq0= ( '==' | '!=' ) instanceOfExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_instanceOfExpression_in_equalityExpression4995)
-                instanceOfExpression442 = self.instanceOfExpression()
+                self._state.following.append(self.FOLLOW_instanceOfExpression_in_equalityExpression4910)
+                instanceOfExpression441 = self.instanceOfExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, instanceOfExpression442.tree)
-                # Java.g:906:30: ( ( '==' | '!=' ) instanceOfExpression )*
+                    self._adaptor.addChild(root_0, instanceOfExpression441.tree)
+                # Java.g:885:9: (eq0= ( '==' | '!=' ) instanceOfExpression )*
                 while True: #loop134
                     alt134 = 2
                     LA134_0 = self.input.LA(1)
@@ -13985,13 +13929,13 @@ class JavaParser(LocalParser):
 
 
                     if alt134 == 1:
-                        # Java.g:906:32: ( '==' | '!=' ) instanceOfExpression
+                        # Java.g:885:10: eq0= ( '==' | '!=' ) instanceOfExpression
                         pass 
-                        set443 = self.input.LT(1)
+                        eq0 = self.input.LT(1)
                         if (101 <= self.input.LA(1) <= 102):
                             self.input.consume()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set443))
+                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(eq0))
                             self._state.errorRecovery = False
 
                         else:
@@ -14002,12 +13946,12 @@ class JavaParser(LocalParser):
                             raise mse
 
 
-                        self._state.following.append(self.FOLLOW_instanceOfExpression_in_equalityExpression5007)
-                        instanceOfExpression444 = self.instanceOfExpression()
+                        self._state.following.append(self.FOLLOW_instanceOfExpression_in_equalityExpression4939)
+                        instanceOfExpression442 = self.instanceOfExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, instanceOfExpression444.tree)
+                            self._adaptor.addChild(root_0, instanceOfExpression442.tree)
 
 
                     else:
@@ -14050,7 +13994,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "instanceOfExpression"
-    # Java.g:910:1: instanceOfExpression : relationalExpression ( 'instanceof' type )? ;
+    # Java.g:891:1: instanceOfExpression : relationalExpression ( 'instanceof' type )? ;
     def instanceOfExpression(self, ):
 
         retval = self.instanceOfExpression_return()
@@ -14058,13 +14002,13 @@ class JavaParser(LocalParser):
         instanceOfExpression_StartIndex = self.input.index()
         root_0 = None
 
-        string_literal446 = None
-        relationalExpression445 = None
+        string_literal444 = None
+        relationalExpression443 = None
 
-        type447 = None
+        type445 = None
 
 
-        string_literal446_tree = None
+        string_literal444_tree = None
 
         success = False
         try:
@@ -14074,38 +14018,38 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:911:5: ( relationalExpression ( 'instanceof' type )? )
-                # Java.g:911:9: relationalExpression ( 'instanceof' type )?
+                # Java.g:892:5: ( relationalExpression ( 'instanceof' type )? )
+                # Java.g:892:9: relationalExpression ( 'instanceof' type )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_relationalExpression_in_instanceOfExpression5030)
-                relationalExpression445 = self.relationalExpression()
+                self._state.following.append(self.FOLLOW_relationalExpression_in_instanceOfExpression4970)
+                relationalExpression443 = self.relationalExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, relationalExpression445.tree)
-                # Java.g:911:30: ( 'instanceof' type )?
+                    self._adaptor.addChild(root_0, relationalExpression443.tree)
+                # Java.g:892:30: ( 'instanceof' type )?
                 alt135 = 2
                 LA135_0 = self.input.LA(1)
 
                 if (LA135_0 == 103) :
                     alt135 = 1
                 if alt135 == 1:
-                    # Java.g:911:31: 'instanceof' type
+                    # Java.g:892:31: 'instanceof' type
                     pass 
-                    string_literal446=self.match(self.input, 103, self.FOLLOW_103_in_instanceOfExpression5033)
+                    string_literal444=self.match(self.input, 103, self.FOLLOW_103_in_instanceOfExpression4973)
                     if self._state.backtracking == 0:
 
-                        string_literal446_tree = self._adaptor.createWithPayload(string_literal446)
-                        self._adaptor.addChild(root_0, string_literal446_tree)
+                        string_literal444_tree = self._adaptor.createWithPayload(string_literal444)
+                        self._adaptor.addChild(root_0, string_literal444_tree)
 
-                    self._state.following.append(self.FOLLOW_type_in_instanceOfExpression5035)
-                    type447 = self.type()
+                    self._state.following.append(self.FOLLOW_type_in_instanceOfExpression4975)
+                    type445 = self.type()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, type447.tree)
+                        self._adaptor.addChild(root_0, type445.tree)
 
 
 
@@ -14145,7 +14089,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "relationalExpression"
-    # Java.g:915:1: relationalExpression : shiftExpression ( relationalOp shiftExpression )* ;
+    # Java.g:896:1: relationalExpression : shiftExpression (op0= relationalOp shiftExpression )* ;
     def relationalExpression(self, ):
 
         retval = self.relationalExpression_return()
@@ -14153,11 +14097,11 @@ class JavaParser(LocalParser):
         relationalExpression_StartIndex = self.input.index()
         root_0 = None
 
-        shiftExpression448 = None
+        op0 = None
 
-        relationalOp449 = None
+        shiftExpression446 = None
 
-        shiftExpression450 = None
+        shiftExpression447 = None
 
 
 
@@ -14169,18 +14113,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:916:5: ( shiftExpression ( relationalOp shiftExpression )* )
-                # Java.g:916:9: shiftExpression ( relationalOp shiftExpression )*
+                # Java.g:897:5: ( shiftExpression (op0= relationalOp shiftExpression )* )
+                # Java.g:897:9: shiftExpression (op0= relationalOp shiftExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_shiftExpression_in_relationalExpression5057)
-                shiftExpression448 = self.shiftExpression()
+                self._state.following.append(self.FOLLOW_shiftExpression_in_relationalExpression4997)
+                shiftExpression446 = self.shiftExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, shiftExpression448.tree)
-                # Java.g:916:25: ( relationalOp shiftExpression )*
+                    self._adaptor.addChild(root_0, shiftExpression446.tree)
+                # Java.g:897:25: (op0= relationalOp shiftExpression )*
                 while True: #loop136
                     alt136 = 2
                     LA136_0 = self.input.LA(1)
@@ -14202,20 +14146,20 @@ class JavaParser(LocalParser):
 
 
                     if alt136 == 1:
-                        # Java.g:916:27: relationalOp shiftExpression
+                        # Java.g:897:26: op0= relationalOp shiftExpression
                         pass 
-                        self._state.following.append(self.FOLLOW_relationalOp_in_relationalExpression5061)
-                        relationalOp449 = self.relationalOp()
+                        self._state.following.append(self.FOLLOW_relationalOp_in_relationalExpression5002)
+                        op0 = self.relationalOp()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, relationalOp449.tree)
-                        self._state.following.append(self.FOLLOW_shiftExpression_in_relationalExpression5063)
-                        shiftExpression450 = self.shiftExpression()
+                            self._adaptor.addChild(root_0, op0.tree)
+                        self._state.following.append(self.FOLLOW_shiftExpression_in_relationalExpression5004)
+                        shiftExpression447 = self.shiftExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, shiftExpression450.tree)
+                            self._adaptor.addChild(root_0, shiftExpression447.tree)
 
 
                     else:
@@ -14258,7 +14202,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "relationalOp"
-    # Java.g:920:1: relationalOp : ( ( '<' '=' )=>t1= '<' t2= '=' {...}? | ( '>' '=' )=>t1= '>' t2= '=' {...}? | '<' | '>' );
+    # Java.g:901:1: relationalOp : ( ( '<' '=' )=>t1= '<' t2= '=' {...}? | ( '>' '=' )=>t1= '>' t2= '=' {...}? | '<' | '>' );
     def relationalOp(self, ):
 
         retval = self.relationalOp_return()
@@ -14268,13 +14212,13 @@ class JavaParser(LocalParser):
 
         t1 = None
         t2 = None
-        char_literal451 = None
-        char_literal452 = None
+        char_literal448 = None
+        char_literal449 = None
 
         t1_tree = None
         t2_tree = None
-        char_literal451_tree = None
-        char_literal452_tree = None
+        char_literal448_tree = None
+        char_literal449_tree = None
 
         success = False
         try:
@@ -14284,7 +14228,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:921:5: ( ( '<' '=' )=>t1= '<' t2= '=' {...}? | ( '>' '=' )=>t1= '>' t2= '=' {...}? | '<' | '>' )
+                # Java.g:902:5: ( ( '<' '=' )=>t1= '<' t2= '=' {...}? | ( '>' '=' )=>t1= '>' t2= '=' {...}? | '<' | '>' )
                 alt137 = 4
                 LA137_0 = self.input.LA(1)
 
@@ -14327,17 +14271,17 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt137 == 1:
-                    # Java.g:921:9: ( '<' '=' )=>t1= '<' t2= '=' {...}?
+                    # Java.g:902:9: ( '<' '=' )=>t1= '<' t2= '=' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 42, self.FOLLOW_42_in_relationalOp5095)
+                    t1=self.match(self.input, 42, self.FOLLOW_42_in_relationalOp5035)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 53, self.FOLLOW_53_in_relationalOp5099)
+                    t2=self.match(self.input, 53, self.FOLLOW_53_in_relationalOp5039)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
@@ -14353,17 +14297,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt137 == 2:
-                    # Java.g:923:9: ( '>' '=' )=>t1= '>' t2= '=' {...}?
+                    # Java.g:904:9: ( '>' '=' )=>t1= '>' t2= '=' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 44, self.FOLLOW_44_in_relationalOp5128)
+                    t1=self.match(self.input, 44, self.FOLLOW_44_in_relationalOp5068)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 53, self.FOLLOW_53_in_relationalOp5132)
+                    t2=self.match(self.input, 53, self.FOLLOW_53_in_relationalOp5072)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
@@ -14379,28 +14323,28 @@ class JavaParser(LocalParser):
 
 
                 elif alt137 == 3:
-                    # Java.g:925:9: '<'
+                    # Java.g:906:9: '<'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal451=self.match(self.input, 42, self.FOLLOW_42_in_relationalOp5152)
+                    char_literal448=self.match(self.input, 42, self.FOLLOW_42_in_relationalOp5092)
                     if self._state.backtracking == 0:
 
-                        char_literal451_tree = self._adaptor.createWithPayload(char_literal451)
-                        self._adaptor.addChild(root_0, char_literal451_tree)
+                        char_literal448_tree = self._adaptor.createWithPayload(char_literal448)
+                        self._adaptor.addChild(root_0, char_literal448_tree)
 
 
 
                 elif alt137 == 4:
-                    # Java.g:926:9: '>'
+                    # Java.g:907:9: '>'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal452=self.match(self.input, 44, self.FOLLOW_44_in_relationalOp5162)
+                    char_literal449=self.match(self.input, 44, self.FOLLOW_44_in_relationalOp5102)
                     if self._state.backtracking == 0:
 
-                        char_literal452_tree = self._adaptor.createWithPayload(char_literal452)
-                        self._adaptor.addChild(root_0, char_literal452_tree)
+                        char_literal449_tree = self._adaptor.createWithPayload(char_literal449)
+                        self._adaptor.addChild(root_0, char_literal449_tree)
 
 
 
@@ -14437,7 +14381,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "shiftExpression"
-    # Java.g:930:1: shiftExpression : additiveExpression ( shiftOp additiveExpression )* ;
+    # Java.g:911:1: shiftExpression : additiveExpression ( shiftOp additiveExpression )* ;
     def shiftExpression(self, ):
 
         retval = self.shiftExpression_return()
@@ -14445,11 +14389,11 @@ class JavaParser(LocalParser):
         shiftExpression_StartIndex = self.input.index()
         root_0 = None
 
-        additiveExpression453 = None
+        additiveExpression450 = None
 
-        shiftOp454 = None
+        shiftOp451 = None
 
-        additiveExpression455 = None
+        additiveExpression452 = None
 
 
 
@@ -14461,18 +14405,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:931:5: ( additiveExpression ( shiftOp additiveExpression )* )
-                # Java.g:931:9: additiveExpression ( shiftOp additiveExpression )*
+                # Java.g:912:5: ( additiveExpression ( shiftOp additiveExpression )* )
+                # Java.g:912:9: additiveExpression ( shiftOp additiveExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_additiveExpression_in_shiftExpression5182)
-                additiveExpression453 = self.additiveExpression()
+                self._state.following.append(self.FOLLOW_additiveExpression_in_shiftExpression5122)
+                additiveExpression450 = self.additiveExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, additiveExpression453.tree)
-                # Java.g:931:28: ( shiftOp additiveExpression )*
+                    self._adaptor.addChild(root_0, additiveExpression450.tree)
+                # Java.g:912:28: ( shiftOp additiveExpression )*
                 while True: #loop138
                     alt138 = 2
                     LA138_0 = self.input.LA(1)
@@ -14511,20 +14455,20 @@ class JavaParser(LocalParser):
 
 
                     if alt138 == 1:
-                        # Java.g:931:30: shiftOp additiveExpression
+                        # Java.g:912:30: shiftOp additiveExpression
                         pass 
-                        self._state.following.append(self.FOLLOW_shiftOp_in_shiftExpression5186)
-                        shiftOp454 = self.shiftOp()
+                        self._state.following.append(self.FOLLOW_shiftOp_in_shiftExpression5126)
+                        shiftOp451 = self.shiftOp()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, shiftOp454.tree)
-                        self._state.following.append(self.FOLLOW_additiveExpression_in_shiftExpression5188)
-                        additiveExpression455 = self.additiveExpression()
+                            self._adaptor.addChild(root_0, shiftOp451.tree)
+                        self._state.following.append(self.FOLLOW_additiveExpression_in_shiftExpression5128)
+                        additiveExpression452 = self.additiveExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, additiveExpression455.tree)
+                            self._adaptor.addChild(root_0, additiveExpression452.tree)
 
 
                     else:
@@ -14567,7 +14511,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "shiftOp"
-    # Java.g:935:1: shiftOp : ( ( '<' '<' )=>t1= '<' t2= '<' {...}? | ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}? | ( '>' '>' )=>t1= '>' t2= '>' {...}?);
+    # Java.g:916:1: shiftOp : ( ( '<' '<' )=>t1= '<' t2= '<' {...}? | ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}? | ( '>' '>' )=>t1= '>' t2= '>' {...}?);
     def shiftOp(self, ):
 
         retval = self.shiftOp_return()
@@ -14591,21 +14535,21 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:936:5: ( ( '<' '<' )=>t1= '<' t2= '<' {...}? | ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}? | ( '>' '>' )=>t1= '>' t2= '>' {...}?)
+                # Java.g:917:5: ( ( '<' '<' )=>t1= '<' t2= '<' {...}? | ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}? | ( '>' '>' )=>t1= '>' t2= '>' {...}?)
                 alt139 = 3
                 alt139 = self.dfa139.predict(self.input)
                 if alt139 == 1:
-                    # Java.g:936:9: ( '<' '<' )=>t1= '<' t2= '<' {...}?
+                    # Java.g:917:9: ( '<' '<' )=>t1= '<' t2= '<' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 42, self.FOLLOW_42_in_shiftOp5220)
+                    t1=self.match(self.input, 42, self.FOLLOW_42_in_shiftOp5160)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 42, self.FOLLOW_42_in_shiftOp5224)
+                    t2=self.match(self.input, 42, self.FOLLOW_42_in_shiftOp5164)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
@@ -14621,23 +14565,23 @@ class JavaParser(LocalParser):
 
 
                 elif alt139 == 2:
-                    # Java.g:938:9: ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}?
+                    # Java.g:919:9: ( '>' '>' '>' )=>t1= '>' t2= '>' t3= '>' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5255)
+                    t1=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5195)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5259)
+                    t2=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5199)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
                         self._adaptor.addChild(root_0, t2_tree)
 
-                    t3=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5263)
+                    t3=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5203)
                     if self._state.backtracking == 0:
 
                         t3_tree = self._adaptor.createWithPayload(t3)
@@ -14655,17 +14599,17 @@ class JavaParser(LocalParser):
 
 
                 elif alt139 == 3:
-                    # Java.g:940:9: ( '>' '>' )=>t1= '>' t2= '>' {...}?
+                    # Java.g:921:9: ( '>' '>' )=>t1= '>' t2= '>' {...}?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    t1=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5292)
+                    t1=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5232)
                     if self._state.backtracking == 0:
 
                         t1_tree = self._adaptor.createWithPayload(t1)
                         self._adaptor.addChild(root_0, t1_tree)
 
-                    t2=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5296)
+                    t2=self.match(self.input, 44, self.FOLLOW_44_in_shiftOp5236)
                     if self._state.backtracking == 0:
 
                         t2_tree = self._adaptor.createWithPayload(t2)
@@ -14713,7 +14657,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "additiveExpression"
-    # Java.g:945:1: additiveExpression : multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )* ;
+    # Java.g:926:1: additiveExpression : multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )* ;
     def additiveExpression(self, ):
 
         retval = self.additiveExpression_return()
@@ -14721,13 +14665,13 @@ class JavaParser(LocalParser):
         additiveExpression_StartIndex = self.input.index()
         root_0 = None
 
-        set457 = None
-        multiplicativeExpression456 = None
+        set454 = None
+        multiplicativeExpression453 = None
 
-        multiplicativeExpression458 = None
+        multiplicativeExpression455 = None
 
 
-        set457_tree = None
+        set454_tree = None
 
         success = False
         try:
@@ -14737,18 +14681,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:946:5: ( multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )* )
-                # Java.g:946:9: multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )*
+                # Java.g:927:5: ( multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )* )
+                # Java.g:927:9: multiplicativeExpression ( ( '+' | '-' ) multiplicativeExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_multiplicativeExpression_in_additiveExpression5326)
-                multiplicativeExpression456 = self.multiplicativeExpression()
+                self._state.following.append(self.FOLLOW_multiplicativeExpression_in_additiveExpression5266)
+                multiplicativeExpression453 = self.multiplicativeExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, multiplicativeExpression456.tree)
-                # Java.g:946:34: ( ( '+' | '-' ) multiplicativeExpression )*
+                    self._adaptor.addChild(root_0, multiplicativeExpression453.tree)
+                # Java.g:927:34: ( ( '+' | '-' ) multiplicativeExpression )*
                 while True: #loop140
                     alt140 = 2
                     LA140_0 = self.input.LA(1)
@@ -14758,13 +14702,13 @@ class JavaParser(LocalParser):
 
 
                     if alt140 == 1:
-                        # Java.g:946:36: ( '+' | '-' ) multiplicativeExpression
+                        # Java.g:927:36: ( '+' | '-' ) multiplicativeExpression
                         pass 
-                        set457 = self.input.LT(1)
+                        set454 = self.input.LT(1)
                         if (104 <= self.input.LA(1) <= 105):
                             self.input.consume()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set457))
+                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set454))
                             self._state.errorRecovery = False
 
                         else:
@@ -14775,12 +14719,12 @@ class JavaParser(LocalParser):
                             raise mse
 
 
-                        self._state.following.append(self.FOLLOW_multiplicativeExpression_in_additiveExpression5338)
-                        multiplicativeExpression458 = self.multiplicativeExpression()
+                        self._state.following.append(self.FOLLOW_multiplicativeExpression_in_additiveExpression5278)
+                        multiplicativeExpression455 = self.multiplicativeExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, multiplicativeExpression458.tree)
+                            self._adaptor.addChild(root_0, multiplicativeExpression455.tree)
 
 
                     else:
@@ -14823,7 +14767,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "multiplicativeExpression"
-    # Java.g:950:1: multiplicativeExpression : unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )* ;
+    # Java.g:931:1: multiplicativeExpression : unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )* ;
     def multiplicativeExpression(self, ):
 
         retval = self.multiplicativeExpression_return()
@@ -14831,13 +14775,13 @@ class JavaParser(LocalParser):
         multiplicativeExpression_StartIndex = self.input.index()
         root_0 = None
 
-        set460 = None
-        unaryExpression459 = None
+        set457 = None
+        unaryExpression456 = None
 
-        unaryExpression461 = None
+        unaryExpression458 = None
 
 
-        set460_tree = None
+        set457_tree = None
 
         success = False
         try:
@@ -14847,18 +14791,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:951:5: ( unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )* )
-                # Java.g:951:9: unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )*
+                # Java.g:932:5: ( unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )* )
+                # Java.g:932:9: unaryExpression ( ( '*' | '/' | '%' ) unaryExpression )*
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_unaryExpression_in_multiplicativeExpression5361)
-                unaryExpression459 = self.unaryExpression()
+                self._state.following.append(self.FOLLOW_unaryExpression_in_multiplicativeExpression5301)
+                unaryExpression456 = self.unaryExpression()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, unaryExpression459.tree)
-                # Java.g:951:25: ( ( '*' | '/' | '%' ) unaryExpression )*
+                    self._adaptor.addChild(root_0, unaryExpression456.tree)
+                # Java.g:932:25: ( ( '*' | '/' | '%' ) unaryExpression )*
                 while True: #loop141
                     alt141 = 2
                     LA141_0 = self.input.LA(1)
@@ -14868,13 +14812,13 @@ class JavaParser(LocalParser):
 
 
                     if alt141 == 1:
-                        # Java.g:951:27: ( '*' | '/' | '%' ) unaryExpression
+                        # Java.g:932:27: ( '*' | '/' | '%' ) unaryExpression
                         pass 
-                        set460 = self.input.LT(1)
+                        set457 = self.input.LT(1)
                         if self.input.LA(1) == 32 or (106 <= self.input.LA(1) <= 107):
                             self.input.consume()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set460))
+                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set457))
                             self._state.errorRecovery = False
 
                         else:
@@ -14885,12 +14829,12 @@ class JavaParser(LocalParser):
                             raise mse
 
 
-                        self._state.following.append(self.FOLLOW_unaryExpression_in_multiplicativeExpression5379)
-                        unaryExpression461 = self.unaryExpression()
+                        self._state.following.append(self.FOLLOW_unaryExpression_in_multiplicativeExpression5319)
+                        unaryExpression458 = self.unaryExpression()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, unaryExpression461.tree)
+                            self._adaptor.addChild(root_0, unaryExpression458.tree)
 
 
                     else:
@@ -14933,7 +14877,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "unaryExpression"
-    # Java.g:955:1: unaryExpression : ( '+' unaryExpression | '-' unaryExpression | '++' unaryExpression | '--' unaryExpression | unaryExpressionNotPlusMinus );
+    # Java.g:936:1: unaryExpression : ( '+' unaryExpression | '-' unaryExpression | '++' unaryExpression | '--' unaryExpression | unaryExpressionNotPlusMinus );
     def unaryExpression(self, ):
 
         retval = self.unaryExpression_return()
@@ -14941,25 +14885,25 @@ class JavaParser(LocalParser):
         unaryExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal462 = None
-        char_literal464 = None
-        string_literal466 = None
-        string_literal468 = None
-        unaryExpression463 = None
+        char_literal459 = None
+        char_literal461 = None
+        string_literal463 = None
+        string_literal465 = None
+        unaryExpression460 = None
 
-        unaryExpression465 = None
+        unaryExpression462 = None
 
-        unaryExpression467 = None
+        unaryExpression464 = None
 
-        unaryExpression469 = None
+        unaryExpression466 = None
 
-        unaryExpressionNotPlusMinus470 = None
+        unaryExpressionNotPlusMinus467 = None
 
 
-        char_literal462_tree = None
-        char_literal464_tree = None
-        string_literal466_tree = None
-        string_literal468_tree = None
+        char_literal459_tree = None
+        char_literal461_tree = None
+        string_literal463_tree = None
+        string_literal465_tree = None
 
         success = False
         try:
@@ -14969,7 +14913,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:956:5: ( '+' unaryExpression | '-' unaryExpression | '++' unaryExpression | '--' unaryExpression | unaryExpressionNotPlusMinus )
+                # Java.g:937:5: ( '+' unaryExpression | '-' unaryExpression | '++' unaryExpression | '--' unaryExpression | unaryExpressionNotPlusMinus )
                 alt142 = 5
                 LA142 = self.input.LA(1)
                 if LA142 == 104:
@@ -14991,92 +14935,92 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt142 == 1:
-                    # Java.g:956:9: '+' unaryExpression
+                    # Java.g:937:9: '+' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal462=self.match(self.input, 104, self.FOLLOW_104_in_unaryExpression5402)
+                    char_literal459=self.match(self.input, 104, self.FOLLOW_104_in_unaryExpression5342)
                     if self._state.backtracking == 0:
 
-                        char_literal462_tree = self._adaptor.createWithPayload(char_literal462)
-                        self._adaptor.addChild(root_0, char_literal462_tree)
+                        char_literal459_tree = self._adaptor.createWithPayload(char_literal459)
+                        self._adaptor.addChild(root_0, char_literal459_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5404)
-                    unaryExpression463 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5344)
+                    unaryExpression460 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression463.tree)
+                        self._adaptor.addChild(root_0, unaryExpression460.tree)
 
 
                 elif alt142 == 2:
-                    # Java.g:957:9: '-' unaryExpression
+                    # Java.g:938:9: '-' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal464=self.match(self.input, 105, self.FOLLOW_105_in_unaryExpression5414)
+                    char_literal461=self.match(self.input, 105, self.FOLLOW_105_in_unaryExpression5354)
                     if self._state.backtracking == 0:
 
-                        char_literal464_tree = self._adaptor.createWithPayload(char_literal464)
-                        self._adaptor.addChild(root_0, char_literal464_tree)
+                        char_literal461_tree = self._adaptor.createWithPayload(char_literal461)
+                        self._adaptor.addChild(root_0, char_literal461_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5416)
-                    unaryExpression465 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5356)
+                    unaryExpression462 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression465.tree)
+                        self._adaptor.addChild(root_0, unaryExpression462.tree)
 
 
                 elif alt142 == 3:
-                    # Java.g:958:9: '++' unaryExpression
+                    # Java.g:939:9: '++' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal466=self.match(self.input, 108, self.FOLLOW_108_in_unaryExpression5426)
+                    string_literal463=self.match(self.input, 108, self.FOLLOW_108_in_unaryExpression5366)
                     if self._state.backtracking == 0:
 
-                        string_literal466_tree = self._adaptor.createWithPayload(string_literal466)
-                        self._adaptor.addChild(root_0, string_literal466_tree)
+                        string_literal463_tree = self._adaptor.createWithPayload(string_literal463)
+                        self._adaptor.addChild(root_0, string_literal463_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5428)
-                    unaryExpression467 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5368)
+                    unaryExpression464 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression467.tree)
+                        self._adaptor.addChild(root_0, unaryExpression464.tree)
 
 
                 elif alt142 == 4:
-                    # Java.g:959:9: '--' unaryExpression
+                    # Java.g:940:9: '--' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal468=self.match(self.input, 109, self.FOLLOW_109_in_unaryExpression5438)
+                    string_literal465=self.match(self.input, 109, self.FOLLOW_109_in_unaryExpression5378)
                     if self._state.backtracking == 0:
 
-                        string_literal468_tree = self._adaptor.createWithPayload(string_literal468)
-                        self._adaptor.addChild(root_0, string_literal468_tree)
+                        string_literal465_tree = self._adaptor.createWithPayload(string_literal465)
+                        self._adaptor.addChild(root_0, string_literal465_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5440)
-                    unaryExpression469 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpression5380)
+                    unaryExpression466 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression469.tree)
+                        self._adaptor.addChild(root_0, unaryExpression466.tree)
 
 
                 elif alt142 == 5:
-                    # Java.g:960:9: unaryExpressionNotPlusMinus
+                    # Java.g:941:9: unaryExpressionNotPlusMinus
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_unaryExpressionNotPlusMinus_in_unaryExpression5450)
-                    unaryExpressionNotPlusMinus470 = self.unaryExpressionNotPlusMinus()
+                    self._state.following.append(self.FOLLOW_unaryExpressionNotPlusMinus_in_unaryExpression5390)
+                    unaryExpressionNotPlusMinus467 = self.unaryExpressionNotPlusMinus()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpressionNotPlusMinus470.tree)
+                        self._adaptor.addChild(root_0, unaryExpressionNotPlusMinus467.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -15112,7 +15056,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "unaryExpressionNotPlusMinus"
-    # Java.g:964:1: unaryExpressionNotPlusMinus : ( '~' unaryExpression | '!' unaryExpression | castExpression | primary ( selector )* ( '++' | '--' )? );
+    # Java.g:945:1: unaryExpressionNotPlusMinus : ( '~' unaryExpression | '!' unaryExpression | castExpression | primary ( selector )* ( '++' | '--' )? );
     def unaryExpressionNotPlusMinus(self, ):
 
         retval = self.unaryExpressionNotPlusMinus_return()
@@ -15120,23 +15064,23 @@ class JavaParser(LocalParser):
         unaryExpressionNotPlusMinus_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal471 = None
-        char_literal473 = None
-        set478 = None
-        unaryExpression472 = None
+        char_literal468 = None
+        char_literal470 = None
+        set475 = None
+        unaryExpression469 = None
 
-        unaryExpression474 = None
+        unaryExpression471 = None
 
-        castExpression475 = None
+        castExpression472 = None
 
-        primary476 = None
+        primary473 = None
 
-        selector477 = None
+        selector474 = None
 
 
-        char_literal471_tree = None
-        char_literal473_tree = None
-        set478_tree = None
+        char_literal468_tree = None
+        char_literal470_tree = None
+        set475_tree = None
 
         success = False
         try:
@@ -15146,72 +15090,72 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:965:5: ( '~' unaryExpression | '!' unaryExpression | castExpression | primary ( selector )* ( '++' | '--' )? )
+                # Java.g:946:5: ( '~' unaryExpression | '!' unaryExpression | castExpression | primary ( selector )* ( '++' | '--' )? )
                 alt145 = 4
                 alt145 = self.dfa145.predict(self.input)
                 if alt145 == 1:
-                    # Java.g:965:9: '~' unaryExpression
+                    # Java.g:946:9: '~' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal471=self.match(self.input, 110, self.FOLLOW_110_in_unaryExpressionNotPlusMinus5470)
+                    char_literal468=self.match(self.input, 110, self.FOLLOW_110_in_unaryExpressionNotPlusMinus5410)
                     if self._state.backtracking == 0:
 
-                        char_literal471_tree = self._adaptor.createWithPayload(char_literal471)
-                        self._adaptor.addChild(root_0, char_literal471_tree)
+                        char_literal468_tree = self._adaptor.createWithPayload(char_literal468)
+                        self._adaptor.addChild(root_0, char_literal468_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5472)
-                    unaryExpression472 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5412)
+                    unaryExpression469 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression472.tree)
+                        self._adaptor.addChild(root_0, unaryExpression469.tree)
 
 
                 elif alt145 == 2:
-                    # Java.g:966:9: '!' unaryExpression
+                    # Java.g:947:9: '!' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal473=self.match(self.input, 111, self.FOLLOW_111_in_unaryExpressionNotPlusMinus5482)
+                    char_literal470=self.match(self.input, 111, self.FOLLOW_111_in_unaryExpressionNotPlusMinus5422)
                     if self._state.backtracking == 0:
 
-                        char_literal473_tree = self._adaptor.createWithPayload(char_literal473)
-                        self._adaptor.addChild(root_0, char_literal473_tree)
+                        char_literal470_tree = self._adaptor.createWithPayload(char_literal470)
+                        self._adaptor.addChild(root_0, char_literal470_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5484)
-                    unaryExpression474 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5424)
+                    unaryExpression471 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression474.tree)
+                        self._adaptor.addChild(root_0, unaryExpression471.tree)
 
 
                 elif alt145 == 3:
-                    # Java.g:967:9: castExpression
+                    # Java.g:948:9: castExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_castExpression_in_unaryExpressionNotPlusMinus5494)
-                    castExpression475 = self.castExpression()
+                    self._state.following.append(self.FOLLOW_castExpression_in_unaryExpressionNotPlusMinus5434)
+                    castExpression472 = self.castExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, castExpression475.tree)
+                        self._adaptor.addChild(root_0, castExpression472.tree)
 
 
                 elif alt145 == 4:
-                    # Java.g:968:9: primary ( selector )* ( '++' | '--' )?
+                    # Java.g:949:9: primary ( selector )* ( '++' | '--' )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_primary_in_unaryExpressionNotPlusMinus5504)
-                    primary476 = self.primary()
+                    self._state.following.append(self.FOLLOW_primary_in_unaryExpressionNotPlusMinus5444)
+                    primary473 = self.primary()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primary476.tree)
-                    # Java.g:968:17: ( selector )*
+                        self._adaptor.addChild(root_0, primary473.tree)
+                    # Java.g:949:17: ( selector )*
                     while True: #loop143
                         alt143 = 2
                         LA143_0 = self.input.LA(1)
@@ -15223,19 +15167,19 @@ class JavaParser(LocalParser):
                         if alt143 == 1:
                             # Java.g:0:0: selector
                             pass 
-                            self._state.following.append(self.FOLLOW_selector_in_unaryExpressionNotPlusMinus5506)
-                            selector477 = self.selector()
+                            self._state.following.append(self.FOLLOW_selector_in_unaryExpressionNotPlusMinus5446)
+                            selector474 = self.selector()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, selector477.tree)
+                                self._adaptor.addChild(root_0, selector474.tree)
 
 
                         else:
                             break #loop143
 
 
-                    # Java.g:968:27: ( '++' | '--' )?
+                    # Java.g:949:27: ( '++' | '--' )?
                     alt144 = 2
                     LA144_0 = self.input.LA(1)
 
@@ -15244,11 +15188,11 @@ class JavaParser(LocalParser):
                     if alt144 == 1:
                         # Java.g:
                         pass 
-                        set478 = self.input.LT(1)
+                        set475 = self.input.LT(1)
                         if (108 <= self.input.LA(1) <= 109):
                             self.input.consume()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set478))
+                                self._adaptor.addChild(root_0, self._adaptor.createWithPayload(set475))
                             self._state.errorRecovery = False
 
                         else:
@@ -15297,7 +15241,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "castExpression"
-    # Java.g:972:1: castExpression : ( '(' primitiveType ')' unaryExpression | '(' ( type | expression ) ')' unaryExpressionNotPlusMinus );
+    # Java.g:953:1: castExpression : ( '(' primitiveType ')' unaryExpression | '(' ( type | expression ) ')' unaryExpressionNotPlusMinus );
     def castExpression(self, ):
 
         retval = self.castExpression_return()
@@ -15305,25 +15249,25 @@ class JavaParser(LocalParser):
         castExpression_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal479 = None
-        char_literal481 = None
+        char_literal476 = None
+        char_literal478 = None
+        char_literal480 = None
         char_literal483 = None
-        char_literal486 = None
-        primitiveType480 = None
+        primitiveType477 = None
 
-        unaryExpression482 = None
+        unaryExpression479 = None
 
-        type484 = None
+        type481 = None
 
-        expression485 = None
+        expression482 = None
 
-        unaryExpressionNotPlusMinus487 = None
+        unaryExpressionNotPlusMinus484 = None
 
 
-        char_literal479_tree = None
-        char_literal481_tree = None
+        char_literal476_tree = None
+        char_literal478_tree = None
+        char_literal480_tree = None
         char_literal483_tree = None
-        char_literal486_tree = None
 
         success = False
         try:
@@ -15333,7 +15277,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:973:5: ( '(' primitiveType ')' unaryExpression | '(' ( type | expression ) ')' unaryExpressionNotPlusMinus )
+                # Java.g:954:5: ( '(' primitiveType ')' unaryExpression | '(' ( type | expression ) ')' unaryExpressionNotPlusMinus )
                 alt147 = 2
                 LA147_0 = self.input.LA(1)
 
@@ -15361,85 +15305,85 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt147 == 1:
-                    # Java.g:973:8: '(' primitiveType ')' unaryExpression
+                    # Java.g:954:8: '(' primitiveType ')' unaryExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal479=self.match(self.input, 68, self.FOLLOW_68_in_castExpression5533)
+                    char_literal476=self.match(self.input, 68, self.FOLLOW_68_in_castExpression5473)
                     if self._state.backtracking == 0:
 
-                        char_literal479_tree = self._adaptor.createWithPayload(char_literal479)
-                        self._adaptor.addChild(root_0, char_literal479_tree)
+                        char_literal476_tree = self._adaptor.createWithPayload(char_literal476)
+                        self._adaptor.addChild(root_0, char_literal476_tree)
 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_castExpression5535)
-                    primitiveType480 = self.primitiveType()
+                    self._state.following.append(self.FOLLOW_primitiveType_in_castExpression5475)
+                    primitiveType477 = self.primitiveType()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primitiveType480.tree)
-                    char_literal481=self.match(self.input, 69, self.FOLLOW_69_in_castExpression5537)
+                        self._adaptor.addChild(root_0, primitiveType477.tree)
+                    char_literal478=self.match(self.input, 69, self.FOLLOW_69_in_castExpression5477)
                     if self._state.backtracking == 0:
 
-                        char_literal481_tree = self._adaptor.createWithPayload(char_literal481)
-                        self._adaptor.addChild(root_0, char_literal481_tree)
+                        char_literal478_tree = self._adaptor.createWithPayload(char_literal478)
+                        self._adaptor.addChild(root_0, char_literal478_tree)
 
-                    self._state.following.append(self.FOLLOW_unaryExpression_in_castExpression5539)
-                    unaryExpression482 = self.unaryExpression()
+                    self._state.following.append(self.FOLLOW_unaryExpression_in_castExpression5479)
+                    unaryExpression479 = self.unaryExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpression482.tree)
+                        self._adaptor.addChild(root_0, unaryExpression479.tree)
 
 
                 elif alt147 == 2:
-                    # Java.g:974:8: '(' ( type | expression ) ')' unaryExpressionNotPlusMinus
+                    # Java.g:955:8: '(' ( type | expression ) ')' unaryExpressionNotPlusMinus
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal483=self.match(self.input, 68, self.FOLLOW_68_in_castExpression5548)
+                    char_literal480=self.match(self.input, 68, self.FOLLOW_68_in_castExpression5488)
+                    if self._state.backtracking == 0:
+
+                        char_literal480_tree = self._adaptor.createWithPayload(char_literal480)
+                        self._adaptor.addChild(root_0, char_literal480_tree)
+
+                    # Java.g:955:12: ( type | expression )
+                    alt146 = 2
+                    alt146 = self.dfa146.predict(self.input)
+                    if alt146 == 1:
+                        # Java.g:955:13: type
+                        pass 
+                        self._state.following.append(self.FOLLOW_type_in_castExpression5491)
+                        type481 = self.type()
+
+                        self._state.following.pop()
+                        if self._state.backtracking == 0:
+                            self._adaptor.addChild(root_0, type481.tree)
+
+
+                    elif alt146 == 2:
+                        # Java.g:955:20: expression
+                        pass 
+                        self._state.following.append(self.FOLLOW_expression_in_castExpression5495)
+                        expression482 = self.expression()
+
+                        self._state.following.pop()
+                        if self._state.backtracking == 0:
+                            self._adaptor.addChild(root_0, expression482.tree)
+
+
+
+                    char_literal483=self.match(self.input, 69, self.FOLLOW_69_in_castExpression5498)
                     if self._state.backtracking == 0:
 
                         char_literal483_tree = self._adaptor.createWithPayload(char_literal483)
                         self._adaptor.addChild(root_0, char_literal483_tree)
 
-                    # Java.g:974:12: ( type | expression )
-                    alt146 = 2
-                    alt146 = self.dfa146.predict(self.input)
-                    if alt146 == 1:
-                        # Java.g:974:13: type
-                        pass 
-                        self._state.following.append(self.FOLLOW_type_in_castExpression5551)
-                        type484 = self.type()
-
-                        self._state.following.pop()
-                        if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, type484.tree)
-
-
-                    elif alt146 == 2:
-                        # Java.g:974:20: expression
-                        pass 
-                        self._state.following.append(self.FOLLOW_expression_in_castExpression5555)
-                        expression485 = self.expression()
-
-                        self._state.following.pop()
-                        if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, expression485.tree)
-
-
-
-                    char_literal486=self.match(self.input, 69, self.FOLLOW_69_in_castExpression5558)
-                    if self._state.backtracking == 0:
-
-                        char_literal486_tree = self._adaptor.createWithPayload(char_literal486)
-                        self._adaptor.addChild(root_0, char_literal486_tree)
-
-                    self._state.following.append(self.FOLLOW_unaryExpressionNotPlusMinus_in_castExpression5560)
-                    unaryExpressionNotPlusMinus487 = self.unaryExpressionNotPlusMinus()
+                    self._state.following.append(self.FOLLOW_unaryExpressionNotPlusMinus_in_castExpression5500)
+                    unaryExpressionNotPlusMinus484 = self.unaryExpressionNotPlusMinus()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, unaryExpressionNotPlusMinus487.tree)
+                        self._adaptor.addChild(root_0, unaryExpressionNotPlusMinus484.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -15475,7 +15419,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "primary"
-    # Java.g:978:1: primary : ( parExpression | 'this' ( '.' id0= Ident )* ( identifierSuffix )? | 'super' superSuffix | literal | 'new' creator | id1= Ident ( '.' id2= Ident )* ( identifierSuffix )? | primitiveType ( '[' ']' )* '.' 'class' | 'void' '.' 'class' );
+    # Java.g:959:1: primary : ( parExpression | 'this' ( '.' id0= Ident )* ( identifierSuffix )? | 'super' superSuffix | literal | 'new' creator | id1= Ident ( '.' id2= Ident )* ( identifierSuffix )? | primitiveType ( '[' ']' )* '.' 'class' | 'void' '.' 'class' );
     def primary(self, ):
 
         retval = self.primary_return()
@@ -15486,53 +15430,60 @@ class JavaParser(LocalParser):
         id0 = None
         id1 = None
         id2 = None
+        string_literal486 = None
+        char_literal487 = None
         string_literal489 = None
-        char_literal490 = None
         string_literal492 = None
-        string_literal495 = None
+        char_literal494 = None
         char_literal497 = None
-        char_literal500 = None
-        char_literal501 = None
+        char_literal498 = None
+        char_literal499 = None
+        string_literal500 = None
+        string_literal501 = None
         char_literal502 = None
         string_literal503 = None
-        string_literal504 = None
-        char_literal505 = None
-        string_literal506 = None
-        parExpression488 = None
+        parExpression485 = None
 
-        identifierSuffix491 = None
+        identifierSuffix488 = None
 
-        superSuffix493 = None
+        superSuffix490 = None
 
-        literal494 = None
+        literal491 = None
 
-        creator496 = None
+        creator493 = None
 
-        identifierSuffix498 = None
+        identifierSuffix495 = None
 
-        primitiveType499 = None
+        primitiveType496 = None
 
 
         id0_tree = None
         id1_tree = None
         id2_tree = None
+        string_literal486_tree = None
+        char_literal487_tree = None
         string_literal489_tree = None
-        char_literal490_tree = None
         string_literal492_tree = None
-        string_literal495_tree = None
+        char_literal494_tree = None
         char_literal497_tree = None
-        char_literal500_tree = None
-        char_literal501_tree = None
+        char_literal498_tree = None
+        char_literal499_tree = None
+        string_literal500_tree = None
+        string_literal501_tree = None
         char_literal502_tree = None
         string_literal503_tree = None
-        string_literal504_tree = None
-        char_literal505_tree = None
-        string_literal506_tree = None
 
                
-        find = self.py_block_stack[-1].block.findVariable
-        expr = self.py_expr_stack[-1].expr
-        nest = self.py_expr_stack[-1].nest
+
+        def start():
+            try:
+                expr = self.scope.expr.top.nest(format=FS.r)
+                pop = lambda:None
+            except (IndexError, ):
+                expr = self.factory('expression', format=FS.r, parent=self.scope.block.top)
+                self.scope.expr.push(expr)
+                pop = self.scope.expr.pop
+            return expr, pop
 
         success = False
         try:
@@ -15542,7 +15493,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:985:5: ( parExpression | 'this' ( '.' id0= Ident )* ( identifierSuffix )? | 'super' superSuffix | literal | 'new' creator | id1= Ident ( '.' id2= Ident )* ( identifierSuffix )? | primitiveType ( '[' ']' )* '.' 'class' | 'void' '.' 'class' )
+                # Java.g:972:5: ( parExpression | 'this' ( '.' id0= Ident )* ( identifierSuffix )? | 'super' superSuffix | literal | 'new' creator | id1= Ident ( '.' id2= Ident )* ( identifierSuffix )? | primitiveType ( '[' ']' )* '.' 'class' | 'void' '.' 'class' )
                 alt153 = 8
                 LA153 = self.input.LA(1)
                 if LA153 == 68:
@@ -15570,30 +15521,30 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt153 == 1:
-                    # Java.g:985:9: parExpression
+                    # Java.g:972:9: parExpression
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_parExpression_in_primary5586)
-                    parExpression488 = self.parExpression()
+                    self._state.following.append(self.FOLLOW_parExpression_in_primary5525)
+                    parExpression485 = self.parExpression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, parExpression488.tree)
+                        self._adaptor.addChild(root_0, parExpression485.tree)
 
 
                 elif alt153 == 2:
-                    # Java.g:986:9: 'this' ( '.' id0= Ident )* ( identifierSuffix )?
+                    # Java.g:973:9: 'this' ( '.' id0= Ident )* ( identifierSuffix )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal489=self.match(self.input, 71, self.FOLLOW_71_in_primary5596)
+                    string_literal486=self.match(self.input, 71, self.FOLLOW_71_in_primary5535)
                     if self._state.backtracking == 0:
 
-                        string_literal489_tree = self._adaptor.createWithPayload(string_literal489)
-                        self._adaptor.addChild(root_0, string_literal489_tree)
+                        string_literal486_tree = self._adaptor.createWithPayload(string_literal486)
+                        self._adaptor.addChild(root_0, string_literal486_tree)
 
-                    # Java.g:986:16: ( '.' id0= Ident )*
+                    # Java.g:973:16: ( '.' id0= Ident )*
                     while True: #loop148
                         alt148 = 2
                         LA148_0 = self.input.LA(1)
@@ -15613,15 +15564,15 @@ class JavaParser(LocalParser):
 
 
                         if alt148 == 1:
-                            # Java.g:986:17: '.' id0= Ident
+                            # Java.g:973:17: '.' id0= Ident
                             pass 
-                            char_literal490=self.match(self.input, 31, self.FOLLOW_31_in_primary5599)
+                            char_literal487=self.match(self.input, 31, self.FOLLOW_31_in_primary5538)
                             if self._state.backtracking == 0:
 
-                                char_literal490_tree = self._adaptor.createWithPayload(char_literal490)
-                                self._adaptor.addChild(root_0, char_literal490_tree)
+                                char_literal487_tree = self._adaptor.createWithPayload(char_literal487)
+                                self._adaptor.addChild(root_0, char_literal487_tree)
 
-                            id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5603)
+                            id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5542)
                             if self._state.backtracking == 0:
 
                                 id0_tree = self._adaptor.createWithPayload(id0)
@@ -15633,104 +15584,95 @@ class JavaParser(LocalParser):
                             break #loop148
 
 
-                    # Java.g:986:33: ( identifierSuffix )?
+                    # Java.g:973:33: ( identifierSuffix )?
                     alt149 = 2
                     alt149 = self.dfa149.predict(self.input)
                     if alt149 == 1:
                         # Java.g:0:0: identifierSuffix
                         pass 
-                        self._state.following.append(self.FOLLOW_identifierSuffix_in_primary5607)
-                        identifierSuffix491 = self.identifierSuffix()
+                        self._state.following.append(self.FOLLOW_identifierSuffix_in_primary5546)
+                        identifierSuffix488 = self.identifierSuffix()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, identifierSuffix491.tree)
+                            self._adaptor.addChild(root_0, identifierSuffix488.tree)
 
 
 
 
 
                 elif alt153 == 3:
-                    # Java.g:987:9: 'super' superSuffix
+                    # Java.g:974:9: 'super' superSuffix
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal492=self.match(self.input, 67, self.FOLLOW_67_in_primary5618)
+                    string_literal489=self.match(self.input, 67, self.FOLLOW_67_in_primary5557)
                     if self._state.backtracking == 0:
 
-                        string_literal492_tree = self._adaptor.createWithPayload(string_literal492)
-                        self._adaptor.addChild(root_0, string_literal492_tree)
+                        string_literal489_tree = self._adaptor.createWithPayload(string_literal489)
+                        self._adaptor.addChild(root_0, string_literal489_tree)
 
-                    self._state.following.append(self.FOLLOW_superSuffix_in_primary5620)
-                    superSuffix493 = self.superSuffix()
+                    self._state.following.append(self.FOLLOW_superSuffix_in_primary5559)
+                    superSuffix490 = self.superSuffix()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, superSuffix493.tree)
+                        self._adaptor.addChild(root_0, superSuffix490.tree)
 
 
                 elif alt153 == 4:
-                    # Java.g:989:9: literal
+                    # Java.g:976:9: literal
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_literal_in_primary5631)
-                    literal494 = self.literal()
+                    if self._state.backtracking == 0:
+                        expr, pop = start() 
+
+                    self._state.following.append(self.FOLLOW_literal_in_primary5580)
+                    literal491 = self.literal()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, literal494.tree)
+                        self._adaptor.addChild(root_0, literal491.tree)
                     if self._state.backtracking == 0:
                                  
-                        self.py_expr_stack[-1].expr = expr = nest(left=((literal494 is not None) and [self.input.toString(literal494.start,literal494.stop)] or [None])[0], format=FS.lr, rule='primary/literal')
-                        self.py_expr_stack[-1].nest = expr.nestRight
+                        expr.update(right=((literal491 is not None) and [self.input.toString(literal491.start,literal491.stop)] or [None])[0])
+                        pop()
                                 
 
 
 
                 elif alt153 == 5:
-                    # Java.g:995:9: 'new' creator
+                    # Java.g:982:9: 'new' creator
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    string_literal495=self.match(self.input, 112, self.FOLLOW_112_in_primary5652)
+                    string_literal492=self.match(self.input, 112, self.FOLLOW_112_in_primary5600)
                     if self._state.backtracking == 0:
 
-                        string_literal495_tree = self._adaptor.createWithPayload(string_literal495)
-                        self._adaptor.addChild(root_0, string_literal495_tree)
+                        string_literal492_tree = self._adaptor.createWithPayload(string_literal492)
+                        self._adaptor.addChild(root_0, string_literal492_tree)
 
-                    self._state.following.append(self.FOLLOW_creator_in_primary5654)
-                    creator496 = self.creator()
+                    self._state.following.append(self.FOLLOW_creator_in_primary5602)
+                    creator493 = self.creator()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, creator496.tree)
-                    if self._state.backtracking == 0:
-                        expr.update(rule='primary/new') 
-
+                        self._adaptor.addChild(root_0, creator493.tree)
 
 
                 elif alt153 == 6:
-                    # Java.g:997:9: id1= Ident ( '.' id2= Ident )* ( identifierSuffix )?
+                    # Java.g:984:9: id1= Ident ( '.' id2= Ident )* ( identifierSuffix )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5669)
+                    id1=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5615)
                     if self._state.backtracking == 0:
 
                         id1_tree = self._adaptor.createWithPayload(id1)
                         self._adaptor.addChild(root_0, id1_tree)
 
-                    if self._state.backtracking == 0:
-                                 
-                        ilvl = 0
-                        subr = lambda:RN(1, 'ident', ilvl)
-                        name = find(id1.text)
-                        expr = nest(format=FS.lr, left=name, rule=subr())
-                        nest = expr.nestRight
-                                
-
-                    # Java.g:1005:9: ( '.' id2= Ident )*
+                    # Java.g:985:9: ( '.' id2= Ident )*
                     while True: #loop150
                         alt150 = 2
                         LA150_0 = self.input.LA(1)
@@ -15750,27 +15692,19 @@ class JavaParser(LocalParser):
 
 
                         if alt150 == 1:
-                            # Java.g:1005:10: '.' id2= Ident
+                            # Java.g:985:10: '.' id2= Ident
                             pass 
-                            char_literal497=self.match(self.input, 31, self.FOLLOW_31_in_primary5690)
+                            char_literal494=self.match(self.input, 31, self.FOLLOW_31_in_primary5626)
                             if self._state.backtracking == 0:
 
-                                char_literal497_tree = self._adaptor.createWithPayload(char_literal497)
-                                self._adaptor.addChild(root_0, char_literal497_tree)
+                                char_literal494_tree = self._adaptor.createWithPayload(char_literal494)
+                                self._adaptor.addChild(root_0, char_literal494_tree)
 
-                            id2=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5694)
+                            id2=self.match(self.input, Ident, self.FOLLOW_Ident_in_primary5630)
                             if self._state.backtracking == 0:
 
                                 id2_tree = self._adaptor.createWithPayload(id2)
                                 self._adaptor.addChild(root_0, id2_tree)
-
-                            if self._state.backtracking == 0:
-                                             
-                                ilvl += 1
-                                name = id2.text
-                                expr = nest(format='.'+FS.lr, left=name, rule=subr())
-                                nest = expr.nestRight
-                                            
 
 
 
@@ -15778,41 +15712,35 @@ class JavaParser(LocalParser):
                             break #loop150
 
 
-                    if self._state.backtracking == 0:
-                                 
-                        self.py_expr_stack[-1].expr = expr
-                        self.py_expr_stack[-1].nest = nest
-                                
-
-                    # Java.g:1017:9: ( identifierSuffix )?
+                    # Java.g:986:9: ( identifierSuffix )?
                     alt151 = 2
                     alt151 = self.dfa151.predict(self.input)
                     if alt151 == 1:
-                        # Java.g:0:0: identifierSuffix
+                        # Java.g:986:10: identifierSuffix
                         pass 
-                        self._state.following.append(self.FOLLOW_identifierSuffix_in_primary5739)
-                        identifierSuffix498 = self.identifierSuffix()
+                        self._state.following.append(self.FOLLOW_identifierSuffix_in_primary5643)
+                        identifierSuffix495 = self.identifierSuffix()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, identifierSuffix498.tree)
+                            self._adaptor.addChild(root_0, identifierSuffix495.tree)
 
 
 
 
 
                 elif alt153 == 7:
-                    # Java.g:1019:9: primitiveType ( '[' ']' )* '.' 'class'
+                    # Java.g:988:9: primitiveType ( '[' ']' )* '.' 'class'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_primary5751)
-                    primitiveType499 = self.primitiveType()
+                    self._state.following.append(self.FOLLOW_primitiveType_in_primary5656)
+                    primitiveType496 = self.primitiveType()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primitiveType499.tree)
-                    # Java.g:1019:23: ( '[' ']' )*
+                        self._adaptor.addChild(root_0, primitiveType496.tree)
+                    # Java.g:988:23: ( '[' ']' )*
                     while True: #loop152
                         alt152 = 2
                         LA152_0 = self.input.LA(1)
@@ -15822,19 +15750,19 @@ class JavaParser(LocalParser):
 
 
                         if alt152 == 1:
-                            # Java.g:1019:24: '[' ']'
+                            # Java.g:988:24: '[' ']'
                             pass 
-                            char_literal500=self.match(self.input, 50, self.FOLLOW_50_in_primary5754)
+                            char_literal497=self.match(self.input, 50, self.FOLLOW_50_in_primary5659)
                             if self._state.backtracking == 0:
 
-                                char_literal500_tree = self._adaptor.createWithPayload(char_literal500)
-                                self._adaptor.addChild(root_0, char_literal500_tree)
+                                char_literal497_tree = self._adaptor.createWithPayload(char_literal497)
+                                self._adaptor.addChild(root_0, char_literal497_tree)
 
-                            char_literal501=self.match(self.input, 51, self.FOLLOW_51_in_primary5756)
+                            char_literal498=self.match(self.input, 51, self.FOLLOW_51_in_primary5661)
                             if self._state.backtracking == 0:
 
-                                char_literal501_tree = self._adaptor.createWithPayload(char_literal501)
-                                self._adaptor.addChild(root_0, char_literal501_tree)
+                                char_literal498_tree = self._adaptor.createWithPayload(char_literal498)
+                                self._adaptor.addChild(root_0, char_literal498_tree)
 
 
 
@@ -15842,42 +15770,42 @@ class JavaParser(LocalParser):
                             break #loop152
 
 
-                    char_literal502=self.match(self.input, 31, self.FOLLOW_31_in_primary5760)
+                    char_literal499=self.match(self.input, 31, self.FOLLOW_31_in_primary5665)
+                    if self._state.backtracking == 0:
+
+                        char_literal499_tree = self._adaptor.createWithPayload(char_literal499)
+                        self._adaptor.addChild(root_0, char_literal499_tree)
+
+                    string_literal500=self.match(self.input, 39, self.FOLLOW_39_in_primary5667)
+                    if self._state.backtracking == 0:
+
+                        string_literal500_tree = self._adaptor.createWithPayload(string_literal500)
+                        self._adaptor.addChild(root_0, string_literal500_tree)
+
+
+
+                elif alt153 == 8:
+                    # Java.g:989:9: 'void' '.' 'class'
+                    pass 
+                    root_0 = self._adaptor.nil()
+
+                    string_literal501=self.match(self.input, 49, self.FOLLOW_49_in_primary5677)
+                    if self._state.backtracking == 0:
+
+                        string_literal501_tree = self._adaptor.createWithPayload(string_literal501)
+                        self._adaptor.addChild(root_0, string_literal501_tree)
+
+                    char_literal502=self.match(self.input, 31, self.FOLLOW_31_in_primary5679)
                     if self._state.backtracking == 0:
 
                         char_literal502_tree = self._adaptor.createWithPayload(char_literal502)
                         self._adaptor.addChild(root_0, char_literal502_tree)
 
-                    string_literal503=self.match(self.input, 39, self.FOLLOW_39_in_primary5762)
+                    string_literal503=self.match(self.input, 39, self.FOLLOW_39_in_primary5681)
                     if self._state.backtracking == 0:
 
                         string_literal503_tree = self._adaptor.createWithPayload(string_literal503)
                         self._adaptor.addChild(root_0, string_literal503_tree)
-
-
-
-                elif alt153 == 8:
-                    # Java.g:1020:9: 'void' '.' 'class'
-                    pass 
-                    root_0 = self._adaptor.nil()
-
-                    string_literal504=self.match(self.input, 49, self.FOLLOW_49_in_primary5772)
-                    if self._state.backtracking == 0:
-
-                        string_literal504_tree = self._adaptor.createWithPayload(string_literal504)
-                        self._adaptor.addChild(root_0, string_literal504_tree)
-
-                    char_literal505=self.match(self.input, 31, self.FOLLOW_31_in_primary5774)
-                    if self._state.backtracking == 0:
-
-                        char_literal505_tree = self._adaptor.createWithPayload(char_literal505)
-                        self._adaptor.addChild(root_0, char_literal505_tree)
-
-                    string_literal506=self.match(self.input, 39, self.FOLLOW_39_in_primary5776)
-                    if self._state.backtracking == 0:
-
-                        string_literal506_tree = self._adaptor.createWithPayload(string_literal506)
-                        self._adaptor.addChild(root_0, string_literal506_tree)
 
 
 
@@ -15914,60 +15842,55 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "identifierSuffix"
-    # Java.g:1024:1: identifierSuffix : ( ( '[' ']' )+ '.' 'class' | ( '[' expression ']' )+ | arguments | '.' 'class' | '.' explicitGenericInvocation | '.' 'this' | '.' 'super' arguments | '.' 'new' innerCreator );
+    # Java.g:993:1: identifierSuffix : ( ( '[' ']' )+ '.' 'class' | ( '[' expression ']' )+ | arguments | '.' 'class' | '.' explicitGenericInvocation | '.' 'this' | '.' 'super' arguments | '.' 'new' innerCreator );
     def identifierSuffix(self, ):
-        self.py_expr_stack.append(py_expr_scope())
 
         retval = self.identifierSuffix_return()
         retval.start = self.input.LT(1)
         identifierSuffix_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal507 = None
+        char_literal504 = None
+        char_literal505 = None
+        char_literal506 = None
+        string_literal507 = None
         char_literal508 = None
-        char_literal509 = None
-        string_literal510 = None
-        char_literal511 = None
-        char_literal513 = None
-        char_literal515 = None
-        string_literal516 = None
-        char_literal517 = None
-        char_literal519 = None
-        string_literal520 = None
+        char_literal510 = None
+        char_literal512 = None
+        string_literal513 = None
+        char_literal514 = None
+        char_literal516 = None
+        string_literal517 = None
+        char_literal518 = None
+        string_literal519 = None
         char_literal521 = None
         string_literal522 = None
-        char_literal524 = None
-        string_literal525 = None
-        expression512 = None
+        expression509 = None
 
-        arguments514 = None
+        arguments511 = None
 
-        explicitGenericInvocation518 = None
+        explicitGenericInvocation515 = None
 
-        arguments523 = None
+        arguments520 = None
 
-        innerCreator526 = None
+        innerCreator523 = None
 
 
-        char_literal507_tree = None
+        char_literal504_tree = None
+        char_literal505_tree = None
+        char_literal506_tree = None
+        string_literal507_tree = None
         char_literal508_tree = None
-        char_literal509_tree = None
-        string_literal510_tree = None
-        char_literal511_tree = None
-        char_literal513_tree = None
-        char_literal515_tree = None
-        string_literal516_tree = None
-        char_literal517_tree = None
-        char_literal519_tree = None
-        string_literal520_tree = None
+        char_literal510_tree = None
+        char_literal512_tree = None
+        string_literal513_tree = None
+        char_literal514_tree = None
+        char_literal516_tree = None
+        string_literal517_tree = None
+        char_literal518_tree = None
+        string_literal519_tree = None
         char_literal521_tree = None
         string_literal522_tree = None
-        char_literal524_tree = None
-        string_literal525_tree = None
-
-               
-        self.py_expr_stack[-1].expr = expr = self.py_expr_stack[PREV].nest()
-        self.py_expr_stack[-1].nest = expr.nestRight
 
         success = False
         try:
@@ -15977,15 +15900,15 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1029:5: ( ( '[' ']' )+ '.' 'class' | ( '[' expression ']' )+ | arguments | '.' 'class' | '.' explicitGenericInvocation | '.' 'this' | '.' 'super' arguments | '.' 'new' innerCreator )
+                # Java.g:994:5: ( ( '[' ']' )+ '.' 'class' | ( '[' expression ']' )+ | arguments | '.' 'class' | '.' explicitGenericInvocation | '.' 'this' | '.' 'super' arguments | '.' 'new' innerCreator )
                 alt156 = 8
                 alt156 = self.dfa156.predict(self.input)
                 if alt156 == 1:
-                    # Java.g:1029:9: ( '[' ']' )+ '.' 'class'
+                    # Java.g:994:9: ( '[' ']' )+ '.' 'class'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:1029:9: ( '[' ']' )+
+                    # Java.g:994:9: ( '[' ']' )+
                     cnt154 = 0
                     while True: #loop154
                         alt154 = 2
@@ -15996,19 +15919,19 @@ class JavaParser(LocalParser):
 
 
                         if alt154 == 1:
-                            # Java.g:1029:10: '[' ']'
+                            # Java.g:994:10: '[' ']'
                             pass 
-                            char_literal507=self.match(self.input, 50, self.FOLLOW_50_in_identifierSuffix5807)
+                            char_literal504=self.match(self.input, 50, self.FOLLOW_50_in_identifierSuffix5702)
                             if self._state.backtracking == 0:
 
-                                char_literal507_tree = self._adaptor.createWithPayload(char_literal507)
-                                self._adaptor.addChild(root_0, char_literal507_tree)
+                                char_literal504_tree = self._adaptor.createWithPayload(char_literal504)
+                                self._adaptor.addChild(root_0, char_literal504_tree)
 
-                            char_literal508=self.match(self.input, 51, self.FOLLOW_51_in_identifierSuffix5809)
+                            char_literal505=self.match(self.input, 51, self.FOLLOW_51_in_identifierSuffix5704)
                             if self._state.backtracking == 0:
 
-                                char_literal508_tree = self._adaptor.createWithPayload(char_literal508)
-                                self._adaptor.addChild(root_0, char_literal508_tree)
+                                char_literal505_tree = self._adaptor.createWithPayload(char_literal505)
+                                self._adaptor.addChild(root_0, char_literal505_tree)
 
 
 
@@ -16025,50 +15948,50 @@ class JavaParser(LocalParser):
                         cnt154 += 1
 
 
-                    char_literal509=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5813)
+                    char_literal506=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5708)
                     if self._state.backtracking == 0:
 
-                        char_literal509_tree = self._adaptor.createWithPayload(char_literal509)
-                        self._adaptor.addChild(root_0, char_literal509_tree)
+                        char_literal506_tree = self._adaptor.createWithPayload(char_literal506)
+                        self._adaptor.addChild(root_0, char_literal506_tree)
 
-                    string_literal510=self.match(self.input, 39, self.FOLLOW_39_in_identifierSuffix5815)
+                    string_literal507=self.match(self.input, 39, self.FOLLOW_39_in_identifierSuffix5710)
                     if self._state.backtracking == 0:
 
-                        string_literal510_tree = self._adaptor.createWithPayload(string_literal510)
-                        self._adaptor.addChild(root_0, string_literal510_tree)
+                        string_literal507_tree = self._adaptor.createWithPayload(string_literal507)
+                        self._adaptor.addChild(root_0, string_literal507_tree)
 
 
 
                 elif alt156 == 2:
-                    # Java.g:1030:9: ( '[' expression ']' )+
+                    # Java.g:995:9: ( '[' expression ']' )+
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    # Java.g:1030:9: ( '[' expression ']' )+
+                    # Java.g:995:9: ( '[' expression ']' )+
                     cnt155 = 0
                     while True: #loop155
                         alt155 = 2
                         alt155 = self.dfa155.predict(self.input)
                         if alt155 == 1:
-                            # Java.g:1030:10: '[' expression ']'
+                            # Java.g:995:10: '[' expression ']'
                             pass 
-                            char_literal511=self.match(self.input, 50, self.FOLLOW_50_in_identifierSuffix5826)
+                            char_literal508=self.match(self.input, 50, self.FOLLOW_50_in_identifierSuffix5721)
                             if self._state.backtracking == 0:
 
-                                char_literal511_tree = self._adaptor.createWithPayload(char_literal511)
-                                self._adaptor.addChild(root_0, char_literal511_tree)
+                                char_literal508_tree = self._adaptor.createWithPayload(char_literal508)
+                                self._adaptor.addChild(root_0, char_literal508_tree)
 
-                            self._state.following.append(self.FOLLOW_expression_in_identifierSuffix5828)
-                            expression512 = self.expression()
+                            self._state.following.append(self.FOLLOW_expression_in_identifierSuffix5723)
+                            expression509 = self.expression()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, expression512.tree)
-                            char_literal513=self.match(self.input, 51, self.FOLLOW_51_in_identifierSuffix5830)
+                                self._adaptor.addChild(root_0, expression509.tree)
+                            char_literal510=self.match(self.input, 51, self.FOLLOW_51_in_identifierSuffix5725)
                             if self._state.backtracking == 0:
 
-                                char_literal513_tree = self._adaptor.createWithPayload(char_literal513)
-                                self._adaptor.addChild(root_0, char_literal513_tree)
+                                char_literal510_tree = self._adaptor.createWithPayload(char_literal510)
+                                self._adaptor.addChild(root_0, char_literal510_tree)
 
 
 
@@ -16088,133 +16011,123 @@ class JavaParser(LocalParser):
 
 
                 elif alt156 == 3:
-                    # Java.g:1031:9: arguments
+                    # Java.g:996:9: arguments
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    if self._state.backtracking == 0:
-                        expr.update(format=FS.args) 
-
-                    self._state.following.append(self.FOLLOW_arguments_in_identifierSuffix5845)
-                    arguments514 = self.arguments()
+                    self._state.following.append(self.FOLLOW_arguments_in_identifierSuffix5738)
+                    arguments511 = self.arguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arguments514.tree)
+                        self._adaptor.addChild(root_0, arguments511.tree)
 
 
                 elif alt156 == 4:
-                    # Java.g:1032:9: '.' 'class'
+                    # Java.g:997:9: '.' 'class'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal515=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5855)
+                    char_literal512=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5748)
                     if self._state.backtracking == 0:
 
-                        char_literal515_tree = self._adaptor.createWithPayload(char_literal515)
-                        self._adaptor.addChild(root_0, char_literal515_tree)
+                        char_literal512_tree = self._adaptor.createWithPayload(char_literal512)
+                        self._adaptor.addChild(root_0, char_literal512_tree)
 
-                    string_literal516=self.match(self.input, 39, self.FOLLOW_39_in_identifierSuffix5857)
+                    string_literal513=self.match(self.input, 39, self.FOLLOW_39_in_identifierSuffix5750)
                     if self._state.backtracking == 0:
 
-                        string_literal516_tree = self._adaptor.createWithPayload(string_literal516)
-                        self._adaptor.addChild(root_0, string_literal516_tree)
+                        string_literal513_tree = self._adaptor.createWithPayload(string_literal513)
+                        self._adaptor.addChild(root_0, string_literal513_tree)
 
 
 
                 elif alt156 == 5:
-                    # Java.g:1033:9: '.' explicitGenericInvocation
+                    # Java.g:998:9: '.' explicitGenericInvocation
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal517=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5867)
+                    char_literal514=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5760)
                     if self._state.backtracking == 0:
 
-                        char_literal517_tree = self._adaptor.createWithPayload(char_literal517)
-                        self._adaptor.addChild(root_0, char_literal517_tree)
+                        char_literal514_tree = self._adaptor.createWithPayload(char_literal514)
+                        self._adaptor.addChild(root_0, char_literal514_tree)
 
-                    self._state.following.append(self.FOLLOW_explicitGenericInvocation_in_identifierSuffix5869)
-                    explicitGenericInvocation518 = self.explicitGenericInvocation()
+                    self._state.following.append(self.FOLLOW_explicitGenericInvocation_in_identifierSuffix5762)
+                    explicitGenericInvocation515 = self.explicitGenericInvocation()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, explicitGenericInvocation518.tree)
+                        self._adaptor.addChild(root_0, explicitGenericInvocation515.tree)
 
 
                 elif alt156 == 6:
-                    # Java.g:1034:9: '.' 'this'
+                    # Java.g:999:9: '.' 'this'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal519=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5879)
+                    char_literal516=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5772)
                     if self._state.backtracking == 0:
 
-                        char_literal519_tree = self._adaptor.createWithPayload(char_literal519)
-                        self._adaptor.addChild(root_0, char_literal519_tree)
+                        char_literal516_tree = self._adaptor.createWithPayload(char_literal516)
+                        self._adaptor.addChild(root_0, char_literal516_tree)
 
-                    string_literal520=self.match(self.input, 71, self.FOLLOW_71_in_identifierSuffix5881)
+                    string_literal517=self.match(self.input, 71, self.FOLLOW_71_in_identifierSuffix5774)
                     if self._state.backtracking == 0:
 
-                        string_literal520_tree = self._adaptor.createWithPayload(string_literal520)
-                        self._adaptor.addChild(root_0, string_literal520_tree)
+                        string_literal517_tree = self._adaptor.createWithPayload(string_literal517)
+                        self._adaptor.addChild(root_0, string_literal517_tree)
 
 
 
                 elif alt156 == 7:
-                    # Java.g:1035:9: '.' 'super' arguments
+                    # Java.g:1000:9: '.' 'super' arguments
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal521=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5891)
+                    char_literal518=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5784)
+                    if self._state.backtracking == 0:
+
+                        char_literal518_tree = self._adaptor.createWithPayload(char_literal518)
+                        self._adaptor.addChild(root_0, char_literal518_tree)
+
+                    string_literal519=self.match(self.input, 67, self.FOLLOW_67_in_identifierSuffix5786)
+                    if self._state.backtracking == 0:
+
+                        string_literal519_tree = self._adaptor.createWithPayload(string_literal519)
+                        self._adaptor.addChild(root_0, string_literal519_tree)
+
+                    self._state.following.append(self.FOLLOW_arguments_in_identifierSuffix5788)
+                    arguments520 = self.arguments()
+
+                    self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self._adaptor.addChild(root_0, arguments520.tree)
+
+
+                elif alt156 == 8:
+                    # Java.g:1001:9: '.' 'new' innerCreator
+                    pass 
+                    root_0 = self._adaptor.nil()
+
+                    char_literal521=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5798)
                     if self._state.backtracking == 0:
 
                         char_literal521_tree = self._adaptor.createWithPayload(char_literal521)
                         self._adaptor.addChild(root_0, char_literal521_tree)
 
-                    string_literal522=self.match(self.input, 67, self.FOLLOW_67_in_identifierSuffix5893)
+                    string_literal522=self.match(self.input, 112, self.FOLLOW_112_in_identifierSuffix5800)
                     if self._state.backtracking == 0:
 
                         string_literal522_tree = self._adaptor.createWithPayload(string_literal522)
                         self._adaptor.addChild(root_0, string_literal522_tree)
 
-                    self._state.following.append(self.FOLLOW_arguments_in_identifierSuffix5895)
-                    arguments523 = self.arguments()
+                    self._state.following.append(self.FOLLOW_innerCreator_in_identifierSuffix5802)
+                    innerCreator523 = self.innerCreator()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arguments523.tree)
-
-
-                elif alt156 == 8:
-                    # Java.g:1036:9: '.' 'new' innerCreator
-                    pass 
-                    root_0 = self._adaptor.nil()
-
-                    char_literal524=self.match(self.input, 31, self.FOLLOW_31_in_identifierSuffix5905)
-                    if self._state.backtracking == 0:
-
-                        char_literal524_tree = self._adaptor.createWithPayload(char_literal524)
-                        self._adaptor.addChild(root_0, char_literal524_tree)
-
-                    string_literal525=self.match(self.input, 112, self.FOLLOW_112_in_identifierSuffix5907)
-                    if self._state.backtracking == 0:
-
-                        string_literal525_tree = self._adaptor.createWithPayload(string_literal525)
-                        self._adaptor.addChild(root_0, string_literal525_tree)
-
-                    self._state.following.append(self.FOLLOW_innerCreator_in_identifierSuffix5909)
-                    innerCreator526 = self.innerCreator()
-
-                    self._state.following.pop()
-                    if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, innerCreator526.tree)
-                    if self._state.backtracking == 0:
-                                 
-                        expr.update(format='.'+FS.tr, rule=RN(0, 'new/innerCreator'))
-                        ##// this can't be right
-                        expr.parent.parent.update(format=FS.r)
-                                
-
+                        self._adaptor.addChild(root_0, innerCreator523.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -16234,8 +16147,6 @@ class JavaParser(LocalParser):
             if self._state.backtracking > 0:
                 self.memoize(self.input, 124, identifierSuffix_StartIndex, success)
 
-            self.py_expr_stack.pop()
-
             pass
 
         return retval
@@ -16252,7 +16163,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "creator"
-    # Java.g:1045:1: creator : ( nonWildcardTypeArguments createdName classCreatorRest | createdName ( arrayCreatorRest | classCreatorRest ) );
+    # Java.g:1005:1: creator : ( nonWildcardTypeArguments createdName classCreatorRest | createdName ( arrayCreatorRest | classCreatorRest ) );
     def creator(self, ):
 
         retval = self.creator_return()
@@ -16260,17 +16171,17 @@ class JavaParser(LocalParser):
         creator_StartIndex = self.input.index()
         root_0 = None
 
-        nonWildcardTypeArguments527 = None
+        nonWildcardTypeArguments524 = None
 
-        createdName528 = None
+        createdName525 = None
+
+        classCreatorRest526 = None
+
+        createdName527 = None
+
+        arrayCreatorRest528 = None
 
         classCreatorRest529 = None
-
-        createdName530 = None
-
-        arrayCreatorRest531 = None
-
-        classCreatorRest532 = None
 
 
 
@@ -16282,7 +16193,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1046:5: ( nonWildcardTypeArguments createdName classCreatorRest | createdName ( arrayCreatorRest | classCreatorRest ) )
+                # Java.g:1006:5: ( nonWildcardTypeArguments createdName classCreatorRest | createdName ( arrayCreatorRest | classCreatorRest ) )
                 alt158 = 2
                 LA158_0 = self.input.LA(1)
 
@@ -16299,42 +16210,42 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt158 == 1:
-                    # Java.g:1046:9: nonWildcardTypeArguments createdName classCreatorRest
+                    # Java.g:1006:9: nonWildcardTypeArguments createdName classCreatorRest
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_creator5939)
-                    nonWildcardTypeArguments527 = self.nonWildcardTypeArguments()
+                    self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_creator5822)
+                    nonWildcardTypeArguments524 = self.nonWildcardTypeArguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, nonWildcardTypeArguments527.tree)
-                    self._state.following.append(self.FOLLOW_createdName_in_creator5941)
-                    createdName528 = self.createdName()
+                        self._adaptor.addChild(root_0, nonWildcardTypeArguments524.tree)
+                    self._state.following.append(self.FOLLOW_createdName_in_creator5824)
+                    createdName525 = self.createdName()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, createdName528.tree)
-                    self._state.following.append(self.FOLLOW_classCreatorRest_in_creator5943)
-                    classCreatorRest529 = self.classCreatorRest()
+                        self._adaptor.addChild(root_0, createdName525.tree)
+                    self._state.following.append(self.FOLLOW_classCreatorRest_in_creator5826)
+                    classCreatorRest526 = self.classCreatorRest()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, classCreatorRest529.tree)
+                        self._adaptor.addChild(root_0, classCreatorRest526.tree)
 
 
                 elif alt158 == 2:
-                    # Java.g:1047:9: createdName ( arrayCreatorRest | classCreatorRest )
+                    # Java.g:1007:9: createdName ( arrayCreatorRest | classCreatorRest )
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_createdName_in_creator5953)
-                    createdName530 = self.createdName()
+                    self._state.following.append(self.FOLLOW_createdName_in_creator5836)
+                    createdName527 = self.createdName()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, createdName530.tree)
-                    # Java.g:1047:21: ( arrayCreatorRest | classCreatorRest )
+                        self._adaptor.addChild(root_0, createdName527.tree)
+                    # Java.g:1007:21: ( arrayCreatorRest | classCreatorRest )
                     alt157 = 2
                     LA157_0 = self.input.LA(1)
 
@@ -16351,25 +16262,25 @@ class JavaParser(LocalParser):
                         raise nvae
 
                     if alt157 == 1:
-                        # Java.g:1047:22: arrayCreatorRest
+                        # Java.g:1007:22: arrayCreatorRest
                         pass 
-                        self._state.following.append(self.FOLLOW_arrayCreatorRest_in_creator5956)
-                        arrayCreatorRest531 = self.arrayCreatorRest()
+                        self._state.following.append(self.FOLLOW_arrayCreatorRest_in_creator5839)
+                        arrayCreatorRest528 = self.arrayCreatorRest()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, arrayCreatorRest531.tree)
+                            self._adaptor.addChild(root_0, arrayCreatorRest528.tree)
 
 
                     elif alt157 == 2:
-                        # Java.g:1047:41: classCreatorRest
+                        # Java.g:1007:41: classCreatorRest
                         pass 
-                        self._state.following.append(self.FOLLOW_classCreatorRest_in_creator5960)
-                        classCreatorRest532 = self.classCreatorRest()
+                        self._state.following.append(self.FOLLOW_classCreatorRest_in_creator5843)
+                        classCreatorRest529 = self.classCreatorRest()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, classCreatorRest532.tree)
+                            self._adaptor.addChild(root_0, classCreatorRest529.tree)
 
 
 
@@ -16408,7 +16319,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "createdName"
-    # Java.g:1051:1: createdName : ( classOrInterfaceType | primitiveType );
+    # Java.g:1011:1: createdName : ( classOrInterfaceType | primitiveType );
     def createdName(self, ):
 
         retval = self.createdName_return()
@@ -16416,9 +16327,9 @@ class JavaParser(LocalParser):
         createdName_StartIndex = self.input.index()
         root_0 = None
 
-        classOrInterfaceType533 = None
+        classOrInterfaceType530 = None
 
-        primitiveType534 = None
+        primitiveType531 = None
 
 
 
@@ -16430,7 +16341,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1052:5: ( classOrInterfaceType | primitiveType )
+                # Java.g:1012:5: ( classOrInterfaceType | primitiveType )
                 alt159 = 2
                 LA159_0 = self.input.LA(1)
 
@@ -16447,29 +16358,29 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt159 == 1:
-                    # Java.g:1052:9: classOrInterfaceType
+                    # Java.g:1012:9: classOrInterfaceType
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_classOrInterfaceType_in_createdName5981)
-                    classOrInterfaceType533 = self.classOrInterfaceType()
+                    self._state.following.append(self.FOLLOW_classOrInterfaceType_in_createdName5864)
+                    classOrInterfaceType530 = self.classOrInterfaceType()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, classOrInterfaceType533.tree)
+                        self._adaptor.addChild(root_0, classOrInterfaceType530.tree)
 
 
                 elif alt159 == 2:
-                    # Java.g:1053:9: primitiveType
+                    # Java.g:1013:9: primitiveType
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_primitiveType_in_createdName5991)
-                    primitiveType534 = self.primitiveType()
+                    self._state.following.append(self.FOLLOW_primitiveType_in_createdName5874)
+                    primitiveType531 = self.primitiveType()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, primitiveType534.tree)
+                        self._adaptor.addChild(root_0, primitiveType531.tree)
 
 
                 retval.stop = self.input.LT(-1)
@@ -16505,7 +16416,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "innerCreator"
-    # Java.g:1057:1: innerCreator : ( nonWildcardTypeArguments )? id0= Ident classCreatorRest ;
+    # Java.g:1017:1: innerCreator : ( nonWildcardTypeArguments )? id0= Ident classCreatorRest ;
     def innerCreator(self, ):
 
         retval = self.innerCreator_return()
@@ -16514,15 +16425,12 @@ class JavaParser(LocalParser):
         root_0 = None
 
         id0 = None
-        nonWildcardTypeArguments535 = None
+        nonWildcardTypeArguments532 = None
 
-        classCreatorRest536 = None
+        classCreatorRest533 = None
 
 
         id0_tree = None
-
-               
-        expr = self.py_expr_stack[-1].expr
 
         success = False
         try:
@@ -16532,12 +16440,12 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1061:5: ( ( nonWildcardTypeArguments )? id0= Ident classCreatorRest )
-                # Java.g:1061:9: ( nonWildcardTypeArguments )? id0= Ident classCreatorRest
+                # Java.g:1018:5: ( ( nonWildcardTypeArguments )? id0= Ident classCreatorRest )
+                # Java.g:1018:9: ( nonWildcardTypeArguments )? id0= Ident classCreatorRest
                 pass 
                 root_0 = self._adaptor.nil()
 
-                # Java.g:1061:9: ( nonWildcardTypeArguments )?
+                # Java.g:1018:9: ( nonWildcardTypeArguments )?
                 alt160 = 2
                 LA160_0 = self.input.LA(1)
 
@@ -16546,30 +16454,27 @@ class JavaParser(LocalParser):
                 if alt160 == 1:
                     # Java.g:0:0: nonWildcardTypeArguments
                     pass 
-                    self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_innerCreator6016)
-                    nonWildcardTypeArguments535 = self.nonWildcardTypeArguments()
+                    self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_innerCreator5894)
+                    nonWildcardTypeArguments532 = self.nonWildcardTypeArguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, nonWildcardTypeArguments535.tree)
+                        self._adaptor.addChild(root_0, nonWildcardTypeArguments532.tree)
 
 
 
-                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_innerCreator6029)
+                id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_innerCreator5907)
                 if self._state.backtracking == 0:
 
                     id0_tree = self._adaptor.createWithPayload(id0)
                     self._adaptor.addChild(root_0, id0_tree)
 
-                if self._state.backtracking == 0:
-                    expr.update(type=id0.text) 
-
-                self._state.following.append(self.FOLLOW_classCreatorRest_in_innerCreator6041)
-                classCreatorRest536 = self.classCreatorRest()
+                self._state.following.append(self.FOLLOW_classCreatorRest_in_innerCreator5917)
+                classCreatorRest533 = self.classCreatorRest()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, classCreatorRest536.tree)
+                    self._adaptor.addChild(root_0, classCreatorRest533.tree)
 
 
 
@@ -16606,7 +16511,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "arrayCreatorRest"
-    # Java.g:1067:1: arrayCreatorRest : '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* ) ;
+    # Java.g:1024:1: arrayCreatorRest : '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* ) ;
     def arrayCreatorRest(self, ):
 
         retval = self.arrayCreatorRest_return()
@@ -16614,31 +16519,31 @@ class JavaParser(LocalParser):
         arrayCreatorRest_StartIndex = self.input.index()
         root_0 = None
 
+        char_literal534 = None
+        char_literal535 = None
+        char_literal536 = None
         char_literal537 = None
-        char_literal538 = None
-        char_literal539 = None
         char_literal540 = None
+        char_literal541 = None
         char_literal543 = None
         char_literal544 = None
-        char_literal546 = None
-        char_literal547 = None
-        char_literal548 = None
-        arrayInitializer541 = None
+        char_literal545 = None
+        arrayInitializer538 = None
+
+        expression539 = None
 
         expression542 = None
 
-        expression545 = None
 
-
+        char_literal534_tree = None
+        char_literal535_tree = None
+        char_literal536_tree = None
         char_literal537_tree = None
-        char_literal538_tree = None
-        char_literal539_tree = None
         char_literal540_tree = None
+        char_literal541_tree = None
         char_literal543_tree = None
         char_literal544_tree = None
-        char_literal546_tree = None
-        char_literal547_tree = None
-        char_literal548_tree = None
+        char_literal545_tree = None
 
         success = False
         try:
@@ -16648,18 +16553,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1068:5: ( '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* ) )
-                # Java.g:1068:9: '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* )
+                # Java.g:1025:5: ( '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* ) )
+                # Java.g:1025:9: '[' ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* )
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal537=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest6061)
+                char_literal534=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest5937)
                 if self._state.backtracking == 0:
 
-                    char_literal537_tree = self._adaptor.createWithPayload(char_literal537)
-                    self._adaptor.addChild(root_0, char_literal537_tree)
+                    char_literal534_tree = self._adaptor.createWithPayload(char_literal534)
+                    self._adaptor.addChild(root_0, char_literal534_tree)
 
-                # Java.g:1069:9: ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* )
+                # Java.g:1026:9: ( ']' ( '[' ']' )* arrayInitializer | expression ']' ( '[' expression ']' )* ( '[' ']' )* )
                 alt164 = 2
                 LA164_0 = self.input.LA(1)
 
@@ -16676,15 +16581,15 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt164 == 1:
-                    # Java.g:1069:13: ']' ( '[' ']' )* arrayInitializer
+                    # Java.g:1026:13: ']' ( '[' ']' )* arrayInitializer
                     pass 
-                    char_literal538=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest6075)
+                    char_literal535=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest5951)
                     if self._state.backtracking == 0:
 
-                        char_literal538_tree = self._adaptor.createWithPayload(char_literal538)
-                        self._adaptor.addChild(root_0, char_literal538_tree)
+                        char_literal535_tree = self._adaptor.createWithPayload(char_literal535)
+                        self._adaptor.addChild(root_0, char_literal535_tree)
 
-                    # Java.g:1069:17: ( '[' ']' )*
+                    # Java.g:1026:17: ( '[' ']' )*
                     while True: #loop161
                         alt161 = 2
                         LA161_0 = self.input.LA(1)
@@ -16694,19 +16599,19 @@ class JavaParser(LocalParser):
 
 
                         if alt161 == 1:
-                            # Java.g:1069:18: '[' ']'
+                            # Java.g:1026:18: '[' ']'
                             pass 
-                            char_literal539=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest6078)
+                            char_literal536=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest5954)
                             if self._state.backtracking == 0:
 
-                                char_literal539_tree = self._adaptor.createWithPayload(char_literal539)
-                                self._adaptor.addChild(root_0, char_literal539_tree)
+                                char_literal536_tree = self._adaptor.createWithPayload(char_literal536)
+                                self._adaptor.addChild(root_0, char_literal536_tree)
 
-                            char_literal540=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest6080)
+                            char_literal537=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest5956)
                             if self._state.backtracking == 0:
 
-                                char_literal540_tree = self._adaptor.createWithPayload(char_literal540)
-                                self._adaptor.addChild(root_0, char_literal540_tree)
+                                char_literal537_tree = self._adaptor.createWithPayload(char_literal537)
+                                self._adaptor.addChild(root_0, char_literal537_tree)
 
 
 
@@ -16714,53 +16619,53 @@ class JavaParser(LocalParser):
                             break #loop161
 
 
-                    self._state.following.append(self.FOLLOW_arrayInitializer_in_arrayCreatorRest6084)
-                    arrayInitializer541 = self.arrayInitializer()
+                    self._state.following.append(self.FOLLOW_arrayInitializer_in_arrayCreatorRest5960)
+                    arrayInitializer538 = self.arrayInitializer()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arrayInitializer541.tree)
+                        self._adaptor.addChild(root_0, arrayInitializer538.tree)
 
 
                 elif alt164 == 2:
-                    # Java.g:1070:13: expression ']' ( '[' expression ']' )* ( '[' ']' )*
+                    # Java.g:1027:13: expression ']' ( '[' expression ']' )* ( '[' ']' )*
                     pass 
-                    self._state.following.append(self.FOLLOW_expression_in_arrayCreatorRest6098)
-                    expression542 = self.expression()
+                    self._state.following.append(self.FOLLOW_expression_in_arrayCreatorRest5974)
+                    expression539 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression542.tree)
-                    char_literal543=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest6100)
+                        self._adaptor.addChild(root_0, expression539.tree)
+                    char_literal540=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest5976)
                     if self._state.backtracking == 0:
 
-                        char_literal543_tree = self._adaptor.createWithPayload(char_literal543)
-                        self._adaptor.addChild(root_0, char_literal543_tree)
+                        char_literal540_tree = self._adaptor.createWithPayload(char_literal540)
+                        self._adaptor.addChild(root_0, char_literal540_tree)
 
-                    # Java.g:1070:28: ( '[' expression ']' )*
+                    # Java.g:1027:28: ( '[' expression ']' )*
                     while True: #loop162
                         alt162 = 2
                         alt162 = self.dfa162.predict(self.input)
                         if alt162 == 1:
-                            # Java.g:1070:29: '[' expression ']'
+                            # Java.g:1027:29: '[' expression ']'
                             pass 
-                            char_literal544=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest6103)
+                            char_literal541=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest5979)
                             if self._state.backtracking == 0:
 
-                                char_literal544_tree = self._adaptor.createWithPayload(char_literal544)
-                                self._adaptor.addChild(root_0, char_literal544_tree)
+                                char_literal541_tree = self._adaptor.createWithPayload(char_literal541)
+                                self._adaptor.addChild(root_0, char_literal541_tree)
 
-                            self._state.following.append(self.FOLLOW_expression_in_arrayCreatorRest6105)
-                            expression545 = self.expression()
+                            self._state.following.append(self.FOLLOW_expression_in_arrayCreatorRest5981)
+                            expression542 = self.expression()
 
                             self._state.following.pop()
                             if self._state.backtracking == 0:
-                                self._adaptor.addChild(root_0, expression545.tree)
-                            char_literal546=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest6107)
+                                self._adaptor.addChild(root_0, expression542.tree)
+                            char_literal543=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest5983)
                             if self._state.backtracking == 0:
 
-                                char_literal546_tree = self._adaptor.createWithPayload(char_literal546)
-                                self._adaptor.addChild(root_0, char_literal546_tree)
+                                char_literal543_tree = self._adaptor.createWithPayload(char_literal543)
+                                self._adaptor.addChild(root_0, char_literal543_tree)
 
 
 
@@ -16768,7 +16673,7 @@ class JavaParser(LocalParser):
                             break #loop162
 
 
-                    # Java.g:1070:50: ( '[' ']' )*
+                    # Java.g:1027:50: ( '[' ']' )*
                     while True: #loop163
                         alt163 = 2
                         LA163_0 = self.input.LA(1)
@@ -16783,19 +16688,19 @@ class JavaParser(LocalParser):
 
 
                         if alt163 == 1:
-                            # Java.g:1070:51: '[' ']'
+                            # Java.g:1027:51: '[' ']'
                             pass 
-                            char_literal547=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest6112)
+                            char_literal544=self.match(self.input, 50, self.FOLLOW_50_in_arrayCreatorRest5988)
                             if self._state.backtracking == 0:
 
-                                char_literal547_tree = self._adaptor.createWithPayload(char_literal547)
-                                self._adaptor.addChild(root_0, char_literal547_tree)
+                                char_literal544_tree = self._adaptor.createWithPayload(char_literal544)
+                                self._adaptor.addChild(root_0, char_literal544_tree)
 
-                            char_literal548=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest6114)
+                            char_literal545=self.match(self.input, 51, self.FOLLOW_51_in_arrayCreatorRest5990)
                             if self._state.backtracking == 0:
 
-                                char_literal548_tree = self._adaptor.createWithPayload(char_literal548)
-                                self._adaptor.addChild(root_0, char_literal548_tree)
+                                char_literal545_tree = self._adaptor.createWithPayload(char_literal545)
+                                self._adaptor.addChild(root_0, char_literal545_tree)
 
 
 
@@ -16842,7 +16747,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "classCreatorRest"
-    # Java.g:1075:1: classCreatorRest : arguments ( classBody )? ;
+    # Java.g:1032:1: classCreatorRest : arguments ( classBody )? ;
     def classCreatorRest(self, ):
 
         retval = self.classCreatorRest_return()
@@ -16850,9 +16755,9 @@ class JavaParser(LocalParser):
         classCreatorRest_StartIndex = self.input.index()
         root_0 = None
 
-        arguments549 = None
+        arguments546 = None
 
-        classBody550 = None
+        classBody547 = None
 
 
 
@@ -16864,18 +16769,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1076:5: ( arguments ( classBody )? )
-                # Java.g:1076:9: arguments ( classBody )?
+                # Java.g:1033:5: ( arguments ( classBody )? )
+                # Java.g:1033:9: arguments ( classBody )?
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_arguments_in_classCreatorRest6146)
-                arguments549 = self.arguments()
+                self._state.following.append(self.FOLLOW_arguments_in_classCreatorRest6022)
+                arguments546 = self.arguments()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, arguments549.tree)
-                # Java.g:1076:19: ( classBody )?
+                    self._adaptor.addChild(root_0, arguments546.tree)
+                # Java.g:1033:19: ( classBody )?
                 alt165 = 2
                 LA165_0 = self.input.LA(1)
 
@@ -16884,12 +16789,12 @@ class JavaParser(LocalParser):
                 if alt165 == 1:
                     # Java.g:0:0: classBody
                     pass 
-                    self._state.following.append(self.FOLLOW_classBody_in_classCreatorRest6148)
-                    classBody550 = self.classBody()
+                    self._state.following.append(self.FOLLOW_classBody_in_classCreatorRest6024)
+                    classBody547 = self.classBody()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, classBody550.tree)
+                        self._adaptor.addChild(root_0, classBody547.tree)
 
 
 
@@ -16929,7 +16834,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "explicitGenericInvocation"
-    # Java.g:1080:1: explicitGenericInvocation : nonWildcardTypeArguments Ident arguments ;
+    # Java.g:1037:1: explicitGenericInvocation : nonWildcardTypeArguments Ident arguments ;
     def explicitGenericInvocation(self, ):
 
         retval = self.explicitGenericInvocation_return()
@@ -16937,13 +16842,13 @@ class JavaParser(LocalParser):
         explicitGenericInvocation_StartIndex = self.input.index()
         root_0 = None
 
-        Ident552 = None
-        nonWildcardTypeArguments551 = None
+        Ident549 = None
+        nonWildcardTypeArguments548 = None
 
-        arguments553 = None
+        arguments550 = None
 
 
-        Ident552_tree = None
+        Ident549_tree = None
 
         success = False
         try:
@@ -16953,29 +16858,29 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1081:5: ( nonWildcardTypeArguments Ident arguments )
-                # Java.g:1081:9: nonWildcardTypeArguments Ident arguments
+                # Java.g:1038:5: ( nonWildcardTypeArguments Ident arguments )
+                # Java.g:1038:9: nonWildcardTypeArguments Ident arguments
                 pass 
                 root_0 = self._adaptor.nil()
 
-                self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitGenericInvocation6169)
-                nonWildcardTypeArguments551 = self.nonWildcardTypeArguments()
+                self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_explicitGenericInvocation6045)
+                nonWildcardTypeArguments548 = self.nonWildcardTypeArguments()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, nonWildcardTypeArguments551.tree)
-                Ident552=self.match(self.input, Ident, self.FOLLOW_Ident_in_explicitGenericInvocation6171)
+                    self._adaptor.addChild(root_0, nonWildcardTypeArguments548.tree)
+                Ident549=self.match(self.input, Ident, self.FOLLOW_Ident_in_explicitGenericInvocation6047)
                 if self._state.backtracking == 0:
 
-                    Ident552_tree = self._adaptor.createWithPayload(Ident552)
-                    self._adaptor.addChild(root_0, Ident552_tree)
+                    Ident549_tree = self._adaptor.createWithPayload(Ident549)
+                    self._adaptor.addChild(root_0, Ident549_tree)
 
-                self._state.following.append(self.FOLLOW_arguments_in_explicitGenericInvocation6173)
-                arguments553 = self.arguments()
+                self._state.following.append(self.FOLLOW_arguments_in_explicitGenericInvocation6049)
+                arguments550 = self.arguments()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, arguments553.tree)
+                    self._adaptor.addChild(root_0, arguments550.tree)
 
 
 
@@ -17012,7 +16917,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "nonWildcardTypeArguments"
-    # Java.g:1085:1: nonWildcardTypeArguments : '<' typeList '>' ;
+    # Java.g:1042:1: nonWildcardTypeArguments : '<' typeList '>' ;
     def nonWildcardTypeArguments(self, ):
 
         retval = self.nonWildcardTypeArguments_return()
@@ -17020,13 +16925,13 @@ class JavaParser(LocalParser):
         nonWildcardTypeArguments_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal554 = None
-        char_literal556 = None
-        typeList555 = None
+        char_literal551 = None
+        char_literal553 = None
+        typeList552 = None
 
 
-        char_literal554_tree = None
-        char_literal556_tree = None
+        char_literal551_tree = None
+        char_literal553_tree = None
 
         success = False
         try:
@@ -17036,28 +16941,28 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1086:5: ( '<' typeList '>' )
-                # Java.g:1086:9: '<' typeList '>'
+                # Java.g:1043:5: ( '<' typeList '>' )
+                # Java.g:1043:9: '<' typeList '>'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal554=self.match(self.input, 42, self.FOLLOW_42_in_nonWildcardTypeArguments6193)
+                char_literal551=self.match(self.input, 42, self.FOLLOW_42_in_nonWildcardTypeArguments6069)
                 if self._state.backtracking == 0:
 
-                    char_literal554_tree = self._adaptor.createWithPayload(char_literal554)
-                    self._adaptor.addChild(root_0, char_literal554_tree)
+                    char_literal551_tree = self._adaptor.createWithPayload(char_literal551)
+                    self._adaptor.addChild(root_0, char_literal551_tree)
 
-                self._state.following.append(self.FOLLOW_typeList_in_nonWildcardTypeArguments6195)
-                typeList555 = self.typeList()
+                self._state.following.append(self.FOLLOW_typeList_in_nonWildcardTypeArguments6071)
+                typeList552 = self.typeList()
 
                 self._state.following.pop()
                 if self._state.backtracking == 0:
-                    self._adaptor.addChild(root_0, typeList555.tree)
-                char_literal556=self.match(self.input, 44, self.FOLLOW_44_in_nonWildcardTypeArguments6197)
+                    self._adaptor.addChild(root_0, typeList552.tree)
+                char_literal553=self.match(self.input, 44, self.FOLLOW_44_in_nonWildcardTypeArguments6073)
                 if self._state.backtracking == 0:
 
-                    char_literal556_tree = self._adaptor.createWithPayload(char_literal556)
-                    self._adaptor.addChild(root_0, char_literal556_tree)
+                    char_literal553_tree = self._adaptor.createWithPayload(char_literal553)
+                    self._adaptor.addChild(root_0, char_literal553_tree)
 
 
 
@@ -17095,7 +17000,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "selector"
-    # Java.g:1090:1: selector : ( '.' Ident ( arguments )? | '.' 'this' | '.' 'super' superSuffix | '.' 'new' innerCreator | '[' expression ']' );
+    # Java.g:1047:1: selector : ( '.' Ident ( arguments )? | '.' 'this' | '.' 'super' superSuffix | '.' 'new' innerCreator | '[' expression ']' );
     def selector(self, ):
 
         retval = self.selector_return()
@@ -17103,35 +17008,35 @@ class JavaParser(LocalParser):
         selector_StartIndex = self.input.index()
         root_0 = None
 
+        char_literal554 = None
+        Ident555 = None
         char_literal557 = None
-        Ident558 = None
-        char_literal560 = None
-        string_literal561 = None
+        string_literal558 = None
+        char_literal559 = None
+        string_literal560 = None
         char_literal562 = None
         string_literal563 = None
         char_literal565 = None
-        string_literal566 = None
-        char_literal568 = None
-        char_literal570 = None
-        arguments559 = None
+        char_literal567 = None
+        arguments556 = None
 
-        superSuffix564 = None
+        superSuffix561 = None
 
-        innerCreator567 = None
+        innerCreator564 = None
 
-        expression569 = None
+        expression566 = None
 
 
+        char_literal554_tree = None
+        Ident555_tree = None
         char_literal557_tree = None
-        Ident558_tree = None
-        char_literal560_tree = None
-        string_literal561_tree = None
+        string_literal558_tree = None
+        char_literal559_tree = None
+        string_literal560_tree = None
         char_literal562_tree = None
         string_literal563_tree = None
         char_literal565_tree = None
-        string_literal566_tree = None
-        char_literal568_tree = None
-        char_literal570_tree = None
+        char_literal567_tree = None
 
         success = False
         try:
@@ -17141,7 +17046,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1091:5: ( '.' Ident ( arguments )? | '.' 'this' | '.' 'super' superSuffix | '.' 'new' innerCreator | '[' expression ']' )
+                # Java.g:1048:5: ( '.' Ident ( arguments )? | '.' 'this' | '.' 'super' superSuffix | '.' 'new' innerCreator | '[' expression ']' )
                 alt167 = 5
                 LA167_0 = self.input.LA(1)
 
@@ -17174,23 +17079,23 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt167 == 1:
-                    # Java.g:1091:9: '.' Ident ( arguments )?
+                    # Java.g:1048:9: '.' Ident ( arguments )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal557=self.match(self.input, 31, self.FOLLOW_31_in_selector6217)
+                    char_literal554=self.match(self.input, 31, self.FOLLOW_31_in_selector6093)
                     if self._state.backtracking == 0:
 
-                        char_literal557_tree = self._adaptor.createWithPayload(char_literal557)
-                        self._adaptor.addChild(root_0, char_literal557_tree)
+                        char_literal554_tree = self._adaptor.createWithPayload(char_literal554)
+                        self._adaptor.addChild(root_0, char_literal554_tree)
 
-                    Ident558=self.match(self.input, Ident, self.FOLLOW_Ident_in_selector6219)
+                    Ident555=self.match(self.input, Ident, self.FOLLOW_Ident_in_selector6095)
                     if self._state.backtracking == 0:
 
-                        Ident558_tree = self._adaptor.createWithPayload(Ident558)
-                        self._adaptor.addChild(root_0, Ident558_tree)
+                        Ident555_tree = self._adaptor.createWithPayload(Ident555)
+                        self._adaptor.addChild(root_0, Ident555_tree)
 
-                    # Java.g:1091:19: ( arguments )?
+                    # Java.g:1048:19: ( arguments )?
                     alt166 = 2
                     LA166_0 = self.input.LA(1)
 
@@ -17199,108 +17104,108 @@ class JavaParser(LocalParser):
                     if alt166 == 1:
                         # Java.g:0:0: arguments
                         pass 
-                        self._state.following.append(self.FOLLOW_arguments_in_selector6221)
-                        arguments559 = self.arguments()
+                        self._state.following.append(self.FOLLOW_arguments_in_selector6097)
+                        arguments556 = self.arguments()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, arguments559.tree)
+                            self._adaptor.addChild(root_0, arguments556.tree)
 
 
 
 
 
                 elif alt167 == 2:
-                    # Java.g:1092:9: '.' 'this'
+                    # Java.g:1049:9: '.' 'this'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal560=self.match(self.input, 31, self.FOLLOW_31_in_selector6232)
+                    char_literal557=self.match(self.input, 31, self.FOLLOW_31_in_selector6108)
                     if self._state.backtracking == 0:
 
-                        char_literal560_tree = self._adaptor.createWithPayload(char_literal560)
-                        self._adaptor.addChild(root_0, char_literal560_tree)
+                        char_literal557_tree = self._adaptor.createWithPayload(char_literal557)
+                        self._adaptor.addChild(root_0, char_literal557_tree)
 
-                    string_literal561=self.match(self.input, 71, self.FOLLOW_71_in_selector6234)
+                    string_literal558=self.match(self.input, 71, self.FOLLOW_71_in_selector6110)
                     if self._state.backtracking == 0:
 
-                        string_literal561_tree = self._adaptor.createWithPayload(string_literal561)
-                        self._adaptor.addChild(root_0, string_literal561_tree)
+                        string_literal558_tree = self._adaptor.createWithPayload(string_literal558)
+                        self._adaptor.addChild(root_0, string_literal558_tree)
 
 
 
                 elif alt167 == 3:
-                    # Java.g:1093:9: '.' 'super' superSuffix
+                    # Java.g:1050:9: '.' 'super' superSuffix
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal562=self.match(self.input, 31, self.FOLLOW_31_in_selector6244)
+                    char_literal559=self.match(self.input, 31, self.FOLLOW_31_in_selector6120)
+                    if self._state.backtracking == 0:
+
+                        char_literal559_tree = self._adaptor.createWithPayload(char_literal559)
+                        self._adaptor.addChild(root_0, char_literal559_tree)
+
+                    string_literal560=self.match(self.input, 67, self.FOLLOW_67_in_selector6122)
+                    if self._state.backtracking == 0:
+
+                        string_literal560_tree = self._adaptor.createWithPayload(string_literal560)
+                        self._adaptor.addChild(root_0, string_literal560_tree)
+
+                    self._state.following.append(self.FOLLOW_superSuffix_in_selector6124)
+                    superSuffix561 = self.superSuffix()
+
+                    self._state.following.pop()
+                    if self._state.backtracking == 0:
+                        self._adaptor.addChild(root_0, superSuffix561.tree)
+
+
+                elif alt167 == 4:
+                    # Java.g:1051:9: '.' 'new' innerCreator
+                    pass 
+                    root_0 = self._adaptor.nil()
+
+                    char_literal562=self.match(self.input, 31, self.FOLLOW_31_in_selector6134)
                     if self._state.backtracking == 0:
 
                         char_literal562_tree = self._adaptor.createWithPayload(char_literal562)
                         self._adaptor.addChild(root_0, char_literal562_tree)
 
-                    string_literal563=self.match(self.input, 67, self.FOLLOW_67_in_selector6246)
+                    string_literal563=self.match(self.input, 112, self.FOLLOW_112_in_selector6136)
                     if self._state.backtracking == 0:
 
                         string_literal563_tree = self._adaptor.createWithPayload(string_literal563)
                         self._adaptor.addChild(root_0, string_literal563_tree)
 
-                    self._state.following.append(self.FOLLOW_superSuffix_in_selector6248)
-                    superSuffix564 = self.superSuffix()
+                    self._state.following.append(self.FOLLOW_innerCreator_in_selector6138)
+                    innerCreator564 = self.innerCreator()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, superSuffix564.tree)
+                        self._adaptor.addChild(root_0, innerCreator564.tree)
 
 
-                elif alt167 == 4:
-                    # Java.g:1094:9: '.' 'new' innerCreator
+                elif alt167 == 5:
+                    # Java.g:1052:9: '[' expression ']'
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal565=self.match(self.input, 31, self.FOLLOW_31_in_selector6258)
+                    char_literal565=self.match(self.input, 50, self.FOLLOW_50_in_selector6148)
                     if self._state.backtracking == 0:
 
                         char_literal565_tree = self._adaptor.createWithPayload(char_literal565)
                         self._adaptor.addChild(root_0, char_literal565_tree)
 
-                    string_literal566=self.match(self.input, 112, self.FOLLOW_112_in_selector6260)
-                    if self._state.backtracking == 0:
-
-                        string_literal566_tree = self._adaptor.createWithPayload(string_literal566)
-                        self._adaptor.addChild(root_0, string_literal566_tree)
-
-                    self._state.following.append(self.FOLLOW_innerCreator_in_selector6262)
-                    innerCreator567 = self.innerCreator()
+                    self._state.following.append(self.FOLLOW_expression_in_selector6150)
+                    expression566 = self.expression()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, innerCreator567.tree)
-
-
-                elif alt167 == 5:
-                    # Java.g:1095:9: '[' expression ']'
-                    pass 
-                    root_0 = self._adaptor.nil()
-
-                    char_literal568=self.match(self.input, 50, self.FOLLOW_50_in_selector6272)
+                        self._adaptor.addChild(root_0, expression566.tree)
+                    char_literal567=self.match(self.input, 51, self.FOLLOW_51_in_selector6152)
                     if self._state.backtracking == 0:
 
-                        char_literal568_tree = self._adaptor.createWithPayload(char_literal568)
-                        self._adaptor.addChild(root_0, char_literal568_tree)
-
-                    self._state.following.append(self.FOLLOW_expression_in_selector6274)
-                    expression569 = self.expression()
-
-                    self._state.following.pop()
-                    if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expression569.tree)
-                    char_literal570=self.match(self.input, 51, self.FOLLOW_51_in_selector6276)
-                    if self._state.backtracking == 0:
-
-                        char_literal570_tree = self._adaptor.createWithPayload(char_literal570)
-                        self._adaptor.addChild(root_0, char_literal570_tree)
+                        char_literal567_tree = self._adaptor.createWithPayload(char_literal567)
+                        self._adaptor.addChild(root_0, char_literal567_tree)
 
 
 
@@ -17337,7 +17242,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "superSuffix"
-    # Java.g:1099:1: superSuffix : ( arguments | '.' Ident ( arguments )? );
+    # Java.g:1056:1: superSuffix : ( arguments | '.' Ident ( arguments )? );
     def superSuffix(self, ):
 
         retval = self.superSuffix_return()
@@ -17345,15 +17250,15 @@ class JavaParser(LocalParser):
         superSuffix_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal572 = None
-        Ident573 = None
+        char_literal569 = None
+        Ident570 = None
+        arguments568 = None
+
         arguments571 = None
 
-        arguments574 = None
 
-
-        char_literal572_tree = None
-        Ident573_tree = None
+        char_literal569_tree = None
+        Ident570_tree = None
 
         success = False
         try:
@@ -17363,7 +17268,7 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1100:5: ( arguments | '.' Ident ( arguments )? )
+                # Java.g:1057:5: ( arguments | '.' Ident ( arguments )? )
                 alt169 = 2
                 LA169_0 = self.input.LA(1)
 
@@ -17380,36 +17285,36 @@ class JavaParser(LocalParser):
                     raise nvae
 
                 if alt169 == 1:
-                    # Java.g:1100:9: arguments
+                    # Java.g:1057:9: arguments
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    self._state.following.append(self.FOLLOW_arguments_in_superSuffix6296)
-                    arguments571 = self.arguments()
+                    self._state.following.append(self.FOLLOW_arguments_in_superSuffix6172)
+                    arguments568 = self.arguments()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, arguments571.tree)
+                        self._adaptor.addChild(root_0, arguments568.tree)
 
 
                 elif alt169 == 2:
-                    # Java.g:1101:9: '.' Ident ( arguments )?
+                    # Java.g:1058:9: '.' Ident ( arguments )?
                     pass 
                     root_0 = self._adaptor.nil()
 
-                    char_literal572=self.match(self.input, 31, self.FOLLOW_31_in_superSuffix6306)
+                    char_literal569=self.match(self.input, 31, self.FOLLOW_31_in_superSuffix6182)
                     if self._state.backtracking == 0:
 
-                        char_literal572_tree = self._adaptor.createWithPayload(char_literal572)
-                        self._adaptor.addChild(root_0, char_literal572_tree)
+                        char_literal569_tree = self._adaptor.createWithPayload(char_literal569)
+                        self._adaptor.addChild(root_0, char_literal569_tree)
 
-                    Ident573=self.match(self.input, Ident, self.FOLLOW_Ident_in_superSuffix6308)
+                    Ident570=self.match(self.input, Ident, self.FOLLOW_Ident_in_superSuffix6184)
                     if self._state.backtracking == 0:
 
-                        Ident573_tree = self._adaptor.createWithPayload(Ident573)
-                        self._adaptor.addChild(root_0, Ident573_tree)
+                        Ident570_tree = self._adaptor.createWithPayload(Ident570)
+                        self._adaptor.addChild(root_0, Ident570_tree)
 
-                    # Java.g:1101:19: ( arguments )?
+                    # Java.g:1058:19: ( arguments )?
                     alt168 = 2
                     LA168_0 = self.input.LA(1)
 
@@ -17418,12 +17323,12 @@ class JavaParser(LocalParser):
                     if alt168 == 1:
                         # Java.g:0:0: arguments
                         pass 
-                        self._state.following.append(self.FOLLOW_arguments_in_superSuffix6310)
-                        arguments574 = self.arguments()
+                        self._state.following.append(self.FOLLOW_arguments_in_superSuffix6186)
+                        arguments571 = self.arguments()
 
                         self._state.following.pop()
                         if self._state.backtracking == 0:
-                            self._adaptor.addChild(root_0, arguments574.tree)
+                            self._adaptor.addChild(root_0, arguments571.tree)
 
 
 
@@ -17462,7 +17367,7 @@ class JavaParser(LocalParser):
 
 
     # $ANTLR start "arguments"
-    # Java.g:1105:1: arguments : '(' ( expressionList )? ')' ;
+    # Java.g:1062:1: arguments : '(' ( expressionList )? ')' ;
     def arguments(self, ):
 
         retval = self.arguments_return()
@@ -17470,13 +17375,13 @@ class JavaParser(LocalParser):
         arguments_StartIndex = self.input.index()
         root_0 = None
 
-        char_literal575 = None
-        char_literal577 = None
-        expressionList576 = None
+        char_literal572 = None
+        char_literal574 = None
+        expressionList573 = None
 
 
-        char_literal575_tree = None
-        char_literal577_tree = None
+        char_literal572_tree = None
+        char_literal574_tree = None
 
         success = False
         try:
@@ -17486,18 +17391,18 @@ class JavaParser(LocalParser):
                     success = True
                     return retval
 
-                # Java.g:1106:5: ( '(' ( expressionList )? ')' )
-                # Java.g:1106:9: '(' ( expressionList )? ')'
+                # Java.g:1063:5: ( '(' ( expressionList )? ')' )
+                # Java.g:1063:9: '(' ( expressionList )? ')'
                 pass 
                 root_0 = self._adaptor.nil()
 
-                char_literal575=self.match(self.input, 68, self.FOLLOW_68_in_arguments6331)
+                char_literal572=self.match(self.input, 68, self.FOLLOW_68_in_arguments6207)
                 if self._state.backtracking == 0:
 
-                    char_literal575_tree = self._adaptor.createWithPayload(char_literal575)
-                    self._adaptor.addChild(root_0, char_literal575_tree)
+                    char_literal572_tree = self._adaptor.createWithPayload(char_literal572)
+                    self._adaptor.addChild(root_0, char_literal572_tree)
 
-                # Java.g:1106:13: ( expressionList )?
+                # Java.g:1063:13: ( expressionList )?
                 alt170 = 2
                 LA170_0 = self.input.LA(1)
 
@@ -17506,20 +17411,20 @@ class JavaParser(LocalParser):
                 if alt170 == 1:
                     # Java.g:0:0: expressionList
                     pass 
-                    self._state.following.append(self.FOLLOW_expressionList_in_arguments6333)
-                    expressionList576 = self.expressionList()
+                    self._state.following.append(self.FOLLOW_expressionList_in_arguments6209)
+                    expressionList573 = self.expressionList()
 
                     self._state.following.pop()
                     if self._state.backtracking == 0:
-                        self._adaptor.addChild(root_0, expressionList576.tree)
+                        self._adaptor.addChild(root_0, expressionList573.tree)
 
 
 
-                char_literal577=self.match(self.input, 69, self.FOLLOW_69_in_arguments6336)
+                char_literal574=self.match(self.input, 69, self.FOLLOW_69_in_arguments6212)
                 if self._state.backtracking == 0:
 
-                    char_literal577_tree = self._adaptor.createWithPayload(char_literal577)
-                    self._adaptor.addChild(root_0, char_literal577_tree)
+                    char_literal574_tree = self._adaptor.createWithPayload(char_literal574)
+                    self._adaptor.addChild(root_0, char_literal574_tree)
 
 
 
@@ -17549,14 +17454,14 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred5_Java"
     def synpred5_Java_fragment(self, ):
-        # Java.g:66:9: ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) )
-        # Java.g:66:9: annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
+        # Java.g:62:9: ( annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* ) )
+        # Java.g:62:9: annotations ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
         pass 
-        self._state.following.append(self.FOLLOW_annotations_in_synpred5_Java123)
+        self._state.following.append(self.FOLLOW_annotations_in_synpred5_Java94)
         self.annotations()
 
         self._state.following.pop()
-        # Java.g:67:9: ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
+        # Java.g:63:9: ( packageDecl ( importDecl )* ( typeDecl )* | classOrInterfaceDecl ( typeDecl )* )
         alt176 = 2
         LA176_0 = self.input.LA(1)
 
@@ -17573,13 +17478,13 @@ class JavaParser(LocalParser):
             raise nvae
 
         if alt176 == 1:
-            # Java.g:67:13: packageDecl ( importDecl )* ( typeDecl )*
+            # Java.g:63:13: packageDecl ( importDecl )* ( typeDecl )*
             pass 
-            self._state.following.append(self.FOLLOW_packageDecl_in_synpred5_Java137)
+            self._state.following.append(self.FOLLOW_packageDecl_in_synpred5_Java108)
             self.packageDecl()
 
             self._state.following.pop()
-            # Java.g:67:25: ( importDecl )*
+            # Java.g:63:25: ( importDecl )*
             while True: #loop173
                 alt173 = 2
                 LA173_0 = self.input.LA(1)
@@ -17591,7 +17496,7 @@ class JavaParser(LocalParser):
                 if alt173 == 1:
                     # Java.g:0:0: importDecl
                     pass 
-                    self._state.following.append(self.FOLLOW_importDecl_in_synpred5_Java139)
+                    self._state.following.append(self.FOLLOW_importDecl_in_synpred5_Java110)
                     self.importDecl()
 
                     self._state.following.pop()
@@ -17601,7 +17506,7 @@ class JavaParser(LocalParser):
                     break #loop173
 
 
-            # Java.g:67:37: ( typeDecl )*
+            # Java.g:63:37: ( typeDecl )*
             while True: #loop174
                 alt174 = 2
                 LA174_0 = self.input.LA(1)
@@ -17613,7 +17518,7 @@ class JavaParser(LocalParser):
                 if alt174 == 1:
                     # Java.g:0:0: typeDecl
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDecl_in_synpred5_Java142)
+                    self._state.following.append(self.FOLLOW_typeDecl_in_synpred5_Java113)
                     self.typeDecl()
 
                     self._state.following.pop()
@@ -17626,13 +17531,13 @@ class JavaParser(LocalParser):
 
 
         elif alt176 == 2:
-            # Java.g:68:13: classOrInterfaceDecl ( typeDecl )*
+            # Java.g:64:13: classOrInterfaceDecl ( typeDecl )*
             pass 
-            self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_synpred5_Java157)
+            self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_synpred5_Java128)
             self.classOrInterfaceDecl()
 
             self._state.following.pop()
-            # Java.g:68:34: ( typeDecl )*
+            # Java.g:64:34: ( typeDecl )*
             while True: #loop175
                 alt175 = 2
                 LA175_0 = self.input.LA(1)
@@ -17644,7 +17549,7 @@ class JavaParser(LocalParser):
                 if alt175 == 1:
                     # Java.g:0:0: typeDecl
                     pass 
-                    self._state.following.append(self.FOLLOW_typeDecl_in_synpred5_Java159)
+                    self._state.following.append(self.FOLLOW_typeDecl_in_synpred5_Java130)
                     self.typeDecl()
 
                     self._state.following.pop()
@@ -17665,10 +17570,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred113_Java"
     def synpred113_Java_fragment(self, ):
-        # Java.g:550:13: ( explicitConstructorInvocation )
-        # Java.g:550:13: explicitConstructorInvocation
+        # Java.g:559:13: ( explicitConstructorInvocation )
+        # Java.g:559:13: explicitConstructorInvocation
         pass 
-        self._state.following.append(self.FOLLOW_explicitConstructorInvocation_in_synpred113_Java2862)
+        self._state.following.append(self.FOLLOW_explicitConstructorInvocation_in_synpred113_Java2854)
         self.explicitConstructorInvocation()
 
         self._state.following.pop()
@@ -17680,10 +17585,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred117_Java"
     def synpred117_Java_fragment(self, ):
-        # Java.g:561:9: ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' )
-        # Java.g:561:9: ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';'
+        # Java.g:571:9: ( ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';' )
+        # Java.g:571:9: ( nonWildcardTypeArguments )? ( 'this' | 'super' ) arguments ';'
         pass 
-        # Java.g:561:9: ( nonWildcardTypeArguments )?
+        # Java.g:571:9: ( nonWildcardTypeArguments )?
         alt184 = 2
         LA184_0 = self.input.LA(1)
 
@@ -17692,7 +17597,7 @@ class JavaParser(LocalParser):
         if alt184 == 1:
             # Java.g:0:0: nonWildcardTypeArguments
             pass 
-            self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_synpred117_Java2898)
+            self._state.following.append(self.FOLLOW_nonWildcardTypeArguments_in_synpred117_Java2890)
             self.nonWildcardTypeArguments()
 
             self._state.following.pop()
@@ -17711,11 +17616,11 @@ class JavaParser(LocalParser):
             raise mse
 
 
-        self._state.following.append(self.FOLLOW_arguments_in_synpred117_Java2909)
+        self._state.following.append(self.FOLLOW_arguments_in_synpred117_Java2901)
         self.arguments()
 
         self._state.following.pop()
-        self.match(self.input, 28, self.FOLLOW_28_in_synpred117_Java2911)
+        self.match(self.input, 28, self.FOLLOW_28_in_synpred117_Java2903)
 
 
     # $ANTLR end "synpred117_Java"
@@ -17724,10 +17629,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred127_Java"
     def synpred127_Java_fragment(self, ):
-        # Java.g:603:9: ( annotation )
-        # Java.g:603:9: annotation
+        # Java.g:613:9: ( annotation )
+        # Java.g:613:9: annotation
         pass 
-        self._state.following.append(self.FOLLOW_annotation_in_synpred127_Java3142)
+        self._state.following.append(self.FOLLOW_annotation_in_synpred127_Java3134)
         self.annotation()
 
         self._state.following.pop()
@@ -17739,10 +17644,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred150_Java"
     def synpred150_Java_fragment(self, ):
-        # Java.g:702:9: ( localVariableDeclStatement )
-        # Java.g:702:9: localVariableDeclStatement
+        # Java.g:703:9: ( localVariableDeclStatement )
+        # Java.g:703:9: localVariableDeclStatement
         pass 
-        self._state.following.append(self.FOLLOW_localVariableDeclStatement_in_synpred150_Java3656)
+        self._state.following.append(self.FOLLOW_localVariableDeclStatement_in_synpred150_Java3634)
         self.localVariableDeclStatement()
 
         self._state.following.pop()
@@ -17754,10 +17659,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred151_Java"
     def synpred151_Java_fragment(self, ):
-        # Java.g:703:9: ( classOrInterfaceDecl )
-        # Java.g:703:9: classOrInterfaceDecl
+        # Java.g:704:9: ( classOrInterfaceDecl )
+        # Java.g:704:9: classOrInterfaceDecl
         pass 
-        self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_synpred151_Java3666)
+        self._state.following.append(self.FOLLOW_classOrInterfaceDecl_in_synpred151_Java3644)
         self.classOrInterfaceDecl()
 
         self._state.following.pop()
@@ -17769,11 +17674,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred156_Java"
     def synpred156_Java_fragment(self, ):
-        # Java.g:736:54: ( 'else' statement )
-        # Java.g:736:54: 'else' statement
+        # Java.g:729:54: ( 'else' statement )
+        # Java.g:729:54: 'else' statement
         pass 
-        self.match(self.input, 76, self.FOLLOW_76_in_synpred156_Java3844)
-        self._state.following.append(self.FOLLOW_statement_in_synpred156_Java3846)
+        self.match(self.input, 76, self.FOLLOW_76_in_synpred156_Java3806)
+        self._state.following.append(self.FOLLOW_statement_in_synpred156_Java3808)
         self.statement()
 
         self._state.following.pop()
@@ -17785,15 +17690,15 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred161_Java"
     def synpred161_Java_fragment(self, ):
-        # Java.g:741:13: ( catches 'finally' block )
-        # Java.g:741:13: catches 'finally' block
+        # Java.g:734:13: ( catches 'finally' block )
+        # Java.g:734:13: catches 'finally' block
         pass 
-        self._state.following.append(self.FOLLOW_catches_in_synpred161_Java3924)
+        self._state.following.append(self.FOLLOW_catches_in_synpred161_Java3886)
         self.catches()
 
         self._state.following.pop()
-        self.match(self.input, 81, self.FOLLOW_81_in_synpred161_Java3926)
-        self._state.following.append(self.FOLLOW_block_in_synpred161_Java3928)
+        self.match(self.input, 81, self.FOLLOW_81_in_synpred161_Java3888)
+        self._state.following.append(self.FOLLOW_block_in_synpred161_Java3890)
         self.block()
 
         self._state.following.pop()
@@ -17805,10 +17710,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred162_Java"
     def synpred162_Java_fragment(self, ):
-        # Java.g:742:13: ( catches )
-        # Java.g:742:13: catches
+        # Java.g:735:13: ( catches )
+        # Java.g:735:13: catches
         pass 
-        self._state.following.append(self.FOLLOW_catches_in_synpred162_Java3942)
+        self._state.following.append(self.FOLLOW_catches_in_synpred162_Java3904)
         self.catches()
 
         self._state.following.pop()
@@ -17820,10 +17725,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred177_Java"
     def synpred177_Java_fragment(self, ):
-        # Java.g:784:9: ( switchLabel )
-        # Java.g:784:9: switchLabel
+        # Java.g:772:9: ( switchLabel )
+        # Java.g:772:9: switchLabel
         pass 
-        self._state.following.append(self.FOLLOW_switchLabel_in_synpred177_Java4235)
+        self._state.following.append(self.FOLLOW_switchLabel_in_synpred177_Java4186)
         self.switchLabel()
 
         self._state.following.pop()
@@ -17835,15 +17740,15 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred179_Java"
     def synpred179_Java_fragment(self, ):
-        # Java.g:789:9: ( 'case' constantExpression ':' )
-        # Java.g:789:9: 'case' constantExpression ':'
+        # Java.g:777:9: ( 'case' constantExpression ':' )
+        # Java.g:777:9: 'case' constantExpression ':'
         pass 
-        self.match(self.input, 88, self.FOLLOW_88_in_synpred179_Java4259)
-        self._state.following.append(self.FOLLOW_constantExpression_in_synpred179_Java4261)
+        self.match(self.input, 88, self.FOLLOW_88_in_synpred179_Java4210)
+        self._state.following.append(self.FOLLOW_constantExpression_in_synpred179_Java4212)
         self.constantExpression()
 
         self._state.following.pop()
-        self.match(self.input, 74, self.FOLLOW_74_in_synpred179_Java4263)
+        self.match(self.input, 74, self.FOLLOW_74_in_synpred179_Java4214)
 
 
     # $ANTLR end "synpred179_Java"
@@ -17852,15 +17757,15 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred180_Java"
     def synpred180_Java_fragment(self, ):
-        # Java.g:790:9: ( 'case' enumConstantName ':' )
-        # Java.g:790:9: 'case' enumConstantName ':'
+        # Java.g:778:9: ( 'case' enumConstantName ':' )
+        # Java.g:778:9: 'case' enumConstantName ':'
         pass 
-        self.match(self.input, 88, self.FOLLOW_88_in_synpred180_Java4273)
-        self._state.following.append(self.FOLLOW_enumConstantName_in_synpred180_Java4275)
+        self.match(self.input, 88, self.FOLLOW_88_in_synpred180_Java4224)
+        self._state.following.append(self.FOLLOW_enumConstantName_in_synpred180_Java4226)
         self.enumConstantName()
 
         self._state.following.pop()
-        self.match(self.input, 74, self.FOLLOW_74_in_synpred180_Java4277)
+        self.match(self.input, 74, self.FOLLOW_74_in_synpred180_Java4228)
 
 
     # $ANTLR end "synpred180_Java"
@@ -17869,10 +17774,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred181_Java"
     def synpred181_Java_fragment(self, ):
-        # Java.g:797:9: ( enhancedForControl )
-        # Java.g:797:9: enhancedForControl
+        # Java.g:785:9: ( enhancedForControl )
+        # Java.g:785:9: enhancedForControl
         pass 
-        self._state.following.append(self.FOLLOW_enhancedForControl_in_synpred181_Java4317)
+        self._state.following.append(self.FOLLOW_enhancedForControl_in_synpred181_Java4268)
         self.enhancedForControl()
 
         self._state.following.pop()
@@ -17884,10 +17789,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred185_Java"
     def synpred185_Java_fragment(self, ):
-        # Java.g:803:9: ( localVariableDecl )
-        # Java.g:803:9: localVariableDecl
+        # Java.g:791:9: ( localVariableDecl )
+        # Java.g:791:9: localVariableDecl
         pass 
-        self._state.following.append(self.FOLLOW_localVariableDecl_in_synpred185_Java4358)
+        self._state.following.append(self.FOLLOW_localVariableDecl_in_synpred185_Java4309)
         self.localVariableDecl()
 
         self._state.following.pop()
@@ -17899,14 +17804,14 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred187_Java"
     def synpred187_Java_fragment(self, ):
-        # Java.g:843:10: (a0= assignmentOperator expression )
-        # Java.g:843:10: a0= assignmentOperator expression
+        # Java.g:830:32: (a0= assignmentOperator expression )
+        # Java.g:830:32: a0= assignmentOperator expression
         pass 
-        self._state.following.append(self.FOLLOW_assignmentOperator_in_synpred187_Java4543)
+        self._state.following.append(self.FOLLOW_assignmentOperator_in_synpred187_Java4486)
         a0 = self.assignmentOperator()
 
         self._state.following.pop()
-        self._state.following.append(self.FOLLOW_expression_in_synpred187_Java4563)
+        self._state.following.append(self.FOLLOW_expression_in_synpred187_Java4488)
         self.expression()
 
         self._state.following.pop()
@@ -17918,12 +17823,12 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred197_Java"
     def synpred197_Java_fragment(self, ):
-        # Java.g:866:9: ( '<' '<' '=' )
-        # Java.g:866:10: '<' '<' '='
+        # Java.g:844:9: ( '<' '<' '=' )
+        # Java.g:844:10: '<' '<' '='
         pass 
-        self.match(self.input, 42, self.FOLLOW_42_in_synpred197_Java4685)
-        self.match(self.input, 42, self.FOLLOW_42_in_synpred197_Java4687)
-        self.match(self.input, 53, self.FOLLOW_53_in_synpred197_Java4689)
+        self.match(self.input, 42, self.FOLLOW_42_in_synpred197_Java4601)
+        self.match(self.input, 42, self.FOLLOW_42_in_synpred197_Java4603)
+        self.match(self.input, 53, self.FOLLOW_53_in_synpred197_Java4605)
 
 
     # $ANTLR end "synpred197_Java"
@@ -17932,13 +17837,13 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred198_Java"
     def synpred198_Java_fragment(self, ):
-        # Java.g:868:9: ( '>' '>' '>' '=' )
-        # Java.g:868:10: '>' '>' '>' '='
+        # Java.g:846:9: ( '>' '>' '>' '=' )
+        # Java.g:846:10: '>' '>' '>' '='
         pass 
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4724)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4726)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4728)
-        self.match(self.input, 53, self.FOLLOW_53_in_synpred198_Java4730)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4640)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4642)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred198_Java4644)
+        self.match(self.input, 53, self.FOLLOW_53_in_synpred198_Java4646)
 
 
     # $ANTLR end "synpred198_Java"
@@ -17947,12 +17852,12 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred199_Java"
     def synpred199_Java_fragment(self, ):
-        # Java.g:870:9: ( '>' '>' '=' )
-        # Java.g:870:10: '>' '>' '='
+        # Java.g:848:9: ( '>' '>' '=' )
+        # Java.g:848:10: '>' '>' '='
         pass 
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred199_Java4769)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred199_Java4771)
-        self.match(self.input, 53, self.FOLLOW_53_in_synpred199_Java4773)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred199_Java4685)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred199_Java4687)
+        self.match(self.input, 53, self.FOLLOW_53_in_synpred199_Java4689)
 
 
     # $ANTLR end "synpred199_Java"
@@ -17961,11 +17866,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred210_Java"
     def synpred210_Java_fragment(self, ):
-        # Java.g:921:9: ( '<' '=' )
-        # Java.g:921:10: '<' '='
+        # Java.g:902:9: ( '<' '=' )
+        # Java.g:902:10: '<' '='
         pass 
-        self.match(self.input, 42, self.FOLLOW_42_in_synpred210_Java5087)
-        self.match(self.input, 53, self.FOLLOW_53_in_synpred210_Java5089)
+        self.match(self.input, 42, self.FOLLOW_42_in_synpred210_Java5027)
+        self.match(self.input, 53, self.FOLLOW_53_in_synpred210_Java5029)
 
 
     # $ANTLR end "synpred210_Java"
@@ -17974,11 +17879,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred211_Java"
     def synpred211_Java_fragment(self, ):
-        # Java.g:923:9: ( '>' '=' )
-        # Java.g:923:10: '>' '='
+        # Java.g:904:9: ( '>' '=' )
+        # Java.g:904:10: '>' '='
         pass 
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred211_Java5120)
-        self.match(self.input, 53, self.FOLLOW_53_in_synpred211_Java5122)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred211_Java5060)
+        self.match(self.input, 53, self.FOLLOW_53_in_synpred211_Java5062)
 
 
     # $ANTLR end "synpred211_Java"
@@ -17987,11 +17892,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred214_Java"
     def synpred214_Java_fragment(self, ):
-        # Java.g:936:9: ( '<' '<' )
-        # Java.g:936:10: '<' '<'
+        # Java.g:917:9: ( '<' '<' )
+        # Java.g:917:10: '<' '<'
         pass 
-        self.match(self.input, 42, self.FOLLOW_42_in_synpred214_Java5212)
-        self.match(self.input, 42, self.FOLLOW_42_in_synpred214_Java5214)
+        self.match(self.input, 42, self.FOLLOW_42_in_synpred214_Java5152)
+        self.match(self.input, 42, self.FOLLOW_42_in_synpred214_Java5154)
 
 
     # $ANTLR end "synpred214_Java"
@@ -18000,12 +17905,12 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred215_Java"
     def synpred215_Java_fragment(self, ):
-        # Java.g:938:9: ( '>' '>' '>' )
-        # Java.g:938:10: '>' '>' '>'
+        # Java.g:919:9: ( '>' '>' '>' )
+        # Java.g:919:10: '>' '>' '>'
         pass 
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5245)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5247)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5249)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5185)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5187)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred215_Java5189)
 
 
     # $ANTLR end "synpred215_Java"
@@ -18014,11 +17919,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred216_Java"
     def synpred216_Java_fragment(self, ):
-        # Java.g:940:9: ( '>' '>' )
-        # Java.g:940:10: '>' '>'
+        # Java.g:921:9: ( '>' '>' )
+        # Java.g:921:10: '>' '>'
         pass 
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred216_Java5284)
-        self.match(self.input, 44, self.FOLLOW_44_in_synpred216_Java5286)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred216_Java5224)
+        self.match(self.input, 44, self.FOLLOW_44_in_synpred216_Java5226)
 
 
     # $ANTLR end "synpred216_Java"
@@ -18027,10 +17932,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred228_Java"
     def synpred228_Java_fragment(self, ):
-        # Java.g:967:9: ( castExpression )
-        # Java.g:967:9: castExpression
+        # Java.g:948:9: ( castExpression )
+        # Java.g:948:9: castExpression
         pass 
-        self._state.following.append(self.FOLLOW_castExpression_in_synpred228_Java5494)
+        self._state.following.append(self.FOLLOW_castExpression_in_synpred228_Java5434)
         self.castExpression()
 
         self._state.following.pop()
@@ -18042,16 +17947,16 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred232_Java"
     def synpred232_Java_fragment(self, ):
-        # Java.g:973:8: ( '(' primitiveType ')' unaryExpression )
-        # Java.g:973:8: '(' primitiveType ')' unaryExpression
+        # Java.g:954:8: ( '(' primitiveType ')' unaryExpression )
+        # Java.g:954:8: '(' primitiveType ')' unaryExpression
         pass 
-        self.match(self.input, 68, self.FOLLOW_68_in_synpred232_Java5533)
-        self._state.following.append(self.FOLLOW_primitiveType_in_synpred232_Java5535)
+        self.match(self.input, 68, self.FOLLOW_68_in_synpred232_Java5473)
+        self._state.following.append(self.FOLLOW_primitiveType_in_synpred232_Java5475)
         self.primitiveType()
 
         self._state.following.pop()
-        self.match(self.input, 69, self.FOLLOW_69_in_synpred232_Java5537)
-        self._state.following.append(self.FOLLOW_unaryExpression_in_synpred232_Java5539)
+        self.match(self.input, 69, self.FOLLOW_69_in_synpred232_Java5477)
+        self._state.following.append(self.FOLLOW_unaryExpression_in_synpred232_Java5479)
         self.unaryExpression()
 
         self._state.following.pop()
@@ -18063,10 +17968,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred233_Java"
     def synpred233_Java_fragment(self, ):
-        # Java.g:974:13: ( type )
-        # Java.g:974:13: type
+        # Java.g:955:13: ( type )
+        # Java.g:955:13: type
         pass 
-        self._state.following.append(self.FOLLOW_type_in_synpred233_Java5551)
+        self._state.following.append(self.FOLLOW_type_in_synpred233_Java5491)
         self.type()
 
         self._state.following.pop()
@@ -18078,11 +17983,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred235_Java"
     def synpred235_Java_fragment(self, ):
-        # Java.g:986:17: ( '.' id0= Ident )
-        # Java.g:986:17: '.' id0= Ident
+        # Java.g:973:17: ( '.' id0= Ident )
+        # Java.g:973:17: '.' id0= Ident
         pass 
-        self.match(self.input, 31, self.FOLLOW_31_in_synpred235_Java5599)
-        id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_synpred235_Java5603)
+        self.match(self.input, 31, self.FOLLOW_31_in_synpred235_Java5538)
+        id0=self.match(self.input, Ident, self.FOLLOW_Ident_in_synpred235_Java5542)
 
 
     # $ANTLR end "synpred235_Java"
@@ -18091,10 +17996,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred236_Java"
     def synpred236_Java_fragment(self, ):
-        # Java.g:986:33: ( identifierSuffix )
-        # Java.g:986:33: identifierSuffix
+        # Java.g:973:33: ( identifierSuffix )
+        # Java.g:973:33: identifierSuffix
         pass 
-        self._state.following.append(self.FOLLOW_identifierSuffix_in_synpred236_Java5607)
+        self._state.following.append(self.FOLLOW_identifierSuffix_in_synpred236_Java5546)
         self.identifierSuffix()
 
         self._state.following.pop()
@@ -18106,11 +18011,11 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred241_Java"
     def synpred241_Java_fragment(self, ):
-        # Java.g:1005:10: ( '.' id2= Ident )
-        # Java.g:1005:10: '.' id2= Ident
+        # Java.g:985:10: ( '.' id2= Ident )
+        # Java.g:985:10: '.' id2= Ident
         pass 
-        self.match(self.input, 31, self.FOLLOW_31_in_synpred241_Java5690)
-        id2=self.match(self.input, Ident, self.FOLLOW_Ident_in_synpred241_Java5694)
+        self.match(self.input, 31, self.FOLLOW_31_in_synpred241_Java5626)
+        id2=self.match(self.input, Ident, self.FOLLOW_Ident_in_synpred241_Java5630)
 
 
     # $ANTLR end "synpred241_Java"
@@ -18119,10 +18024,10 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred242_Java"
     def synpred242_Java_fragment(self, ):
-        # Java.g:1017:9: ( identifierSuffix )
-        # Java.g:1017:9: identifierSuffix
+        # Java.g:986:10: ( identifierSuffix )
+        # Java.g:986:10: identifierSuffix
         pass 
-        self._state.following.append(self.FOLLOW_identifierSuffix_in_synpred242_Java5739)
+        self._state.following.append(self.FOLLOW_identifierSuffix_in_synpred242_Java5643)
         self.identifierSuffix()
 
         self._state.following.pop()
@@ -18134,15 +18039,15 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred248_Java"
     def synpred248_Java_fragment(self, ):
-        # Java.g:1030:10: ( '[' expression ']' )
-        # Java.g:1030:10: '[' expression ']'
+        # Java.g:995:10: ( '[' expression ']' )
+        # Java.g:995:10: '[' expression ']'
         pass 
-        self.match(self.input, 50, self.FOLLOW_50_in_synpred248_Java5826)
-        self._state.following.append(self.FOLLOW_expression_in_synpred248_Java5828)
+        self.match(self.input, 50, self.FOLLOW_50_in_synpred248_Java5721)
+        self._state.following.append(self.FOLLOW_expression_in_synpred248_Java5723)
         self.expression()
 
         self._state.following.pop()
-        self.match(self.input, 51, self.FOLLOW_51_in_synpred248_Java5830)
+        self.match(self.input, 51, self.FOLLOW_51_in_synpred248_Java5725)
 
 
     # $ANTLR end "synpred248_Java"
@@ -18151,15 +18056,15 @@ class JavaParser(LocalParser):
 
     # $ANTLR start "synpred261_Java"
     def synpred261_Java_fragment(self, ):
-        # Java.g:1070:29: ( '[' expression ']' )
-        # Java.g:1070:29: '[' expression ']'
+        # Java.g:1027:29: ( '[' expression ']' )
+        # Java.g:1027:29: '[' expression ']'
         pass 
-        self.match(self.input, 50, self.FOLLOW_50_in_synpred261_Java6103)
-        self._state.following.append(self.FOLLOW_expression_in_synpred261_Java6105)
+        self.match(self.input, 50, self.FOLLOW_50_in_synpred261_Java5979)
+        self._state.following.append(self.FOLLOW_expression_in_synpred261_Java5981)
         self.expression()
 
         self._state.following.pop()
-        self.match(self.input, 51, self.FOLLOW_51_in_synpred261_Java6107)
+        self.match(self.input, 51, self.FOLLOW_51_in_synpred261_Java5983)
 
 
     # $ANTLR end "synpred261_Java"
@@ -19325,13 +19230,13 @@ class JavaParser(LocalParser):
         )
 
     DFA123_min = DFA.unpack(
-        u"\5\4\22\uffff\10\4\1\34\30\uffff\1\63\1\34\1\uffff\21\0\2\uffff"
+        u"\5\4\22\uffff\10\4\1\34\30\uffff\1\63\1\uffff\1\34\21\0\2\uffff"
         u"\3\0\21\uffff\1\0\5\uffff\1\0\30\uffff\1\0\5\uffff"
         )
 
     DFA123_max = DFA.unpack(
         u"\1\160\1\110\1\4\1\155\1\62\22\uffff\2\62\1\110\1\4\1\110\3\160"
-        u"\1\112\30\uffff\1\63\1\112\1\uffff\21\0\2\uffff\3\0\21\uffff\1"
+        u"\1\112\30\uffff\1\63\1\uffff\1\112\21\0\2\uffff\3\0\21\uffff\1"
         u"\0\5\uffff\1\0\30\uffff\1\0\5\uffff"
         )
 
@@ -19355,7 +19260,7 @@ class JavaParser(LocalParser):
         DFA.unpack(u"\1\37\27\uffff\1\5\2\uffff\1\35\1\5\11\uffff\1\34\3"
         u"\5\4\uffff\1\36\2\uffff\1\5\14\uffff\1\5\1\uffff\1\5\24\uffff\25"
         u"\5"),
-        DFA.unpack(u"\1\71\32\uffff\1\5\22\uffff\1\70"),
+        DFA.unpack(u"\1\72\32\uffff\1\5\22\uffff\1\70"),
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u""),
@@ -19414,9 +19319,9 @@ class JavaParser(LocalParser):
         DFA.unpack(u""),
         DFA.unpack(u""),
         DFA.unpack(u"\1\u0081"),
+        DFA.unpack(u""),
         DFA.unpack(u"\1\5\16\uffff\1\5\6\uffff\1\5\2\uffff\1\5\24\uffff"
         u"\1\174"),
-        DFA.unpack(u""),
         DFA.unpack(u"\1\uffff"),
         DFA.unpack(u"\1\uffff"),
         DFA.unpack(u"\1\uffff"),
@@ -20034,7 +19939,7 @@ class JavaParser(LocalParser):
         )
 
     DFA126_special = DFA.unpack(
-        u"\1\uffff\1\1\1\5\1\7\1\11\1\0\1\3\1\12\1\10\1\6\1\2\1\4\2\uffff"
+        u"\1\uffff\1\2\1\5\1\7\1\0\1\3\1\6\1\11\1\1\1\4\1\12\1\10\2\uffff"
         )
 
             
@@ -20071,10 +19976,10 @@ class JavaParser(LocalParser):
             _s = s
 
             if s == 0: 
-                LA126_5 = input.LA(1)
+                LA126_4 = input.LA(1)
 
                  
-                index126_5 = input.index()
+                index126_4 = input.index()
                 input.rewind()
                 s = -1
                 if (self.synpred187_Java()):
@@ -20084,10 +19989,27 @@ class JavaParser(LocalParser):
                     s = 12
 
                  
-                input.seek(index126_5)
+                input.seek(index126_4)
                 if s >= 0:
                     return s
             elif s == 1: 
+                LA126_8 = input.LA(1)
+
+                 
+                index126_8 = input.index()
+                input.rewind()
+                s = -1
+                if (self.synpred187_Java()):
+                    s = 13
+
+                elif (True):
+                    s = 12
+
+                 
+                input.seek(index126_8)
+                if s >= 0:
+                    return s
+            elif s == 2: 
                 LA126_1 = input.LA(1)
 
                  
@@ -20104,28 +20026,11 @@ class JavaParser(LocalParser):
                 input.seek(index126_1)
                 if s >= 0:
                     return s
-            elif s == 2: 
-                LA126_10 = input.LA(1)
-
-                 
-                index126_10 = input.index()
-                input.rewind()
-                s = -1
-                if (self.synpred187_Java()):
-                    s = 13
-
-                elif (True):
-                    s = 12
-
-                 
-                input.seek(index126_10)
-                if s >= 0:
-                    return s
             elif s == 3: 
-                LA126_6 = input.LA(1)
+                LA126_5 = input.LA(1)
 
                  
-                index126_6 = input.index()
+                index126_5 = input.index()
                 input.rewind()
                 s = -1
                 if (self.synpred187_Java()):
@@ -20135,14 +20040,14 @@ class JavaParser(LocalParser):
                     s = 12
 
                  
-                input.seek(index126_6)
+                input.seek(index126_5)
                 if s >= 0:
                     return s
             elif s == 4: 
-                LA126_11 = input.LA(1)
+                LA126_9 = input.LA(1)
 
                  
-                index126_11 = input.index()
+                index126_9 = input.index()
                 input.rewind()
                 s = -1
                 if (self.synpred187_Java()):
@@ -20152,7 +20057,7 @@ class JavaParser(LocalParser):
                     s = 12
 
                  
-                input.seek(index126_11)
+                input.seek(index126_9)
                 if s >= 0:
                     return s
             elif s == 5: 
@@ -20173,10 +20078,10 @@ class JavaParser(LocalParser):
                 if s >= 0:
                     return s
             elif s == 6: 
-                LA126_9 = input.LA(1)
+                LA126_6 = input.LA(1)
 
                  
-                index126_9 = input.index()
+                index126_6 = input.index()
                 input.rewind()
                 s = -1
                 if (self.synpred187_Java()):
@@ -20186,7 +20091,7 @@ class JavaParser(LocalParser):
                     s = 12
 
                  
-                input.seek(index126_9)
+                input.seek(index126_6)
                 if s >= 0:
                     return s
             elif s == 7: 
@@ -20207,10 +20112,10 @@ class JavaParser(LocalParser):
                 if s >= 0:
                     return s
             elif s == 8: 
-                LA126_8 = input.LA(1)
+                LA126_11 = input.LA(1)
 
                  
-                index126_8 = input.index()
+                index126_11 = input.index()
                 input.rewind()
                 s = -1
                 if (self.synpred187_Java()):
@@ -20220,27 +20125,10 @@ class JavaParser(LocalParser):
                     s = 12
 
                  
-                input.seek(index126_8)
+                input.seek(index126_11)
                 if s >= 0:
                     return s
             elif s == 9: 
-                LA126_4 = input.LA(1)
-
-                 
-                index126_4 = input.index()
-                input.rewind()
-                s = -1
-                if (self.synpred187_Java()):
-                    s = 13
-
-                elif (True):
-                    s = 12
-
-                 
-                input.seek(index126_4)
-                if s >= 0:
-                    return s
-            elif s == 10: 
                 LA126_7 = input.LA(1)
 
                  
@@ -20255,6 +20143,23 @@ class JavaParser(LocalParser):
 
                  
                 input.seek(index126_7)
+                if s >= 0:
+                    return s
+            elif s == 10: 
+                LA126_10 = input.LA(1)
+
+                 
+                index126_10 = input.index()
+                input.rewind()
+                s = -1
+                if (self.synpred187_Java()):
+                    s = 13
+
+                elif (True):
+                    s = 12
+
+                 
+                input.seek(index126_10)
                 if s >= 0:
                     return s
 
@@ -20413,7 +20318,7 @@ class JavaParser(LocalParser):
         )
 
     DFA139_special = DFA.unpack(
-        u"\1\0\2\uffff\1\1\24\uffff"
+        u"\1\1\2\uffff\1\0\24\uffff"
         )
 
             
@@ -20460,23 +20365,6 @@ class JavaParser(LocalParser):
             _s = s
 
             if s == 0: 
-                LA139_0 = input.LA(1)
-
-                 
-                index139_0 = input.index()
-                input.rewind()
-                s = -1
-                if (LA139_0 == 42) and (self.synpred214_Java()):
-                    s = 1
-
-                elif (LA139_0 == 44):
-                    s = 2
-
-                 
-                input.seek(index139_0)
-                if s >= 0:
-                    return s
-            elif s == 1: 
                 LA139_3 = input.LA(1)
 
                  
@@ -20545,6 +20433,23 @@ class JavaParser(LocalParser):
 
                  
                 input.seek(index139_3)
+                if s >= 0:
+                    return s
+            elif s == 1: 
+                LA139_0 = input.LA(1)
+
+                 
+                index139_0 = input.index()
+                input.rewind()
+                s = -1
+                if (LA139_0 == 42) and (self.synpred214_Java()):
+                    s = 1
+
+                elif (LA139_0 == 44):
+                    s = 2
+
+                 
+                input.seek(index139_0)
                 if s >= 0:
                     return s
 
@@ -21197,705 +21102,705 @@ class JavaParser(LocalParser):
             raise nvae
  
 
-    FOLLOW_annotations_in_compilationUnit123 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_packageDecl_in_compilationUnit137 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_importDecl_in_compilationUnit139 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_typeDecl_in_compilationUnit142 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_classOrInterfaceDecl_in_compilationUnit157 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_typeDecl_in_compilationUnit159 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_packageDecl_in_compilationUnit180 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_importDecl_in_compilationUnit183 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_typeDecl_in_compilationUnit186 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_27_in_packageDecl207 = frozenset([4])
-    FOLLOW_qualifiedName_in_packageDecl209 = frozenset([28])
-    FOLLOW_28_in_packageDecl211 = frozenset([1])
-    FOLLOW_29_in_importDecl231 = frozenset([4, 30])
-    FOLLOW_30_in_importDecl233 = frozenset([4])
-    FOLLOW_qualifiedName_in_importDecl236 = frozenset([28, 31])
-    FOLLOW_31_in_importDecl239 = frozenset([32])
-    FOLLOW_32_in_importDecl241 = frozenset([28])
-    FOLLOW_28_in_importDecl245 = frozenset([1])
-    FOLLOW_classOrInterfaceDecl_in_typeDecl265 = frozenset([1])
-    FOLLOW_28_in_typeDecl275 = frozenset([1])
-    FOLLOW_classOrInterfaceModifiers_in_classOrInterfaceDecl295 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_classDecl_in_classOrInterfaceDecl298 = frozenset([1])
-    FOLLOW_interfaceDecl_in_classOrInterfaceDecl302 = frozenset([1])
-    FOLLOW_classOrInterfaceModifier_in_classOrInterfaceModifiers322 = frozenset([1, 30, 33, 34, 35, 36, 37, 38, 72])
-    FOLLOW_annotation_in_classOrInterfaceModifier343 = frozenset([1])
-    FOLLOW_33_in_classOrInterfaceModifier356 = frozenset([1])
-    FOLLOW_34_in_classOrInterfaceModifier371 = frozenset([1])
-    FOLLOW_35_in_classOrInterfaceModifier383 = frozenset([1])
-    FOLLOW_36_in_classOrInterfaceModifier397 = frozenset([1])
-    FOLLOW_30_in_classOrInterfaceModifier410 = frozenset([1])
-    FOLLOW_37_in_classOrInterfaceModifier425 = frozenset([1])
-    FOLLOW_38_in_classOrInterfaceModifier441 = frozenset([1])
-    FOLLOW_modifier_in_modifiers474 = frozenset([1, 30, 33, 34, 35, 36, 37, 38, 54, 55, 56, 57, 72])
-    FOLLOW_normalClassDecl_in_classDecl508 = frozenset([1])
-    FOLLOW_enumDecl_in_classDecl514 = frozenset([1])
-    FOLLOW_39_in_normalClassDecl542 = frozenset([4])
-    FOLLOW_Ident_in_normalClassDecl546 = frozenset([40, 41, 42, 46])
-    FOLLOW_typeParameters_in_normalClassDecl550 = frozenset([40, 41, 42, 46])
-    FOLLOW_40_in_normalClassDecl562 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_normalClassDecl566 = frozenset([40, 41, 42, 46])
-    FOLLOW_41_in_normalClassDecl581 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_typeList_in_normalClassDecl585 = frozenset([40, 41, 42, 46])
-    FOLLOW_classBody_in_normalClassDecl599 = frozenset([1])
-    FOLLOW_42_in_typeParameters619 = frozenset([4])
-    FOLLOW_typeParameter_in_typeParameters621 = frozenset([43, 44])
-    FOLLOW_43_in_typeParameters624 = frozenset([4])
-    FOLLOW_typeParameter_in_typeParameters626 = frozenset([43, 44])
-    FOLLOW_44_in_typeParameters630 = frozenset([1])
-    FOLLOW_Ident_in_typeParameter650 = frozenset([1, 40])
-    FOLLOW_40_in_typeParameter653 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_typeBound_in_typeParameter655 = frozenset([1])
-    FOLLOW_type_in_typeBound677 = frozenset([1, 45])
-    FOLLOW_45_in_typeBound680 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_typeBound682 = frozenset([1, 45])
-    FOLLOW_ENUM_in_enumDecl706 = frozenset([4])
-    FOLLOW_Ident_in_enumDecl708 = frozenset([41, 46])
-    FOLLOW_41_in_enumDecl711 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_typeList_in_enumDecl713 = frozenset([41, 46])
-    FOLLOW_enumBody_in_enumDecl717 = frozenset([1])
-    FOLLOW_46_in_enumBody737 = frozenset([4, 28, 43, 47, 72])
-    FOLLOW_enumConstants_in_enumBody739 = frozenset([28, 43, 47])
-    FOLLOW_43_in_enumBody742 = frozenset([28, 47])
-    FOLLOW_enumBodyDecls_in_enumBody745 = frozenset([47])
-    FOLLOW_47_in_enumBody748 = frozenset([1])
-    FOLLOW_enumConstant_in_enumConstants768 = frozenset([1, 43])
-    FOLLOW_43_in_enumConstants771 = frozenset([4, 72])
-    FOLLOW_enumConstant_in_enumConstants773 = frozenset([1, 43])
-    FOLLOW_annotations_in_enumConstant795 = frozenset([4])
-    FOLLOW_Ident_in_enumConstant798 = frozenset([1, 40, 41, 42, 46, 68])
-    FOLLOW_arguments_in_enumConstant800 = frozenset([1, 40, 41, 42, 46])
-    FOLLOW_classBody_in_enumConstant803 = frozenset([1])
-    FOLLOW_28_in_enumBodyDecls824 = frozenset([1, 28, 30, 33, 34, 35, 36, 37, 38, 46, 54, 55, 56, 57, 72])
-    FOLLOW_classBodyDecl_in_enumBodyDecls827 = frozenset([1, 28, 30, 33, 34, 35, 36, 37, 38, 46, 54, 55, 56, 57, 72])
-    FOLLOW_normalInterfaceDecl_in_interfaceDecl859 = frozenset([1])
-    FOLLOW_annotationTypeDecl_in_interfaceDecl870 = frozenset([1])
-    FOLLOW_48_in_normalInterfaceDecl892 = frozenset([4])
-    FOLLOW_Ident_in_normalInterfaceDecl896 = frozenset([40, 42, 46])
-    FOLLOW_typeParameters_in_normalInterfaceDecl909 = frozenset([40, 42, 46])
-    FOLLOW_40_in_normalInterfaceDecl922 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_typeList_in_normalInterfaceDecl926 = frozenset([40, 42, 46])
-    FOLLOW_interfaceBody_in_normalInterfaceDecl941 = frozenset([1])
-    FOLLOW_type_in_typeList972 = frozenset([1, 43])
-    FOLLOW_43_in_typeList977 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_typeList981 = frozenset([1, 43])
-    FOLLOW_46_in_classBody1005 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_classBodyDecl_in_classBody1007 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_47_in_classBody1010 = frozenset([1])
-    FOLLOW_28_in_classBodyDecl1030 = frozenset([1])
-    FOLLOW_30_in_classBodyDecl1040 = frozenset([30, 46])
-    FOLLOW_block_in_classBodyDecl1043 = frozenset([1])
-    FOLLOW_modifiers_in_classBodyDecl1055 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 42, 48, 49, 58, 59, 60, 61, 62, 63, 64, 65, 72])
-    FOLLOW_memberDecl_in_classBodyDecl1057 = frozenset([1])
-    FOLLOW_genericMethodOrConstructorDecl_in_memberDecl1080 = frozenset([1])
-    FOLLOW_fieldOrMethodDecl_in_memberDecl1090 = frozenset([1])
-    FOLLOW_49_in_memberDecl1101 = frozenset([4])
-    FOLLOW_Ident_in_memberDecl1105 = frozenset([68])
-    FOLLOW_voidMethodDeclRest_in_memberDecl1107 = frozenset([1])
-    FOLLOW_Ident_in_memberDecl1120 = frozenset([68])
-    FOLLOW_constructorDeclRest_in_memberDecl1122 = frozenset([1])
-    FOLLOW_interfaceDecl_in_memberDecl1133 = frozenset([1])
-    FOLLOW_classDecl_in_memberDecl1143 = frozenset([1])
-    FOLLOW_type_in_fieldOrMethodDecl1167 = frozenset([4])
-    FOLLOW_methodDecl_in_fieldOrMethodDecl1170 = frozenset([1])
-    FOLLOW_fieldDecl_in_fieldOrMethodDecl1175 = frozenset([1])
-    FOLLOW_typeParameters_in_genericMethodOrConstructorDecl1197 = frozenset([4, 49, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_genericMethodOrConstructorRest_in_genericMethodOrConstructorDecl1199 = frozenset([1])
-    FOLLOW_type_in_genericMethodOrConstructorRest1220 = frozenset([4])
-    FOLLOW_49_in_genericMethodOrConstructorRest1224 = frozenset([4])
-    FOLLOW_Ident_in_genericMethodOrConstructorRest1229 = frozenset([68])
-    FOLLOW_methodDeclRest_in_genericMethodOrConstructorRest1231 = frozenset([1])
-    FOLLOW_Ident_in_genericMethodOrConstructorRest1244 = frozenset([68])
-    FOLLOW_constructorDeclRest_in_genericMethodOrConstructorRest1246 = frozenset([1])
-    FOLLOW_Ident_in_methodDecl1281 = frozenset([68])
-    FOLLOW_methodDeclRest_in_methodDecl1283 = frozenset([1])
-    FOLLOW_variableDecls_in_fieldDecl1317 = frozenset([28])
-    FOLLOW_28_in_fieldDecl1319 = frozenset([1])
-    FOLLOW_46_in_interfaceBody1339 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_interfaceBodyDecl_in_interfaceBody1341 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_47_in_interfaceBody1344 = frozenset([1])
-    FOLLOW_modifiers_in_interfaceBodyDecl1366 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 42, 48, 49, 58, 59, 60, 61, 62, 63, 64, 65, 72])
-    FOLLOW_interfaceMemberDecl_in_interfaceBodyDecl1368 = frozenset([1])
-    FOLLOW_28_in_interfaceBodyDecl1379 = frozenset([1])
-    FOLLOW_interfaceMethodOrFieldDecl_in_interfaceMemberDecl1401 = frozenset([1])
-    FOLLOW_interfaceGenericMethodDecl_in_interfaceMemberDecl1412 = frozenset([1])
-    FOLLOW_49_in_interfaceMemberDecl1422 = frozenset([4])
-    FOLLOW_Ident_in_interfaceMemberDecl1426 = frozenset([68])
-    FOLLOW_voidInterfaceMethodDeclRest_in_interfaceMemberDecl1428 = frozenset([1])
-    FOLLOW_interfaceDecl_in_interfaceMemberDecl1439 = frozenset([1])
-    FOLLOW_classDecl_in_interfaceMemberDecl1449 = frozenset([1])
-    FOLLOW_type_in_interfaceMethodOrFieldDecl1471 = frozenset([4])
-    FOLLOW_Ident_in_interfaceMethodOrFieldDecl1475 = frozenset([50, 53, 68])
-    FOLLOW_interfaceMethodOrFieldRest_in_interfaceMethodOrFieldDecl1477 = frozenset([1])
-    FOLLOW_constantDeclsRest_in_interfaceMethodOrFieldRest1500 = frozenset([28])
-    FOLLOW_28_in_interfaceMethodOrFieldRest1502 = frozenset([1])
-    FOLLOW_interfaceMethodDeclRest_in_interfaceMethodOrFieldRest1512 = frozenset([1])
-    FOLLOW_formalParameters_in_methodDeclRest1540 = frozenset([28, 30, 46, 50, 52])
-    FOLLOW_50_in_methodDeclRest1543 = frozenset([51])
-    FOLLOW_51_in_methodDeclRest1545 = frozenset([28, 30, 46, 50, 52])
-    FOLLOW_52_in_methodDeclRest1558 = frozenset([4])
-    FOLLOW_qualifiedNameList_in_methodDeclRest1560 = frozenset([28, 30, 46])
-    FOLLOW_methodBody_in_methodDeclRest1576 = frozenset([1])
-    FOLLOW_28_in_methodDeclRest1590 = frozenset([1])
-    FOLLOW_formalParameters_in_voidMethodDeclRest1632 = frozenset([28, 30, 46, 52])
-    FOLLOW_52_in_voidMethodDeclRest1635 = frozenset([4])
-    FOLLOW_qualifiedNameList_in_voidMethodDeclRest1637 = frozenset([28, 30, 46])
-    FOLLOW_methodBody_in_voidMethodDeclRest1653 = frozenset([1])
-    FOLLOW_28_in_voidMethodDeclRest1667 = frozenset([1])
-    FOLLOW_formalParameters_in_interfaceMethodDeclRest1709 = frozenset([28, 50, 52])
-    FOLLOW_50_in_interfaceMethodDeclRest1712 = frozenset([51])
-    FOLLOW_51_in_interfaceMethodDeclRest1714 = frozenset([28, 50, 52])
-    FOLLOW_52_in_interfaceMethodDeclRest1719 = frozenset([4])
-    FOLLOW_qualifiedNameList_in_interfaceMethodDeclRest1721 = frozenset([28])
-    FOLLOW_28_in_interfaceMethodDeclRest1725 = frozenset([1])
-    FOLLOW_typeParameters_in_interfaceGenericMethodDecl1745 = frozenset([4, 49, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_interfaceGenericMethodDecl1748 = frozenset([4])
-    FOLLOW_49_in_interfaceGenericMethodDecl1752 = frozenset([4])
-    FOLLOW_Ident_in_interfaceGenericMethodDecl1755 = frozenset([50, 53, 68])
-    FOLLOW_interfaceMethodDeclRest_in_interfaceGenericMethodDecl1765 = frozenset([1])
-    FOLLOW_formalParameters_in_voidInterfaceMethodDeclRest1798 = frozenset([28, 52])
-    FOLLOW_52_in_voidInterfaceMethodDeclRest1801 = frozenset([4])
-    FOLLOW_qualifiedNameList_in_voidInterfaceMethodDeclRest1803 = frozenset([28])
-    FOLLOW_28_in_voidInterfaceMethodDeclRest1807 = frozenset([1])
-    FOLLOW_formalParameters_in_constructorDeclRest1839 = frozenset([46, 52])
-    FOLLOW_52_in_constructorDeclRest1842 = frozenset([4])
-    FOLLOW_qualifiedNameList_in_constructorDeclRest1844 = frozenset([46, 52])
-    FOLLOW_constructorBody_in_constructorDeclRest1848 = frozenset([1])
-    FOLLOW_Ident_in_constantDecl1868 = frozenset([50, 53])
-    FOLLOW_constantDeclRest_in_constantDecl1870 = frozenset([1])
-    FOLLOW_variableDecl_in_variableDecls1895 = frozenset([1, 43])
-    FOLLOW_43_in_variableDecls1898 = frozenset([4])
-    FOLLOW_variableDecl_in_variableDecls1902 = frozenset([1, 43])
-    FOLLOW_variableDeclId_in_variableDecl1931 = frozenset([1, 53])
-    FOLLOW_53_in_variableDecl1952 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_variableInitializer_in_variableDecl1980 = frozenset([1])
-    FOLLOW_constantDeclRest_in_constantDeclsRest2011 = frozenset([1, 43])
-    FOLLOW_43_in_constantDeclsRest2014 = frozenset([4])
-    FOLLOW_constantDecl_in_constantDeclsRest2016 = frozenset([1, 43])
-    FOLLOW_50_in_constantDeclRest2039 = frozenset([51])
-    FOLLOW_51_in_constantDeclRest2041 = frozenset([50, 53])
-    FOLLOW_53_in_constantDeclRest2045 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_variableInitializer_in_constantDeclRest2047 = frozenset([1])
-    FOLLOW_Ident_in_variableDeclId2078 = frozenset([1, 50])
-    FOLLOW_50_in_variableDeclId2091 = frozenset([51])
-    FOLLOW_51_in_variableDeclId2093 = frozenset([1, 50])
-    FOLLOW_arrayInitializer_in_variableInitializer2118 = frozenset([1])
-    FOLLOW_expression_in_variableInitializer2128 = frozenset([1])
-    FOLLOW_46_in_arrayInitializer2148 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 47, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_variableInitializer_in_arrayInitializer2151 = frozenset([43, 47])
-    FOLLOW_43_in_arrayInitializer2154 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_variableInitializer_in_arrayInitializer2156 = frozenset([43, 47])
-    FOLLOW_43_in_arrayInitializer2161 = frozenset([47])
-    FOLLOW_47_in_arrayInitializer2168 = frozenset([1])
-    FOLLOW_annotation_in_modifier2203 = frozenset([1])
-    FOLLOW_33_in_modifier2215 = frozenset([1])
-    FOLLOW_34_in_modifier2225 = frozenset([1])
-    FOLLOW_35_in_modifier2235 = frozenset([1])
-    FOLLOW_30_in_modifier2245 = frozenset([1])
-    FOLLOW_36_in_modifier2255 = frozenset([1])
-    FOLLOW_37_in_modifier2265 = frozenset([1])
-    FOLLOW_54_in_modifier2275 = frozenset([1])
-    FOLLOW_55_in_modifier2285 = frozenset([1])
-    FOLLOW_56_in_modifier2295 = frozenset([1])
-    FOLLOW_57_in_modifier2305 = frozenset([1])
-    FOLLOW_38_in_modifier2315 = frozenset([1])
-    FOLLOW_qualifiedName_in_packageOrTypeName2335 = frozenset([1])
-    FOLLOW_Ident_in_enumConstantName2355 = frozenset([1])
-    FOLLOW_qualifiedName_in_typeName2375 = frozenset([1])
-    FOLLOW_classOrInterfaceType_in_type2399 = frozenset([1, 50])
-    FOLLOW_50_in_type2404 = frozenset([51])
-    FOLLOW_51_in_type2406 = frozenset([1, 50])
-    FOLLOW_primitiveType_in_type2416 = frozenset([1, 50])
-    FOLLOW_50_in_type2422 = frozenset([51])
-    FOLLOW_51_in_type2424 = frozenset([1, 50])
-    FOLLOW_Ident_in_classOrInterfaceType2461 = frozenset([1, 31, 42])
-    FOLLOW_typeArguments_in_classOrInterfaceType2465 = frozenset([1, 31])
-    FOLLOW_31_in_classOrInterfaceType2477 = frozenset([4])
-    FOLLOW_Ident_in_classOrInterfaceType2481 = frozenset([1, 31, 42])
-    FOLLOW_typeArguments_in_classOrInterfaceType2486 = frozenset([1, 31])
+    FOLLOW_annotations_in_compilationUnit94 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_packageDecl_in_compilationUnit108 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_importDecl_in_compilationUnit110 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_typeDecl_in_compilationUnit113 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_classOrInterfaceDecl_in_compilationUnit128 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_typeDecl_in_compilationUnit130 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_packageDecl_in_compilationUnit151 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_importDecl_in_compilationUnit154 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_typeDecl_in_compilationUnit157 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_27_in_packageDecl178 = frozenset([4])
+    FOLLOW_qualifiedName_in_packageDecl180 = frozenset([28])
+    FOLLOW_28_in_packageDecl182 = frozenset([1])
+    FOLLOW_29_in_importDecl202 = frozenset([4, 30])
+    FOLLOW_30_in_importDecl204 = frozenset([4])
+    FOLLOW_qualifiedName_in_importDecl207 = frozenset([28, 31])
+    FOLLOW_31_in_importDecl210 = frozenset([32])
+    FOLLOW_32_in_importDecl212 = frozenset([28])
+    FOLLOW_28_in_importDecl216 = frozenset([1])
+    FOLLOW_classOrInterfaceDecl_in_typeDecl236 = frozenset([1])
+    FOLLOW_28_in_typeDecl246 = frozenset([1])
+    FOLLOW_classOrInterfaceModifiers_in_classOrInterfaceDecl266 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_classDecl_in_classOrInterfaceDecl269 = frozenset([1])
+    FOLLOW_interfaceDecl_in_classOrInterfaceDecl273 = frozenset([1])
+    FOLLOW_classOrInterfaceModifier_in_classOrInterfaceModifiers293 = frozenset([1, 30, 33, 34, 35, 36, 37, 38, 72])
+    FOLLOW_annotation_in_classOrInterfaceModifier314 = frozenset([1])
+    FOLLOW_33_in_classOrInterfaceModifier327 = frozenset([1])
+    FOLLOW_34_in_classOrInterfaceModifier342 = frozenset([1])
+    FOLLOW_35_in_classOrInterfaceModifier354 = frozenset([1])
+    FOLLOW_36_in_classOrInterfaceModifier368 = frozenset([1])
+    FOLLOW_30_in_classOrInterfaceModifier381 = frozenset([1])
+    FOLLOW_37_in_classOrInterfaceModifier396 = frozenset([1])
+    FOLLOW_38_in_classOrInterfaceModifier412 = frozenset([1])
+    FOLLOW_modifier_in_modifiers445 = frozenset([1, 30, 33, 34, 35, 36, 37, 38, 54, 55, 56, 57, 72])
+    FOLLOW_normalClassDecl_in_classDecl479 = frozenset([1])
+    FOLLOW_enumDecl_in_classDecl485 = frozenset([1])
+    FOLLOW_39_in_normalClassDecl513 = frozenset([4])
+    FOLLOW_Ident_in_normalClassDecl517 = frozenset([40, 41, 42, 46])
+    FOLLOW_typeParameters_in_normalClassDecl521 = frozenset([40, 41, 42, 46])
+    FOLLOW_40_in_normalClassDecl533 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_normalClassDecl537 = frozenset([40, 41, 42, 46])
+    FOLLOW_41_in_normalClassDecl552 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_typeList_in_normalClassDecl556 = frozenset([40, 41, 42, 46])
+    FOLLOW_classBody_in_normalClassDecl570 = frozenset([1])
+    FOLLOW_42_in_typeParameters590 = frozenset([4])
+    FOLLOW_typeParameter_in_typeParameters592 = frozenset([43, 44])
+    FOLLOW_43_in_typeParameters595 = frozenset([4])
+    FOLLOW_typeParameter_in_typeParameters597 = frozenset([43, 44])
+    FOLLOW_44_in_typeParameters601 = frozenset([1])
+    FOLLOW_Ident_in_typeParameter621 = frozenset([1, 40])
+    FOLLOW_40_in_typeParameter624 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_typeBound_in_typeParameter626 = frozenset([1])
+    FOLLOW_type_in_typeBound648 = frozenset([1, 45])
+    FOLLOW_45_in_typeBound651 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_typeBound653 = frozenset([1, 45])
+    FOLLOW_ENUM_in_enumDecl677 = frozenset([4])
+    FOLLOW_Ident_in_enumDecl679 = frozenset([41, 46])
+    FOLLOW_41_in_enumDecl682 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_typeList_in_enumDecl684 = frozenset([41, 46])
+    FOLLOW_enumBody_in_enumDecl688 = frozenset([1])
+    FOLLOW_46_in_enumBody708 = frozenset([4, 28, 43, 47, 72])
+    FOLLOW_enumConstants_in_enumBody710 = frozenset([28, 43, 47])
+    FOLLOW_43_in_enumBody713 = frozenset([28, 47])
+    FOLLOW_enumBodyDecls_in_enumBody716 = frozenset([47])
+    FOLLOW_47_in_enumBody719 = frozenset([1])
+    FOLLOW_enumConstant_in_enumConstants739 = frozenset([1, 43])
+    FOLLOW_43_in_enumConstants742 = frozenset([4, 72])
+    FOLLOW_enumConstant_in_enumConstants744 = frozenset([1, 43])
+    FOLLOW_annotations_in_enumConstant766 = frozenset([4])
+    FOLLOW_Ident_in_enumConstant769 = frozenset([1, 40, 41, 42, 46, 68])
+    FOLLOW_arguments_in_enumConstant771 = frozenset([1, 40, 41, 42, 46])
+    FOLLOW_classBody_in_enumConstant774 = frozenset([1])
+    FOLLOW_28_in_enumBodyDecls795 = frozenset([1, 28, 30, 33, 34, 35, 36, 37, 38, 46, 54, 55, 56, 57, 72])
+    FOLLOW_classBodyDecl_in_enumBodyDecls798 = frozenset([1, 28, 30, 33, 34, 35, 36, 37, 38, 46, 54, 55, 56, 57, 72])
+    FOLLOW_normalInterfaceDecl_in_interfaceDecl830 = frozenset([1])
+    FOLLOW_annotationTypeDecl_in_interfaceDecl841 = frozenset([1])
+    FOLLOW_48_in_normalInterfaceDecl863 = frozenset([4])
+    FOLLOW_Ident_in_normalInterfaceDecl867 = frozenset([40, 42, 46])
+    FOLLOW_typeParameters_in_normalInterfaceDecl880 = frozenset([40, 42, 46])
+    FOLLOW_40_in_normalInterfaceDecl893 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_typeList_in_normalInterfaceDecl897 = frozenset([40, 42, 46])
+    FOLLOW_interfaceBody_in_normalInterfaceDecl912 = frozenset([1])
+    FOLLOW_type_in_typeList943 = frozenset([1, 43])
+    FOLLOW_43_in_typeList948 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_typeList952 = frozenset([1, 43])
+    FOLLOW_46_in_classBody976 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_classBodyDecl_in_classBody978 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_47_in_classBody981 = frozenset([1])
+    FOLLOW_28_in_classBodyDecl1001 = frozenset([1])
+    FOLLOW_30_in_classBodyDecl1011 = frozenset([30, 46])
+    FOLLOW_block_in_classBodyDecl1014 = frozenset([1])
+    FOLLOW_modifiers_in_classBodyDecl1026 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 42, 48, 49, 58, 59, 60, 61, 62, 63, 64, 65, 72])
+    FOLLOW_memberDecl_in_classBodyDecl1028 = frozenset([1])
+    FOLLOW_genericMethodOrConstructorDecl_in_memberDecl1051 = frozenset([1])
+    FOLLOW_fieldOrMethodDecl_in_memberDecl1061 = frozenset([1])
+    FOLLOW_49_in_memberDecl1072 = frozenset([4])
+    FOLLOW_Ident_in_memberDecl1076 = frozenset([68])
+    FOLLOW_voidMethodDeclRest_in_memberDecl1078 = frozenset([1])
+    FOLLOW_Ident_in_memberDecl1091 = frozenset([68])
+    FOLLOW_constructorDeclRest_in_memberDecl1093 = frozenset([1])
+    FOLLOW_interfaceDecl_in_memberDecl1104 = frozenset([1])
+    FOLLOW_classDecl_in_memberDecl1114 = frozenset([1])
+    FOLLOW_type_in_fieldOrMethodDecl1138 = frozenset([4])
+    FOLLOW_methodDecl_in_fieldOrMethodDecl1141 = frozenset([1])
+    FOLLOW_fieldDecl_in_fieldOrMethodDecl1146 = frozenset([1])
+    FOLLOW_typeParameters_in_genericMethodOrConstructorDecl1168 = frozenset([4, 49, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_genericMethodOrConstructorRest_in_genericMethodOrConstructorDecl1170 = frozenset([1])
+    FOLLOW_type_in_genericMethodOrConstructorRest1191 = frozenset([4])
+    FOLLOW_49_in_genericMethodOrConstructorRest1195 = frozenset([4])
+    FOLLOW_Ident_in_genericMethodOrConstructorRest1200 = frozenset([68])
+    FOLLOW_methodDeclRest_in_genericMethodOrConstructorRest1202 = frozenset([1])
+    FOLLOW_Ident_in_genericMethodOrConstructorRest1215 = frozenset([68])
+    FOLLOW_constructorDeclRest_in_genericMethodOrConstructorRest1217 = frozenset([1])
+    FOLLOW_Ident_in_methodDecl1252 = frozenset([68])
+    FOLLOW_methodDeclRest_in_methodDecl1254 = frozenset([1])
+    FOLLOW_variableDecls_in_fieldDecl1277 = frozenset([28])
+    FOLLOW_28_in_fieldDecl1280 = frozenset([1])
+    FOLLOW_46_in_interfaceBody1300 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_interfaceBodyDecl_in_interfaceBody1302 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_47_in_interfaceBody1305 = frozenset([1])
+    FOLLOW_modifiers_in_interfaceBodyDecl1327 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 42, 48, 49, 58, 59, 60, 61, 62, 63, 64, 65, 72])
+    FOLLOW_interfaceMemberDecl_in_interfaceBodyDecl1329 = frozenset([1])
+    FOLLOW_28_in_interfaceBodyDecl1340 = frozenset([1])
+    FOLLOW_interfaceMethodOrFieldDecl_in_interfaceMemberDecl1362 = frozenset([1])
+    FOLLOW_interfaceGenericMethodDecl_in_interfaceMemberDecl1373 = frozenset([1])
+    FOLLOW_49_in_interfaceMemberDecl1383 = frozenset([4])
+    FOLLOW_Ident_in_interfaceMemberDecl1387 = frozenset([68])
+    FOLLOW_voidInterfaceMethodDeclRest_in_interfaceMemberDecl1389 = frozenset([1])
+    FOLLOW_interfaceDecl_in_interfaceMemberDecl1400 = frozenset([1])
+    FOLLOW_classDecl_in_interfaceMemberDecl1410 = frozenset([1])
+    FOLLOW_type_in_interfaceMethodOrFieldDecl1432 = frozenset([4])
+    FOLLOW_Ident_in_interfaceMethodOrFieldDecl1436 = frozenset([50, 53, 68])
+    FOLLOW_interfaceMethodOrFieldRest_in_interfaceMethodOrFieldDecl1438 = frozenset([1])
+    FOLLOW_constantDeclsRest_in_interfaceMethodOrFieldRest1461 = frozenset([28])
+    FOLLOW_28_in_interfaceMethodOrFieldRest1463 = frozenset([1])
+    FOLLOW_interfaceMethodDeclRest_in_interfaceMethodOrFieldRest1473 = frozenset([1])
+    FOLLOW_formalParameters_in_methodDeclRest1501 = frozenset([28, 30, 46, 50, 52])
+    FOLLOW_50_in_methodDeclRest1504 = frozenset([51])
+    FOLLOW_51_in_methodDeclRest1506 = frozenset([28, 30, 46, 50, 52])
+    FOLLOW_52_in_methodDeclRest1519 = frozenset([4])
+    FOLLOW_qualifiedNameList_in_methodDeclRest1521 = frozenset([28, 30, 46])
+    FOLLOW_methodBody_in_methodDeclRest1537 = frozenset([1])
+    FOLLOW_28_in_methodDeclRest1551 = frozenset([1])
+    FOLLOW_formalParameters_in_voidMethodDeclRest1593 = frozenset([28, 30, 46, 52])
+    FOLLOW_52_in_voidMethodDeclRest1596 = frozenset([4])
+    FOLLOW_qualifiedNameList_in_voidMethodDeclRest1598 = frozenset([28, 30, 46])
+    FOLLOW_methodBody_in_voidMethodDeclRest1614 = frozenset([1])
+    FOLLOW_28_in_voidMethodDeclRest1628 = frozenset([1])
+    FOLLOW_formalParameters_in_interfaceMethodDeclRest1670 = frozenset([28, 50, 52])
+    FOLLOW_50_in_interfaceMethodDeclRest1673 = frozenset([51])
+    FOLLOW_51_in_interfaceMethodDeclRest1675 = frozenset([28, 50, 52])
+    FOLLOW_52_in_interfaceMethodDeclRest1680 = frozenset([4])
+    FOLLOW_qualifiedNameList_in_interfaceMethodDeclRest1682 = frozenset([28])
+    FOLLOW_28_in_interfaceMethodDeclRest1686 = frozenset([1])
+    FOLLOW_typeParameters_in_interfaceGenericMethodDecl1706 = frozenset([4, 49, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_interfaceGenericMethodDecl1709 = frozenset([4])
+    FOLLOW_49_in_interfaceGenericMethodDecl1713 = frozenset([4])
+    FOLLOW_Ident_in_interfaceGenericMethodDecl1716 = frozenset([50, 53, 68])
+    FOLLOW_interfaceMethodDeclRest_in_interfaceGenericMethodDecl1726 = frozenset([1])
+    FOLLOW_formalParameters_in_voidInterfaceMethodDeclRest1759 = frozenset([28, 52])
+    FOLLOW_52_in_voidInterfaceMethodDeclRest1762 = frozenset([4])
+    FOLLOW_qualifiedNameList_in_voidInterfaceMethodDeclRest1764 = frozenset([28])
+    FOLLOW_28_in_voidInterfaceMethodDeclRest1768 = frozenset([1])
+    FOLLOW_formalParameters_in_constructorDeclRest1800 = frozenset([46, 52])
+    FOLLOW_52_in_constructorDeclRest1803 = frozenset([4])
+    FOLLOW_qualifiedNameList_in_constructorDeclRest1805 = frozenset([46, 52])
+    FOLLOW_constructorBody_in_constructorDeclRest1809 = frozenset([1])
+    FOLLOW_Ident_in_constantDecl1829 = frozenset([50, 53])
+    FOLLOW_constantDeclRest_in_constantDecl1831 = frozenset([1])
+    FOLLOW_variableDecl_in_variableDecls1853 = frozenset([1, 43])
+    FOLLOW_43_in_variableDecls1857 = frozenset([4])
+    FOLLOW_variableDecl_in_variableDecls1859 = frozenset([1, 43])
+    FOLLOW_variableDeclId_in_variableDecl1892 = frozenset([1, 53])
+    FOLLOW_53_in_variableDecl1913 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_variableInitializer_in_variableDecl1941 = frozenset([1])
+    FOLLOW_constantDeclRest_in_constantDeclsRest1996 = frozenset([1, 43])
+    FOLLOW_43_in_constantDeclsRest1999 = frozenset([4])
+    FOLLOW_constantDecl_in_constantDeclsRest2001 = frozenset([1, 43])
+    FOLLOW_50_in_constantDeclRest2024 = frozenset([51])
+    FOLLOW_51_in_constantDeclRest2026 = frozenset([50, 53])
+    FOLLOW_53_in_constantDeclRest2030 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_variableInitializer_in_constantDeclRest2032 = frozenset([1])
+    FOLLOW_Ident_in_variableDeclId2063 = frozenset([1, 50])
+    FOLLOW_50_in_variableDeclId2076 = frozenset([51])
+    FOLLOW_51_in_variableDeclId2078 = frozenset([1, 50])
+    FOLLOW_arrayInitializer_in_variableInitializer2103 = frozenset([1])
+    FOLLOW_expression_in_variableInitializer2113 = frozenset([1])
+    FOLLOW_46_in_arrayInitializer2133 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 47, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_variableInitializer_in_arrayInitializer2136 = frozenset([43, 47])
+    FOLLOW_43_in_arrayInitializer2139 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_variableInitializer_in_arrayInitializer2141 = frozenset([43, 47])
+    FOLLOW_43_in_arrayInitializer2146 = frozenset([47])
+    FOLLOW_47_in_arrayInitializer2153 = frozenset([1])
+    FOLLOW_annotation_in_modifier2188 = frozenset([1])
+    FOLLOW_33_in_modifier2200 = frozenset([1])
+    FOLLOW_34_in_modifier2210 = frozenset([1])
+    FOLLOW_35_in_modifier2220 = frozenset([1])
+    FOLLOW_30_in_modifier2230 = frozenset([1])
+    FOLLOW_36_in_modifier2240 = frozenset([1])
+    FOLLOW_37_in_modifier2250 = frozenset([1])
+    FOLLOW_54_in_modifier2260 = frozenset([1])
+    FOLLOW_55_in_modifier2270 = frozenset([1])
+    FOLLOW_56_in_modifier2280 = frozenset([1])
+    FOLLOW_57_in_modifier2290 = frozenset([1])
+    FOLLOW_38_in_modifier2300 = frozenset([1])
+    FOLLOW_qualifiedName_in_packageOrTypeName2320 = frozenset([1])
+    FOLLOW_Ident_in_enumConstantName2340 = frozenset([1])
+    FOLLOW_qualifiedName_in_typeName2360 = frozenset([1])
+    FOLLOW_classOrInterfaceType_in_type2389 = frozenset([1, 50])
+    FOLLOW_50_in_type2394 = frozenset([51])
+    FOLLOW_51_in_type2396 = frozenset([1, 50])
+    FOLLOW_primitiveType_in_type2408 = frozenset([1, 50])
+    FOLLOW_50_in_type2414 = frozenset([51])
+    FOLLOW_51_in_type2416 = frozenset([1, 50])
+    FOLLOW_Ident_in_classOrInterfaceType2453 = frozenset([1, 31, 42])
+    FOLLOW_typeArguments_in_classOrInterfaceType2457 = frozenset([1, 31])
+    FOLLOW_31_in_classOrInterfaceType2469 = frozenset([4])
+    FOLLOW_Ident_in_classOrInterfaceType2473 = frozenset([1, 31, 42])
+    FOLLOW_typeArguments_in_classOrInterfaceType2478 = frozenset([1, 31])
     FOLLOW_set_in_primitiveType0 = frozenset([1])
-    FOLLOW_37_in_variableModifier2603 = frozenset([1])
-    FOLLOW_annotation_in_variableModifier2613 = frozenset([1])
-    FOLLOW_42_in_typeArguments2633 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65, 66])
-    FOLLOW_typeArgument_in_typeArguments2635 = frozenset([43, 44])
-    FOLLOW_43_in_typeArguments2638 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65, 66])
-    FOLLOW_typeArgument_in_typeArguments2640 = frozenset([43, 44])
-    FOLLOW_44_in_typeArguments2644 = frozenset([1])
-    FOLLOW_type_in_typeArgument2664 = frozenset([1])
-    FOLLOW_66_in_typeArgument2674 = frozenset([1, 40, 67])
-    FOLLOW_set_in_typeArgument2677 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_typeArgument2685 = frozenset([1])
-    FOLLOW_qualifiedName_in_qualifiedNameList2707 = frozenset([1, 43])
-    FOLLOW_43_in_qualifiedNameList2710 = frozenset([4])
-    FOLLOW_qualifiedName_in_qualifiedNameList2712 = frozenset([1, 43])
-    FOLLOW_68_in_formalParameters2734 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 69, 72])
-    FOLLOW_formalParameterDecls_in_formalParameters2736 = frozenset([69])
-    FOLLOW_69_in_formalParameters2739 = frozenset([1])
-    FOLLOW_variableModifiers_in_formalParameterDecls2759 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_formalParameterDecls2763 = frozenset([4, 70])
-    FOLLOW_formalParameterDeclsRest_in_formalParameterDecls2765 = frozenset([1])
-    FOLLOW_variableDeclId_in_formalParameterDeclsRest2795 = frozenset([1, 43])
-    FOLLOW_43_in_formalParameterDeclsRest2800 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 72])
-    FOLLOW_formalParameterDecls_in_formalParameterDeclsRest2802 = frozenset([1])
-    FOLLOW_70_in_formalParameterDeclsRest2814 = frozenset([4])
-    FOLLOW_variableDeclId_in_formalParameterDeclsRest2818 = frozenset([1])
-    FOLLOW_block_in_methodBody2840 = frozenset([1])
-    FOLLOW_46_in_constructorBody2860 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 42, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_explicitConstructorInvocation_in_constructorBody2862 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_blockStatement_in_constructorBody2865 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_47_in_constructorBody2868 = frozenset([1])
-    FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2898 = frozenset([67, 71])
-    FOLLOW_set_in_explicitConstructorInvocation2901 = frozenset([68])
-    FOLLOW_arguments_in_explicitConstructorInvocation2909 = frozenset([28])
-    FOLLOW_28_in_explicitConstructorInvocation2911 = frozenset([1])
-    FOLLOW_primary_in_explicitConstructorInvocation2921 = frozenset([31])
-    FOLLOW_31_in_explicitConstructorInvocation2923 = frozenset([42, 67])
-    FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2925 = frozenset([67])
-    FOLLOW_67_in_explicitConstructorInvocation2928 = frozenset([68])
-    FOLLOW_arguments_in_explicitConstructorInvocation2930 = frozenset([28])
-    FOLLOW_28_in_explicitConstructorInvocation2932 = frozenset([1])
-    FOLLOW_Ident_in_qualifiedName2952 = frozenset([1, 31])
-    FOLLOW_31_in_qualifiedName2955 = frozenset([4])
-    FOLLOW_Ident_in_qualifiedName2957 = frozenset([1, 31])
-    FOLLOW_integerLiteral_in_literal2979 = frozenset([1])
-    FOLLOW_FloatingPointLiteral_in_literal2989 = frozenset([1])
-    FOLLOW_CharacterLiteral_in_literal2999 = frozenset([1])
-    FOLLOW_StringLiteral_in_literal3009 = frozenset([1])
-    FOLLOW_BooleanLiteral_in_literal3019 = frozenset([1])
-    FOLLOW_NullLiteral_in_literal3029 = frozenset([1])
+    FOLLOW_37_in_variableModifier2595 = frozenset([1])
+    FOLLOW_annotation_in_variableModifier2605 = frozenset([1])
+    FOLLOW_42_in_typeArguments2625 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65, 66])
+    FOLLOW_typeArgument_in_typeArguments2627 = frozenset([43, 44])
+    FOLLOW_43_in_typeArguments2630 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65, 66])
+    FOLLOW_typeArgument_in_typeArguments2632 = frozenset([43, 44])
+    FOLLOW_44_in_typeArguments2636 = frozenset([1])
+    FOLLOW_type_in_typeArgument2656 = frozenset([1])
+    FOLLOW_66_in_typeArgument2666 = frozenset([1, 40, 67])
+    FOLLOW_set_in_typeArgument2669 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_typeArgument2677 = frozenset([1])
+    FOLLOW_qualifiedName_in_qualifiedNameList2699 = frozenset([1, 43])
+    FOLLOW_43_in_qualifiedNameList2702 = frozenset([4])
+    FOLLOW_qualifiedName_in_qualifiedNameList2704 = frozenset([1, 43])
+    FOLLOW_68_in_formalParameters2726 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 69, 72])
+    FOLLOW_formalParameterDecls_in_formalParameters2728 = frozenset([69])
+    FOLLOW_69_in_formalParameters2731 = frozenset([1])
+    FOLLOW_variableModifiers_in_formalParameterDecls2751 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_formalParameterDecls2755 = frozenset([4, 70])
+    FOLLOW_formalParameterDeclsRest_in_formalParameterDecls2757 = frozenset([1])
+    FOLLOW_variableDeclId_in_formalParameterDeclsRest2787 = frozenset([1, 43])
+    FOLLOW_43_in_formalParameterDeclsRest2792 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 72])
+    FOLLOW_formalParameterDecls_in_formalParameterDeclsRest2794 = frozenset([1])
+    FOLLOW_70_in_formalParameterDeclsRest2806 = frozenset([4])
+    FOLLOW_variableDeclId_in_formalParameterDeclsRest2810 = frozenset([1])
+    FOLLOW_block_in_methodBody2832 = frozenset([1])
+    FOLLOW_46_in_constructorBody2852 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 42, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_explicitConstructorInvocation_in_constructorBody2854 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_blockStatement_in_constructorBody2857 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_47_in_constructorBody2860 = frozenset([1])
+    FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2890 = frozenset([67, 71])
+    FOLLOW_set_in_explicitConstructorInvocation2893 = frozenset([68])
+    FOLLOW_arguments_in_explicitConstructorInvocation2901 = frozenset([28])
+    FOLLOW_28_in_explicitConstructorInvocation2903 = frozenset([1])
+    FOLLOW_primary_in_explicitConstructorInvocation2913 = frozenset([31])
+    FOLLOW_31_in_explicitConstructorInvocation2915 = frozenset([42, 67])
+    FOLLOW_nonWildcardTypeArguments_in_explicitConstructorInvocation2917 = frozenset([67])
+    FOLLOW_67_in_explicitConstructorInvocation2920 = frozenset([68])
+    FOLLOW_arguments_in_explicitConstructorInvocation2922 = frozenset([28])
+    FOLLOW_28_in_explicitConstructorInvocation2924 = frozenset([1])
+    FOLLOW_Ident_in_qualifiedName2944 = frozenset([1, 31])
+    FOLLOW_31_in_qualifiedName2947 = frozenset([4])
+    FOLLOW_Ident_in_qualifiedName2949 = frozenset([1, 31])
+    FOLLOW_integerLiteral_in_literal2971 = frozenset([1])
+    FOLLOW_FloatingPointLiteral_in_literal2981 = frozenset([1])
+    FOLLOW_CharacterLiteral_in_literal2991 = frozenset([1])
+    FOLLOW_StringLiteral_in_literal3001 = frozenset([1])
+    FOLLOW_BooleanLiteral_in_literal3011 = frozenset([1])
+    FOLLOW_NullLiteral_in_literal3021 = frozenset([1])
     FOLLOW_set_in_integerLiteral0 = frozenset([1])
-    FOLLOW_annotation_in_annotations3142 = frozenset([1, 72])
-    FOLLOW_72_in_annotation3163 = frozenset([4])
-    FOLLOW_annotationName_in_annotation3165 = frozenset([1, 68])
-    FOLLOW_68_in_annotation3169 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 69, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_elementValuePairs_in_annotation3173 = frozenset([69])
-    FOLLOW_elementValue_in_annotation3177 = frozenset([69])
-    FOLLOW_69_in_annotation3182 = frozenset([1])
-    FOLLOW_Ident_in_annotationName3203 = frozenset([1, 31])
-    FOLLOW_31_in_annotationName3206 = frozenset([4])
-    FOLLOW_Ident_in_annotationName3208 = frozenset([1, 31])
-    FOLLOW_elementValuePair_in_elementValuePairs3230 = frozenset([1, 43])
-    FOLLOW_43_in_elementValuePairs3233 = frozenset([4])
-    FOLLOW_elementValuePair_in_elementValuePairs3235 = frozenset([1, 43])
-    FOLLOW_Ident_in_elementValuePair3257 = frozenset([53])
-    FOLLOW_53_in_elementValuePair3259 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_elementValue_in_elementValuePair3261 = frozenset([1])
-    FOLLOW_conditionalExpression_in_elementValue3281 = frozenset([1])
-    FOLLOW_annotation_in_elementValue3291 = frozenset([1])
-    FOLLOW_elementValueArrayInitializer_in_elementValue3301 = frozenset([1])
-    FOLLOW_46_in_elementValueArrayInitializer3321 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 43, 46, 47, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_elementValue_in_elementValueArrayInitializer3324 = frozenset([43, 47])
-    FOLLOW_43_in_elementValueArrayInitializer3327 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_elementValue_in_elementValueArrayInitializer3329 = frozenset([43, 47])
-    FOLLOW_43_in_elementValueArrayInitializer3336 = frozenset([47])
-    FOLLOW_47_in_elementValueArrayInitializer3340 = frozenset([1])
-    FOLLOW_72_in_annotationTypeDecl3360 = frozenset([48])
-    FOLLOW_48_in_annotationTypeDecl3362 = frozenset([4])
-    FOLLOW_Ident_in_annotationTypeDecl3364 = frozenset([46])
-    FOLLOW_annotationTypeBody_in_annotationTypeDecl3366 = frozenset([1])
-    FOLLOW_46_in_annotationTypeBody3386 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_annotationTypeElementDecl_in_annotationTypeBody3389 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
-    FOLLOW_47_in_annotationTypeBody3393 = frozenset([1])
-    FOLLOW_modifiers_in_annotationTypeElementDecl3413 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 58, 59, 60, 61, 62, 63, 64, 65, 72])
-    FOLLOW_annotationTypeElementRest_in_annotationTypeElementDecl3415 = frozenset([1])
-    FOLLOW_type_in_annotationTypeElementRest3435 = frozenset([4])
-    FOLLOW_annotationMethodOrConstantRest_in_annotationTypeElementRest3437 = frozenset([28])
-    FOLLOW_28_in_annotationTypeElementRest3439 = frozenset([1])
-    FOLLOW_normalClassDecl_in_annotationTypeElementRest3449 = frozenset([1, 28])
-    FOLLOW_28_in_annotationTypeElementRest3452 = frozenset([1])
-    FOLLOW_normalInterfaceDecl_in_annotationTypeElementRest3463 = frozenset([1, 28])
-    FOLLOW_28_in_annotationTypeElementRest3466 = frozenset([1])
-    FOLLOW_enumDecl_in_annotationTypeElementRest3477 = frozenset([1, 28])
-    FOLLOW_28_in_annotationTypeElementRest3480 = frozenset([1])
-    FOLLOW_annotationTypeDecl_in_annotationTypeElementRest3491 = frozenset([1, 28])
-    FOLLOW_28_in_annotationTypeElementRest3493 = frozenset([1])
-    FOLLOW_annotationMethodRest_in_annotationMethodOrConstantRest3514 = frozenset([1])
-    FOLLOW_annotationConstantRest_in_annotationMethodOrConstantRest3524 = frozenset([1])
-    FOLLOW_Ident_in_annotationMethodRest3544 = frozenset([68])
-    FOLLOW_68_in_annotationMethodRest3546 = frozenset([69])
-    FOLLOW_69_in_annotationMethodRest3548 = frozenset([1, 73])
-    FOLLOW_defaultValue_in_annotationMethodRest3550 = frozenset([1])
-    FOLLOW_variableDecls_in_annotationConstantRest3571 = frozenset([1])
-    FOLLOW_73_in_defaultValue3591 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_elementValue_in_defaultValue3593 = frozenset([1])
-    FOLLOW_46_in_block3616 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_blockStatement_in_block3618 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_47_in_block3621 = frozenset([1])
-    FOLLOW_localVariableDeclStatement_in_blockStatement3656 = frozenset([1])
-    FOLLOW_classOrInterfaceDecl_in_blockStatement3666 = frozenset([1])
-    FOLLOW_statement_in_blockStatement3676 = frozenset([1])
-    FOLLOW_localVariableDecl_in_localVariableDeclStatement3697 = frozenset([28])
-    FOLLOW_28_in_localVariableDeclStatement3699 = frozenset([1])
-    FOLLOW_variableModifiers_in_localVariableDecl3724 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_localVariableDecl3736 = frozenset([4])
-    FOLLOW_variableDecls_in_localVariableDecl3748 = frozenset([1])
-    FOLLOW_variableModifier_in_variableModifiers3768 = frozenset([1, 37, 72])
-    FOLLOW_block_in_statement3799 = frozenset([1])
-    FOLLOW_ASSERT_in_statement3809 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_statement3811 = frozenset([28, 74])
-    FOLLOW_74_in_statement3814 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_statement3816 = frozenset([28])
-    FOLLOW_28_in_statement3820 = frozenset([1])
-    FOLLOW_75_in_statement3830 = frozenset([68])
-    FOLLOW_parExpression_in_statement3832 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement3834 = frozenset([1, 76])
-    FOLLOW_76_in_statement3844 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement3846 = frozenset([1])
-    FOLLOW_77_in_statement3858 = frozenset([68])
-    FOLLOW_68_in_statement3860 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_forControl_in_statement3862 = frozenset([69])
-    FOLLOW_69_in_statement3864 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement3866 = frozenset([1])
-    FOLLOW_78_in_statement3876 = frozenset([68])
-    FOLLOW_parExpression_in_statement3878 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement3880 = frozenset([1])
-    FOLLOW_79_in_statement3890 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement3892 = frozenset([78])
-    FOLLOW_78_in_statement3894 = frozenset([68])
-    FOLLOW_parExpression_in_statement3896 = frozenset([28])
-    FOLLOW_28_in_statement3898 = frozenset([1])
-    FOLLOW_80_in_statement3908 = frozenset([30, 46])
-    FOLLOW_block_in_statement3910 = frozenset([81, 87])
-    FOLLOW_catches_in_statement3924 = frozenset([81])
-    FOLLOW_81_in_statement3926 = frozenset([30, 46])
-    FOLLOW_block_in_statement3928 = frozenset([1])
-    FOLLOW_catches_in_statement3942 = frozenset([1])
-    FOLLOW_81_in_statement3956 = frozenset([30, 46])
-    FOLLOW_block_in_statement3958 = frozenset([1])
-    FOLLOW_82_in_statement3978 = frozenset([68])
-    FOLLOW_parExpression_in_statement3980 = frozenset([46])
-    FOLLOW_46_in_statement3982 = frozenset([47, 73, 88])
-    FOLLOW_switchBlockStatementGroups_in_statement3984 = frozenset([47])
-    FOLLOW_47_in_statement3986 = frozenset([1])
-    FOLLOW_55_in_statement3996 = frozenset([68])
-    FOLLOW_parExpression_in_statement3998 = frozenset([30, 46])
-    FOLLOW_block_in_statement4000 = frozenset([1])
-    FOLLOW_83_in_statement4010 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_statement4032 = frozenset([28])
-    FOLLOW_28_in_statement4035 = frozenset([1])
-    FOLLOW_84_in_statement4045 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_statement4047 = frozenset([28])
-    FOLLOW_28_in_statement4049 = frozenset([1])
-    FOLLOW_85_in_statement4059 = frozenset([4, 28])
-    FOLLOW_Ident_in_statement4061 = frozenset([28])
-    FOLLOW_28_in_statement4064 = frozenset([1])
-    FOLLOW_86_in_statement4074 = frozenset([4, 28])
-    FOLLOW_Ident_in_statement4076 = frozenset([28])
-    FOLLOW_28_in_statement4079 = frozenset([1])
-    FOLLOW_28_in_statement4089 = frozenset([1])
-    FOLLOW_statementExpression_in_statement4099 = frozenset([28])
-    FOLLOW_28_in_statement4101 = frozenset([1])
-    FOLLOW_Ident_in_statement4111 = frozenset([74])
-    FOLLOW_74_in_statement4113 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_statement4115 = frozenset([1])
-    FOLLOW_catchClause_in_catches4135 = frozenset([1, 87])
-    FOLLOW_catchClause_in_catches4138 = frozenset([1, 87])
-    FOLLOW_87_in_catchClause4160 = frozenset([68])
-    FOLLOW_68_in_catchClause4162 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 72])
-    FOLLOW_formalParameter_in_catchClause4164 = frozenset([69])
-    FOLLOW_69_in_catchClause4166 = frozenset([30, 46])
-    FOLLOW_block_in_catchClause4168 = frozenset([1])
-    FOLLOW_variableModifiers_in_formalParameter4188 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_formalParameter4190 = frozenset([4])
-    FOLLOW_variableDeclId_in_formalParameter4192 = frozenset([1])
-    FOLLOW_switchBlockStatementGroup_in_switchBlockStatementGroups4213 = frozenset([1, 73, 88])
-    FOLLOW_switchLabel_in_switchBlockStatementGroup4235 = frozenset([1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 73, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 88, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_blockStatement_in_switchBlockStatementGroup4238 = frozenset([1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_88_in_switchLabel4259 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_constantExpression_in_switchLabel4261 = frozenset([74])
-    FOLLOW_74_in_switchLabel4263 = frozenset([1])
-    FOLLOW_88_in_switchLabel4273 = frozenset([4])
-    FOLLOW_enumConstantName_in_switchLabel4275 = frozenset([74])
-    FOLLOW_74_in_switchLabel4277 = frozenset([1])
-    FOLLOW_73_in_switchLabel4287 = frozenset([74])
-    FOLLOW_74_in_switchLabel4289 = frozenset([1])
-    FOLLOW_enhancedForControl_in_forControl4317 = frozenset([1])
-    FOLLOW_forInit_in_forControl4327 = frozenset([28])
-    FOLLOW_28_in_forControl4330 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_forControl4332 = frozenset([28])
-    FOLLOW_28_in_forControl4335 = frozenset([1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_forUpdate_in_forControl4337 = frozenset([1])
-    FOLLOW_localVariableDecl_in_forInit4358 = frozenset([1])
-    FOLLOW_expressionList_in_forInit4368 = frozenset([1])
-    FOLLOW_variableModifiers_in_enhancedForControl4388 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_enhancedForControl4390 = frozenset([4])
-    FOLLOW_Ident_in_enhancedForControl4392 = frozenset([74])
-    FOLLOW_74_in_enhancedForControl4394 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_enhancedForControl4396 = frozenset([1])
-    FOLLOW_expressionList_in_forUpdate4416 = frozenset([1])
-    FOLLOW_68_in_parExpression4439 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_parExpression4441 = frozenset([69])
-    FOLLOW_69_in_parExpression4443 = frozenset([1])
-    FOLLOW_expression_in_expressionList4463 = frozenset([1, 43])
-    FOLLOW_43_in_expressionList4466 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_expressionList4468 = frozenset([1, 43])
-    FOLLOW_expression_in_statementExpression4490 = frozenset([1])
-    FOLLOW_expression_in_constantExpression4510 = frozenset([1])
-    FOLLOW_conditionalExpression_in_expression4530 = frozenset([1, 42, 44, 53, 89, 90, 91, 92, 93, 94, 95, 96])
-    FOLLOW_assignmentOperator_in_expression4543 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_expression4563 = frozenset([1])
-    FOLLOW_53_in_assignmentOperator4594 = frozenset([1])
-    FOLLOW_89_in_assignmentOperator4604 = frozenset([1])
-    FOLLOW_90_in_assignmentOperator4614 = frozenset([1])
-    FOLLOW_91_in_assignmentOperator4624 = frozenset([1])
-    FOLLOW_92_in_assignmentOperator4634 = frozenset([1])
-    FOLLOW_93_in_assignmentOperator4644 = frozenset([1])
-    FOLLOW_94_in_assignmentOperator4654 = frozenset([1])
-    FOLLOW_95_in_assignmentOperator4664 = frozenset([1])
-    FOLLOW_96_in_assignmentOperator4674 = frozenset([1])
-    FOLLOW_42_in_assignmentOperator4695 = frozenset([42])
-    FOLLOW_42_in_assignmentOperator4699 = frozenset([53])
+    FOLLOW_annotation_in_annotations3134 = frozenset([1, 72])
+    FOLLOW_72_in_annotation3155 = frozenset([4])
+    FOLLOW_annotationName_in_annotation3157 = frozenset([1, 68])
+    FOLLOW_68_in_annotation3161 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 69, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_elementValuePairs_in_annotation3165 = frozenset([69])
+    FOLLOW_elementValue_in_annotation3169 = frozenset([69])
+    FOLLOW_69_in_annotation3174 = frozenset([1])
+    FOLLOW_Ident_in_annotationName3195 = frozenset([1, 31])
+    FOLLOW_31_in_annotationName3198 = frozenset([4])
+    FOLLOW_Ident_in_annotationName3200 = frozenset([1, 31])
+    FOLLOW_elementValuePair_in_elementValuePairs3222 = frozenset([1, 43])
+    FOLLOW_43_in_elementValuePairs3225 = frozenset([4])
+    FOLLOW_elementValuePair_in_elementValuePairs3227 = frozenset([1, 43])
+    FOLLOW_Ident_in_elementValuePair3249 = frozenset([53])
+    FOLLOW_53_in_elementValuePair3251 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_elementValue_in_elementValuePair3253 = frozenset([1])
+    FOLLOW_conditionalExpression_in_elementValue3273 = frozenset([1])
+    FOLLOW_annotation_in_elementValue3283 = frozenset([1])
+    FOLLOW_elementValueArrayInitializer_in_elementValue3293 = frozenset([1])
+    FOLLOW_46_in_elementValueArrayInitializer3313 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 43, 46, 47, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_elementValue_in_elementValueArrayInitializer3316 = frozenset([43, 47])
+    FOLLOW_43_in_elementValueArrayInitializer3319 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_elementValue_in_elementValueArrayInitializer3321 = frozenset([43, 47])
+    FOLLOW_43_in_elementValueArrayInitializer3328 = frozenset([47])
+    FOLLOW_47_in_elementValueArrayInitializer3332 = frozenset([1])
+    FOLLOW_72_in_annotationTypeDecl3352 = frozenset([48])
+    FOLLOW_48_in_annotationTypeDecl3354 = frozenset([4])
+    FOLLOW_Ident_in_annotationTypeDecl3356 = frozenset([46])
+    FOLLOW_annotationTypeBody_in_annotationTypeDecl3358 = frozenset([1])
+    FOLLOW_46_in_annotationTypeBody3378 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_annotationTypeElementDecl_in_annotationTypeBody3381 = frozenset([28, 30, 33, 34, 35, 36, 37, 38, 46, 47, 54, 55, 56, 57, 72])
+    FOLLOW_47_in_annotationTypeBody3385 = frozenset([1])
+    FOLLOW_modifiers_in_annotationTypeElementDecl3405 = frozenset([4, 5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 58, 59, 60, 61, 62, 63, 64, 65, 72])
+    FOLLOW_annotationTypeElementRest_in_annotationTypeElementDecl3407 = frozenset([1])
+    FOLLOW_type_in_annotationTypeElementRest3427 = frozenset([4])
+    FOLLOW_annotationMethodOrConstantRest_in_annotationTypeElementRest3429 = frozenset([28])
+    FOLLOW_28_in_annotationTypeElementRest3431 = frozenset([1])
+    FOLLOW_normalClassDecl_in_annotationTypeElementRest3441 = frozenset([1, 28])
+    FOLLOW_28_in_annotationTypeElementRest3444 = frozenset([1])
+    FOLLOW_normalInterfaceDecl_in_annotationTypeElementRest3455 = frozenset([1, 28])
+    FOLLOW_28_in_annotationTypeElementRest3458 = frozenset([1])
+    FOLLOW_enumDecl_in_annotationTypeElementRest3469 = frozenset([1, 28])
+    FOLLOW_28_in_annotationTypeElementRest3472 = frozenset([1])
+    FOLLOW_annotationTypeDecl_in_annotationTypeElementRest3483 = frozenset([1, 28])
+    FOLLOW_28_in_annotationTypeElementRest3485 = frozenset([1])
+    FOLLOW_annotationMethodRest_in_annotationMethodOrConstantRest3506 = frozenset([1])
+    FOLLOW_annotationConstantRest_in_annotationMethodOrConstantRest3516 = frozenset([1])
+    FOLLOW_Ident_in_annotationMethodRest3536 = frozenset([68])
+    FOLLOW_68_in_annotationMethodRest3538 = frozenset([69])
+    FOLLOW_69_in_annotationMethodRest3540 = frozenset([1, 73])
+    FOLLOW_defaultValue_in_annotationMethodRest3542 = frozenset([1])
+    FOLLOW_variableDecls_in_annotationConstantRest3563 = frozenset([1])
+    FOLLOW_73_in_defaultValue3584 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_elementValue_in_defaultValue3586 = frozenset([1])
+    FOLLOW_46_in_block3609 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_blockStatement_in_block3611 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 47, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_47_in_block3614 = frozenset([1])
+    FOLLOW_localVariableDeclStatement_in_blockStatement3634 = frozenset([1])
+    FOLLOW_classOrInterfaceDecl_in_blockStatement3644 = frozenset([1])
+    FOLLOW_statement_in_blockStatement3654 = frozenset([1])
+    FOLLOW_localVariableDecl_in_localVariableDeclStatement3675 = frozenset([28])
+    FOLLOW_28_in_localVariableDeclStatement3677 = frozenset([1])
+    FOLLOW_variableModifiers_in_localVariableDecl3697 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_localVariableDecl3709 = frozenset([4])
+    FOLLOW_variableDecls_in_localVariableDecl3719 = frozenset([1])
+    FOLLOW_variableModifier_in_variableModifiers3740 = frozenset([1, 37, 72])
+    FOLLOW_block_in_statement3761 = frozenset([1])
+    FOLLOW_ASSERT_in_statement3771 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_statement3773 = frozenset([28, 74])
+    FOLLOW_74_in_statement3776 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_statement3778 = frozenset([28])
+    FOLLOW_28_in_statement3782 = frozenset([1])
+    FOLLOW_75_in_statement3792 = frozenset([68])
+    FOLLOW_parExpression_in_statement3794 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement3796 = frozenset([1, 76])
+    FOLLOW_76_in_statement3806 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement3808 = frozenset([1])
+    FOLLOW_77_in_statement3820 = frozenset([68])
+    FOLLOW_68_in_statement3822 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_forControl_in_statement3824 = frozenset([69])
+    FOLLOW_69_in_statement3826 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement3828 = frozenset([1])
+    FOLLOW_78_in_statement3838 = frozenset([68])
+    FOLLOW_parExpression_in_statement3840 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement3842 = frozenset([1])
+    FOLLOW_79_in_statement3852 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement3854 = frozenset([78])
+    FOLLOW_78_in_statement3856 = frozenset([68])
+    FOLLOW_parExpression_in_statement3858 = frozenset([28])
+    FOLLOW_28_in_statement3860 = frozenset([1])
+    FOLLOW_80_in_statement3870 = frozenset([30, 46])
+    FOLLOW_block_in_statement3872 = frozenset([81, 87])
+    FOLLOW_catches_in_statement3886 = frozenset([81])
+    FOLLOW_81_in_statement3888 = frozenset([30, 46])
+    FOLLOW_block_in_statement3890 = frozenset([1])
+    FOLLOW_catches_in_statement3904 = frozenset([1])
+    FOLLOW_81_in_statement3918 = frozenset([30, 46])
+    FOLLOW_block_in_statement3920 = frozenset([1])
+    FOLLOW_82_in_statement3940 = frozenset([68])
+    FOLLOW_parExpression_in_statement3942 = frozenset([46])
+    FOLLOW_46_in_statement3944 = frozenset([47, 73, 88])
+    FOLLOW_switchBlockStatementGroups_in_statement3946 = frozenset([47])
+    FOLLOW_47_in_statement3948 = frozenset([1])
+    FOLLOW_55_in_statement3958 = frozenset([68])
+    FOLLOW_parExpression_in_statement3960 = frozenset([30, 46])
+    FOLLOW_block_in_statement3962 = frozenset([1])
+    FOLLOW_83_in_statement3972 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_statement3983 = frozenset([28])
+    FOLLOW_28_in_statement3986 = frozenset([1])
+    FOLLOW_84_in_statement3996 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_statement3998 = frozenset([28])
+    FOLLOW_28_in_statement4000 = frozenset([1])
+    FOLLOW_85_in_statement4010 = frozenset([4, 28])
+    FOLLOW_Ident_in_statement4012 = frozenset([28])
+    FOLLOW_28_in_statement4015 = frozenset([1])
+    FOLLOW_86_in_statement4025 = frozenset([4, 28])
+    FOLLOW_Ident_in_statement4027 = frozenset([28])
+    FOLLOW_28_in_statement4030 = frozenset([1])
+    FOLLOW_28_in_statement4040 = frozenset([1])
+    FOLLOW_statementExpression_in_statement4050 = frozenset([28])
+    FOLLOW_28_in_statement4052 = frozenset([1])
+    FOLLOW_Ident_in_statement4062 = frozenset([74])
+    FOLLOW_74_in_statement4064 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_statement4066 = frozenset([1])
+    FOLLOW_catchClause_in_catches4086 = frozenset([1, 87])
+    FOLLOW_catchClause_in_catches4089 = frozenset([1, 87])
+    FOLLOW_87_in_catchClause4111 = frozenset([68])
+    FOLLOW_68_in_catchClause4113 = frozenset([4, 37, 58, 59, 60, 61, 62, 63, 64, 65, 72])
+    FOLLOW_formalParameter_in_catchClause4115 = frozenset([69])
+    FOLLOW_69_in_catchClause4117 = frozenset([30, 46])
+    FOLLOW_block_in_catchClause4119 = frozenset([1])
+    FOLLOW_variableModifiers_in_formalParameter4139 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_formalParameter4141 = frozenset([4])
+    FOLLOW_variableDeclId_in_formalParameter4143 = frozenset([1])
+    FOLLOW_switchBlockStatementGroup_in_switchBlockStatementGroups4164 = frozenset([1, 73, 88])
+    FOLLOW_switchLabel_in_switchBlockStatementGroup4186 = frozenset([1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 73, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 88, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_blockStatement_in_switchBlockStatementGroup4189 = frozenset([1, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_88_in_switchLabel4210 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_constantExpression_in_switchLabel4212 = frozenset([74])
+    FOLLOW_74_in_switchLabel4214 = frozenset([1])
+    FOLLOW_88_in_switchLabel4224 = frozenset([4])
+    FOLLOW_enumConstantName_in_switchLabel4226 = frozenset([74])
+    FOLLOW_74_in_switchLabel4228 = frozenset([1])
+    FOLLOW_73_in_switchLabel4238 = frozenset([74])
+    FOLLOW_74_in_switchLabel4240 = frozenset([1])
+    FOLLOW_enhancedForControl_in_forControl4268 = frozenset([1])
+    FOLLOW_forInit_in_forControl4278 = frozenset([28])
+    FOLLOW_28_in_forControl4281 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 28, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_forControl4283 = frozenset([28])
+    FOLLOW_28_in_forControl4286 = frozenset([1, 4, 6, 7, 8, 9, 10, 11, 12, 13, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_forUpdate_in_forControl4288 = frozenset([1])
+    FOLLOW_localVariableDecl_in_forInit4309 = frozenset([1])
+    FOLLOW_expressionList_in_forInit4319 = frozenset([1])
+    FOLLOW_variableModifiers_in_enhancedForControl4339 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_enhancedForControl4341 = frozenset([4])
+    FOLLOW_Ident_in_enhancedForControl4343 = frozenset([74])
+    FOLLOW_74_in_enhancedForControl4345 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_enhancedForControl4347 = frozenset([1])
+    FOLLOW_expressionList_in_forUpdate4367 = frozenset([1])
+    FOLLOW_68_in_parExpression4390 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_parExpression4392 = frozenset([69])
+    FOLLOW_69_in_parExpression4394 = frozenset([1])
+    FOLLOW_expression_in_expressionList4414 = frozenset([1, 43])
+    FOLLOW_43_in_expressionList4417 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_expressionList4419 = frozenset([1, 43])
+    FOLLOW_expression_in_statementExpression4441 = frozenset([1])
+    FOLLOW_expression_in_constantExpression4461 = frozenset([1])
+    FOLLOW_conditionalExpression_in_expression4481 = frozenset([1, 42, 44, 53, 89, 90, 91, 92, 93, 94, 95, 96])
+    FOLLOW_assignmentOperator_in_expression4486 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_expression4488 = frozenset([1])
+    FOLLOW_53_in_assignmentOperator4510 = frozenset([1])
+    FOLLOW_89_in_assignmentOperator4520 = frozenset([1])
+    FOLLOW_90_in_assignmentOperator4530 = frozenset([1])
+    FOLLOW_91_in_assignmentOperator4540 = frozenset([1])
+    FOLLOW_92_in_assignmentOperator4550 = frozenset([1])
+    FOLLOW_93_in_assignmentOperator4560 = frozenset([1])
+    FOLLOW_94_in_assignmentOperator4570 = frozenset([1])
+    FOLLOW_95_in_assignmentOperator4580 = frozenset([1])
+    FOLLOW_96_in_assignmentOperator4590 = frozenset([1])
+    FOLLOW_42_in_assignmentOperator4611 = frozenset([42])
+    FOLLOW_42_in_assignmentOperator4615 = frozenset([53])
+    FOLLOW_53_in_assignmentOperator4619 = frozenset([1])
+    FOLLOW_44_in_assignmentOperator4652 = frozenset([44])
+    FOLLOW_44_in_assignmentOperator4656 = frozenset([44])
+    FOLLOW_44_in_assignmentOperator4660 = frozenset([53])
+    FOLLOW_53_in_assignmentOperator4664 = frozenset([1])
+    FOLLOW_44_in_assignmentOperator4695 = frozenset([44])
+    FOLLOW_44_in_assignmentOperator4699 = frozenset([53])
     FOLLOW_53_in_assignmentOperator4703 = frozenset([1])
-    FOLLOW_44_in_assignmentOperator4736 = frozenset([44])
-    FOLLOW_44_in_assignmentOperator4740 = frozenset([44])
-    FOLLOW_44_in_assignmentOperator4744 = frozenset([53])
-    FOLLOW_53_in_assignmentOperator4748 = frozenset([1])
-    FOLLOW_44_in_assignmentOperator4779 = frozenset([44])
-    FOLLOW_44_in_assignmentOperator4783 = frozenset([53])
-    FOLLOW_53_in_assignmentOperator4787 = frozenset([1])
-    FOLLOW_conditionalOrExpression_in_conditionalExpression4817 = frozenset([1, 66])
-    FOLLOW_66_in_conditionalExpression4821 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_conditionalExpression4823 = frozenset([74])
-    FOLLOW_74_in_conditionalExpression4825 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_conditionalExpression4827 = frozenset([1])
-    FOLLOW_conditionalAndExpression_in_conditionalOrExpression4850 = frozenset([1, 97])
-    FOLLOW_97_in_conditionalOrExpression4854 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_conditionalAndExpression_in_conditionalOrExpression4856 = frozenset([1, 97])
-    FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4879 = frozenset([1, 98])
-    FOLLOW_98_in_conditionalAndExpression4883 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4885 = frozenset([1, 98])
-    FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4908 = frozenset([1, 99])
-    FOLLOW_99_in_inclusiveOrExpression4912 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4914 = frozenset([1, 99])
-    FOLLOW_andExpression_in_exclusiveOrExpression4937 = frozenset([1, 100])
-    FOLLOW_100_in_exclusiveOrExpression4941 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_andExpression_in_exclusiveOrExpression4943 = frozenset([1, 100])
-    FOLLOW_equalityExpression_in_andExpression4966 = frozenset([1, 45])
-    FOLLOW_45_in_andExpression4970 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_equalityExpression_in_andExpression4972 = frozenset([1, 45])
-    FOLLOW_instanceOfExpression_in_equalityExpression4995 = frozenset([1, 101, 102])
-    FOLLOW_set_in_equalityExpression4999 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_instanceOfExpression_in_equalityExpression5007 = frozenset([1, 101, 102])
-    FOLLOW_relationalExpression_in_instanceOfExpression5030 = frozenset([1, 103])
-    FOLLOW_103_in_instanceOfExpression5033 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_type_in_instanceOfExpression5035 = frozenset([1])
-    FOLLOW_shiftExpression_in_relationalExpression5057 = frozenset([1, 42, 44])
-    FOLLOW_relationalOp_in_relationalExpression5061 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_shiftExpression_in_relationalExpression5063 = frozenset([1, 42, 44])
-    FOLLOW_42_in_relationalOp5095 = frozenset([53])
-    FOLLOW_53_in_relationalOp5099 = frozenset([1])
-    FOLLOW_44_in_relationalOp5128 = frozenset([53])
-    FOLLOW_53_in_relationalOp5132 = frozenset([1])
-    FOLLOW_42_in_relationalOp5152 = frozenset([1])
-    FOLLOW_44_in_relationalOp5162 = frozenset([1])
-    FOLLOW_additiveExpression_in_shiftExpression5182 = frozenset([1, 42, 44])
-    FOLLOW_shiftOp_in_shiftExpression5186 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_additiveExpression_in_shiftExpression5188 = frozenset([1, 42, 44])
-    FOLLOW_42_in_shiftOp5220 = frozenset([42])
-    FOLLOW_42_in_shiftOp5224 = frozenset([1])
-    FOLLOW_44_in_shiftOp5255 = frozenset([44])
-    FOLLOW_44_in_shiftOp5259 = frozenset([44])
-    FOLLOW_44_in_shiftOp5263 = frozenset([1])
-    FOLLOW_44_in_shiftOp5292 = frozenset([44])
-    FOLLOW_44_in_shiftOp5296 = frozenset([1])
-    FOLLOW_multiplicativeExpression_in_additiveExpression5326 = frozenset([1, 104, 105])
-    FOLLOW_set_in_additiveExpression5330 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_multiplicativeExpression_in_additiveExpression5338 = frozenset([1, 104, 105])
-    FOLLOW_unaryExpression_in_multiplicativeExpression5361 = frozenset([1, 32, 106, 107])
-    FOLLOW_set_in_multiplicativeExpression5365 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_multiplicativeExpression5379 = frozenset([1, 32, 106, 107])
-    FOLLOW_104_in_unaryExpression5402 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpression5404 = frozenset([1])
-    FOLLOW_105_in_unaryExpression5414 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpression5416 = frozenset([1])
-    FOLLOW_108_in_unaryExpression5426 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpression5428 = frozenset([1])
-    FOLLOW_109_in_unaryExpression5438 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpression5440 = frozenset([1])
-    FOLLOW_unaryExpressionNotPlusMinus_in_unaryExpression5450 = frozenset([1])
-    FOLLOW_110_in_unaryExpressionNotPlusMinus5470 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5472 = frozenset([1])
-    FOLLOW_111_in_unaryExpressionNotPlusMinus5482 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5484 = frozenset([1])
-    FOLLOW_castExpression_in_unaryExpressionNotPlusMinus5494 = frozenset([1])
-    FOLLOW_primary_in_unaryExpressionNotPlusMinus5504 = frozenset([1, 31, 50, 108, 109])
-    FOLLOW_selector_in_unaryExpressionNotPlusMinus5506 = frozenset([1, 31, 50, 108, 109])
-    FOLLOW_set_in_unaryExpressionNotPlusMinus5509 = frozenset([1])
-    FOLLOW_68_in_castExpression5533 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_primitiveType_in_castExpression5535 = frozenset([69])
-    FOLLOW_69_in_castExpression5537 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_castExpression5539 = frozenset([1])
-    FOLLOW_68_in_castExpression5548 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_type_in_castExpression5551 = frozenset([69])
-    FOLLOW_expression_in_castExpression5555 = frozenset([69])
-    FOLLOW_69_in_castExpression5558 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpressionNotPlusMinus_in_castExpression5560 = frozenset([1])
-    FOLLOW_parExpression_in_primary5586 = frozenset([1])
-    FOLLOW_71_in_primary5596 = frozenset([1, 31, 50, 68])
-    FOLLOW_31_in_primary5599 = frozenset([4])
-    FOLLOW_Ident_in_primary5603 = frozenset([1, 31, 50, 68])
-    FOLLOW_identifierSuffix_in_primary5607 = frozenset([1])
-    FOLLOW_67_in_primary5618 = frozenset([31, 68])
-    FOLLOW_superSuffix_in_primary5620 = frozenset([1])
-    FOLLOW_literal_in_primary5631 = frozenset([1])
-    FOLLOW_112_in_primary5652 = frozenset([4, 42, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_creator_in_primary5654 = frozenset([1])
-    FOLLOW_Ident_in_primary5669 = frozenset([1, 31, 50, 68])
-    FOLLOW_31_in_primary5690 = frozenset([4])
-    FOLLOW_Ident_in_primary5694 = frozenset([1, 31, 50, 68])
-    FOLLOW_identifierSuffix_in_primary5739 = frozenset([1])
-    FOLLOW_primitiveType_in_primary5751 = frozenset([31, 50])
-    FOLLOW_50_in_primary5754 = frozenset([51])
-    FOLLOW_51_in_primary5756 = frozenset([31, 50])
-    FOLLOW_31_in_primary5760 = frozenset([39])
-    FOLLOW_39_in_primary5762 = frozenset([1])
-    FOLLOW_49_in_primary5772 = frozenset([31])
-    FOLLOW_31_in_primary5774 = frozenset([39])
-    FOLLOW_39_in_primary5776 = frozenset([1])
-    FOLLOW_50_in_identifierSuffix5807 = frozenset([51])
-    FOLLOW_51_in_identifierSuffix5809 = frozenset([31, 50])
-    FOLLOW_31_in_identifierSuffix5813 = frozenset([39])
-    FOLLOW_39_in_identifierSuffix5815 = frozenset([1])
-    FOLLOW_50_in_identifierSuffix5826 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_identifierSuffix5828 = frozenset([51])
-    FOLLOW_51_in_identifierSuffix5830 = frozenset([1, 50])
-    FOLLOW_arguments_in_identifierSuffix5845 = frozenset([1])
-    FOLLOW_31_in_identifierSuffix5855 = frozenset([39])
-    FOLLOW_39_in_identifierSuffix5857 = frozenset([1])
-    FOLLOW_31_in_identifierSuffix5867 = frozenset([42])
-    FOLLOW_explicitGenericInvocation_in_identifierSuffix5869 = frozenset([1])
-    FOLLOW_31_in_identifierSuffix5879 = frozenset([71])
-    FOLLOW_71_in_identifierSuffix5881 = frozenset([1])
-    FOLLOW_31_in_identifierSuffix5891 = frozenset([67])
-    FOLLOW_67_in_identifierSuffix5893 = frozenset([68])
-    FOLLOW_arguments_in_identifierSuffix5895 = frozenset([1])
-    FOLLOW_31_in_identifierSuffix5905 = frozenset([112])
-    FOLLOW_112_in_identifierSuffix5907 = frozenset([4, 42])
-    FOLLOW_innerCreator_in_identifierSuffix5909 = frozenset([1])
-    FOLLOW_nonWildcardTypeArguments_in_creator5939 = frozenset([4, 42, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_createdName_in_creator5941 = frozenset([68])
-    FOLLOW_classCreatorRest_in_creator5943 = frozenset([1])
-    FOLLOW_createdName_in_creator5953 = frozenset([50, 68])
-    FOLLOW_arrayCreatorRest_in_creator5956 = frozenset([1])
-    FOLLOW_classCreatorRest_in_creator5960 = frozenset([1])
-    FOLLOW_classOrInterfaceType_in_createdName5981 = frozenset([1])
-    FOLLOW_primitiveType_in_createdName5991 = frozenset([1])
-    FOLLOW_nonWildcardTypeArguments_in_innerCreator6016 = frozenset([4])
-    FOLLOW_Ident_in_innerCreator6029 = frozenset([68])
-    FOLLOW_classCreatorRest_in_innerCreator6041 = frozenset([1])
-    FOLLOW_50_in_arrayCreatorRest6061 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 51, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_51_in_arrayCreatorRest6075 = frozenset([46, 50])
-    FOLLOW_50_in_arrayCreatorRest6078 = frozenset([51])
-    FOLLOW_51_in_arrayCreatorRest6080 = frozenset([46, 50])
-    FOLLOW_arrayInitializer_in_arrayCreatorRest6084 = frozenset([1])
-    FOLLOW_expression_in_arrayCreatorRest6098 = frozenset([51])
-    FOLLOW_51_in_arrayCreatorRest6100 = frozenset([1, 50])
-    FOLLOW_50_in_arrayCreatorRest6103 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_arrayCreatorRest6105 = frozenset([51])
-    FOLLOW_51_in_arrayCreatorRest6107 = frozenset([1, 50])
-    FOLLOW_50_in_arrayCreatorRest6112 = frozenset([51])
-    FOLLOW_51_in_arrayCreatorRest6114 = frozenset([1, 50])
-    FOLLOW_arguments_in_classCreatorRest6146 = frozenset([1, 40, 41, 42, 46])
-    FOLLOW_classBody_in_classCreatorRest6148 = frozenset([1])
-    FOLLOW_nonWildcardTypeArguments_in_explicitGenericInvocation6169 = frozenset([4])
-    FOLLOW_Ident_in_explicitGenericInvocation6171 = frozenset([68])
-    FOLLOW_arguments_in_explicitGenericInvocation6173 = frozenset([1])
-    FOLLOW_42_in_nonWildcardTypeArguments6193 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_typeList_in_nonWildcardTypeArguments6195 = frozenset([44])
-    FOLLOW_44_in_nonWildcardTypeArguments6197 = frozenset([1])
-    FOLLOW_31_in_selector6217 = frozenset([4])
-    FOLLOW_Ident_in_selector6219 = frozenset([1, 68])
-    FOLLOW_arguments_in_selector6221 = frozenset([1])
-    FOLLOW_31_in_selector6232 = frozenset([71])
-    FOLLOW_71_in_selector6234 = frozenset([1])
-    FOLLOW_31_in_selector6244 = frozenset([67])
-    FOLLOW_67_in_selector6246 = frozenset([31, 68])
-    FOLLOW_superSuffix_in_selector6248 = frozenset([1])
-    FOLLOW_31_in_selector6258 = frozenset([112])
-    FOLLOW_112_in_selector6260 = frozenset([4, 42])
-    FOLLOW_innerCreator_in_selector6262 = frozenset([1])
-    FOLLOW_50_in_selector6272 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_selector6274 = frozenset([51])
-    FOLLOW_51_in_selector6276 = frozenset([1])
-    FOLLOW_arguments_in_superSuffix6296 = frozenset([1])
-    FOLLOW_31_in_superSuffix6306 = frozenset([4])
-    FOLLOW_Ident_in_superSuffix6308 = frozenset([1, 68])
-    FOLLOW_arguments_in_superSuffix6310 = frozenset([1])
-    FOLLOW_68_in_arguments6331 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 69, 71, 72, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expressionList_in_arguments6333 = frozenset([69])
-    FOLLOW_69_in_arguments6336 = frozenset([1])
-    FOLLOW_annotations_in_synpred5_Java123 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_packageDecl_in_synpred5_Java137 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_importDecl_in_synpred5_Java139 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_typeDecl_in_synpred5_Java142 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_classOrInterfaceDecl_in_synpred5_Java157 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_typeDecl_in_synpred5_Java159 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
-    FOLLOW_explicitConstructorInvocation_in_synpred113_Java2862 = frozenset([1])
-    FOLLOW_nonWildcardTypeArguments_in_synpred117_Java2898 = frozenset([67, 71])
-    FOLLOW_set_in_synpred117_Java2901 = frozenset([68])
-    FOLLOW_arguments_in_synpred117_Java2909 = frozenset([28])
-    FOLLOW_28_in_synpred117_Java2911 = frozenset([1])
-    FOLLOW_annotation_in_synpred127_Java3142 = frozenset([1])
-    FOLLOW_localVariableDeclStatement_in_synpred150_Java3656 = frozenset([1])
-    FOLLOW_classOrInterfaceDecl_in_synpred151_Java3666 = frozenset([1])
-    FOLLOW_76_in_synpred156_Java3844 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_statement_in_synpred156_Java3846 = frozenset([1])
-    FOLLOW_catches_in_synpred161_Java3924 = frozenset([81])
-    FOLLOW_81_in_synpred161_Java3926 = frozenset([30, 46])
-    FOLLOW_block_in_synpred161_Java3928 = frozenset([1])
-    FOLLOW_catches_in_synpred162_Java3942 = frozenset([1])
-    FOLLOW_switchLabel_in_synpred177_Java4235 = frozenset([1])
-    FOLLOW_88_in_synpred179_Java4259 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_constantExpression_in_synpred179_Java4261 = frozenset([74])
-    FOLLOW_74_in_synpred179_Java4263 = frozenset([1])
-    FOLLOW_88_in_synpred180_Java4273 = frozenset([4])
-    FOLLOW_enumConstantName_in_synpred180_Java4275 = frozenset([74])
-    FOLLOW_74_in_synpred180_Java4277 = frozenset([1])
-    FOLLOW_enhancedForControl_in_synpred181_Java4317 = frozenset([1])
-    FOLLOW_localVariableDecl_in_synpred185_Java4358 = frozenset([1])
-    FOLLOW_assignmentOperator_in_synpred187_Java4543 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_synpred187_Java4563 = frozenset([1])
-    FOLLOW_42_in_synpred197_Java4685 = frozenset([42])
-    FOLLOW_42_in_synpred197_Java4687 = frozenset([53])
-    FOLLOW_53_in_synpred197_Java4689 = frozenset([1])
-    FOLLOW_44_in_synpred198_Java4724 = frozenset([44])
-    FOLLOW_44_in_synpred198_Java4726 = frozenset([44])
-    FOLLOW_44_in_synpred198_Java4728 = frozenset([53])
-    FOLLOW_53_in_synpred198_Java4730 = frozenset([1])
-    FOLLOW_44_in_synpred199_Java4769 = frozenset([44])
-    FOLLOW_44_in_synpred199_Java4771 = frozenset([53])
-    FOLLOW_53_in_synpred199_Java4773 = frozenset([1])
-    FOLLOW_42_in_synpred210_Java5087 = frozenset([53])
-    FOLLOW_53_in_synpred210_Java5089 = frozenset([1])
-    FOLLOW_44_in_synpred211_Java5120 = frozenset([53])
-    FOLLOW_53_in_synpred211_Java5122 = frozenset([1])
-    FOLLOW_42_in_synpred214_Java5212 = frozenset([42])
-    FOLLOW_42_in_synpred214_Java5214 = frozenset([1])
-    FOLLOW_44_in_synpred215_Java5245 = frozenset([44])
-    FOLLOW_44_in_synpred215_Java5247 = frozenset([44])
-    FOLLOW_44_in_synpred215_Java5249 = frozenset([1])
-    FOLLOW_44_in_synpred216_Java5284 = frozenset([44])
-    FOLLOW_44_in_synpred216_Java5286 = frozenset([1])
-    FOLLOW_castExpression_in_synpred228_Java5494 = frozenset([1])
-    FOLLOW_68_in_synpred232_Java5533 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
-    FOLLOW_primitiveType_in_synpred232_Java5535 = frozenset([69])
-    FOLLOW_69_in_synpred232_Java5537 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_unaryExpression_in_synpred232_Java5539 = frozenset([1])
-    FOLLOW_type_in_synpred233_Java5551 = frozenset([1])
-    FOLLOW_31_in_synpred235_Java5599 = frozenset([4])
-    FOLLOW_Ident_in_synpred235_Java5603 = frozenset([1])
-    FOLLOW_identifierSuffix_in_synpred236_Java5607 = frozenset([1])
-    FOLLOW_31_in_synpred241_Java5690 = frozenset([4])
-    FOLLOW_Ident_in_synpred241_Java5694 = frozenset([1])
-    FOLLOW_identifierSuffix_in_synpred242_Java5739 = frozenset([1])
-    FOLLOW_50_in_synpred248_Java5826 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_synpred248_Java5828 = frozenset([51])
-    FOLLOW_51_in_synpred248_Java5830 = frozenset([1])
-    FOLLOW_50_in_synpred261_Java6103 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
-    FOLLOW_expression_in_synpred261_Java6105 = frozenset([51])
-    FOLLOW_51_in_synpred261_Java6107 = frozenset([1])
+    FOLLOW_conditionalOrExpression_in_conditionalExpression4733 = frozenset([1, 66])
+    FOLLOW_66_in_conditionalExpression4736 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_conditionalExpression4738 = frozenset([74])
+    FOLLOW_74_in_conditionalExpression4740 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_conditionalExpression4742 = frozenset([1])
+    FOLLOW_conditionalAndExpression_in_conditionalOrExpression4765 = frozenset([1, 97])
+    FOLLOW_97_in_conditionalOrExpression4769 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_conditionalAndExpression_in_conditionalOrExpression4771 = frozenset([1, 97])
+    FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4794 = frozenset([1, 98])
+    FOLLOW_98_in_conditionalAndExpression4798 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_inclusiveOrExpression_in_conditionalAndExpression4800 = frozenset([1, 98])
+    FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4823 = frozenset([1, 99])
+    FOLLOW_99_in_inclusiveOrExpression4827 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_exclusiveOrExpression_in_inclusiveOrExpression4829 = frozenset([1, 99])
+    FOLLOW_andExpression_in_exclusiveOrExpression4852 = frozenset([1, 100])
+    FOLLOW_100_in_exclusiveOrExpression4856 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_andExpression_in_exclusiveOrExpression4858 = frozenset([1, 100])
+    FOLLOW_equalityExpression_in_andExpression4881 = frozenset([1, 45])
+    FOLLOW_45_in_andExpression4885 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_equalityExpression_in_andExpression4887 = frozenset([1, 45])
+    FOLLOW_instanceOfExpression_in_equalityExpression4910 = frozenset([1, 101, 102])
+    FOLLOW_set_in_equalityExpression4923 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_instanceOfExpression_in_equalityExpression4939 = frozenset([1, 101, 102])
+    FOLLOW_relationalExpression_in_instanceOfExpression4970 = frozenset([1, 103])
+    FOLLOW_103_in_instanceOfExpression4973 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_type_in_instanceOfExpression4975 = frozenset([1])
+    FOLLOW_shiftExpression_in_relationalExpression4997 = frozenset([1, 42, 44])
+    FOLLOW_relationalOp_in_relationalExpression5002 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_shiftExpression_in_relationalExpression5004 = frozenset([1, 42, 44])
+    FOLLOW_42_in_relationalOp5035 = frozenset([53])
+    FOLLOW_53_in_relationalOp5039 = frozenset([1])
+    FOLLOW_44_in_relationalOp5068 = frozenset([53])
+    FOLLOW_53_in_relationalOp5072 = frozenset([1])
+    FOLLOW_42_in_relationalOp5092 = frozenset([1])
+    FOLLOW_44_in_relationalOp5102 = frozenset([1])
+    FOLLOW_additiveExpression_in_shiftExpression5122 = frozenset([1, 42, 44])
+    FOLLOW_shiftOp_in_shiftExpression5126 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_additiveExpression_in_shiftExpression5128 = frozenset([1, 42, 44])
+    FOLLOW_42_in_shiftOp5160 = frozenset([42])
+    FOLLOW_42_in_shiftOp5164 = frozenset([1])
+    FOLLOW_44_in_shiftOp5195 = frozenset([44])
+    FOLLOW_44_in_shiftOp5199 = frozenset([44])
+    FOLLOW_44_in_shiftOp5203 = frozenset([1])
+    FOLLOW_44_in_shiftOp5232 = frozenset([44])
+    FOLLOW_44_in_shiftOp5236 = frozenset([1])
+    FOLLOW_multiplicativeExpression_in_additiveExpression5266 = frozenset([1, 104, 105])
+    FOLLOW_set_in_additiveExpression5270 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_multiplicativeExpression_in_additiveExpression5278 = frozenset([1, 104, 105])
+    FOLLOW_unaryExpression_in_multiplicativeExpression5301 = frozenset([1, 32, 106, 107])
+    FOLLOW_set_in_multiplicativeExpression5305 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_multiplicativeExpression5319 = frozenset([1, 32, 106, 107])
+    FOLLOW_104_in_unaryExpression5342 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpression5344 = frozenset([1])
+    FOLLOW_105_in_unaryExpression5354 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpression5356 = frozenset([1])
+    FOLLOW_108_in_unaryExpression5366 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpression5368 = frozenset([1])
+    FOLLOW_109_in_unaryExpression5378 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpression5380 = frozenset([1])
+    FOLLOW_unaryExpressionNotPlusMinus_in_unaryExpression5390 = frozenset([1])
+    FOLLOW_110_in_unaryExpressionNotPlusMinus5410 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5412 = frozenset([1])
+    FOLLOW_111_in_unaryExpressionNotPlusMinus5422 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_unaryExpressionNotPlusMinus5424 = frozenset([1])
+    FOLLOW_castExpression_in_unaryExpressionNotPlusMinus5434 = frozenset([1])
+    FOLLOW_primary_in_unaryExpressionNotPlusMinus5444 = frozenset([1, 31, 50, 108, 109])
+    FOLLOW_selector_in_unaryExpressionNotPlusMinus5446 = frozenset([1, 31, 50, 108, 109])
+    FOLLOW_set_in_unaryExpressionNotPlusMinus5449 = frozenset([1])
+    FOLLOW_68_in_castExpression5473 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_primitiveType_in_castExpression5475 = frozenset([69])
+    FOLLOW_69_in_castExpression5477 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_castExpression5479 = frozenset([1])
+    FOLLOW_68_in_castExpression5488 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_type_in_castExpression5491 = frozenset([69])
+    FOLLOW_expression_in_castExpression5495 = frozenset([69])
+    FOLLOW_69_in_castExpression5498 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpressionNotPlusMinus_in_castExpression5500 = frozenset([1])
+    FOLLOW_parExpression_in_primary5525 = frozenset([1])
+    FOLLOW_71_in_primary5535 = frozenset([1, 31, 50, 68])
+    FOLLOW_31_in_primary5538 = frozenset([4])
+    FOLLOW_Ident_in_primary5542 = frozenset([1, 31, 50, 68])
+    FOLLOW_identifierSuffix_in_primary5546 = frozenset([1])
+    FOLLOW_67_in_primary5557 = frozenset([31, 68])
+    FOLLOW_superSuffix_in_primary5559 = frozenset([1])
+    FOLLOW_literal_in_primary5580 = frozenset([1])
+    FOLLOW_112_in_primary5600 = frozenset([4, 42, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_creator_in_primary5602 = frozenset([1])
+    FOLLOW_Ident_in_primary5615 = frozenset([1, 31, 50, 68])
+    FOLLOW_31_in_primary5626 = frozenset([4])
+    FOLLOW_Ident_in_primary5630 = frozenset([1, 31, 50, 68])
+    FOLLOW_identifierSuffix_in_primary5643 = frozenset([1])
+    FOLLOW_primitiveType_in_primary5656 = frozenset([31, 50])
+    FOLLOW_50_in_primary5659 = frozenset([51])
+    FOLLOW_51_in_primary5661 = frozenset([31, 50])
+    FOLLOW_31_in_primary5665 = frozenset([39])
+    FOLLOW_39_in_primary5667 = frozenset([1])
+    FOLLOW_49_in_primary5677 = frozenset([31])
+    FOLLOW_31_in_primary5679 = frozenset([39])
+    FOLLOW_39_in_primary5681 = frozenset([1])
+    FOLLOW_50_in_identifierSuffix5702 = frozenset([51])
+    FOLLOW_51_in_identifierSuffix5704 = frozenset([31, 50])
+    FOLLOW_31_in_identifierSuffix5708 = frozenset([39])
+    FOLLOW_39_in_identifierSuffix5710 = frozenset([1])
+    FOLLOW_50_in_identifierSuffix5721 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_identifierSuffix5723 = frozenset([51])
+    FOLLOW_51_in_identifierSuffix5725 = frozenset([1, 50])
+    FOLLOW_arguments_in_identifierSuffix5738 = frozenset([1])
+    FOLLOW_31_in_identifierSuffix5748 = frozenset([39])
+    FOLLOW_39_in_identifierSuffix5750 = frozenset([1])
+    FOLLOW_31_in_identifierSuffix5760 = frozenset([42])
+    FOLLOW_explicitGenericInvocation_in_identifierSuffix5762 = frozenset([1])
+    FOLLOW_31_in_identifierSuffix5772 = frozenset([71])
+    FOLLOW_71_in_identifierSuffix5774 = frozenset([1])
+    FOLLOW_31_in_identifierSuffix5784 = frozenset([67])
+    FOLLOW_67_in_identifierSuffix5786 = frozenset([68])
+    FOLLOW_arguments_in_identifierSuffix5788 = frozenset([1])
+    FOLLOW_31_in_identifierSuffix5798 = frozenset([112])
+    FOLLOW_112_in_identifierSuffix5800 = frozenset([4, 42])
+    FOLLOW_innerCreator_in_identifierSuffix5802 = frozenset([1])
+    FOLLOW_nonWildcardTypeArguments_in_creator5822 = frozenset([4, 42, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_createdName_in_creator5824 = frozenset([68])
+    FOLLOW_classCreatorRest_in_creator5826 = frozenset([1])
+    FOLLOW_createdName_in_creator5836 = frozenset([50, 68])
+    FOLLOW_arrayCreatorRest_in_creator5839 = frozenset([1])
+    FOLLOW_classCreatorRest_in_creator5843 = frozenset([1])
+    FOLLOW_classOrInterfaceType_in_createdName5864 = frozenset([1])
+    FOLLOW_primitiveType_in_createdName5874 = frozenset([1])
+    FOLLOW_nonWildcardTypeArguments_in_innerCreator5894 = frozenset([4])
+    FOLLOW_Ident_in_innerCreator5907 = frozenset([68])
+    FOLLOW_classCreatorRest_in_innerCreator5917 = frozenset([1])
+    FOLLOW_50_in_arrayCreatorRest5937 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 51, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_51_in_arrayCreatorRest5951 = frozenset([46, 50])
+    FOLLOW_50_in_arrayCreatorRest5954 = frozenset([51])
+    FOLLOW_51_in_arrayCreatorRest5956 = frozenset([46, 50])
+    FOLLOW_arrayInitializer_in_arrayCreatorRest5960 = frozenset([1])
+    FOLLOW_expression_in_arrayCreatorRest5974 = frozenset([51])
+    FOLLOW_51_in_arrayCreatorRest5976 = frozenset([1, 50])
+    FOLLOW_50_in_arrayCreatorRest5979 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_arrayCreatorRest5981 = frozenset([51])
+    FOLLOW_51_in_arrayCreatorRest5983 = frozenset([1, 50])
+    FOLLOW_50_in_arrayCreatorRest5988 = frozenset([51])
+    FOLLOW_51_in_arrayCreatorRest5990 = frozenset([1, 50])
+    FOLLOW_arguments_in_classCreatorRest6022 = frozenset([1, 40, 41, 42, 46])
+    FOLLOW_classBody_in_classCreatorRest6024 = frozenset([1])
+    FOLLOW_nonWildcardTypeArguments_in_explicitGenericInvocation6045 = frozenset([4])
+    FOLLOW_Ident_in_explicitGenericInvocation6047 = frozenset([68])
+    FOLLOW_arguments_in_explicitGenericInvocation6049 = frozenset([1])
+    FOLLOW_42_in_nonWildcardTypeArguments6069 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_typeList_in_nonWildcardTypeArguments6071 = frozenset([44])
+    FOLLOW_44_in_nonWildcardTypeArguments6073 = frozenset([1])
+    FOLLOW_31_in_selector6093 = frozenset([4])
+    FOLLOW_Ident_in_selector6095 = frozenset([1, 68])
+    FOLLOW_arguments_in_selector6097 = frozenset([1])
+    FOLLOW_31_in_selector6108 = frozenset([71])
+    FOLLOW_71_in_selector6110 = frozenset([1])
+    FOLLOW_31_in_selector6120 = frozenset([67])
+    FOLLOW_67_in_selector6122 = frozenset([31, 68])
+    FOLLOW_superSuffix_in_selector6124 = frozenset([1])
+    FOLLOW_31_in_selector6134 = frozenset([112])
+    FOLLOW_112_in_selector6136 = frozenset([4, 42])
+    FOLLOW_innerCreator_in_selector6138 = frozenset([1])
+    FOLLOW_50_in_selector6148 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_selector6150 = frozenset([51])
+    FOLLOW_51_in_selector6152 = frozenset([1])
+    FOLLOW_arguments_in_superSuffix6172 = frozenset([1])
+    FOLLOW_31_in_superSuffix6182 = frozenset([4])
+    FOLLOW_Ident_in_superSuffix6184 = frozenset([1, 68])
+    FOLLOW_arguments_in_superSuffix6186 = frozenset([1])
+    FOLLOW_68_in_arguments6207 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 37, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 69, 71, 72, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expressionList_in_arguments6209 = frozenset([69])
+    FOLLOW_69_in_arguments6212 = frozenset([1])
+    FOLLOW_annotations_in_synpred5_Java94 = frozenset([5, 27, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_packageDecl_in_synpred5_Java108 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_importDecl_in_synpred5_Java110 = frozenset([1, 5, 27, 28, 29, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_typeDecl_in_synpred5_Java113 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_classOrInterfaceDecl_in_synpred5_Java128 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_typeDecl_in_synpred5_Java130 = frozenset([1, 5, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 48, 72])
+    FOLLOW_explicitConstructorInvocation_in_synpred113_Java2854 = frozenset([1])
+    FOLLOW_nonWildcardTypeArguments_in_synpred117_Java2890 = frozenset([67, 71])
+    FOLLOW_set_in_synpred117_Java2893 = frozenset([68])
+    FOLLOW_arguments_in_synpred117_Java2901 = frozenset([28])
+    FOLLOW_28_in_synpred117_Java2903 = frozenset([1])
+    FOLLOW_annotation_in_synpred127_Java3134 = frozenset([1])
+    FOLLOW_localVariableDeclStatement_in_synpred150_Java3634 = frozenset([1])
+    FOLLOW_classOrInterfaceDecl_in_synpred151_Java3644 = frozenset([1])
+    FOLLOW_76_in_synpred156_Java3806 = frozenset([4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 27, 28, 30, 33, 34, 35, 36, 37, 38, 39, 46, 48, 49, 55, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 72, 75, 77, 78, 79, 80, 82, 83, 84, 85, 86, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_statement_in_synpred156_Java3808 = frozenset([1])
+    FOLLOW_catches_in_synpred161_Java3886 = frozenset([81])
+    FOLLOW_81_in_synpred161_Java3888 = frozenset([30, 46])
+    FOLLOW_block_in_synpred161_Java3890 = frozenset([1])
+    FOLLOW_catches_in_synpred162_Java3904 = frozenset([1])
+    FOLLOW_switchLabel_in_synpred177_Java4186 = frozenset([1])
+    FOLLOW_88_in_synpred179_Java4210 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_constantExpression_in_synpred179_Java4212 = frozenset([74])
+    FOLLOW_74_in_synpred179_Java4214 = frozenset([1])
+    FOLLOW_88_in_synpred180_Java4224 = frozenset([4])
+    FOLLOW_enumConstantName_in_synpred180_Java4226 = frozenset([74])
+    FOLLOW_74_in_synpred180_Java4228 = frozenset([1])
+    FOLLOW_enhancedForControl_in_synpred181_Java4268 = frozenset([1])
+    FOLLOW_localVariableDecl_in_synpred185_Java4309 = frozenset([1])
+    FOLLOW_assignmentOperator_in_synpred187_Java4486 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_synpred187_Java4488 = frozenset([1])
+    FOLLOW_42_in_synpred197_Java4601 = frozenset([42])
+    FOLLOW_42_in_synpred197_Java4603 = frozenset([53])
+    FOLLOW_53_in_synpred197_Java4605 = frozenset([1])
+    FOLLOW_44_in_synpred198_Java4640 = frozenset([44])
+    FOLLOW_44_in_synpred198_Java4642 = frozenset([44])
+    FOLLOW_44_in_synpred198_Java4644 = frozenset([53])
+    FOLLOW_53_in_synpred198_Java4646 = frozenset([1])
+    FOLLOW_44_in_synpred199_Java4685 = frozenset([44])
+    FOLLOW_44_in_synpred199_Java4687 = frozenset([53])
+    FOLLOW_53_in_synpred199_Java4689 = frozenset([1])
+    FOLLOW_42_in_synpred210_Java5027 = frozenset([53])
+    FOLLOW_53_in_synpred210_Java5029 = frozenset([1])
+    FOLLOW_44_in_synpred211_Java5060 = frozenset([53])
+    FOLLOW_53_in_synpred211_Java5062 = frozenset([1])
+    FOLLOW_42_in_synpred214_Java5152 = frozenset([42])
+    FOLLOW_42_in_synpred214_Java5154 = frozenset([1])
+    FOLLOW_44_in_synpred215_Java5185 = frozenset([44])
+    FOLLOW_44_in_synpred215_Java5187 = frozenset([44])
+    FOLLOW_44_in_synpred215_Java5189 = frozenset([1])
+    FOLLOW_44_in_synpred216_Java5224 = frozenset([44])
+    FOLLOW_44_in_synpred216_Java5226 = frozenset([1])
+    FOLLOW_castExpression_in_synpred228_Java5434 = frozenset([1])
+    FOLLOW_68_in_synpred232_Java5473 = frozenset([4, 58, 59, 60, 61, 62, 63, 64, 65])
+    FOLLOW_primitiveType_in_synpred232_Java5475 = frozenset([69])
+    FOLLOW_69_in_synpred232_Java5477 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_unaryExpression_in_synpred232_Java5479 = frozenset([1])
+    FOLLOW_type_in_synpred233_Java5491 = frozenset([1])
+    FOLLOW_31_in_synpred235_Java5538 = frozenset([4])
+    FOLLOW_Ident_in_synpred235_Java5542 = frozenset([1])
+    FOLLOW_identifierSuffix_in_synpred236_Java5546 = frozenset([1])
+    FOLLOW_31_in_synpred241_Java5626 = frozenset([4])
+    FOLLOW_Ident_in_synpred241_Java5630 = frozenset([1])
+    FOLLOW_identifierSuffix_in_synpred242_Java5643 = frozenset([1])
+    FOLLOW_50_in_synpred248_Java5721 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_synpred248_Java5723 = frozenset([51])
+    FOLLOW_51_in_synpred248_Java5725 = frozenset([1])
+    FOLLOW_50_in_synpred261_Java5979 = frozenset([4, 6, 7, 8, 9, 10, 11, 12, 13, 46, 49, 58, 59, 60, 61, 62, 63, 64, 65, 67, 68, 71, 104, 105, 108, 109, 110, 111, 112])
+    FOLLOW_expression_in_synpred261_Java5981 = frozenset([51])
+    FOLLOW_51_in_synpred261_Java5983 = frozenset([1])
 
 
 

@@ -133,6 +133,9 @@ def ruleName(depth=0, *paths):
     path = '/'.join(str(p) for p in paths)
     return getframe(1+depth).f_code.co_name + ('/' + path if path else '')
 
+def ruleNames(depth=15):
+    return [ruleName(n) for n in range(depth+1)][1:]
+
 
 class Formats:
     l = '{left}'

@@ -1,4 +1,4 @@
-class Literals {
+class Literals1 {
     public static void main (String [] args) {
         int h = 0xAA;
         int o = 034;

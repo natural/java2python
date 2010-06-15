@@ -1,7 +1,12 @@
 class ReallyQuickTest {
     public static void main(String[] args) {
-	for (int i=0; i<4; i++) {
-	System.out.println(i);
-}
+        Object e;
+        Object n = null;
+        n = 1;
+
+        int v = 3;
+        int w, x = 2, y = 4, z;
+
+
     }
 }

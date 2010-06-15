@@ -37,31 +37,27 @@ options {
 }
 
 
-scope py_block {block}
-scope py_expr {expr; nest}
-scope py_module {module}
-
-
 @parser::header {
-    from java2python.lib import Formats as FS, ruleName as RN
+    from functools import partial
+
+    from java2python.lib import Formats as FS, ruleName as RN, ruleNames as RNS
     from java2python.parser.local import LocalParser
+
     TOP, PREV = -1, -2
 }
 
 
-
-compilationUnit returns [module] scope py_module, py_block;
+compilationUnit returns [module]
 @init {
-    ##// the topmost block which is always a module
-    $module = $py_module::module = $py_block::block = self.factory('module')
-    ##// necessary to catch any leading comments before initial syntax
+    $module = module = self.factory('module')
+    self.scope.module.push(self.scope.block.push(module))
     self.checkCommentsLeading($start)
 }
 @after {
-    ##// necessary to catch any trailing comments
     self.checkCommentsTrailing()
-    ##// message the module that the parsing is complete.
-    $module.cleanup()
+    module.cleanup()
+    self.scope.block.pop()
+    self.scope.module.pop()
 }
     :   annotations
         (   packageDecl importDecl* typeDecl*
@@ -116,11 +112,13 @@ modifiers returns [mods]
     ;
 
 
-classDecl scope py_block;
+classDecl
 @init {
-    parent = $py_block[PREV]::block
-    block = self.factory('class', parent=parent)
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('class', parent=scope.top))
+}
+@after {
+    scope.pop()
 }
     :   normalClassDecl[block] |  enumDecl[block]
     ;
@@ -128,7 +126,7 @@ classDecl scope py_block;
 
 normalClassDecl [klass]
 @after {
-    $py_block::block.parent.addVariable(klass.name)
+    klass.parent.addVariable(klass.name)
 }
     :   'class' id0=Ident { klass.name = $id0.text } typeParameters?
         ('extends' tp0=type { klass.addType($tp0.value) })?
@@ -177,10 +175,13 @@ enumBodyDecls
     ;
 
 
-interfaceDecl scope py_block;
+interfaceDecl
 @init {
-    block = self.factory('class', parent=$py_block[PREV]::block)
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('class', parent=scope.top))
+}
+@after {
+    scope.pop()
 }
     :   normalInterfaceDecl[block]
     |   annotationTypeDecl
@@ -212,7 +213,7 @@ classBody
 classBodyDecl
     :   ';'
     |   'static'? block
-    |   md1=modifiers memberDecl[$md1.mods]
+    |   md0=modifiers memberDecl[$md0.mods]
     ;
 
 
@@ -242,24 +243,20 @@ genericMethodOrConstructorRest
     ;
 
 
-methodDecl [type, mods] scope py_block;
+methodDecl [type, mods]
 @init {
-    $py_block::block = \
-        self.factory('method', parent=$py_block[PREV]::block, type=type)
+    scope = self.scope.block
+    block = scope.push(self.factory('method', parent=scope.top, type=type))
+}
+@after {
+    scope.pop()
 }
     :   id0=Ident methodDeclRest[$id0.text, $mods]
     ;
 
 
-fieldDecl [type, mods]  scope py_expr;
-@init {
-    block = $py_block::block
-    expr = self.factory('expression', format=FS.tassign, parent=block,
-                        type=type, rule=RN())
-    $py_expr::expr = expr
-    $py_expr::nest = expr.nestRight
-}
-    :   variableDecls ';'
+fieldDecl [type, mods]
+    :   variableDecls[type] ';'
     ;
 
 
@@ -269,7 +266,7 @@ interfaceBody
 
 
 interfaceBodyDecl
-    :   md1=modifiers interfaceMemberDecl[$md1.mods]
+    :   md0=modifiers interfaceMemberDecl[$md0.mods]
     |   ';'
     ;
 
@@ -296,7 +293,7 @@ interfaceMethodOrFieldRest [name, mods]
 
 methodDeclRest [name, mods]
 @init {
-    method = $py_block[TOP]::block
+    method = self.scope.block.top
     method.name = name
     method.modifiers.extend(mods)
 }
@@ -308,12 +305,14 @@ methodDeclRest [name, mods]
     ;
 
 
-voidMethodDeclRest [name, mods] scope py_block;
+voidMethodDeclRest [name, mods]
 @init {
-    parent = $py_block[PREV]::block
-    block = self.factory('method', name=name, parent=parent, modifiers=mods)
-    block.type = 'void'
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                    modifiers=mods, type='void'))
+}
+@after {
+    scope.pop()
 }
     :   formalParameters ('throws' qualifiedNameList)?
         (   methodBody
@@ -322,11 +321,14 @@ voidMethodDeclRest [name, mods] scope py_block;
     ;
 
 
-interfaceMethodDeclRest [name, mods] scope py_block;
+interfaceMethodDeclRest [name, mods]
 @init {
-    parent = $py_block[PREV]::block
-    block = self.factory('method', name=name, parent=parent, modifiers=mods)
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                    modifiers=mods))
+}
+@after {
+    scope.pop()
 }
     :   formalParameters ('[' ']')* ('throws' qualifiedNameList)? ';'
     ;
@@ -338,23 +340,27 @@ interfaceGenericMethodDecl
     ;
 
 
-voidInterfaceMethodDeclRest [name, mods] scope py_block;
+voidInterfaceMethodDeclRest [name, mods]
 @init {
-    parent = $py_block[PREV]::block
-    block = self.factory('method', name=name, parent=parent, modifiers=mods)
-    block.type = 'void'
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('method', name=name, parent=scope.top,
+                                    modifiers=mods, type='void'))
+}
+@after {
+    scope.pop()
 }
     :   formalParameters ('throws' qualifiedNameList)? ';'
     ;
 
 
-constructorDeclRest [name, mods] scope py_block;
+constructorDeclRest [name, mods]
 @init {
-    parent = $py_block[PREV]::block
-    name = '__init__'
-    block = self.factory('method', name=name, parent=parent, modifiers=mods)
-    $py_block::block = block
+    scope = self.scope.block
+    block = scope.push(self.factory('method', name='__init__',
+                                    parent=scope.top, modifiers=mods))
+}
+@after {
+    scope.pop()
 }
     :   formalParameters ('throws' qualifiedNameList)? constructorBody
     ;
@@ -365,41 +371,40 @@ constantDecl
     ;
 
 
-variableDecls
-@init {
-    blk = $py_block::block
-    typ = $py_expr::expr.type
-    fmt = FS.tassign
-
-    def pushVariableDecl():
-        expr = self.factory('expression', format=fmt, parent=blk, type=typ)
-        $py_expr::expr = expr
-        $py_expr::nest = expr.nestRight
-}
-    :   variableDecl (',' { pushVariableDecl() } variableDecl)*
+variableDecls [type]
+    :   variableDecl[type] (',' variableDecl[type] )*
     ;
 
 
-variableDecl
+variableDecl [type]
 @init {
-    expr = etop = $py_expr::expr
-    nest = $py_expr::nest
+    scope = self.scope.block
 }
     :   vd0=variableDeclId
         {
-            name = $vd0.value['name']
-            expr.update(left=name, rule=RN())
-            $py_block::block.addVariable(name)
+            expr = scope.push(
+                self.factory('expression', format=FS.assign, left=$vd0.text,
+                             right='None', parent=scope.top, type=type)
+            )
         }
         ('='
             {
-                expr.update(format=FS.assign)
-                expr = nest(type=expr.type, format=FS.tr, rule=RN(0, 'assign'))
-                $py_expr::expr = expr
-                $py_expr::nest = expr.nestRight
+                self.scope.expr.push(expr)
             }
             variableInitializer
+            {
+                self.scope.expr.pop()
+                if 0: # expr and str(expr) and expr.isBaseType:
+                    expr.update(format=FS.r)
+                ## also hacky but not as much
+                if 0: # str(expr.right) == 'None':
+                    expr.update(format=FS.r)
+                #scope.pop()
+            }
         )?
+        {
+            scope.pop()
+        }
     ;
 
 
@@ -436,7 +441,7 @@ arrayInitializer
 modifier returns [value]
 @init  { anno = False }
 @after {
-    $value = $modifier.text if not anno else None
+    $value = None if anno else $modifier.text
 }
     :   annotation { anno = True }
     |   'public'
@@ -469,8 +474,11 @@ typeName
 
 
 type returns [value]
+@after {
+    $value = self.scope.module.top.mapType($value)
+}
     :	ct0=classOrInterfaceType { $value = ct0.value } ('[' ']')*
-    |	primitiveType { $value = $primitiveType.text }  ('[' ']')*
+    |	pt0=primitiveType { $value = $pt0.text }  ('[' ']')*
     ;
 
 
@@ -479,7 +487,7 @@ classOrInterfaceType returns [value]
     $value = []
 }
 @after {
-    find = $py_block::block.findVariable
+    find = self.scope.block.top.findVariable
     $value = [find(v) for v in $value]
     $value = '.'.join($value)
     $value = find($value)
@@ -535,7 +543,7 @@ formalParameterDecls
 
 formalParameterDeclsRest [type]
 @init {
-    add = $py_block[TOP]::block.addParameter
+    add = self.scope.block.top.addParameter
 }
     :   vd0=variableDeclId { add(type=type, **$vd0.value) } (',' formalParameterDecls)?
     |   '...' vd1=variableDeclId { add(type=type, variadic=True, **$vd1.value) }
@@ -552,12 +560,13 @@ constructorBody
     ;
 
 
-explicitConstructorInvocation scope py_expr;
+explicitConstructorInvocation
 @init {
-    block = $py_block::block
-    expr = self.factory('expression', format=FS.r, rule=RN())
-    $py_expr::expr = expr
-    $py_expr::nest = expr.nestRight
+    scope = self.scope.expr
+    expr = scope.push(self.factory('expression', format=FS.r, rule=RN()))
+}
+@after {
+    scope.pop()
 }
     :   nonWildcardTypeArguments? ('this' | 'super') arguments ';'
     |   primary '.' nonWildcardTypeArguments? 'super' arguments ';'
@@ -673,7 +682,7 @@ annotationMethodRest
 
 
 annotationConstantRest
-    :   variableDecls
+    :   variableDecls[None]
     ;
 
 
@@ -690,16 +699,7 @@ block
     ;
 
 
-blockStatement scope py_expr;
-@init {
-    block = $py_block::block
-    expr = self.factory('expression', format=FS.r, parent=block, rule=RN())
-    $py_expr::expr = expr
-    $py_expr::nest = expr.nestRight
-}
-@after {
-    block.packExpr(expr)
-}
+blockStatement
     :   localVariableDeclStatement
     |   classOrInterfaceDecl
     |   statement
@@ -712,12 +712,9 @@ localVariableDeclStatement
 
 
 localVariableDecl
-@init {
-    expr = $py_expr::expr
-}
     :   variableModifiers
-        t0=type { expr.update(type=$t0.value, format=FS.tassign, rule=RN()) }
-        variableDecls
+        t0=type
+        variableDecls[$t0.value]
     ;
 
 
@@ -726,12 +723,7 @@ variableModifiers
     ;
 
 
-statement scope py_expr;
-@init {
-    expr = $py_expr[PREV]::nest(format=FS.lr, rule=RN())
-    $py_expr::expr = expr
-    $py_expr::nest = nest = expr.nestRight
-}
+statement
     :   block
     |   ASSERT expression (':' expression)? ';'
     |   'if' parExpression statement (options {k=1;}:'else' statement)?
@@ -746,11 +738,6 @@ statement scope py_expr;
     |   'switch' parExpression '{' switchBlockStatementGroups '}'
     |   'synchronized' parExpression block
     |   'return'
-         {
-            expr.update(format='return ' + FS.r)
-            $py_expr::expr = expr = nest(format=FS.r)
-            $py_expr::nest = expr.nestRight
-         }
          expression? ';'
     |   'throw' expression ';'
     |   'break' Ident? ';'
@@ -840,16 +827,7 @@ constantExpression
 
 
 expression
-    :   conditionalExpression
-        (a0=assignmentOperator
-        {
-            op = $a0.text
-            $py_expr[TOP]::expr.update(format=FS.op(op))
-            if op == '>>>=':
-                $py_module::module.addBsrSource()
-        }
-        expression
-        )?
+    :   conditionalExpression (a0=assignmentOperator expression)?
     ;
 
 
@@ -884,7 +862,7 @@ assignmentOperator
 
 
 conditionalExpression
-    :   conditionalOrExpression ( '?' expression ':' expression )?
+    :   conditionalOrExpression ('?' expression ':' expression )?
     ;
 
 
@@ -914,7 +892,10 @@ andExpression
 
 
 equalityExpression
-    :   instanceOfExpression ( ('==' | '!=') instanceOfExpression )*
+    :   instanceOfExpression
+        (eq0=('==' | '!=')
+        instanceOfExpression
+        )*
     ;
 
 
@@ -924,7 +905,7 @@ instanceOfExpression
 
 
 relationalExpression
-    :   shiftExpression ( relationalOp shiftExpression )*
+    :   shiftExpression (op0=relationalOp shiftExpression)*
     ;
 
 
@@ -995,68 +976,47 @@ castExpression
 
 primary
 @init {
-    find = $py_block::block.findVariable
-    expr = $py_expr::expr
-    nest = $py_expr::nest
-}
 
+    def start():
+        try:
+            expr = self.scope.expr.top.nest(format=FS.r)
+            pop = lambda:None
+        except (IndexError, ):
+            expr = self.factory('expression', format=FS.r, parent=self.scope.block.top)
+            self.scope.expr.push(expr)
+            pop = self.scope.expr.pop
+        return expr, pop
+}
     :   parExpression
     |   'this' ('.' id0=Ident)* identifierSuffix?
     |   'super' superSuffix
 
-    |   literal
+    |   { expr, pop = start() }
+        literal
         {
-            $py_expr::expr = expr = nest(left=$literal.text, format=FS.lr, rule='primary/literal')
-            $py_expr::nest = expr.nestRight
+            expr.update(right=$literal.text)
+            pop()
         }
-
-    |   'new' creator { expr.update(rule='primary/new') }
+    |   'new' creator
 
     |   id1=Ident
-        {
-            ilvl = 0
-            subr = lambda:RN(1, 'ident', ilvl)
-            name = find($id1.text)
-            expr = nest(format=FS.lr, left=name, rule=subr())
-            nest = expr.nestRight
-        }
-        ('.' id2=Ident
-            {
-                ilvl += 1
-                name = $id2.text
-                expr = nest(format='.'+FS.lr, left=name, rule=subr())
-                nest = expr.nestRight
-            }
-        )*
-        {
-            $py_expr::expr = expr
-            $py_expr::nest = nest
-        }
-        identifierSuffix?
+        ('.' id2=Ident)*
+        (identifierSuffix)?
 
     |   primitiveType ('[' ']')* '.' 'class'
     |   'void' '.' 'class'
     ;
 
 
-identifierSuffix scope py_expr;
-@init {
-    $py_expr::expr = expr = $py_expr[PREV]::nest()
-    $py_expr::nest = expr.nestRight
-}
+identifierSuffix
     :   ('[' ']')+ '.' 'class'
     |   ('[' expression ']')+ // can also be matched by selector, but do here
-    |   {expr.update(format=FS.args) } arguments
+    |   arguments
     |   '.' 'class'
     |   '.' explicitGenericInvocation
     |   '.' 'this'
     |   '.' 'super' arguments
     |   '.' 'new' innerCreator
-        {
-            expr.update(format='.'+FS.tr, rule=RN(0, 'new/innerCreator'))
-            ##// this can't be right
-            expr.parent.parent.update(format=FS.r)
-        }
     ;
 
 
@@ -1073,11 +1033,8 @@ createdName
 
 
 innerCreator
-@init {
-    expr = $py_expr::expr
-}
     :   nonWildcardTypeArguments?
-        id0=Ident { expr.update(type=$id0.text) }
+        id0=Ident
         classCreatorRest
     ;
 

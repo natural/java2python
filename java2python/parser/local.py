@@ -13,6 +13,35 @@ from java2python.parser.JavaLexer import (
     )
 
 
+class Scope(object):
+    def __init__(self):
+	self.stack = []
+
+    def __len__(self):
+	return len(self.stack)
+
+    def push(self, v):
+	self.stack.append(v)
+	return v
+
+    def pop(self, index=-1, default=None):
+	try:
+	    return self.stack.pop(index)
+	except (IndexError, ):
+	    return default
+
+    @property
+    def top(self):
+	return self.stack[-1]
+
+
+class Scopes(object):
+    def __init__(self):
+	self.module = Scope()
+	self.block = Scope()
+	self.expr = Scope()
+
+
 class LocalParser(Parser):
     """ Antlr parser subclass with block factory and comment handling.
 
@@ -30,6 +59,7 @@ class LocalParser(Parser):
 	    NullLiteral          : self.xformNull,
 	    BooleanLiteral       : self.xformBool,
         }
+	self.scope = Scopes()
 
     def handleNode(self, node):
 	""" Special treatments for various types of nodes
@@ -64,8 +94,6 @@ class LocalParser(Parser):
 
     def xformNull(self, node):
 	node.token.text = 'None'
-
-
 
     def selectCommentsTarget(self):
 	""" Feeble attempt to locate the most appropriate block for comments

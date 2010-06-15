@@ -114,12 +114,7 @@ class Block(object):
 		value = existing + [value]
 	else:
 	    raise Exception('Unhandled existing type')
-
-	# this is gimpy.  fix it.
-	tm = self.config.last('typeSubstitutionMap', {})
-	typeMap = lambda t:tm.get(t, t)
-	value = [typeMap(v) for v in value if v]
-	self.type = value
+	self.type = [self.mapType(v) for v in value if v]
 
     def addTypes(self, types):
 	for typ in types:
@@ -389,6 +384,11 @@ class Block(object):
 	    value = '{0}_'.format(value)
 	return value
 
+    def mapType(self, name):
+	typeMap = self.config.last('typeSubstitutionMap', {})
+	return typeMap.get(name, name)
+
+
     ## the first/last/handler methods on the config object are a mess.
     ## clean them up.
 
@@ -418,15 +418,12 @@ class Block(object):
 	    return name
 
     def packExpr(self, expr):
-	parent = expr.parent
-	children = getattr(parent, 'children', [])
-	index = children.index(expr)
-	if expr.isRightFormat and expr.hasRight:
-	    children[index] = expr = self.toExpression(expr.right)
-	elif expr.isLeftFormat and expr.hasLeft:
-	    children[index] = expr = self.toExpression(expr.left)
-	#nestedPackExpr(expr, self.toExpression(expr.right))
-	#nestedPackExpr(expr, self.toExpression(expr.left))
+	if (expr.isLeftRightFormat or expr.isRightFormat) and expr.hasRight and not expr.hasLeft:
+	    expr.parent.right = expr.right
+	elif (not expr.format) and expr.hasRight:
+	    expr.parent.right = expr.right
+	elif expr.isArgFormat and expr.hasRight and not expr.hasLeft:
+	    pass
 
     def toExpression(self, value):
 	if getattr(value, 'isExpression', False):
@@ -708,8 +705,7 @@ class Method(PostDeclDocString, Block):
 	""" Adds the given value to this methods parameter sequence.
 
 	"""
-	tm = self.config.last('typeSubstitutionMap', {})
-	type = tm.get(type, type)
+	type = self.mapType(type)
         name = '*{0}'.format(name) if variadic else name
 	param = dict(name=name, type=type, dimensions=dimensions)
 	self.parameters.append(param)
@@ -775,6 +771,13 @@ class Expression(Block):
 	defaults = dict.fromkeys(self.keyNames, '')
 	defaults.update(kwds)
 	self.update(**defaults)
+	nest = kwds.get('nest', 'nestRight')
+	if callable(nest):
+	    self.nest = nest
+	else:
+	    nest = getattr(self, nest, None)
+	    if nest is not None:
+		self.nest = nest
 
     def __nonzero__(self):
 	""" x.__nonzero__() <==> x != 0
@@ -813,6 +816,14 @@ class Expression(Block):
 	right.parent = self
 	return right
 
+    def nestCenter(self, **kwds):
+	""" Create and assign a new expression for the center of this one.
+
+	"""
+	self.center = center = self.new(self.config, **kwds)
+	center.parent = self
+	return center
+
     def addComment(self, comment):
 	""" Places comments at the tail of this expression.
 
@@ -846,7 +857,7 @@ class Expression(Block):
 	"""
 	indent = self.indent
 	print >> fd, '{0}{1}'.format(indent*level, self.debugFormat(title))
-	for name in ('left', 'right', 'type'):
+	for name in ('left', 'right', 'center', 'type'):
 	    obj = getattr(self, name, None)
 	    printer = getattr(obj, 'debugPrint', lambda x, y, z:None)
 	    printer(fd, level+1, name.title())
@@ -873,7 +884,16 @@ class Expression(Block):
 
     @property
     def isRightFormat(self):
-	return (self.format == FS.r) or (self.format == FS.args)
+	return self.format == FS.r
+
+    @property
+    def isArgFormat(self):
+	return self.format == FS.args
+
+    @property
+    def isBaseType(self):
+	return self.type in ['int', 'str', 'float', 'bool', ]
+
 
 class BlockFactory(object):
     """ BlockFactory -> objects for building block instances.

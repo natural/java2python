@@ -104,7 +104,11 @@ classBaseLookup = 'java2python.mods.defaultClassBase'
 
 
 typeSubstitutionMap = {
+    'Boolean'          : 'bool',
+    'Object'           : 'object',
     'String'           : 'str',
+    'char'             : 'str',
+    'double'           : 'float',
     'java.lang.String' : 'str',
 }
 
