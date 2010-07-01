@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+then
+    echo Usage: $0 file.java
+    exit 1
+fi
+
+if [ -e "$1" ]
+then
+    javac "$1" && java -ea `echo $1 | sed s/\.java//` && rm `echo $1 | sed s/\.java/\.class/`
+    exit 0
+else
+    echo File \""$1"\" does not exist.
+    exit 2
+fi
+
+
