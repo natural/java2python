@@ -3,7 +3,6 @@ class Class3 {
     public int m1(int x) {
         System.out.println(x);
         return x;
-        x = 4;
     }
 
     public static void main(String[] args) {

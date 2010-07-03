@@ -44,6 +44,7 @@ modulePrologueHandlers = [
     'java2python.mod.commentedPackageName',
 ]
 
+
 moduleEpilogueHandlers = [
     'java2python.mod.scriptMainStanza',
 ]
@@ -51,7 +52,6 @@ moduleEpilogueHandlers = [
 
 moduleOutputHandlers = [
     'java2python.mod.outputSubs',
-#    'java2python.mod.scriptMainStanza',
 ]
 
 
@@ -98,8 +98,12 @@ classDocStringHandlers = [
 ]
 
 
-classBaseLookup = 'java2python.mod.defaultClassBase'
+classBaseHandler = 'java2python.mod.mapClassType'
 
+
+exceptionSubMap = {
+    'IndexOutOfBoundsException' : 'IndexError',
+    }
 
 
 typeSubstitutionMap = {

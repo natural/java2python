@@ -8,7 +8,8 @@ from optparse import Option, OptionParser, OptionValueError
 from os.path import basename, splitext
 from time import time
 
-from java2python.block import walkAST, Module
+from java2python.block import Module
+from java2python.config import Config
 from java2python.lib.colortools import colors
 from java2python.lib.transform import buildAST
 
@@ -79,10 +80,10 @@ def main(options):
         return 1
     timed['comp_finish']
 
-    module = Module()
+    module = Module(Config(configs))
     module.name = splitext(basename(filein))[0] if filein != '-' else '<stdin>'
     timed['xform']
-    walkAST(tree, module)
+    module.walk(tree)
     timed['xform_finish']
 
     timed['encode']

@@ -40,5 +40,5 @@ class Config(object):
 	groups = self.every(key, default)
 	if groups is not default:
 	    for group in groups:
-		for handler in group:
+		for handler in group or ():
 		    yield valueOf(handler)
