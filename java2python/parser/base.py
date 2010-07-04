@@ -25,6 +25,7 @@
 #
 ##
 
+import types
 from keyword import kwlist
 from antlr3 import ANTLRStringStream, CommonTokenStream, Lexer, Parser
 from antlr3.tree import CommonTreeAdaptor, CommonTree
@@ -92,8 +93,20 @@ class LocalParser(Parser, LocalRecognizer):
 	self.setComments([])
 
 
+def typeNames():
+    typs = [getattr(types, n) for n in dir(types) if not n.startswith('_')]
+    names = [t.__name__ for t in typs if isinstance(t, type)]
+    return ['None', 'True', 'False', ] + names
+
+
+def transformConstMethod(v):
+    def transformMethod(self, node):
+	node.token.text = v
+    return transformMethod
+
+
 class LocalLexer(Lexer, LocalRecognizer):
-    renameIdents = kwlist + ['None', 'str', ]
+    renameIdents = kwlist + typeNames()
 
     def __init__(self, input=None, state=None):
 	Lexer.__init__(self, input, state)
@@ -105,11 +118,9 @@ class LocalLexer(Lexer, LocalRecognizer):
 	    call = getattr(self, 'transform{0}'.format(title), lambda n:None)
 	    call(node)
 
-    def transformFalse(self, node):
-	node.token.text = node.token.text.title()
-
-    def transformTrue(self, node):
-	node.token.text = node.token.text.title()
+    transformFalse = transformConstMethod('False')
+    transformTrue = transformConstMethod('True')
+    transformNull = transformConstMethod('None')
 
     def transformIdent(self, node):
 	ident = node.token.text
@@ -125,18 +136,15 @@ class LocalLexer(Lexer, LocalRecognizer):
             value = value[:-1] + 'L'
 	node.token.text = value
 
-    def transformNull(self, node):
-	node.token.text = 'None'
-
 
 class LocalTree(CommonTree):
     colorTypeMap = {
 	'CLASS'            : colortools.green,
 	'JAVA_SOURCE'      : colortools.green,
 	'VOID_METHOD_DECL' : colortools.green,
-	'IDENT'            : colortools.red,
+	'IDENT'            : colortools.yellow,
 	'TYPE'             : colortools.magenta,
-	'EXPR'             : colortools.cyan,
+	'EXPR'             : colortools.blue,
 	'TRUE'             : colortools.yellow,
 	'FALSE'            : colortools.yellow,
 	'NULL'             : colortools.yellow,
@@ -181,6 +189,35 @@ class LocalTree(CommonTree):
 	tokens = [t for t in tokens if t.type in types and t.index not in memo]
 	memo.update(t.index for t in tokens)
 	return tokens
+
+    def childrenOfType(self, type):
+	return [c for c in self.children if c.type==type]
+
+    def firstChild(self, pred=lambda c:True, default=None):
+	try:
+	    return [child for child in self.children if pred(child)][0]
+	except (IndexError, ):
+	    return default
+
+    def firstChildOfType(self, type):
+	return self.firstChild(lambda c:c.type==type)
+
+    def findChildren(self, pred=lambda c:True):
+	""" Depth-first search that yields nodes meeting the predicate. """
+	for child in self.children:
+	    if pred(child):
+		yield child
+	    for sub in child.findChildren(pred):
+		yield sub
+
+    def findChildrenOfType(self, type):
+	""" Depth-first search that yields nodes of the given type. """
+	return self.findChildren(lambda c:c.type==type)
+
+    @property
+    def parentType(self):
+	""" Returns the type of the parent node. """
+	return self.parent.type
 
 
 class LocalTreeAdaptor(CommonTreeAdaptor):

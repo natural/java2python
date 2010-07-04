@@ -93,6 +93,18 @@ modulePostParseHandlers = [
 ]
 
 
+methodExtraDecoratorHandlers = [
+    'java2python.mod.overloadedClassMethods',
+]
+
+
+classSomething = [
+    ## You only need one of the following:
+    'java2python.mod.simpleInterfaces',
+    #'java2python.mod.abcInterfaces',
+    #'java2python.mod.zopeInterfaces',
+    ]
+
 classDocStringHandlers = [
     'java2python.mod.simpleDocString',
 ]

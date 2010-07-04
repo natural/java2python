@@ -1,5 +1,6 @@
 public class Keywords  {
     public static void main(String[] args) {
+
 	String and = "this is and";
 	System.out.println(and == "this is and" ? 1 : 0);
 
@@ -32,6 +33,16 @@ public class Keywords  {
 
 	String None = "this is None";
 	System.out.println(None == "this is None" ? 1 : 0);
+
+	String bool = "this is bool";
+	System.out.println(bool == "this is bool" ? 1 : 0);
+
+	String True = "this is True";
+	System.out.println(True == "this is True" ? 1 : 0);
+
+	String False = "this is False";
+	System.out.println(False == "this is False" ? 1 : 0);
+
     }
 
 

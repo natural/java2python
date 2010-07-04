@@ -1,7 +1,8 @@
 class ReallyQuickTest {
-    void show(Object... foos) {
+    ReallyQuickTest() {
     }
-    void again(int x, int... bars) {
+
+    ReallyQuickTest(int x) {
     }
 
 }

@@ -30,20 +30,18 @@ class PythonTemplate(object):
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
-	parts = [green(self.typeName), ' ', white('name:'), cyan(self.name)]
+	name = white('name:') + cyan(self.name) if self.name else ''
+	parts = [green(self.typeName), name]
 	if self.type:
-	    parts.extend([' ', white('type:'), cyan(self.type)])
+	    parts.append(white('type:')+cyan(self.type))
 	if self.modifiers:
-	    mods = cyan(','.join(self.modifiers))
-	    parts.extend([' ', white('modifiers:'), mods])
-	return ''.join([black('[')] + parts + [black(']')])
+	    parts.append(white('modifiers:')+cyan(','.join(self.modifiers)))
+	return ' '.join(parts)
 
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
-	fd = StringIO()
-	self.dump(fd, -1)
 	handlers = self.configHandlers('OutputHandlers')
-	return reduce(lambda v, func:func(self, v), handlers, fd.getvalue())
+	return reduce(lambda v, func:func(self, v), handlers, self.dumps(-1))
 
     @classmethod
     def build(cls, parent, name=None, type=None):
@@ -63,6 +61,12 @@ class PythonTemplate(object):
 	name = '{0}{1}'.format(self.typeName, part)
 	return self.config.handlers(name, default)
 
+    def dumps(self, level=0):
+	""" Dumps this template to a string. """
+	fd = StringIO()
+	self.dump(fd, level)
+	return fd.getvalue()
+
     def dump(self, fd, level=0):
 	""" Writes the Python source code for this template to the given file. """
 	indent, isNotNone = level * self.indent, lambda x:x is not None
@@ -80,6 +84,12 @@ class PythonTemplate(object):
 	for child in ifilter(None, self.children):
 	    getattr(child, 'dumpRepr', default)(fd, level+1)
 
+    def exprEmpty(self):
+	return Expression(self.config)
+
+    def exprPass(self):
+	return Expression(self.config, left='pass')
+
     @property
     def indent(self):
 	""" Returns the indent string for this item. """
@@ -91,10 +101,7 @@ class PythonTemplate(object):
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
-	## TODO:  account for docstrings
-	if self.children:
-	    return iter(self.children)
-	return iter([Expression(self.config, left='pass')])
+        return iter(self.children if self.children else [self.exprPass()])
 
     def iterEpilogue(self):
 	""" Yields the items in the epilogue of this template. """
@@ -138,30 +145,30 @@ class Visitor(object):
 
     def acceptClass(self, node):
 	""" Creates a new class.  Called on Module and Class templates. """
-	name = nodeFirstChildOfType(node, tokens.IDENT).text
+	name = node.firstChildOfType(tokens.IDENT).text
 	self.variables.append(name)
 	return Class.build(self, name=name)
 
     def acceptVarDeclaration(self, node):
 	""" Creates a new expression for a variable declaration. """
-	mods = nodeChildrenOfType(node, tokens.MODIFIER_LIST)
-	decl = nodeFirstChildOfType(node, tokens.VAR_DECLARATOR_LIST)
-	for vard in nodeChildrenOfType(decl, tokens.VAR_DECLARATOR):
-	    ident = nodeFirstChildOfType(vard, tokens.IDENT)
-    	    expr = nodeFirstChildOfType(vard, tokens.EXPR)
+	mods = node.childrenOfType(tokens.MODIFIER_LIST)
+	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
+	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
+	    ident = vard.firstChildOfType(tokens.IDENT)
+    	    expr = vard.firstChildOfType(tokens.EXPR)
 	    child = Expression.build(self, left=ident.text)
 	    assgn = child.pushRight(' = ')
 	    if expr:
 		assgn.walk(expr)
 	    else:
-		typ = nodeFirstChildOfType(node, tokens.TYPE)
+		typ = node.firstChildOfType(tokens.TYPE)
 		typ = typ.children[0].text
 		val = assgn.pushRight()
 		val.left = '{0}()'.format(typ) # wrong
 	return self
 
 
-class SharedIteratorsTemplate(object):
+class ModuleClassSharedTemplate(object):
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
 	for handler in self.configHandlers('PrologueHandlers'):
@@ -174,12 +181,25 @@ class SharedIteratorsTemplate(object):
 	    for line in handler(self):
 		yield line
 
+
+class ClassMethodSharedTemplate(object):
+    def iterBody(self):
+	body, more = PythonTemplate.iterBody(self), []
+	if not (self is self.parent.children[-1]):
+	    more.append(self.exprEmpty())
+	def iterDocString():
+	    for handler in self.configHandlers('DocStringHandlers'):
+		for line in handler(self):
+		    yield Expression(self.config, left=line)
+	return chain(iterDocString(), body, more)
+
+
 #
 # Module types
 #
 
 
-class ModuleTemplate(SharedIteratorsTemplate, PythonTemplate):
+class ModuleTemplate(ModuleClassSharedTemplate, PythonTemplate):
     """ ModuleTemplate -> represents a Python module. """
 
 
@@ -187,12 +207,16 @@ class ModuleVisitor(Visitor):
     """ ModuleVisitor -> accepts AST branches for module-level objects. """
 
 
+class Module(ModuleTemplate, ModuleVisitor):
+    """ Module -> represents a Python module. """
+
+
 #
 # Class types
 #
 
 
-class ClassTemplate(SharedIteratorsTemplate, PythonTemplate):
+class ClassTemplate(ModuleClassSharedTemplate, ClassMethodSharedTemplate, PythonTemplate):
     """ ClassTemplate -> represents a Python class.
 
     """
@@ -210,27 +234,34 @@ class ClassTemplate(SharedIteratorsTemplate, PythonTemplate):
 	yield 'class {0}{1}:'.format(self.name, bases)
 
 
+
 class ClassVisitor(Visitor):
     """ ClassVisitor -> accepts AST branches for class-level objects.
 
     """
+    def acceptConstructorDecl(self, node):
+	""" Accept and process a constructor declaration. """
+	return Method.build(self, name='__init__', type=self.name)
+
     def acceptExtendsClause(self, node):
 	""" Accept and process an extends clause. """
-	names = (n.text for n in nodeFindChildrenOfType(node, tokens.IDENT))
+	names = (n.text for n in node.findChildrenOfType(tokens.IDENT))
 	self.bases.append('.'.join(names))
-
-    def acceptVoidMethodDecl(self, node):
-	""" Accept and process a void method declaration. """
-	ident = nodeFirstChildOfType(node, tokens.IDENT)
-	method = Method.build(self, name=ident.text, type='void')
-	return method
 
     def acceptFunctionMethodDecl(self, node):
 	""" Accept and process a typed method declaration. """
-	ident = nodeFirstChildOfType(node, tokens.IDENT)
-	type = nodeFirstChildOfType(node, tokens.TYPE).children[0].text
-	method = Method.build(self, name=ident.text, type=type)
-	return method
+	ident = node.firstChildOfType(tokens.IDENT)
+	type = node.firstChildOfType(tokens.TYPE).children[0].text
+	return Method.build(self, name=ident.text, type=type)
+
+    def acceptVoidMethodDecl(self, node):
+	""" Accept and process a void method declaration. """
+	ident = node.firstChildOfType(tokens.IDENT)
+	return Method.build(self, name=ident.text, type='void')
+
+
+class Class(ClassTemplate, ClassVisitor):
+    """ Class -> represents a Python class. """
 
 
 #
@@ -238,7 +269,7 @@ class ClassVisitor(Visitor):
 #
 
 
-class MethodTemplate(PythonTemplate):
+class MethodTemplate(ClassMethodSharedTemplate, PythonTemplate):
     """ MethodTemplte -> represents a Python method.
 
     """
@@ -257,6 +288,9 @@ class MethodTemplate(PythonTemplate):
 	def iterOtherDecos():
 	    if self.isStatic and 'classmethod' not in self.decorators:
 		yield 'classmethod'
+	    for handler in self.configHandlers('ExtraDecoratorHandlers'):
+		for line in handler(self):
+		    yield line
 	return chain(self.decorators, iterOtherDecos(), iterLines())
 
     def iterPrologue(self):
@@ -278,7 +312,19 @@ class MethodContentVisitor(Visitor):
     def acceptAssert(self, node):
 	""" Accept and process an assert statement. """
 	assertStat = Statement.build(self, 'assert', fs=FS.lsr)
-	assertStat.expr.walk(nodeFirstChild(node))
+	assertStat.expr.walk(node.firstChild())
+
+    def acceptIf(self, node):
+	""" Accept and process an if statement. """
+	ifStat = Statement.build(self, 'if', fs=FS.lsrc)
+	ifStat.expr.walk(node.firstChildOfType(tokens.PARENTESIZED_EXPR))
+	blockNodes = node.childrenOfType(tokens.BLOCK_SCOPE)
+	ifBlock = MethodContent.build(self)
+	ifBlock.walk(blockNodes[0])
+	if len(blockNodes) == 2:
+	    elseStat = Statement.build(self, 'else', fs=FS.lc)
+	    elseBlock = MethodContent.build(self)
+	    elseBlock.walk(blockNodes[1])
 
     def acceptThrow(self, node):
 	""" Accept and process a throw statement. """
@@ -309,16 +355,20 @@ class MethodContentVisitor(Visitor):
 
     def acceptExpr(self, node):
 	""" Creates a new expression. """
-	if nodeParentType(node) == tokens.BLOCK_SCOPE: # wrong
+	if node.parentType == tokens.BLOCK_SCOPE: # wrong
 	    return Expression.build(self)
 
     def acceptReturn(self, node):
 	""" Creates a new return expression. """
-	if nodeParentType(node) == tokens.BLOCK_SCOPE: # wrong
+	if node.parentType == tokens.BLOCK_SCOPE: # wrong
 	    expr = Expression.build(self, left='return')
 	    if node.children:
 		expr.fs, expr.right = FS.lsr, Expression.build(expr)
 		expr.right.walk(node)
+
+
+class MethodContent(MethodContentVisitor, PythonTemplate):
+    pass
 
 
 class MethodVisitor(MethodContentVisitor):
@@ -327,21 +377,36 @@ class MethodVisitor(MethodContentVisitor):
     """
     def acceptModifierList(self, node):
 	""" Accept and process method modifiers. """
-	if nodeParentType(node) in tokens.methodTypes:
-	    self.modifiers.extend(n.text for n in nodeChildren(node))
+	if node.parentType in tokens.methodTypes:
+	    self.modifiers.extend(n.text for n in node.children)
 	return self
 
     def acceptFormalParamStdDecl(self, node):
 	""" Accept and process a single parameter declaration. """
-	ident = nodeFirstChildOfType(node, tokens.IDENT)
-	self.parameters.append({'name':ident.text})
+	ident = node.firstChildOfType(tokens.IDENT)
+
+        # wrong, wrong, wrong.
+	ptype = list(node.findChildrenOfType(tokens.TYPE))[0]
+	try:
+	    ptype = list(ptype.findChildrenOfType(tokens.IDENT))[0].text
+	except:
+	    ptype = ptype.firstChild().text
+	ptype = self.config.combined('typeSubstitutionMap').get(ptype, ptype)
+
+	param = {'name':ident.text, 'type':ptype}
+	self.parameters.append(param)
 	return self
 
     def acceptFormalParamVarargDecl(self, node):
 	""" Accept and process a var arg declaration. """
-	ident = nodeFirstChildOfType(node, tokens.IDENT)
-	self.parameters.append({'name':'*{0}'.format(ident.text)})
+	ident = node.firstChildOfType(tokens.IDENT)
+	param = {'name':'*{0}'.format(ident.text), 'type':'A'}
+	self.parameters.append(param)
 	return self
+
+
+class Method(MethodTemplate, MethodVisitor):
+    """ Method -> represents a Python method. """
 
 
 #
@@ -360,11 +425,11 @@ class ExpressionTemplate(PythonTemplate):
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
 	parts = [blue(self.typeName)]
-	if isinstance(self.left, (basestring, )):
-	    parts.extend([' ', yellow(self.left)])
-	if isinstance(self.right, (basestring, )):
-	    parts.append(yellow(self.right))
-	return ''.join([black('[')] + parts + [black(']')])
+	if isinstance(self.left, (basestring, )) and self.left:
+	    parts.append(white('value:')+yellow(self.left))
+	if isinstance(self.right, (basestring, )) and self.right:
+	    parts.append(white('value:')+yellow(self.right))
+	return ' '.join(parts)
 
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
@@ -424,8 +489,8 @@ class ExpressionVisitor(Visitor):
     def equalityExpression(self, node):
 	""" Accept and processes an equality expression. """
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = Expression.build(self), Expression(self.config)
-	self.walkThisWay(nodeChildren(node), (self.left, self.right))
+	self.left, self.right = Expression.build(self), self.exprEmpty()
+	self.walkThisWay(node.children, (self.left, self.right))
 
     acceptEqual = equalityExpression
     acceptGreaterOrEqual = equalityExpression
@@ -437,8 +502,8 @@ class ExpressionVisitor(Visitor):
     def assignExpression(self, node):
 	""" Accept and processes an assignment expression (Python statement). """
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = Expression.build(self), Expression(self.config)
-	self.walkThisWay(nodeChildren(node), (self.left, self.right))
+	self.left, self.right = Expression.build(self), self.exprEmpty()
+	self.walkThisWay(node.children, (self.left, self.right))
 
     acceptAssign = assignExpression
     acceptPlusAssign = assignExpression
@@ -468,14 +533,14 @@ class ExpressionVisitor(Visitor):
 	""" Accept and process a method call. """
 	self.fs = FS.l + '(' + FS.r + ')'
 	self.left, self.right = Expression.build(self), Expression.build(self)
-	self.left.walk(nodeFirstChild(node))
-	self.right.walk(nodeFirstChildOfType(node, tokens.ARGUMENT_LIST))
+	self.left.walk(node.firstChild())
+	self.right.walk(node.firstChildOfType(tokens.ARGUMENT_LIST))
 
     def acceptDot(self, node):
 	""" Accept and process a dotted expression. """
 	self.fs = FS.l + '.' + FS.r
 	self.left, self.right = Expression.build(self), Expression.build(self)
-	self.walkThisWay(nodeChildren(node), (self.left, self.right))
+	self.walkThisWay(node.children, (self.left, self.right))
 
     def acceptQuestion(self, node):
 	""" Accept and process a terinary expression. """
@@ -484,12 +549,16 @@ class ExpressionVisitor(Visitor):
 	self.right = Expression.build(self, fs=FS.l + ' else ' + FS.r)
         self.right.left = Expression.build(self.right)
 	self.right.right = Expression.build(self.right)
-	self.walkThisWay(nodeChildren(node), (self.right.left, self.left, self.right.right))
+	self.walkThisWay(node.children, (self.right.left, self.left, self.right.right))
 
     def pushRight(self, value=''):
 	""" Creates a new right expression, sets it, and returns it. """
 	self.right = Expression.build(self, left=value)
 	return self.right
+
+
+class Expression(ExpressionTemplate, ExpressionVisitor):
+    """ Expression -> represents a Python expression. """
 
 
 #
@@ -509,8 +578,8 @@ class StatementTemplate(PythonTemplate):
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
-	parts = [green('statement'), ' ', white('keyword:'), cyan(self.keyword)]
-	return ''.join([black('[')] + parts + [black(']')])
+	parts = [green('statement'), white('keyword:')+cyan(self.keyword)]
+	return ' '.join(parts)
 
     def iterPrologue(self):
 	""" Yields the keyword (and clause, if any) for this statement . """
@@ -525,46 +594,26 @@ class StatementVisitor(MethodContentVisitor):
     """ StatementVisitor -> accepts AST branches for statement objects. """
 
 
+class Statement(StatementTemplate, StatementVisitor):
+    """ Statement -> represents a Python statement. """
+
+
 class ExceptStatementVisitor(MethodContentVisitor):
     """ ExceptStatementVisitor -> accepts AST branches for 'except' statements.
 
     """
     def acceptCatch(self, node):
 	""" Accept and process a catch statement. """
-	decl = nodeFirstChildOfType(node, tokens.FORMAL_PARAM_STD_DECL)
-	dtype = nodeFirstChildOfType(decl, tokens.TYPE)
-	tnames = nodeFindChildrenOfType(dtype, tokens.IDENT)
+	decl = node.firstChildOfType(tokens.FORMAL_PARAM_STD_DECL)
+	dtype = decl.firstChildOfType(tokens.TYPE)
+	tnames = dtype.findChildrenOfType(tokens.IDENT)
 	cname = '.'.join(n.text for n in tnames)
 	cname = self.config.combined('exceptionSubMap').get(cname, cname)
-	cvar = nodeFirstChildOfType(decl, tokens.IDENT)
-	block = nodeFirstChildOfType(node, tokens.BLOCK_SCOPE)
+	cvar = decl.firstChildOfType(tokens.IDENT)
+	block = node.firstChildOfType(tokens.BLOCK_SCOPE)
 	self.expr.fs = FS.lsrc
 	self.expr.right = Expression(self.config, fs=FS.l+' as '+FS.r, left=cname, right=cvar)
 	self.walk(block)
-
-
-#
-# Concrete client types
-#
-
-class Module(ModuleTemplate, ModuleVisitor):
-    """ Module -> represents a Python module. """
-
-
-class Class(ClassTemplate, ClassVisitor):
-    """ Class -> represents a Python class. """
-
-
-class Method(MethodTemplate, MethodVisitor):
-    """ Method -> represents a Python method. """
-
-
-class Expression(ExpressionTemplate, ExpressionVisitor):
-    """ Expression -> represents a Python expression. """
-
-
-class Statement(StatementTemplate, StatementVisitor):
-    """ Statement -> represents a Python statement. """
 
 
 class ExceptStatement(StatementTemplate, ExceptStatementVisitor):

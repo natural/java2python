@@ -8,7 +8,7 @@ def simpleShebang(module):
 
 
 def simpleDocString(obj):
-    yield '""" generated source for %s' % obj.name
+    yield '""" generated source for {0} {1}'.format(obj.typeName, obj.name)
     yield ''
     yield '"""'
 
@@ -63,3 +63,28 @@ def mapClassType(obj):
 	yield name
 
 
+def overloadedClassMethods(method):
+    """
+    NB: this implementation does not handle overloaded static (or
+    class) methods, only instance methods.
+    """
+    cls = method.parent
+    methods = [o for o in cls.children if o.isMethod and o.name==method.name]
+    if len(methods) == 1:
+        return
+    for i, m in enumerate(methods[1:]):
+        args = ['object', ] + [p['type'] for p in m.parameters]
+	args = ', '.join(args)
+        m.decorators.append('{0}.register({1})'.format(method.name, args))
+        m.name = '{0}_{1}'.format(method.name, i)
+    # for this one only:
+    yield 'overloaded'
+
+
+def simpleInterfaces(method):
+    mkExpr = partial(Expression, module.config,
+		     format='raise NotImplementedError({left})')
+    for iface in module.interfaces:
+	for method in iface.methods:
+	    expr = mkExpr(left='"Method \'%s\' is abstract"' % method.name)
+	    method.children.insert(0, expr)
