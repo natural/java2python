@@ -152,3 +152,13 @@ def isInt(v):
 
 
 ## the new
+
+class FS(object):
+    l = '{left}'
+    r = '{right}'
+    lc = l + ':'
+    lr = l + r
+    lsr = l + ' ' + r
+    lsrc = lsr + ':'
+
+

@@ -94,6 +94,7 @@ modulePostParseHandlers = [
 
 
 methodExtraDecoratorHandlers = [
+    'java2python.mod.maybeClassMethod',
     'java2python.mod.overloadedClassMethods',
 ]
 

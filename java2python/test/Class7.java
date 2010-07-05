@@ -11,6 +11,8 @@ class Class7 {
 	System.out.println(a);
     }
 
+    private void empty() {
+    }
 
     private void z(int a) {
 	System.out.println(a);

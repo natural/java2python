@@ -81,6 +81,11 @@ def overloadedClassMethods(method):
     yield 'overloaded'
 
 
+def maybeClassMethod(method):
+    if method.isStatic and 'classmethod' not in method.decorators:
+	yield 'classmethod'
+
+
 def simpleInterfaces(method):
     mkExpr = partial(Expression, module.config,
 		     format='raise NotImplementedError({left})')

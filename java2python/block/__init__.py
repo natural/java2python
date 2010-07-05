@@ -4,40 +4,24 @@
 
 """
 from functools import reduce
-from itertools import *
+from itertools import chain
 
-from java2python.block.util import *
+from java2python.block.template import BaseExpressionTemplate, BaseTemplate, CommonIterMixin
+from java2python.block.visitor import BaseVisitor
+from java2python.lib import FS
 from java2python.lib.colortools import *
 from java2python.parser import tokens
 
 
-class ModuleTemplate(BaseTemplate):
+class ModuleTemplate(CommonIterMixin, BaseTemplate):
     """ ModuleTemplate -> represents a Python module. """
-
-    def iterPrologue(self):
-	""" Yields the items in the prologue of this template. """
-	for handler in self.configHandlers('PrologueHandlers'):
-	    for line in handler(self):
-		yield line
-
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	for handler in self.configHandlers('EpilogueHandlers'):
-	    for line in handler(self):
-		yield line
 
 
 class ModuleVisitor(BaseVisitor):
     """ ModuleVisitor -> accepts AST branches for module-level objects. """
 
-    def acceptClass(self, node):
-	""" Creates a new class.  Called on Module and Class templates. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory('class')(self.config, name=name, parent=self)
 
-
-class ClassTemplate(BaseTemplate):
+class ClassTemplate(CommonIterMixin, BaseTemplate):
     """ ClassTemplate -> represents a Python class. """
     isClass = True
 
@@ -53,30 +37,31 @@ class ClassTemplate(BaseTemplate):
 	yield 'class {0}{1}:'.format(self.name, bases)
 
     def iterBody(self):
-	body, more = super(ClassTemplate, self).iterBody(), []
-	if not (self is self.parent.children[-1]):
-	    more.append(self.factory('expression')(self.config))
+	""" Yields the items in the body of this template. """
 	def iterDocString():
 	    for handler in self.configHandlers('DocStringHandlers'):
 		for line in handler(self):
-		    yield self.factory('expression')(self.config, left=line)
-	return chain(iterDocString(), body, more)
-
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	for handler in self.configHandlers('EpilogueHandlers'):
-	    for line in handler(self):
-		yield line
+		    yield self.factory.expr(left=line)
+	def intersperseLines(lines):
+	    get = lambda o, n:getattr(o, n, None)
+	    blank, prev = self.factory.expr(), None
+	    for item in lines:
+		if type(item) != type(prev) and prev:
+		    yield blank
+		elif get(item, 'isMethod') and get(prev, 'isMethod'):
+		    yield blank
+		elif get(prev, 'isClass'):
+		    yield blank
+		yield item
+		prev = item
+	body = list(super(ClassTemplate, self).iterBody())
+	docs = list(iterDocString())
+	more = [self.factory.expr(left='pass')] if not (body or docs) else []
+	return chain(docs, iter(body) if more else intersperseLines(body), more)
 
 
 class ClassVisitor(BaseVisitor):
     """ ClassVisitor -> accepts AST branches for class-level objects. """
-
-    def acceptClass(self, node):
-	""" Creates a new class.  Called on Module and Class templates. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory('class')(self, name=name)
 
     def acceptVarDeclaration(self, node):
 	""" Creates a new expression for a variable declaration. """
@@ -85,7 +70,7 @@ class ClassVisitor(BaseVisitor):
 	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
 	    ident = vard.firstChildOfType(tokens.IDENT)
     	    expr = vard.firstChildOfType(tokens.EXPR)
-	    child = self.factory('expression')(self.config, left=ident.text, parent=self)
+	    child = self.factory.expr(left=ident.text, parent=self)
 	    assgn = child.pushRight(' = ')
 	    if expr:
 		assgn.walk(expr)
@@ -98,8 +83,7 @@ class ClassVisitor(BaseVisitor):
 
     def acceptConstructorDecl(self, node):
 	""" Accept and process a constructor declaration. """
-	mtype = self.factory('method')
-	return mtype(self.config, name='__init__', type=self.name, parent=self)
+	return self.factory.method(name='__init__', type=self.name, parent=self)
 
     def acceptExtendsClause(self, node):
 	""" Accept and process an extends clause. """
@@ -110,14 +94,12 @@ class ClassVisitor(BaseVisitor):
 	""" Accept and process a typed method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
-	mtype = self.factory('method')
-	return mtype(self.config, name=ident.text, type=type, parent=self)
+	return self.factory.method(name=ident.text, type=type, parent=self)
 
     def acceptVoidMethodDecl(self, node):
 	""" Accept and process a void method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
-	mtype = self.factory('method')
-	return mtype(self.config, name=ident.text, type='void', parent=self)
+	return self.factory.method(name=ident.text, type='void', parent=self)
 
 
 class MethodTemplate(BaseTemplate):
@@ -136,8 +118,6 @@ class MethodTemplate(BaseTemplate):
 		for line in handler(self):
 		    yield line
 	def iterOtherDecos():
-	    if self.isStatic and 'classmethod' not in self.decorators:
-		yield 'classmethod'
 	    for handler in self.configHandlers('ExtraDecoratorHandlers'):
 		for line in handler(self):
 		    yield line
@@ -145,21 +125,21 @@ class MethodTemplate(BaseTemplate):
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
-	body, more = super(MethodTemplate, self).iterBody(), []
 	def iterDocString():
 	    for handler in self.configHandlers('DocStringHandlers'):
 		for line in handler(self):
-		    yield self.factory('expression')(self.config, left=line)
-	return chain(iterDocString(), body, more)
+		    yield self.factory.expr(left=line)
+	body = list(super(MethodTemplate, self).iterBody())
+	docs = list(iterDocString())
+	more = [self.factory.expr(left='pass')] if not (body or docs) else []
+	return chain(docs, body, more)
 
     def iterPrologue(self):
 	""" Yields items in this method declaration, maybe with decorators. """
 	for deco in self.iterDecorators():
 	    yield '@{0}'.format(deco)
-	if self.requiresFirstParam:
-	    first = ['cls' if self.isStatic else 'self']
-	else:
-	    first = []
+	firstParam = 'cls' if self.isStatic else 'self'
+        first = [firstParam] if self.requiresFirstParam else []
 	params = ', '.join(first + [p['name'] for p in self.parameters])
 	yield 'def {0}({1}):'.format(self.name, params)
 
@@ -169,24 +149,24 @@ class MethodContentVisitor(BaseVisitor):
 
     def acceptAssert(self, node):
 	""" Accept and process an assert statement. """
-	assertStat = self.factory('statement')(self.config, 'assert', fs=FS.lsr, parent=self)
+	assertStat = self.factory.statement('assert', fs=FS.lsr, parent=self)
 	assertStat.expr.walk(node.firstChild())
 
     def acceptIf(self, node):
 	""" Accept and process an if statement. """
-	ifStat = self.factory('statement')(self.config, 'if', fs=FS.lsrc, parent=self)
+	ifStat = self.factory.statement('if', fs=FS.lsrc, parent=self)
 	ifStat.expr.walk(node.firstChildOfType(tokens.PARENTESIZED_EXPR))
 	blockNodes = node.childrenOfType(tokens.BLOCK_SCOPE)
-	ifBlock = self.factory('methodcontent')(self.config, parent=self)
+	ifBlock = self.factory.methodContent(parent=self)
 	ifBlock.walk(blockNodes[0])
 	if len(blockNodes) == 2:
-	    elseStat = self.factory('statement')(self.config, 'else', fs=FS.lc, parent=self)
-	    elseBlock = self.factory('methodcontent')(self.config, parent=self)
+	    elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
+	    elseBlock = self.factory.methodContent(parent=self)
 	    elseBlock.walk(blockNodes[1])
 
     def acceptThrow(self, node):
 	""" Accept and process a throw statement. """
-	throw = self.factory('statement')(self.config, 'raise', fs=FS.lsr, parent=self)
+	throw = self.factory.statement('raise', fs=FS.lsr, parent=self)
 	throw.expr.walk(node.children[0])
 
     def acceptTry(self, node):
@@ -201,27 +181,27 @@ class MethodContentVisitor(BaseVisitor):
 		catchClausesNode = children[1]
 	    else:
 		finNode = children[1]
-        tryStat = self.factory('statement')(self.config, 'try', fs=FS.lc, parent=self)
+        tryStat = self.factory.statement('try', fs=FS.lc, parent=self)
 	tryStat.walk(tryNode)
 	if catchClausesNode:
 	    for catchNode in catchClausesNode.children:
-		exStat = self.factory('exceptstatement')(self.config, 'except', fs=FS.lsrc, parent=self)
+		exStat = self.factory.exceptStatement('except', fs=FS.lsrc, parent=self)
 		exStat.walk(catchNode)
 	if finNode:
-	    finStat = self.factory('statement')(self.config, 'finally', fs=FS.lc, parent=self)
+	    finStat = self.factory.statement('finally', fs=FS.lc, parent=self)
 	    finStat.walk(finNode)
 
     def acceptExpr(self, node):
 	""" Creates a new expression. """
 	if node.parentType == tokens.BLOCK_SCOPE: # wrong
-	    return self.factory('expression')(self.config, parent=self)
+	    return self.factory.expr(parent=self)
 
     def acceptReturn(self, node):
 	""" Creates a new return expression. """
 	if node.parentType == tokens.BLOCK_SCOPE: # wrong
-	    expr = self.factory('expression')(self.config, left='return', parent=self)
+	    expr = self.factory.expr(left='return', parent=self)
 	    if node.children:
-		expr.fs, expr.right = FS.lsr, self.factory('expression')(self.config, parent=expr)
+		expr.fs, expr.right = FS.lsr, self.factory.expr(parent=expr)
 		expr.right.walk(node)
 
     def acceptVarDeclaration(self, node):
@@ -231,7 +211,7 @@ class MethodContentVisitor(BaseVisitor):
 	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
 	    ident = vard.firstChildOfType(tokens.IDENT)
     	    expr = vard.firstChildOfType(tokens.EXPR)
-	    child = self.factory('expression')(self.config, left=ident.text, parent=self)
+	    child = self.factory.expr(left=ident.text, parent=self)
 	    assgn = child.pushRight(' = ')
 	    if expr:
 		assgn.walk(expr)
@@ -276,7 +256,7 @@ class MethodVisitor(MethodContentVisitor):
 	return self
 
 
-class ExpressionTemplate(BaseExpression, BaseTemplate):
+class ExpressionTemplate(BaseExpressionTemplate):
     """ ExpressionTemplate -> represents a Python expression. """
 
 
@@ -300,7 +280,7 @@ class ExpressionVisitor(BaseVisitor):
 
     def equalityExpression(self, node):
 	""" Accept and processes an equality expression. """
-	expr = self.factory('expression')
+	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
 	self.left, self.right = expr(self.config, parent=self), expr(self.config)
 	self.walkThisWay(node.children, (self.left, self.right))
@@ -314,7 +294,7 @@ class ExpressionVisitor(BaseVisitor):
 
     def assignExpression(self, node):
 	""" Accept and processes an assignment expression (Python statement). """
-	expr = self.factory('expression')
+	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
 	self.left, self.right = expr(self.config, parent=self), expr(self.config)
 	self.walkThisWay(node.children, (self.left, self.right))
@@ -331,10 +311,6 @@ class ExpressionVisitor(BaseVisitor):
     acceptShiftLeftAssign = assignExpression
     acceptShiftRightAssign = assignExpression
 
-    def walkThisWay(self, nodes, exprs):
-	for node, expr in izip(nodes, exprs):
-	    expr.walk(node)
-
     def acceptExpr(self, node):
 	""" Create a new expression within this one. """
 	return self.pushRight()
@@ -345,32 +321,32 @@ class ExpressionVisitor(BaseVisitor):
 
     def acceptMethodCall(self, node):
 	""" Accept and process a method call. """
-	expr = self.factory('expression')
+	expr = self.factory.expr
 	self.fs = FS.l + '(' + FS.r + ')'
-	self.left, self.right = expr(self.config, parent=self), expr(self.config, parent=self)
+	self.left, self.right = expr(parent=self), expr(parent=self)
 	self.left.walk(node.firstChild())
 	self.right.walk(node.firstChildOfType(tokens.ARGUMENT_LIST))
 
     def acceptDot(self, node):
 	""" Accept and process a dotted expression. """
-	expr = self.factory('expression')
+	expr = self.factory.expr
 	self.fs = FS.l + '.' + FS.r
-	self.left, self.right = expr(self.config, parent=self), expr(self.config, parent=self)
+	self.left, self.right = expr(parent=self), expr(parent=self)
 	self.walkThisWay(node.children, (self.left, self.right))
 
     def acceptQuestion(self, node):
 	""" Accept and process a terinary expression. """
-	expr = self.factory('expression')
+	expr = self.factory.expr
 	self.fs = FS.l + ' if ' + FS.r
-	self.left = expr(self.config, parent=self)
-	self.right = expr(self.config, fs=FS.l+' else '+FS.r, parent=self)
-        self.right.left = expr(self.config, parent=self.right)
-	self.right.right = expr(self.config, parent=self.right)
+	self.left = expr(parent=self)
+	self.right = expr(fs=FS.l+' else '+FS.r, parent=self)
+        self.right.left = expr(parent=self.right)
+	self.right.right = expr(parent=self.right)
 	self.walkThisWay(node.children, (self.right.left, self.left, self.right.right))
 
     def pushRight(self, value=''):
 	""" Creates a new right expression, sets it, and returns it. """
-	self.right = self.factory('expression')(self.config, left=value, parent=self)
+	self.right = self.factory.expr(left=value, parent=self)
 	return self.right
 
 
@@ -380,7 +356,7 @@ class StatementTemplate(BaseTemplate):
     def __init__(self, config, keyword, fs=FS.lr, parent=None):
 	super(StatementTemplate, self).__init__(config, parent=parent)
 	self.keyword = keyword
-	self.expr = self.factory('expression')(config, left=keyword, fs=fs)
+	self.expr = self.factory.expr(left=keyword, fs=fs)
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
@@ -415,21 +391,34 @@ class ExceptStatementVisitor(MethodContentVisitor):
 
 class Module(ModuleTemplate, ModuleVisitor):
     """ Module -> represents a Python module. """
+    factoryTypeName = 'module'
+
 
 class Class(ClassTemplate, ClassVisitor):
     """ Class -> represents a Python class. """
+    factoryTypeName = 'klass'
+
 
 class Method(MethodTemplate, MethodVisitor):
     """ Method -> represents a Python method. """
+    factoryTypeName = 'method'
+
 
 class MethodContent(BaseTemplate, MethodContentVisitor):
     """ MethodContent -> represents content within a Python method. """
+    factoryTypeName = 'methodContent'
+
 
 class Expression(ExpressionTemplate, ExpressionVisitor):
     """ Expression -> represents a Python expression. """
+    factoryTypeName = 'expr'
+
 
 class Statement(StatementTemplate, StatementVisitor):
     """ Statement -> represents a Python statement. """
+    factoryTypeName = 'statement'
+
 
 class ExceptStatement(StatementTemplate, ExceptStatementVisitor):
     """ ExceptStatement -> represents a Python 'except' statement. """
+    factoryTypeName = 'exceptStatement'
