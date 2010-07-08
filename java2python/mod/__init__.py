@@ -28,6 +28,14 @@ def commentedPackageName(module):
 	yield ''
 
 
+def enumConstInts(enum, index, name):
+    return str(index)
+
+
+def enumConstStrings(enum, index, name):
+    return repr(name)
+
+
 scriptTemplate = """\n
 if __name__ == '__main__':
 {indent}import sys
@@ -73,7 +81,7 @@ def overloadedClassMethods(method):
     if len(methods) == 1:
         return
     for i, m in enumerate(methods[1:]):
-        args = ['object', ] + [p['type'] for p in m.parameters]
+        args = [p['type'] for p in m.parameters]
 	args = ', '.join(args)
         m.decorators.append('{0}.register({1})'.format(method.name, args))
         m.name = '{0}_{1}'.format(method.name, i)

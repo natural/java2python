@@ -112,6 +112,15 @@ classDocStringHandlers = [
 
 
 classBaseHandler = 'java2python.mod.mapClassType'
+enumBaseHandler = 'java2python.mod.mapClassType'
+enumDocStringHandlers = [
+    'java2python.mod.simpleDocString',
+]
+
+
+enumValueHandler = 'java2python.mod.enumConstInts'
+## or this one:
+# enumValueHandler = 'java2python.mod.enumConstStrings'
 
 
 exceptionSubMap = {

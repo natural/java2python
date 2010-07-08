@@ -156,9 +156,10 @@ def isInt(v):
 class FS(object):
     l = '{left}'
     r = '{right}'
-    lc = l + ':'
+    c = ':'
+    lc = l + c
     lr = l + r
     lsr = l + ' ' + r
-    lsrc = lsr + ':'
+    lsrc = lsr + c
 
 

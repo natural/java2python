@@ -1,7 +1,7 @@
 enum Color {
-    WHITE(255, 0),
-	GRAY(127, 1),
-	BLACK(0, 2);
+    WHITE(10, 11+3),
+	GRAY(20, 22),
+	BLACK(30, 33);
     private final int val;
 
     Color(int v, int x) {

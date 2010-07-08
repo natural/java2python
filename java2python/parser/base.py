@@ -24,7 +24,6 @@
 # instances.
 #
 ##
-
 import types
 from keyword import kwlist
 from antlr3 import ANTLRStringStream, CommonTokenStream, Lexer, Parser
@@ -80,17 +79,12 @@ class LocalTokenStream(CommonTokenStream):
 
 
 class LocalRecognizer(object):
-    def setComments(self, comments):
-	self.comments = comments
-
-    def addComment(self, start, stop, text):
-        self.comments.append((start, stop, text.split('\n')))
+    pass
 
 
 class LocalParser(Parser, LocalRecognizer):
     def __init__(self, input, state=None):
-	Parser.__init__(self, input, state=state)
-	self.setComments([])
+	super(LocalParser, self).__init__(input, state=state)
 
 
 def typeNames():
@@ -109,8 +103,7 @@ class LocalLexer(Lexer, LocalRecognizer):
     renameIdents = kwlist + typeNames()
 
     def __init__(self, input=None, state=None):
-	Lexer.__init__(self, input, state)
-	self.setComments([])
+	super(LocalLexer, self).__init__(input, state)
 
     def transform(self, node):
 	title = tokens.title(tokens.map.get(node.token.type, ''))
@@ -156,39 +149,43 @@ class LocalTree(CommonTree):
     def colorText(self, tokenType, tokenText):
 	return self.colorTypeMap.get(tokenType, colortools.white)(tokenText)
 
-    def colorComments(self, comments):
-	text = ''.join(token.text.replace('\n', '') for token in comments)
-	return colortools.black(text)
+    def colorComments(self, token):
+	ttyp = tokens.map.get(token.type)
+	text = token.text.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
+	item = '{0} [{1}:{2}] {3}'.format(ttyp, token.start, token.stop, text)
+	yield colortools.black(item)
 
     def dump(self, fd, level=0):
-	hasExtra = lambda x, y:x and (x != y)
-	comMemo, comTypes = set(), tokens.commentTypes
-	nodeFormat = '{0}{1}{2}{3}{4}'
+	extras = lambda x, y:x and (x != y)
+	seen, nform = set(), '{0}{1}{2}{3}'
 
 	def innerDump(root, offset):
-	    token, indent = root.getToken(), '    ' * offset
-	    start, stop = root.getTokenStartIndex(), root.getTokenStopIndex()
-	    rng, typ = '', tokens.map.get(token.type, '?')
+	    token, indent = root.token, '    ' * offset
+	    start, stop = root.tokenStartIndex, root.tokenStopIndex
+	    idxes, ttyp = '', tokens.map.get(token.type, '?')
 	    if start and stop and start == stop:
-		rng = ' [{0}]'.format(start)
+		idxes = ' [{0}]'.format(start)
 	    elif start and stop:
-	        rng = ' [{0}:{1}]'.format(start, stop)
-	    args = [indent, self.colorType(typ), '', rng, '']
-	    if hasExtra(token.text, typ):
-		args[2] = ' ' + self.colorText(typ, token.text)
-	    coms = self.selectComments(start, comMemo, comTypes)
-	    if coms:
-		args[4] = ' ' + self.colorComments(coms)
-	    print >> fd, nodeFormat.format(*args)
+	        idxes = ' [{0}:{1}]'.format(start, stop)
+	    args = [indent, self.colorType(ttyp), '', idxes, '']
+	    if extras(token.text, ttyp):
+		args[2] = ' ' + self.colorText(ttyp, token.text)
+	    for com in self.selectComments(start, seen):
+		for line in self.colorComments(com):
+		    print >> fd, '{0}{1}'.format(indent, line)
+	    print >> fd, nform.format(*args)
 	    for child in root.getChildren():
 		innerDump(child, offset+1)
+	    for com in self.selectComments(root.tokenStopIndex, seen):
+		for line in self.colorComments(com):
+		    print >> fd, '{0}{1}'.format(indent, line)
 	innerDump(self, level)
 
-    def selectComments(self, stop, memo, types):
-	tokens = self.parser.input.tokens[0:stop]
-	tokens = [t for t in tokens if t.type in types and t.index not in memo]
-	memo.update(t.index for t in tokens)
-	return tokens
+    def selectComments(self, stop, memo):
+	pred = lambda k:k.type in tokens.commentTypes and k.index not in memo
+	ctoks = [t for t in self.parser.input.tokens[0:stop] if pred(t)]
+	memo.update(t.index for t in ctoks)
+	return ctoks
 
     def childrenOfType(self, type):
 	return [c for c in self.children if c.type==type]
@@ -218,6 +215,12 @@ class LocalTree(CommonTree):
     def parentType(self):
 	""" Returns the type of the parent node. """
 	return self.parent.type
+
+    def dupNode(self):
+	node = LocalTree(self)
+	node.parser = self.parser
+	node.lexer = self.lexer
+	return node
 
 
 class LocalTreeAdaptor(CommonTreeAdaptor):

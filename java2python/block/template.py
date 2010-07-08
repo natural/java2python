@@ -9,25 +9,36 @@ from java2python.lib import FS
 from java2python.lib.colortools import *
 
 
-class FactoryTypeDetector(type):
-    def __init__(cls, name, bases, namespace):
-	if hasattr(cls, 'factoryTypeName'):
-	    cls.factoryTypes[cls.factoryTypeName] = cls
-
-
 class Factory(object):
-    def __init__(self, template, types):
-	self.template = template
-	self.types = types
+    """ Factory -> creates pre-configured callables for new factory type instances.
+
+    """
+    types = {}
+
+    def __init__(self, config):
+	self.config =  config
 
     def __getattr__(self, name):
-	return partial(self.types.get(name), self.template.config)
+	return partial(self.types.get(name), self.config)
+
+
+class FactoryTypeDetector(type):
+    """ FactoryTypeDetector -> detects factory-creatable types as they are defined.
+
+    """
+    def __init__(cls, name, bases, namespace):
+	try:
+	    Factory.types[cls.factoryTypeName] = cls
+	except (AttributeError, ):
+	    pass
 
 
 class BaseTemplate(object):
+    """ BaseTemplate -> base class for formatting Python output.
+
+    """
     __metaclass__ = FactoryTypeDetector
-    factoryTypes = {}
-    isClass = isMethod = False
+    isClass = isComment = isMethod = False
 
     def __init__(self, config, name=None, type=None, parent=None):
 	self.config = config
@@ -37,9 +48,9 @@ class BaseTemplate(object):
 	self.children = []
 	self.modifiers = []
 	self.variables = []
+	self.factory = Factory(config)
 	if parent:
 	    parent.children.append(self)
-	self.factory = Factory(self, self.factoryTypes)
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
@@ -126,8 +137,15 @@ class BaseTemplate(object):
 	for child in ifilter(None, self.children):
 	    getattr(child, 'dumpRepr', default)(fd, level+1)
 
+    def lookupIdent(self, name):
+	return name
+	#return '^^'+name
+
 
 class BaseExpressionTemplate(BaseTemplate):
+    """ BaseExpressionTemplate -> base class for formatting Python expressions.
+
+    """
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None):
 	super(BaseExpressionTemplate, self).__init__(config, parent=parent)
 	self.left, self.right, self.fs = left, right, fs
@@ -144,6 +162,14 @@ class BaseExpressionTemplate(BaseTemplate):
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
 	return self.fs.format(left=self.left, right=self.right)
+
+    @property
+    def isComment(self):
+	""" True if this expression is a comment. """
+	try:
+	    return self.left.startswith('#')
+	except (AttributeError, ):
+	    return False
 
     @property
     def typeName(self):
@@ -168,16 +194,16 @@ class BaseExpressionTemplate(BaseTemplate):
 	    dumper(fd, level+1)
 
 
-class CommonIterMixin(object):
-    def iterPrologue(self):
-	""" Yields the items in the prologue of this template. """
-	for handler in self.configHandlers('PrologueHandlers'):
-	    for line in handler(self):
-		yield line
+class BaseStatementTemplate(BaseTemplate):
+    """ BaseStatementTemplate -> base class for formatting Python statements.
 
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	for handler in self.configHandlers('EpilogueHandlers'):
-	    for line in handler(self):
-		yield line
+    """
+    def __init__(self, config, keyword, fs=FS.lr, parent=None):
+	super(BaseStatementTemplate, self).__init__(config, parent=parent)
+	self.keyword = keyword
+	self.expr = self.factory.expr(left=keyword, fs=fs)
 
+    def __repr__(self):
+	""" Returns the debug string representation of this template. """
+	parts = [green('statement'), white('keyword:')+cyan(self.keyword)]
+	return ' '.join(parts)

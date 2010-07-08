@@ -19,7 +19,6 @@ def buildAST(source, configs=(), debug=False):
 
     treeAdaptor = LocalTreeAdaptor(callback)
     sourceParser.setTreeAdaptor(treeAdaptor)
-    sourceParser.setComments(sourceLexer.comments)
     returnScope = sourceParser.javaSource()
 
     if debug:

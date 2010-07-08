@@ -1083,7 +1083,6 @@ COMMENT
     :   '/*' ( options {greedy=false;} : . )* '*/'
     {
     $channel = HIDDEN
-    self.addComment($start, $stop, $text[2:-2])
     }
     ;
 
@@ -1091,6 +1090,5 @@ LINE_COMMENT
     : '//' ~('\n'|'\r')* '\r'? '\n'
     {
     $channel = HIDDEN
-    self.addComment($start, $stop, $text[2:])
     }
     ;
