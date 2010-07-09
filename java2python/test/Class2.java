@@ -13,6 +13,7 @@ class Class2 {
 	System.out.println(c.z);
 	System.out.println(c.a);
 	System.out.println(c.b);
-        System.out.println(c.b++);
+        c.b++;
+        System.out.println(c.b);
     }
 }

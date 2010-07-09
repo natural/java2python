@@ -3,15 +3,14 @@
 """ java2python.blocks -> AST visitors combined with python syntax templates.
 
 """
-from itertools import chain
+from itertools import chain, ifilter
 
-from java2python.block.template import BaseExpressionTemplate, BaseStatementTemplate, BaseTemplate
-from java2python.block.visitor import BaseVisitor
+from java2python.block import template, visitor
 from java2python.lib import FS
 from java2python.parser import tokens
 
 
-class ModuleTemplate(BaseTemplate):
+class ModuleTemplate(template.BaseTemplate):
     """ ModuleTemplate -> formatting for Python modules. """
 
     def iterPrologue(self):
@@ -58,12 +57,18 @@ class TypeDeclVisitorMixin(object):
 	self.variables.append(name)
 	return self.factory.enum(name=name, parent=self)
 
+    def acceptInterface(self, node, memo):
+	""" Creates a new interface. """
+	name = node.firstChildOfType(tokens.IDENT).text
+	self.variables.append(name)
+	return self.factory.interface(name=name, parent=self)
 
-class ModuleVisitor(TypeDeclVisitorMixin, BaseVisitor):
+
+class ModuleVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
     """ ModuleVisitor -> accepts AST branches for module-level objects. """
 
 
-class ClassTemplate(BaseTemplate):
+class ClassTemplate(template.BaseTemplate):
     """ ClassTemplate -> formatting for Python classes. """
     isClass = True
 
@@ -73,9 +78,9 @@ class ClassTemplate(BaseTemplate):
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	handler = self.configHandler('BaseHandler', lambda b:b)
-	bases = [b for b in handler(self) if b is not None]
-        bases = '({0})'.format(', '.join(bases)) if bases else ''
+	handler = self.configHandler('BaseHandler', lambda v:v.bases)
+        bases = ', '.join(ifilter(None, handler(self)))
+	bases = '({0})'.format(bases) if bases else bases
 	yield 'class {0}{1}:'.format(self.name, bases)
 
     def iterBody(self):
@@ -108,7 +113,7 @@ class ClassTemplate(BaseTemplate):
 		yield line
 
 
-class ClassVisitor(TypeDeclVisitorMixin, BaseVisitor):
+class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
     """ ClassVisitor -> accepts AST branches for class-level objects. """
 
     def acceptVarDeclaration(self, node, memo):
@@ -137,7 +142,9 @@ class ClassVisitor(TypeDeclVisitorMixin, BaseVisitor):
     def acceptExtendsClause(self, node, memo):
 	""" Accept and process an extends clause. """
 	names = (n.text for n in node.findChildrenOfType(tokens.IDENT))
-	self.bases.append('.'.join(names))
+	self.bases.extend(names)
+
+    acceptImplementsClause = acceptExtendsClause
 
     def acceptFunctionMethodDecl(self, node, memo):
 	""" Accept and process a typed method declaration. """
@@ -181,7 +188,15 @@ class EnumVisitor(ClassVisitor):
 	return self
 
 
-class MethodTemplate(BaseTemplate):
+class InterfaceTemplate(ClassTemplate):
+    """ InterfaceTemplate -> formatting for interfaces converted to Python classes. """
+
+
+class InterfaceVisitor(ClassVisitor):
+    """ InterfaceVisitor -> accepts AST branches for Java interfaces. """
+
+
+class MethodTemplate(template.BaseTemplate):
     """ MethodTemplte -> formatting for Python methods. """
     isMethod = requiresFirstParam = True
 
@@ -191,7 +206,8 @@ class MethodTemplate(BaseTemplate):
 	self.parameters = [self.makeParam('self', 'object')]
 
     def makeParam(self, name, type):
-	return {'name':name, 'type':type}
+	""" Creates a parameter as a mapping. """
+	return dict(name=name, type=type)
 
     def iterDecorators(self):
 	""" Yields decorators for this method. """
@@ -224,10 +240,17 @@ class MethodTemplate(BaseTemplate):
 	yield 'def {0}({1}):'.format(self.name, params)
 
 
-class MethodContentVisitor(BaseVisitor):
+class MethodContentVisitor(visitor.BaseVisitor):
     """ MethodContentVisitor -> accepts trees for blocks within methods. """
 
     def acceptSwitch(self, node, memo):
+	""" Accept and process a switch block.
+
+	This implementation needs a lot of work to handle case
+	statements without breaks, out-of-order default labels, etc.
+	Given the current size and complexity, consider growing a Case
+	block type.
+	"""
 	parNode = node.firstChildOfType(tokens.PARENTESIZED_EXPR)
 	lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
 	caseNodes = lblNode.children
@@ -416,12 +439,11 @@ class MethodVisitor(MethodContentVisitor):
 	return self
 
 
-class ExpressionTemplate(BaseExpressionTemplate):
+class ExpressionTemplate(template.BaseExpressionTemplate):
     """ ExpressionTemplate -> formatting for Python expressions. """
-    isExpression = True
 
 
-class ExpressionVisitor(BaseVisitor):
+class ExpressionVisitor(visitor.BaseVisitor):
     """ ClassVisitor -> accepts trees for expression objects. """
 
     def textExpression(self, node, memo):
@@ -531,7 +553,7 @@ class ExpressionVisitor(BaseVisitor):
 	return self.right
 
 
-class StatementTemplate(BaseStatementTemplate):
+class StatementTemplate(template.BaseStatementTemplate):
     """ StatementTemplate -> formatting for Python statements. """
 
     def iterPrologue(self):
@@ -559,12 +581,17 @@ class Enum(EnumTemplate, EnumVisitor):
     factoryTypeName = 'enum'
 
 
+class Interface(InterfaceTemplate, InterfaceVisitor):
+    """ Interface -> represents a Java interface as a Python class. """
+    factoryTypeName = 'interface'
+
+
 class Method(MethodTemplate, MethodVisitor):
     """ Method -> represents a Java method as a Python method. """
     factoryTypeName = 'method'
 
 
-class MethodContent(BaseTemplate, MethodContentVisitor):
+class MethodContent(template.BaseTemplate, MethodContentVisitor):
     """ MethodContent -> represents Java block content in a Python method. """
     factoryTypeName = 'methodContent'
 

@@ -114,6 +114,8 @@ classDocStringHandlers = [
 
 classBaseHandler = 'java2python.mod.mapClassType'
 enumBaseHandler = 'java2python.mod.mapClassType'
+interfaceBaseHandler = 'java2python.mod.mapClassType'
+
 enumDocStringHandlers = [
     'java2python.mod.simpleDocString',
 ]

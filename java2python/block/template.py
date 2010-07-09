@@ -57,9 +57,9 @@ class BaseTemplate(object):
 	name = white('name:') + cyan(self.name) if self.name else ''
 	parts = [green(self.typeName), name]
 	if self.type:
-	    parts.append(white('type:')+cyan(self.type))
+	    parts.append(white('type:') + cyan(self.type))
 	if self.modifiers:
-	    parts.append(white('modifiers:')+cyan(','.join(self.modifiers)))
+	    parts.append(white('modifiers:') + cyan(','.join(self.modifiers)))
 	return ' '.join(parts)
 
     def __str__(self):
@@ -76,43 +76,6 @@ class BaseTemplate(object):
 	""" Returns config handlers for this type of template """
 	name = '{0}{1}'.format(self.typeName, part)
 	return self.config.handlers(name, default)
-
-    def iterPrologue(self):
-	""" Yields the items in the prologue of this template. """
-	yield None
-
-    def iterBody(self):
-	""" Yields the items in the body of this template. """
-        return iter(self.children)
-
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	yield None
-
-    @property
-    def indent(self):
-	""" Returns the indent string for this item. """
-	return self.config.last('leadingIndent', '    ')
-
-    @property
-    def isPublic(self):
-	""" True if this item is static. """
-	return 'public' in self.modifiers
-
-    @property
-    def isStatic(self):
-	""" True if this item is static. """
-	return 'static' in self.modifiers
-
-    @property
-    def isVoid(self):
-	""" True if this item is void. """
-	return 'void' == self.type
-
-    @property
-    def typeName(self):
-	""" Returns the name of this template type. """
-	return self.__class__.__name__.lower()
 
     def dumps(self, level=0):
 	""" Dumps this template to a string. """
@@ -137,15 +100,53 @@ class BaseTemplate(object):
 	for child in ifilter(None, self.children):
 	    getattr(child, 'dumpRepr', default)(fd, level+1)
 
+    @property
+    def indent(self):
+	""" Returns the indent string for this item. """
+	return self.config.last('leadingIndent', '    ')
+
+    @property
+    def isPublic(self):
+	""" True if this item is static. """
+	return 'public' in self.modifiers
+
+    @property
+    def isStatic(self):
+	""" True if this item is static. """
+	return 'static' in self.modifiers
+
+    @property
+    def isVoid(self):
+	""" True if this item is void. """
+	return 'void' == self.type
+
+    def iterPrologue(self):
+	""" Yields the items in the prologue of this template. """
+	yield None
+
+    def iterBody(self):
+	""" Yields the items in the body of this template. """
+        return iter(self.children)
+
+    def iterEpilogue(self):
+	""" Yields the items in the epilogue of this template. """
+	yield None
+
     def lookupIdent(self, name):
 	return name
-	#return '^^'+name
+
+    @property
+    def typeName(self):
+	""" Returns the name of this template type. """
+	return self.__class__.__name__.lower()
 
 
 class BaseExpressionTemplate(BaseTemplate):
     """ BaseExpressionTemplate -> base class for formatting Python expressions.
 
     """
+    isExpression = True
+
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None):
 	super(BaseExpressionTemplate, self).__init__(config, parent=parent)
 	self.left, self.right, self.fs, self.tail = left, right, fs, ''
@@ -162,6 +163,17 @@ class BaseExpressionTemplate(BaseTemplate):
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
 	return self.fs.format(left=self.left, right=self.right)+self.tail
+
+    def dump(self, fd, level=0):
+	""" Writes the Python source code for this template to the given file. """
+	fd.write('{0}{1}\n'.format(self.indent*level, self))
+
+    def dumpRepr(self, fd, level=0):
+	""" Writes a debug string for this template to the given file. """
+	fd.write('{0}{1!r}\n'.format(self.indent*level, self))
+	for obj in (self.left, self.right):
+	    dumper = getattr(obj, 'dumpRepr', lambda x, y:None)
+	    dumper(fd, level+1)
 
     @property
     def isComment(self):
@@ -181,17 +193,6 @@ class BaseExpressionTemplate(BaseTemplate):
 	if self is getattr(parent, 'right', None):
 	    name = 'right'
 	return name
-
-    def dump(self, fd, level=0):
-	""" Writes the Python source code for this template to the given file. """
-	fd.write('{0}{1}\n'.format(self.indent*level, self))
-
-    def dumpRepr(self, fd, level=0):
-	""" Writes a debug string for this template to the given file. """
-	fd.write('{0}{1!r}\n'.format(self.indent*level, self))
-	for obj in (self.left, self.right):
-	    dumper = getattr(obj, 'dumpRepr', lambda x, y:None)
-	    dumper(fd, level+1)
 
 
 class BaseStatementTemplate(BaseTemplate):
