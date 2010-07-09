@@ -27,40 +27,35 @@ class BaseVisitor(object):
 	call = getattr(self, 'accept{0}'.format(title), lambda n, m:self)
         return call(node, memo)
 
-    def acceptClass(self, node, memo):
-	""" Creates a new class.  Called on Module and Class templates. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory.klass(name=name, parent=self)
-
-    def acceptEnum(self, node, memo):
-	""" Creates a new enum. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory.enum(name=name, parent=self)
-
     def walk(self, tree, memo=None):
 	""" Depth-first visiting of the given AST. """
 	memo = Memo() if memo is None else memo
-	self.handleComments(tree.parser, tree.tokenStartIndex, memo.comments)
+
+	self.handleComments(self, tree, tree.tokenStartIndex, memo.comments)
 	visitor = self.accept(tree, memo)
+
 	if visitor:
 	    for child in tree.children:
 		visitor.walk(child, memo)
-	self.handleComments(tree.parser, tree.tokenStopIndex, memo.comments)
+	self.handleComments(visitor, tree, tree.tokenStopIndex, memo.comments)
 
     def zipWalk(self, nodes, visitors, memo):
 	""" Walk the given nodes zipped with the given visitors. """
 	for node, visitor in izip(nodes, visitors):
 	    visitor.walk(node, memo)
 
-    def handleComments(self, parser, index, cache):
+    def handleComments(self, block, tree, index, cache):
+	parser = tree.parser
 	prefix = self.config.last('commentPrefix')
 	csubs = self.commentSubs
 	for comment in self.selectComments(parser, index, cache):
-	    for line in comment.text.split('\n'):
-		line = reduce(lambda v, rx:re.sub(rx, '', v), csubs, line)
-		expr = self.factory.expr(left=prefix, right=line, parent=self)
+	    if comment.line == parser.input.tokens[index].line and getattr(block, 'isExpression'):
+		## getting closer...
+		block.tail += prefix + str(comment.text)
+	    else:
+		for line in [l for l in comment.text.split('\n') if l.strip()]:
+		    line = reduce(lambda v, rx:re.sub(rx, '', v), csubs, line)
+		    expr = self.factory.expr(left=prefix, right=line, parent=self)
 
     def selectComments(self, parser, stop, cache):
 	pred = lambda k:k.type in tokens.commentTypes and k.index not in cache

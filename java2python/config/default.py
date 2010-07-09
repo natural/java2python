@@ -67,14 +67,15 @@ moduleStringImports = []
 
 moduleOutputSubs = [
 #    (r'(\.self\.)', '.'),
-    (r'String\.valueOf\((.*?)\)', r'str(\1)'),
+#    (r'String\.valueOf\((.*?)\)', r'str(\1)'),
     (r'System\.out\.println\((.*)\)', r'print \1'),
     (r'System\.out\.print_\((.*?)\)', r'print \1,'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
-    (r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+#    (r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+    (r'(\s)(\S*?)(\.toString\(\))', r'\1\2.__str__()'),
     (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),
     (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),

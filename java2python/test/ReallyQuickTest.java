@@ -1,13 +1,8 @@
 class ReallyQuickTest {
-    public int x = 3;
-
-    public setSome(int v) {
-        x = v;
+    public foo() {
+	int b[] = {1, 2, 3};
+        int x;
+        int y = 3;
     }
 
-    public static void main(String[] args) {
-        ReallyQuickTest rqt = new ReallyQuickTest();
-        rqt(5);
-        System.out.println(rqt.x);
-    }
 }

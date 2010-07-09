@@ -218,8 +218,8 @@ class LocalTree(CommonTree):
 
     def dupNode(self):
 	node = LocalTree(self)
-	node.parser = self.parser
-	node.lexer = self.lexer
+	node.parser = getattr(self, 'parser', None)
+	node.lexer = getattr(self, 'lexer', None)
 	return node
 
 

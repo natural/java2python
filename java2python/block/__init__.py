@@ -25,8 +25,11 @@ class ModuleTemplate(BaseTemplate):
 	get = lambda o, n:getattr(o, n, None)
 	children, prev = self.children, None
 	space = [self.factory.expr(), self.factory.expr()]
+	def pred(c, p):
+	    return p and get(c, 'isClass') and not get(c, 'isComment') \
+		   and not get(p, 'isClass')
 	for index, child in enumerate(children):
-	    if prev and not get(child, 'isComment') and not get(prev, 'isClass') and get(child, 'isClass'):
+	    if pred(child, prev):
 		for line in space:
 		    yield line
 	    yield child
@@ -39,7 +42,24 @@ class ModuleTemplate(BaseTemplate):
 		yield line
 
 
-class ModuleVisitor(BaseVisitor):
+class TypeDeclVisitorMixin(object):
+    """ TypeDeclVisitorMixin -> shared visitor methods for type declarations
+                                (i.e., within modules and classes).
+    """
+    def acceptClass(self, node, memo):
+	""" Creates a new class.  Called on Module and Class templates. """
+	name = node.firstChildOfType(tokens.IDENT).text
+	self.variables.append(name)
+	return self.factory.klass(name=name, parent=self)
+
+    def acceptEnum(self, node, memo):
+	""" Creates a new enum. """
+	name = node.firstChildOfType(tokens.IDENT).text
+	self.variables.append(name)
+	return self.factory.enum(name=name, parent=self)
+
+
+class ModuleVisitor(TypeDeclVisitorMixin, BaseVisitor):
     """ ModuleVisitor -> accepts AST branches for module-level objects. """
 
 
@@ -88,7 +108,7 @@ class ClassTemplate(BaseTemplate):
 		yield line
 
 
-class ClassVisitor(BaseVisitor):
+class ClassVisitor(TypeDeclVisitorMixin, BaseVisitor):
     """ ClassVisitor -> accepts AST branches for class-level objects. """
 
     def acceptVarDeclaration(self, node, memo):
@@ -207,6 +227,45 @@ class MethodTemplate(BaseTemplate):
 class MethodContentVisitor(BaseVisitor):
     """ MethodContentVisitor -> accepts trees for blocks within methods. """
 
+    def acceptSwitch(self, node, memo):
+	parNode = node.firstChildOfType(tokens.PARENTESIZED_EXPR)
+	lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
+	caseNodes = lblNode.children
+        ## empty switch statement
+	if not len(caseNodes):
+	    return
+	## we have at least one node...
+	parExpr = self.factory.expr()
+	parExpr.walk(parNode)
+	eqFs = FS.l + '==' + FS.r
+	for caseIdx, caseNode in enumerate(caseNodes):
+	    isDefault, isFirst = caseNode.type==tokens.DEFAULT, caseIdx==0
+
+	    if isFirst:
+   	        caseExpr = self.factory.statement('if', fs=FS.lsrc, parent=self)
+	    elif not isDefault:
+		caseExpr = self.factory.statement('elif', fs=FS.lsrc, parent=self)
+	    elif isDefault:
+		caseExpr = self.factory.statement('else', fs=FS.lc, parent=self)
+
+	    if not isDefault:
+		right = self.factory.expr()
+		right.walk(caseNode.firstChildOfType(tokens.EXPR))
+		caseExpr.expr.right = self.factory.expr(left=parExpr, right=right, fs=eqFs)
+		caseContent = self.factory.methodContent(parent=self)
+		for child in caseNode.children[1:]:
+		    caseContent.walk(child, memo)
+		if not caseNode.children[1:]:
+		    self.factory.expr(left='pass', parent=caseContent)
+	    if isDefault:
+		if isFirst:
+		    caseExpr.expr.right = 'True'
+		caseContent = self.factory.methodContent(parent=self)
+		for child in caseNode.children:
+		    caseContent.walk(child, memo)
+		if not caseNode.children:
+		    self.factory.expr(left='pass', parent=caseContent)
+
     def acceptCatch(self, node, memo):
 	""" Accept and process a catch statement. """
 	decl = node.firstChildOfType(tokens.FORMAL_PARAM_STD_DECL)
@@ -217,7 +276,7 @@ class MethodContentVisitor(BaseVisitor):
 	cvar = decl.firstChildOfType(tokens.IDENT)
 	block = node.firstChildOfType(tokens.BLOCK_SCOPE)
 	self.expr.fs = FS.lsrc
-	self.expr.right = Expression(self.config, fs=FS.l+' as '+FS.r, left=cname, right=cvar)
+	self.expr.right = self.factory.expr(fs=FS.l+' as '+FS.r, left=cname, right=cvar)
 	self.walk(block, memo)
 
     def acceptAssert(self, node, memo):
@@ -266,7 +325,7 @@ class MethodContentVisitor(BaseVisitor):
 
     def acceptExpr(self, node, memo):
 	""" Creates a new expression. """
-	if node.parentType == tokens.BLOCK_SCOPE: # wrong
+	if node.parentType in (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT): # wrong
 	    return self.factory.expr(parent=self)
 
     def acceptReturn(self, node, memo):
@@ -279,29 +338,32 @@ class MethodContentVisitor(BaseVisitor):
 
     def acceptVarDeclaration(self, node, memo):
 	""" Creates a new expression for a variable declaration. """
-	mods = node.childrenOfType(tokens.MODIFIER_LIST)
-	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
-	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
-	    ident = vard.firstChildOfType(tokens.IDENT)
-    	    expr = vard.firstChildOfType(tokens.EXPR)
-	    child = self.factory.expr(left=ident.text, parent=self)
-	    assgn = child.pushRight(' = ')
-	    ## also might be an array
-	    array = vard.firstChildOfType(tokens.ARRAY_INITIALIZER)
-	    if expr:
-		assgn.walk(expr, memo)
-            elif array:
-		assgn.left = self.factory.expr(fs='['+FS.l+', '+FS.r)
-		assgn.left.walk(array, memo)
+	varDecls = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
+	for varDecl in varDecls.childrenOfType(tokens.VAR_DECLARATOR):
+	    ident = varDecl.firstChildOfType(tokens.IDENT)
+	    identExp = self.factory.expr(left=ident.text, parent=self)
+	    assgnExp = identExp.pushRight(' = ')
+	    declExp = varDecl.firstChildOfType(tokens.EXPR)
+	    declArr = varDecl.firstChildOfType(tokens.ARRAY_INITIALIZER)
+	    if declExp:
+		assgnExp.walk(declExp, memo)
+            elif declArr:
+		assgnExp.right = exp = self.factory.expr(fs='['+FS.lr+']')
+		children = declArr.childrenOfType(tokens.EXPR)
+		for child in children:
+		    fs = FS.lr if child is children[-1] else FS.lr + ', '
+		    exp.left = self.factory.expr(fs=fs)
+		    exp.left.walk(child, memo)
+		    exp.right = exp = self.factory.expr()
 	    else:
 		typ = node.firstChildOfType(tokens.TYPE)
 		typ = typ.children[0].text
-		val = assgn.pushRight()
+		val = assgnExp.pushRight()
 		val.left = '{0}()'.format(typ) # wrong
 	return self
 
     def acceptForEach(self, node, memo):
-	""" Accept and process a for (each style) statement. """
+	""" Accept and process a 'for each' style statement. """
 	forEach = self.factory.statement('for', fs=FS.lsrc, parent=self)
 	identExpr = forEach.expr.right = self.factory.expr(fs=FS.l+' in '+FS.r)
 	identExpr.walk(node.firstChildOfType(tokens.IDENT), memo)
@@ -309,6 +371,17 @@ class MethodContentVisitor(BaseVisitor):
 	inExpr.walk(node.firstChildOfType(tokens.EXPR), memo)
 	forBlock = self.factory.methodContent(parent=self)
 	forBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
+
+    def acceptFor(self, node, memo):
+	""" Accept and process a 'for' statement. """
+	self.walk(node.firstChildOfType(tokens.FOR_INIT))
+	whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
+	whileStat.expr.walk(node.firstChildOfType(tokens.FOR_CONDITION))
+	whileBlock = self.factory.methodContent(parent=self)
+	whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE))
+	updateStat = self.factory.expr(parent=whileBlock)
+	updateStat.walk(node.firstChildOfType(tokens.FOR_UPDATE))
+
 
 class MethodVisitor(MethodContentVisitor):
     """ MethodVisitor -> accepts AST branches for method-level objects. """
@@ -345,6 +418,7 @@ class MethodVisitor(MethodContentVisitor):
 
 class ExpressionTemplate(BaseExpressionTemplate):
     """ ExpressionTemplate -> formatting for Python expressions. """
+    isExpression = True
 
 
 class ExpressionVisitor(BaseVisitor):
@@ -368,7 +442,7 @@ class ExpressionVisitor(BaseVisitor):
 	""" Accept and processes an equality expression. """
 	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = expr(self.config, parent=self), expr(self.config)
+	self.left, self.right = expr(parent=self), expr()
 	self.zipWalk(node.children, (self.left, self.right), memo)
 
     acceptEqual = equalityExpression
@@ -382,7 +456,7 @@ class ExpressionVisitor(BaseVisitor):
 	""" Accept and processes an assignment expression (Python statement). """
 	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = expr(self.config, parent=self), expr(self.config)
+	self.left, self.right = expr(parent=self), expr()
 	self.zipWalk(node.children, (self.left, self.right), memo)
 
     acceptAssign = assignExpression
@@ -418,12 +492,25 @@ class ExpressionVisitor(BaseVisitor):
 	self.left.walk(node.firstChild(), memo)
 	self.right.walk(node.firstChildOfType(tokens.ARGUMENT_LIST), memo)
 
-    def acceptDot(self, node, memo):
-	""" Accept and process a dotted expression. """
-	expr = self.factory.expr
-	self.fs = FS.l + '.' + FS.r
-	self.left, self.right = expr(parent=self), expr(parent=self)
-	self.zipWalk(node.children, (self.left, self.right), memo)
+    def acceptPostInc(self, node, memo):
+	""" """
+	self.fs = FS.l + ' += 1'
+	self.left = self.factory.expr()
+	return self.left
+
+    def constFormatExpression(fs):
+	def accept(self, node, memo):
+	    self.fs = fs
+	    self.left, self.right = self.factory.expr(), self.factory.expr()
+	    self.zipWalk(node.children, (self.left, self.right), memo)
+	return accept
+
+    acceptDot = constFormatExpression(FS.l + '.' + FS.r)
+    acceptDiv = constFormatExpression(FS.l + ' / ' +FS.r)
+    acceptMinus = constFormatExpression(FS.l + ' - ' +FS.r)
+    acceptPlus = constFormatExpression(FS.l + ' + ' +FS.r)
+    acceptStar = constFormatExpression(FS.l + ' *' +FS.r)
+    acceptArrayElementAccess = constFormatExpression(FS.l + '[' + FS.r + ']')
 
     def acceptThis(self, node, memo):
 	self.pushRight('self')

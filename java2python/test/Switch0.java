@@ -1,8 +1,8 @@
-class Switch1 {
+class Switch0 {
     public static void main(String[] args) {
 	int x = 1;
 	switch (x) {
-            case 0:
+           // empty switch
 	}
 	System.out.println(x);
     }

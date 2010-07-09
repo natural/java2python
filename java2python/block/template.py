@@ -38,7 +38,7 @@ class BaseTemplate(object):
 
     """
     __metaclass__ = FactoryTypeDetector
-    isClass = isComment = isMethod = False
+    isClass = isComment = isExpression = isMethod = False
 
     def __init__(self, config, name=None, type=None, parent=None):
 	self.config = config
@@ -148,7 +148,7 @@ class BaseExpressionTemplate(BaseTemplate):
     """
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None):
 	super(BaseExpressionTemplate, self).__init__(config, parent=parent)
-	self.left, self.right, self.fs = left, right, fs
+	self.left, self.right, self.fs, self.tail = left, right, fs, ''
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
@@ -161,7 +161,7 @@ class BaseExpressionTemplate(BaseTemplate):
 
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
-	return self.fs.format(left=self.left, right=self.right)
+	return self.fs.format(left=self.left, right=self.right)+self.tail
 
     @property
     def isComment(self):

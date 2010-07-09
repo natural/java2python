@@ -682,7 +682,7 @@ statement
     |   WHILE parenthesizedExpression statement                             ->  ^(WHILE parenthesizedExpression statement)
     |   DO statement WHILE parenthesizedExpression SEMI                     ->  ^(DO statement parenthesizedExpression)
     |   TRY block (catches finallyClause? | finallyClause)                  ->  ^(TRY block catches? finallyClause?)
-    |   SWITCH parenthesizedExpression LCURLY switchBlockLabels RCURLY      ->  ^(SWITCH parenthesizedExpression switchBlockLabels)
+    |   SWITCH parenthesizedExpression LCURLY switchBlockLabels? RCURLY      ->  ^(SWITCH parenthesizedExpression switchBlockLabels?)
     |   SYNCHRONIZED parenthesizedExpression block                          ->  ^(SYNCHRONIZED parenthesizedExpression block)
     |   RETURN expression? SEMI                                             ->  ^(RETURN expression?)
     |   THROW expression SEMI                                               ->  ^(THROW expression)
@@ -708,8 +708,11 @@ finallyClause
     ;
 
 switchBlockLabels
-    :   switchCaseLabels switchDefaultLabel? switchCaseLabels
-        ->  ^(SWITCH_BLOCK_LABEL_LIST switchCaseLabels switchDefaultLabel? switchCaseLabels)
+    // local modification: changed "switchCaseLabels" to
+    // "varname=switchCaseLabels?" to match language spec and support empty
+    // switch statements.
+    :   c0=switchCaseLabels? switchDefaultLabel? c1=switchCaseLabels?
+        ->  ^(SWITCH_BLOCK_LABEL_LIST $c0? switchDefaultLabel? $c1?)
     ;
 
 switchCaseLabels
