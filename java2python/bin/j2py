@@ -46,6 +46,19 @@ class LocalOption(Option):
     TYPE_CHECKER['loglevel'] = checkLogLevel
 
 
+def profileMain(options):
+    if options.profile:
+	import cProfile, pstats
+	prof = cProfile.Profile()
+	prof.runcall(main, options)
+	stats = pstats.Stats(prof, stream=sys.stderr)
+	stats.strip_dirs().sort_stats('cumulative')
+	stats.print_stats().print_callers()
+	return 0
+    else:
+	return main(options)
+
+
 def main(options):
     timed = defaultdict(time)
     timed['overall']
@@ -146,6 +159,9 @@ def config(argv):
     parser.add_option('-j', '--java-ast', dest='javaast',
 		      help='Print java source AST tree to stderr.',
 		      default=False, action='store_true')
+    parser.add_option('-f', '--profile', dest='profile',
+		      help='Profile execution and print results to stderr.',
+		      default=False, action='store_true')
     parser.add_option('-s', '--skip-source', dest='skipsource',
 		      help='Skip writing translated source; useful when printing trees',
 		      default=False, action='store_true')
@@ -173,4 +189,4 @@ def config(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(main(config(sys.argv)))
+    sys.exit(profileMain(config(sys.argv)))

@@ -1,4 +1,4 @@
-public class Array1  {
+public class Array3  {
     public static void main(String[] args) {
 	Integer b[] = {4, 5, 6};
         System.out.println(b[0].toString());

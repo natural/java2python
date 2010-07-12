@@ -3,6 +3,7 @@ class Class6 {
     int x = 42;
 
     public void spam() {
+        x += 1;
         System.out.println( x );
     };
 

@@ -38,26 +38,19 @@ class ModuleTemplate(template.BaseTemplate):
 
 
 class TypeDeclVisitorMixin(object):
-    """ TypeDeclVisitorMixin -> shared visitor methods for type declarations
-                                (i.e., within modules and classes).
-    """
-    def acceptClass(self, node, memo):
-	""" Creates a new class.  Called on Module and Class templates. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory.klass(name=name, parent=self)
+    """ TypeDeclVisitorMixin -> shared visitor methods for type declarations """
 
-    def acceptEnum(self, node, memo):
-	""" Creates a new enum. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory.enum(name=name, parent=self)
+    def makeAcceptType(ft):
+	def accept(self, node, memo):
+	    name = node.firstChildOfType(tokens.IDENT).text
+	    self.variables.append(name)
+	    return getattr(self.factory, ft)(name=name, parent=self)
+	return accept
 
-    def acceptInterface(self, node, memo):
-	""" Creates a new interface. """
-	name = node.firstChildOfType(tokens.IDENT).text
-	self.variables.append(name)
-	return self.factory.interface(name=name, parent=self)
+    acceptAt = makeAcceptType('at')
+    acceptClass = makeAcceptType('klass')
+    acceptEnum = makeAcceptType('enum')
+    acceptInterface = makeAcceptType('interface')
 
 
 class ModuleVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
@@ -68,15 +61,21 @@ class ClassTemplate(template.BaseTemplate):
     """ ClassTemplate -> formatting for Python classes. """
     isClass = True
 
-    def __init__(self, config, name=None, type=None, parent=None):
-	super(ClassTemplate, self).__init__(config, name, type, parent)
-	self.bases = []
+    def iterDecorators(self):
+	""" Yields decorators for this method. """
+	def iterLines():
+	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
+	def iterOtherDecos():
+	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
+	return chain(self.decorators, iterOtherDecos(), iterLines())
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
 	handler = self.configHandler('Base', default=lambda v:v.bases)
         bases = ', '.join(ifilter(None, handler(self)))
 	bases = '({0})'.format(bases) if bases else ''
+	for deco in self.iterDecorators():
+	    yield '@{0}'.format(deco)
 	yield 'class {0}{1}:'.format(self.name, bases)
 
     def iterBody(self):
@@ -110,9 +109,57 @@ class ClassTemplate(template.BaseTemplate):
 class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
     """ ClassVisitor -> accepts AST branches for class-level objects. """
 
+    def acceptAt(self, node, memo):
+	""" Accept and ignore an annotation declaration. """
+	## this overrides the TypeDeclVisitorMixin implementation and
+	## ignores AT tokens; they're sent within the class modifier
+	## list and we have to use for them here.
+
+    def acceptAnnotationMethodDecl(self, node, memo):
+	""" Accept and process a typed method declaration. """
+	ident = node.firstChildOfType(tokens.IDENT)
+	type = node.firstChildOfType(tokens.TYPE).children[0].text
+	return self.factory.method(name=ident.text, type=type, parent=self)
+
+    def acceptConstructorDecl(self, node, memo):
+	""" Accept and process a constructor declaration. """
+	method = self.factory.method(name='__init__', type=self.name, parent=self)
+	superCalls = node.findChildrenOfType(tokens.SUPER_CONSTRUCTOR_CALL)
+	if not any(superCalls) and any(self.bases):
+	    ## from the java tutorial:
+	    # Note: If a constructor does not explicitly invoke a
+	    # superclass constructor, the Java compiler automatically
+	    # inserts a call to the no-argument constructor of the
+	    # superclass.
+	    fs = 'super(' + FS.r + ', self).__init__()'
+	    self.factory.expr(fs=fs, right=self.name, parent=method)
+	return method
+
+    def acceptExtendsClause(self, node, memo):
+	""" Accept and process an extends clause. """
+	names = (n.text for n in node.findChildrenOfType(tokens.IDENT))
+	self.bases.extend(names)
+
+    def acceptFunctionMethodDecl(self, node, memo):
+	""" Accept and process a typed method declaration. """
+	ident = node.firstChildOfType(tokens.IDENT)
+	type = node.firstChildOfType(tokens.TYPE).children[0].text
+	return self.factory.method(name=ident.text, type=type, parent=self)
+
+    acceptImplementsClause = acceptExtendsClause
+
+    def acceptModifierList(self, node, memo):
+	for mod in node.children:
+	    if mod.type == tokens.AT:
+		## needs args, too
+		self.decorators.append(mod.firstChildOfType(tokens.IDENT).text)
+	    else:
+		self.modifiers.append(mod.text)
+	return self
+
     def acceptVarDeclaration(self, node, memo):
 	""" Creates a new expression for a variable declaration. """
-	mods = node.childrenOfType(tokens.MODIFIER_LIST)
+	#mods = node.childrenOfType(tokens.MODIFIER_LIST)
 	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
 	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
 	    ident = vard.firstChildOfType(tokens.IDENT)
@@ -129,27 +176,18 @@ class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
 		val.left = '{0}()'.format(typ) # wrong
 	return self
 
-    def acceptConstructorDecl(self, node, memo):
-	""" Accept and process a constructor declaration. """
-	return self.factory.method(name='__init__', type=self.name, parent=self)
-
-    def acceptExtendsClause(self, node, memo):
-	""" Accept and process an extends clause. """
-	names = (n.text for n in node.findChildrenOfType(tokens.IDENT))
-	self.bases.extend(names)
-
-    acceptImplementsClause = acceptExtendsClause
-
-    def acceptFunctionMethodDecl(self, node, memo):
-	""" Accept and process a typed method declaration. """
-	ident = node.firstChildOfType(tokens.IDENT)
-	type = node.firstChildOfType(tokens.TYPE).children[0].text
-	return self.factory.method(name=ident.text, type=type, parent=self)
-
     def acceptVoidMethodDecl(self, node, memo):
 	""" Accept and process a void method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
 	return self.factory.method(name=ident.text, type='void', parent=self)
+
+
+class AnnotationTemplate(ClassTemplate):
+    """ AnnotationTemplate -> formatting for annotations converted to Python classes. """
+
+
+class AnnotationVisitor(ClassVisitor):
+    """ AnnotationVisitor -> accepts AST branches for Java annotations. """
 
 
 class EnumTemplate(ClassTemplate):
@@ -165,7 +203,6 @@ class EnumVisitor(ClassVisitor):
 	expr = self.factory.expr
 	clsset = lambda v:'{0}.{1} = {2}'.format(self.name, v, self.name)
 	handler = self.configHandler('Value')
-
 	for index, ident in enumerate(idents):
 	    if list(ident.findChildrenOfType(tokens.ARGUMENT_LIST)):
 		call = expr(left=clsset(ident), parent=self.parent)
@@ -193,15 +230,6 @@ class InterfaceVisitor(ClassVisitor):
 class MethodTemplate(template.BaseTemplate):
     """ MethodTemplte -> formatting for Python methods. """
     isMethod = True
-
-    def __init__(self, config, name=None, type=None, parent=None):
-	super(MethodTemplate, self).__init__(config, name, type, parent)
-	self.decorators = []
-	self.parameters = [self.makeParam('self', 'object')]
-
-    def makeParam(self, name, type):
-	""" Creates a parameter as a mapping. """
-	return dict(name=name, type=type)
 
     def iterDecorators(self):
 	""" Yields decorators for this method. """
@@ -233,14 +261,32 @@ class MethodTemplate(template.BaseTemplate):
 class MethodContentVisitor(visitor.BaseVisitor):
     """ MethodContentVisitor -> accepts trees for blocks within methods. """
 
-    def acceptSwitch(self, node, memo):
-	""" Accept and process a switch block.
+    def acceptWhile(self, node, memo):
+	""" Accept and process a while block. """
+	# WHILE - PARENTESIZED_EXPR - BLOCK_SCOPE
+	parNode, blkNode = node.children
+	whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
+	whileStat.expr.walk(parNode, memo)
+	whileStat.walk(blkNode, memo)
 
-	This implementation needs a lot of work to handle case
-	statements without breaks, out-of-order default labels, etc.
-	Given the current size and complexity, consider growing a Case
-	block type.
-	"""
+    def acceptDo(self, node, memo):
+	""" Accept and process a do-while block. """
+	# DO - BLOCK_SCOPE - PARENTESIZED_EXPR
+	blkNode, parNode = node.children
+	whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
+	whileStat.expr.right = 'True'
+	whileStat.walk(blkNode, memo)
+	fs = FS.l+ ' ' + 'not ({right}):'
+	ifStat = self.factory.statement('if', fs=fs, parent=whileStat)
+	ifStat.expr.walk(parNode, memo)
+	breakStat = self.factory.statement('break', parent=ifStat)
+
+    def acceptSwitch(self, node, memo):
+	""" Accept and process a switch block. """
+	# This implementation needs a lot of work to handle case
+	# statements without breaks, out-of-order default labels, etc.
+	# Given the current size and complexity, consider growing a
+	# Case block type.
 	parNode = node.firstChildOfType(tokens.PARENTESIZED_EXPR)
 	lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
 	caseNodes = lblNode.children
@@ -308,7 +354,6 @@ class MethodContentVisitor(visitor.BaseVisitor):
 	ifStat.expr.walk(children[0], memo)
 	ifBlock = self.factory.methodContent(parent=self)
 	ifBlock.walk(node.children[1], memo)
-
 	if len(children) == 3:
 	    nextNode = children[2]
 	    nextType = nextNode.type
@@ -355,7 +400,8 @@ class MethodContentVisitor(visitor.BaseVisitor):
 
     def acceptExpr(self, node, memo):
 	""" Creates a new expression. """
-	if node.parentType in (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT, tokens.FOR_EACH): # wrong
+	goodParents = (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT, tokens.FOR_EACH)
+	if node.parentType in goodParents: # wrong
 	    return self.factory.expr(parent=self)
 
     def acceptReturn(self, node, memo):
@@ -379,7 +425,7 @@ class MethodContentVisitor(visitor.BaseVisitor):
 		assgnExp.walk(declExp, memo)
             elif declArr:
 		assgnExp.right = exp = self.factory.expr(fs='['+FS.lr+']')
-		children = declArr.childrenOfType(tokens.EXPR)
+		children = list(declArr.childrenOfType(tokens.EXPR))
 		for child in children:
 		    fs = FS.lr if child is children[-1] else FS.lr + ', '
 		    exp.left = self.factory.expr(fs=fs)
@@ -421,7 +467,7 @@ class MethodVisitor(MethodContentVisitor):
     def acceptModifierList(self, node, memo):
 	""" Accept and process method modifiers. """
 	if node.parentType in tokens.methodTypes:
-	    self.modifiers.extend(n.text for n in node.children)
+	    self.modifiers.extend(n.text for n in node.children) ## wrong
 	    if self.isStatic:
 		self.parameters[0]['name'] = 'cls'
 	return self
@@ -508,7 +554,7 @@ class ExpressionVisitor(visitor.BaseVisitor):
 
     def acceptIdent(self, node, memo):
 	""" Accept and process an ident expression. """
-	self.left = self.renameIdent(node.text)
+	self.left = name = self.renameIdent(node.text)
 
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """
@@ -524,8 +570,9 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	self.right = arg = expr(parent=self)
 	nodes = node.firstChildOfType(tokens.ARGUMENT_LIST).children
 	for tree in nodes:
+	    fs = FS.r + (', ' if tree is not nodes[-1] else '')
 	    arg.walk(tree, memo)
-	    arg.left = expr(fs=FS.r+(', ' if tree is not nodes[-1] else ''))
+	    arg.left = expr(fs=fs, parent=self)
 	    arg.left.walk(tree, memo)
 	    arg.right = arg = expr()
 
@@ -535,7 +582,7 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	self.left = self.factory.expr()
 	return self.left
 
-    def constFormatExpression(fs):
+    def makeAcceptPreFormatted(fs):
 	def accept(self, node, memo):
 	    expr = self.factory.expr
 	    self.fs = fs
@@ -543,12 +590,18 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	    self.zipWalk(node.children, visitors, memo)
 	return accept
 
-    acceptDot = constFormatExpression(FS.l + '.' + FS.r)
-    acceptDiv = constFormatExpression(FS.l + ' / ' +FS.r)
-    acceptMinus = constFormatExpression(FS.l + ' - ' +FS.r)
-    acceptPlus = constFormatExpression(FS.l + ' + ' +FS.r)
-    acceptStar = constFormatExpression(FS.l + ' *' +FS.r)
-    acceptArrayElementAccess = constFormatExpression(FS.l + '[' + FS.r + ']')
+    acceptDot = makeAcceptPreFormatted(FS.l + '.' + FS.r)
+    acceptDiv = makeAcceptPreFormatted(FS.l + ' / ' +FS.r)
+    acceptMinus = makeAcceptPreFormatted(FS.l + ' - ' +FS.r)
+    acceptPlus = makeAcceptPreFormatted(FS.l + ' + ' +FS.r)
+    acceptStar = makeAcceptPreFormatted(FS.l + ' *' +FS.r)
+    acceptArrayElementAccess = makeAcceptPreFormatted(FS.l + '[' + FS.r + ']')
+
+    def acceptSuperConstructorCall(self, node, memo):
+	cls = self.parents(lambda c:c.isClass).next()
+	fs = 'super(' + FS.l + ', self).__init__(' + FS.r + ')'
+	self.right = self.factory.expr(fs=fs, left=cls.name)
+	return self.right
 
     def acceptThis(self, node, memo):
 	self.pushRight('self')
@@ -577,7 +630,6 @@ class CommentVisitor(ExpressionVisitor):
     """ """
 
 
-
 class StatementTemplate(template.BaseStatementTemplate):
     """ StatementTemplate -> formatting for Python statements. """
 
@@ -590,46 +642,47 @@ class StatementVisitor(MethodContentVisitor):
     """ StatementVisitor -> accepts AST branches for statement objects. """
 
 
+##
+# Now we can mix the template and visitor classes to make concrete
+# types.
+#
+##
 
-class Module(ModuleTemplate, ModuleVisitor):
-    """ Module -> represents a Java compilation unit as a Python module. """
-    factoryTypeName = 'module'
-
+class Annotation(AnnotationTemplate, AnnotationVisitor):
+    """ Enum -> represents a Java annotation as a Python class. """
+    factoryTypeName = 'at'
 
 class Class(ClassTemplate, ClassVisitor):
     """ Class -> represents a Java class as a Python class. """
     factoryTypeName = 'klass'
 
+class Comment(CommentTemplate, CommentVisitor):
+    """ Comment -> represents a Java comment as a Python comment. """
+    factoryTypeName = 'comment'
 
 class Enum(EnumTemplate, EnumVisitor):
     """ Enum -> represents a Java enum as a Python class. """
     factoryTypeName = 'enum'
 
+class Expression(ExpressionTemplate, ExpressionVisitor):
+    """ Expression -> represents a Java expression as a Python expression. """
+    factoryTypeName = 'expr'
 
 class Interface(InterfaceTemplate, InterfaceVisitor):
     """ Interface -> represents a Java interface as a Python class. """
     factoryTypeName = 'interface'
 
-
 class Method(MethodTemplate, MethodVisitor):
     """ Method -> represents a Java method as a Python method. """
     factoryTypeName = 'method'
-
 
 class MethodContent(template.BaseTemplate, MethodContentVisitor):
     """ MethodContent -> represents Java block content in a Python method. """
     factoryTypeName = 'methodContent'
 
-
-class Expression(ExpressionTemplate, ExpressionVisitor):
-    """ Expression -> represents a Java expression as a Python expression. """
-    factoryTypeName = 'expr'
-
-
-class Comment(CommentTemplate, CommentVisitor):
-    """ Comment -> represents a Java comment as a Python comment. """
-    factoryTypeName = 'comment'
-
+class Module(ModuleTemplate, ModuleVisitor):
+    """ Module -> represents a Java compilation unit as a Python module. """
+    factoryTypeName = 'module'
 
 class Statement(StatementTemplate, StatementVisitor):
     """ Statement -> represents a Java statement as a Python statement. """

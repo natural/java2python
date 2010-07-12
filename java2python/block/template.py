@@ -45,12 +45,14 @@ class BaseTemplate(object):
 	self.name = name
 	self.type = type
 	self.parent = parent
-	self.children = []
-	self.modifiers = []
-	self.variables = []
 	self.factory = Factory(config)
+	attrs = 'bases children decorators modifiers parameters variables'
+	for attr in attrs.split():
+	    setattr(self, attr, [])
 	if parent:
 	    parent.children.append(self)
+	if self.isMethod:
+	    self.parameters.append(self.makeParam('self', 'object'))
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
@@ -131,6 +133,10 @@ class BaseTemplate(object):
     def iterEpilogue(self):
 	""" Yields the items in the epilogue of this template. """
 	yield None
+
+    def makeParam(self, name, type):
+	""" Creates a parameter as a mapping. """
+	return dict(name=name, type=type)
 
     def renameIdent(self, name):
 	isClass = lambda v:v.isClass

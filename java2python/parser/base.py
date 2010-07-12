@@ -32,6 +32,8 @@ from java2python.lib import colortools
 
 
 class Tokens(object):
+    _m = None
+
     def __init__(self):
 	self.cache = {}
 
@@ -40,7 +42,10 @@ class Tokens(object):
 
     @property
     def commentTypes(self):
-	return (self.module.COMMENT, self.module.LINE_COMMENT)
+	## perfomance optimization:
+	return (181, 182, )
+	## should be:
+	#return (self.module.COMMENT, self.module.LINE_COMMENT)
 
     @property
     def methodTypes(self):
@@ -58,8 +63,11 @@ class Tokens(object):
 
     @property
     def module(self):
-	import java2python.parser.JavaParser as module
-	return module
+	m = self._m
+	if m is None:
+	    import java2python.parser.JavaParser as module
+	    self._m = m = module
+	return m
 
     @staticmethod
     def title(name):
@@ -188,16 +196,19 @@ class LocalTree(CommonTree):
 	return ctoks
 
     def childrenOfType(self, type):
-	return [c for c in self.children if c.type==type]
+	return (c for c in self.children if c.type==type)
 
-    def firstChild(self, pred=lambda c:True, default=None):
+    def firstChild(self, default=None):
 	try:
-	    return [child for child in self.children if pred(child)][0]
+	    return self.children[0]
 	except (IndexError, ):
 	    return default
 
-    def firstChildOfType(self, type):
-	return self.firstChild(lambda c:c.type==type)
+    def firstChildOfType(self, type, default=None):
+	for child in self.children:
+	    if child.type == type:
+		return child
+	return default
 
     def findChildren(self, pred=lambda c:True):
 	""" Depth-first search that yields nodes meeting the predicate. """

@@ -1,4 +1,4 @@
-class FunctionMethod {
+class Class8 {
     public int one() {
 	return 1;
     }
@@ -11,7 +11,7 @@ class FunctionMethod {
     }
 
     public static void main(String[] args) {
-        FunctionMethod fm = new FunctionMethod();
+        Class8 fm = new Class8();
         System.out.println(fm.one());
         fm.two(123);
     }

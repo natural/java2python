@@ -80,6 +80,9 @@ moduleOutputSubs = [
     (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),
     (r'\.__class__\.getName\(\)', '.__class__.__name__'),
+    (r'\.getClass\(\)', '.__class__'),
+    (r'\.getName\(\)', '.__name__'),
+    (r'\.getInterfaces\(\)', '.__bases__'),
 ]
 
 

@@ -12,6 +12,14 @@ modulePreamble = [
     ]
 
 
+def addOverloading(obj):
+    yield 'from overloading import overloaded'
+
+
+modulePrologueHandlers = [
+    addOverloading,
+    ]
+
 moduleStringImports = [
     'from overloading import overloaded',
 ]
