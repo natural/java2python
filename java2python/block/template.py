@@ -38,7 +38,7 @@ class BaseTemplate(object):
 
     """
     __metaclass__ = FactoryTypeDetector
-    isClass = isComment = isExpression = isMethod = False
+    isClass = isComment = isExpression = isMethod = isModule = False
 
     def __init__(self, config, name=None, type=None, parent=None):
 	self.config = config
@@ -64,17 +64,17 @@ class BaseTemplate(object):
 
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
-	handlers = self.configHandlers('OutputHandlers')
+	handlers = self.configHandlers('Output')
 	return reduce(lambda v, func:func(self, v), handlers, self.dumps(-1))
 
-    def configHandler(self, part, default=None):
+    def configHandler(self, part, suffix='Handler', default=None):
 	""" Returns the config handler for this type of template. """
-	name = '{0}{1}'.format(self.typeName, part)
+	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
 	return self.config.handler(name, default)
 
-    def configHandlers(self, part, default=None):
+    def configHandlers(self, part, suffix='Handlers', default=None):
 	""" Returns config handlers for this type of template """
-	name = '{0}{1}'.format(self.typeName, part)
+	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
 	return self.config.handlers(name, default)
 
     def dumps(self, level=0):
@@ -132,8 +132,22 @@ class BaseTemplate(object):
 	""" Yields the items in the epilogue of this template. """
 	yield None
 
-    def lookupIdent(self, name):
+    def renameIdent(self, name):
+	isClass = lambda v:v.isClass
+	isMethod = lambda v:v.isMethod
+	for klass in self.parents(isClass):
+	    if name in klass.variables:
+		method = self.parents(isMethod).next()
+		if name in [p['name'] for p in method.parameters]:
+		    return name
+		return ('cls' if method.isStatic else 'self') + '.' + name
 	return name
+
+    def parents(self, pred=lambda v:True):
+	while self:
+	    if pred(self):
+		yield self
+	    self = self.parent
 
     @property
     def typeName(self):
@@ -147,22 +161,24 @@ class BaseExpressionTemplate(BaseTemplate):
     """
     isExpression = True
 
-    def __init__(self, config, left='', right='', fs=FS.lr, parent=None):
+    def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
 	super(BaseExpressionTemplate, self).__init__(config, parent=parent)
-	self.left, self.right, self.fs, self.tail = left, right, fs, ''
+	self.left, self.right, self.fs, self.tail = left, right, fs, tail
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
 	parts = [blue(self.typeName)]
 	if isinstance(self.left, (basestring, )) and self.left:
-	    parts.append(white('value:')+yellow(self.left))
+	    parts.append(white('left:')+yellow(self.left))
 	if isinstance(self.right, (basestring, )) and self.right:
-	    parts.append(white('value:')+yellow(self.right))
+	    parts.append(white('right:')+yellow(self.right))
+	if self.tail:
+	    parts.append(white('tail:')+yellow(self.tail))
 	return ' '.join(parts)
 
     def __str__(self):
 	""" Returns the Python source code representation of this template. """
-	return self.fs.format(left=self.left, right=self.right)+self.tail
+	return self.fs.format(left=self.left, right=self.right) + self.tail
 
     def dump(self, fd, level=0):
 	""" Writes the Python source code for this template to the given file. """
@@ -183,16 +199,12 @@ class BaseExpressionTemplate(BaseTemplate):
 	except (AttributeError, ):
 	    return False
 
-    @property
-    def typeName(self):
-	""" Returns the name of this template type. """
-	parent = self.parent
-	name = self.__class__.__name__.lower()
-	if self is getattr(parent, 'left', None):
-	    name = 'left'
-	if self is getattr(parent, 'right', None):
-	    name = 'right'
-	return name
+
+class BaseCommentTemplate(BaseExpressionTemplate):
+    def __repr__(self):
+	parts = [white(self.typeName+':'),
+		 black(self.left) + black(self.right) + black(self.tail)]
+	return ' '.join(parts)
 
 
 class BaseStatementTemplate(BaseTemplate):

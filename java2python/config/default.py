@@ -121,9 +121,22 @@ enumDocStringHandlers = [
 ]
 
 
-enumValueHandler = 'java2python.mod.enumConstInts'
-## or this one:
-# enumValueHandler = 'java2python.mod.enumConstStrings'
+##
+# Note that the following two enum value handlers are only called for
+# basic enumerations, not enumerations that take arguments in a
+# constructor.  When those kinds of enum values are detected, the
+# package will create the enum values as instance of the enum class,
+# and these handlers will not be invoked.
+
+# This handler creates enum values on enum classes after they've been
+# defined.  The handler matches Java semantics fairly closely by using
+# strings.
+enumValueHandler = 'java2python.mod.enumConstStrings'
+
+# Alternatively, you can use this handler to construct enum values as
+# integers.
+#enumValueHandler = 'java2python.mod.enumConstInts'
+
 
 
 exceptionSubMap = {

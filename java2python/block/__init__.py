@@ -12,33 +12,29 @@ from java2python.parser import tokens
 
 class ModuleTemplate(template.BaseTemplate):
     """ ModuleTemplate -> formatting for Python modules. """
+    isModule = True
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	for handler in self.configHandlers('PrologueHandlers'):
-	    for line in handler(self):
-		yield line
+	return chain(*(h(self) for h in self.configHandlers('Prologue')))
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
 	get = lambda o, n:getattr(o, n, None)
 	children, prev = self.children, None
-	space = [self.factory.expr(), self.factory.expr()]
+	blank = self.factory.expr(left='\n')
 	def pred(c, p):
 	    return p and get(c, 'isClass') and not get(c, 'isComment') \
 		   and not get(p, 'isClass')
-	for index, child in enumerate(children):
+	for child in children:
 	    if pred(child, prev):
-		for line in space:
-		    yield line
+		yield blank
 	    yield child
 	    prev = child
 
     def iterEpilogue(self):
 	""" Yields the items in the epilogue of this template. """
-	for handler in self.configHandlers('EpilogueHandlers'):
-	    for line in handler(self):
-		yield line
+	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
 
 
 class TypeDeclVisitorMixin(object):
@@ -78,15 +74,15 @@ class ClassTemplate(template.BaseTemplate):
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	handler = self.configHandler('BaseHandler', lambda v:v.bases)
+	handler = self.configHandler('Base', default=lambda v:v.bases)
         bases = ', '.join(ifilter(None, handler(self)))
-	bases = '({0})'.format(bases) if bases else bases
+	bases = '({0})'.format(bases) if bases else ''
 	yield 'class {0}{1}:'.format(self.name, bases)
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
 	def iterDocString():
-	    for handler in self.configHandlers('DocStringHandlers'):
+	    for handler in self.configHandlers('DocString'):
 		for line in handler(self):
 		    yield self.factory.expr(left=line)
 	def intersperseLines(lines):
@@ -108,9 +104,7 @@ class ClassTemplate(template.BaseTemplate):
 
     def iterEpilogue(self):
 	""" Yields the items in the epilogue of this template. """
-	for handler in self.configHandlers('EpilogueHandlers'):
-	    for line in handler(self):
-		yield line
+	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
 
 
 class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
@@ -170,7 +164,7 @@ class EnumVisitor(ClassVisitor):
 	idents = node.childrenOfType(tokens.IDENT)
 	expr = self.factory.expr
 	clsset = lambda v:'{0}.{1} = {2}'.format(self.name, v, self.name)
-	handler = self.configHandler('ValueHandler')
+	handler = self.configHandler('Value')
 
 	for index, ident in enumerate(idents):
 	    if list(ident.findChildrenOfType(tokens.ARGUMENT_LIST)):
@@ -198,7 +192,7 @@ class InterfaceVisitor(ClassVisitor):
 
 class MethodTemplate(template.BaseTemplate):
     """ MethodTemplte -> formatting for Python methods. """
-    isMethod = requiresFirstParam = True
+    isMethod = True
 
     def __init__(self, config, name=None, type=None, parent=None):
 	super(MethodTemplate, self).__init__(config, name, type, parent)
@@ -212,19 +206,15 @@ class MethodTemplate(template.BaseTemplate):
     def iterDecorators(self):
 	""" Yields decorators for this method. """
 	def iterLines():
-	    for handler in self.configHandlers('PrologueHandlers'):
-		for line in handler(self):
-		    yield line
+	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
 	def iterOtherDecos():
-	    for handler in self.configHandlers('ExtraDecoratorHandlers'):
-		for line in handler(self):
-		    yield line
+	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
 	return chain(self.decorators, iterOtherDecos(), iterLines())
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
 	def iterDocString():
-	    for handler in self.configHandlers('DocStringHandlers'):
+	    for handler in self.configHandlers('DocString'):
 		for line in handler(self):
 		    yield self.factory.expr(left=line)
 	body = list(super(MethodTemplate, self).iterBody())
@@ -309,15 +299,32 @@ class MethodContentVisitor(visitor.BaseVisitor):
 
     def acceptIf(self, node, memo):
 	""" Accept and process an if statement. """
+	## the parser will feed us one of three forms:
+	## bare if:          PARENTESIZED_EXPR - BLOCK_SCOPE
+	## if with else:     PARENTESIZED_EXPR - BLOCK_SCOPE - BLOCK_SCOPE
+	## if with else if:  PARENTESIZED_EXPR - BLOCK_SCOPE - IF
+	children = node.children
 	ifStat = self.factory.statement('if', fs=FS.lsrc, parent=self)
-	ifStat.expr.walk(node.firstChildOfType(tokens.PARENTESIZED_EXPR), memo)
-	blockNodes = node.childrenOfType(tokens.BLOCK_SCOPE)
+	ifStat.expr.walk(children[0], memo)
 	ifBlock = self.factory.methodContent(parent=self)
-	ifBlock.walk(blockNodes[0], memo)
-	if len(blockNodes) == 2:
-	    elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
-	    elseBlock = self.factory.methodContent(parent=self)
-	    elseBlock.walk(blockNodes[1], memo)
+	ifBlock.walk(node.children[1], memo)
+
+	if len(children) == 3:
+	    nextNode = children[2]
+	    nextType = nextNode.type
+	    while nextType == tokens.IF:
+		nextStat = self.factory.statement('elif', fs=FS.lsrc, parent=self)
+		nextStat.expr.walk(nextNode.children[0], memo)
+		nextBlock = self.factory.methodContent(parent=self)
+		nextBlock.walk(nextNode.children[1], memo)
+		try:
+		    nextNode = nextNode.children[2]
+		    nextType = nextNode.type
+		except (IndexError, ):
+		    nextType = None
+	    if nextType == tokens.BLOCK_SCOPE:
+		self.factory.statement('else', fs=FS.lc, parent=self)
+		self.factory.methodContent(parent=self).walk(nextNode, memo)
 
     def acceptThrow(self, node, memo):
 	""" Accept and process a throw statement. """
@@ -348,7 +355,7 @@ class MethodContentVisitor(visitor.BaseVisitor):
 
     def acceptExpr(self, node, memo):
 	""" Creates a new expression. """
-	if node.parentType in (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT): # wrong
+	if node.parentType in (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT, tokens.FOR_EACH): # wrong
 	    return self.factory.expr(parent=self)
 
     def acceptReturn(self, node, memo):
@@ -393,7 +400,9 @@ class MethodContentVisitor(visitor.BaseVisitor):
 	inExpr = identExpr.right = self.factory.expr()
 	inExpr.walk(node.firstChildOfType(tokens.EXPR), memo)
 	forBlock = self.factory.methodContent(parent=self)
-	forBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
+	#print '############', [tokens.map[n.type] for n in node.children]
+	#forBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
+	forBlock.walk(node.children[4], memo)
 
     def acceptFor(self, node, memo):
 	""" Accept and process a 'for' statement. """
@@ -464,8 +473,8 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	""" Accept and processes an equality expression. """
 	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = expr(parent=self), expr()
-	self.zipWalk(node.children, (self.left, self.right), memo)
+	self.left, self.right = visitors = expr(parent=self), expr()
+	self.zipWalk(node.children, visitors, memo)
 
     acceptEqual = equalityExpression
     acceptGreaterOrEqual = equalityExpression
@@ -478,8 +487,8 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	""" Accept and processes an assignment expression (Python statement). """
 	expr = self.factory.expr
 	self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-	self.left, self.right = expr(parent=self), expr()
-	self.zipWalk(node.children, (self.left, self.right), memo)
+	self.left, self.right = visitors = expr(parent=self), expr()
+	self.zipWalk(node.children, visitors, memo)
 
     acceptAssign = assignExpression
     acceptPlusAssign = assignExpression
@@ -499,8 +508,7 @@ class ExpressionVisitor(visitor.BaseVisitor):
 
     def acceptIdent(self, node, memo):
 	""" Accept and process an ident expression. """
-	name = self.lookupIdent(node.text)
-	self.left = name
+	self.left = self.renameIdent(node.text)
 
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """
@@ -508,11 +516,18 @@ class ExpressionVisitor(visitor.BaseVisitor):
 
     def acceptMethodCall(self, node, memo):
 	""" Accept and process a method call. """
+	## note: this creates one too many expression levels.
 	expr = self.factory.expr
 	self.fs = FS.l + '(' + FS.r + ')'
-	self.left, self.right = expr(parent=self), expr(parent=self)
+	self.left = expr(parent=self)
 	self.left.walk(node.firstChild(), memo)
-	self.right.walk(node.firstChildOfType(tokens.ARGUMENT_LIST), memo)
+	self.right = arg = expr(parent=self)
+	nodes = node.firstChildOfType(tokens.ARGUMENT_LIST).children
+	for tree in nodes:
+	    arg.walk(tree, memo)
+	    arg.left = expr(fs=FS.r+(', ' if tree is not nodes[-1] else ''))
+	    arg.left.walk(tree, memo)
+	    arg.right = arg = expr()
 
     def acceptPostInc(self, node, memo):
 	""" """
@@ -522,9 +537,10 @@ class ExpressionVisitor(visitor.BaseVisitor):
 
     def constFormatExpression(fs):
 	def accept(self, node, memo):
+	    expr = self.factory.expr
 	    self.fs = fs
-	    self.left, self.right = self.factory.expr(), self.factory.expr()
-	    self.zipWalk(node.children, (self.left, self.right), memo)
+	    self.left, self.right = visitors = expr(), expr()
+	    self.zipWalk(node.children, visitors, memo)
 	return accept
 
     acceptDot = constFormatExpression(FS.l + '.' + FS.r)
@@ -545,12 +561,21 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	self.right = expr(fs=FS.l+' else '+FS.r, parent=self)
         self.right.left = expr(parent=self.right)
 	self.right.right = expr(parent=self.right)
-	self.zipWalk(node.children, (self.right.left, self.left, self.right.right), memo)
+	visitors = (self.right.left, self.left, self.right.right)
+	self.zipWalk(node.children, visitors, memo)
 
     def pushRight(self, value=''):
 	""" Creates a new right expression, sets it, and returns it. """
 	self.right = self.factory.expr(left=value, parent=self)
 	return self.right
+
+
+class CommentTemplate(template.BaseCommentTemplate):
+    """ """
+
+class CommentVisitor(ExpressionVisitor):
+    """ """
+
 
 
 class StatementTemplate(template.BaseStatementTemplate):
@@ -599,6 +624,11 @@ class MethodContent(template.BaseTemplate, MethodContentVisitor):
 class Expression(ExpressionTemplate, ExpressionVisitor):
     """ Expression -> represents a Java expression as a Python expression. """
     factoryTypeName = 'expr'
+
+
+class Comment(CommentTemplate, CommentVisitor):
+    """ Comment -> represents a Java comment as a Python comment. """
+    factoryTypeName = 'comment'
 
 
 class Statement(StatementTemplate, StatementVisitor):

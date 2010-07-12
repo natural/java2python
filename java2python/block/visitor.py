@@ -33,6 +33,8 @@ class BaseVisitor(object):
 
     def walk(self, tree, memo=None):
 	""" Depth-first visiting of the given AST. """
+	if not tree:
+	    return
 	memo = Memo() if memo is None else memo
 	self.insertComments(self, tree, tree.tokenStartIndex, memo.comments)
 	visitor = self.accept(tree, memo)
@@ -59,7 +61,7 @@ class BaseVisitor(object):
 		block.tail += ''.join(self.stripComment(token.text))
 	    else:
 		for line in self.stripComment(token.text):
-		    self.factory.expr(left=prefix, right=line, parent=self)
+		    self.factory.comment(left=prefix, right=line, parent=self)
 
     def stripComment(self, text):
 	""" Regex substitutions for comments; removes comment characters. """
