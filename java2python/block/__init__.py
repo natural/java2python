@@ -20,8 +20,8 @@
 from itertools import chain, ifilter
 
 from java2python.block import template, visitor
+from java2python.lang import tokens
 from java2python.lib import FS
-from java2python.parser import tokens
 
 
 class ModuleTemplate(template.BaseTemplate):

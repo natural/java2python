@@ -220,14 +220,14 @@ tokens {
 }
 
 @parser::header {
-    from java2python.parser.base import LocalParser
+    from java2python.lang.base import LocalParser
 }
 
 @lexer::header {
     ##// the following line replaces antlr's base lexer class with our own.
     ##// this is required because we can't specify the lexer base
     ##// class directly.
-    from java2python.parser.base import LocalLexer as Lexer
+    from java2python.lang.base import LocalLexer as Lexer
 }
 
 

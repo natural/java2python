@@ -12,7 +12,7 @@ from functools import reduce
 from itertools import ifilter, izip, tee
 from re import compile as rxcompile, sub as rxsub
 
-from java2python.parser import tokens
+from java2python.lang import tokens
 
 
 class Memo(object):

@@ -65,7 +65,7 @@ class Tokens(object):
     def module(self):
 	m = self._m
 	if m is None:
-	    import java2python.parser.JavaParser as module
+	    import java2python.lang.JavaParser as module
 	    self._m = m = module
 	return m
 

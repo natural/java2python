@@ -17,9 +17,10 @@ from functools import partial
 from itertools import ifilter
 from StringIO import StringIO
 
+from java2python.lang import tokens
 from java2python.lib import FS
 from java2python.lib.colortools import *
-from java2python.parser import tokens
+
 
 
 class Factory(object):

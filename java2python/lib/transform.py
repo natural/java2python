@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from java2python.parser import (
+from java2python.lang import (
     Lexer, Parser, LocalSourceStream, LocalTokenStream, LocalTreeAdaptor
     )
 
