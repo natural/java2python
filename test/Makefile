@@ -1,4 +1,4 @@
-PYTHONPATH=../..:.
+PYTHONPATH=$PYTHONPATH:..:.
 ## CLASSPATH=.
 
 java_sources := $(wildcard *.java)
@@ -31,4 +31,4 @@ clean:
 	rm -f *.class *.pyc $(py_sources)
 
 parser:
-	cd ../parser && make
+	cd ../java2python/lang && make
