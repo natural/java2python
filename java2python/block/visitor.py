@@ -1,29 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import re
+""" java2python.block.visitor -> Base classes for walking ASTs. """
+##
+#
+# This module defines the base visitor class, BaseVisitor.  It
+# implements the accept(...) and walk(...) methods.  The walk(...)
+# method handles finding and inserting blocks for hidden comment lexer
+# nodes.
+#
 from functools import reduce
 from itertools import ifilter, izip, tee
+from re import compile as rxcompile, sub as rxsub
 
 from java2python.parser import tokens
 
 
 class Memo(object):
-    """ Memo -> AST walking luggage.
-
-    """
+    """ Memo -> AST walking luggage. """
     def __init__(self):
-	self.comments = set()
-	self.index = 0
+	self.comments, self.last = set(), 0
 
 
 class BaseVisitor(object):
-    """ BaseVisitor -> Base class for AST visitors.
-
-    """
+    """ BaseVisitor -> Base class for AST visitors. """
     commentSubs = (
-	re.compile('^\s*/(\*)+'),
-	re.compile('(\*)+/\s*$'),
-	re.compile('^\s*//'),
+	rxcompile('^\s*/(\*)+'), rxcompile('(\*)+/\s*$'), rxcompile('^\s*//'),
     )
 
     def accept(self, node, memo):
@@ -40,10 +41,17 @@ class BaseVisitor(object):
 	self.insertComments(self, tree, tree.tokenStartIndex, memo)
 	visitor = self.accept(tree, memo)
 	if visitor:
+	    ## look for a transformation function
+	    #n, hs = self.configTransformers(visitor)
+	    #print '############', n, list(hs)
 	    for child in tree.children:
 		visitor.walk(child, memo)
-	self.insertComments(visitor, tree, tree.tokenStopIndex, memo)
-	## does not pick up trailing comments
+		self.insertComments(visitor, child, child.tokenStopIndex, memo)
+	self.insertComments(self, tree, tree.tokenStopIndex, memo)
+	## we've got to cheat and check to see if this is a
+	## compilation unit node.  if so, scan any remaining tokens.
+	if tree.token.type == tokens.JAVA_SOURCE:
+	    self.insertComments(self, tree, len(tree.parser.input.tokens), memo)
 
     def zipWalk(self, nodes, visitors, memo):
 	""" Walk the given nodes zipped with the given visitors. """
@@ -52,16 +60,15 @@ class BaseVisitor(object):
 
     def insertComments(self, block, tree, index, memo):
 	""" Add comments to the block from tokens in the tree. """
-	cache = memo.comments
-	parser, prefix = tree.parser, self.config.last('commentPrefix', '# ')
+	cache, parser = memo.comments, tree.parser
+	prefix = self.config.last('commentPrefix', '# ')
 
 	## the next for loop should read like this, but it's pretty
 	## slow that way:
 	#
 	#pred = lambda k:k.type in tokens.commentTypes and k.index not in cache
 	#for token in ifilter(pred, parser.input.tokens[0:index]):
-
-	for token in parser.input.tokens[memo.index:index]:
+	for token in parser.input.tokens[memo.last:index]:
 	    if (token.type != 181 and token.type != 182) or token.index in cache:
 		continue
 	    cache.add(token.index)
@@ -72,10 +79,10 @@ class BaseVisitor(object):
 	    else:
 		for line in self.stripComment(token.text):
 		    self.factory.comment(left=prefix, right=line, parent=self)
-	memo.index = index
+	memo.last = index
 
     def stripComment(self, text):
 	""" Regex substitutions for comments; removes comment characters. """
-	resub = lambda val, rx:re.sub(rx, '', val)
+	resub = lambda val, rx:rxsub(rx, '', val)
 	for text in ifilter(unicode.strip, text.split('\n')):
 	    yield reduce(resub, self.commentSubs, text)

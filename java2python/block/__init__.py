@@ -1,8 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.blocks -> AST visitors combined with python syntax templates.
-
-"""
+""" java2python.block -> Visitors combined with templates to make blocks. """
+##
+# This module defines classes which combine AST walking with source
+# generation.  We've put these two behaviors into separate modules,
+# java2python.block.template for creating source code, and
+# java2python.block.visitor for walking Antlr trees.
+#
+# Each of the base classes depends on the behavior of its counterpart.
+# This means they're very tightly coupled and that the classes are not
+# very reusable.  The module split does allow for grouping of related
+# methods and does hide some of the more cluttered code.
+#
+# The template base class defines a factory for creating new block
+# instances.  This was necessary to avoid lookups to the global
+# namespace for classes that weren't there.  The factory also makes
+# creating block instances a bit easier.
+#
 from itertools import chain, ifilter
 
 from java2python.block import template, visitor
@@ -554,7 +568,7 @@ class ExpressionVisitor(visitor.BaseVisitor):
 
     def acceptIdent(self, node, memo):
 	""" Accept and process an ident expression. """
-	self.left = name = self.renameIdent(node.text)
+	self.left = name = self.altIdent(node.text)
 
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """

@@ -1,25 +1,39 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+""" java2python.block.template -> Base classes for writing Python source. """
+##
+# This module defines base template types.  Each base class provides
+# string representation methods (__str__, __repr__, dump, dumps) for
+# serializing instances as source code.  The base types also provide
+# many utility methods.
+#
+# The Factory class is used by the BaseTemplate class to provide
+# runtime lookup of concrete classes; this was necessary to
+# accommodate splitting the behavior of the blocks package into
+# multiple modules.  So-called patterns are usually a sign of a bad
+# design and/or language limitations, and this case is no exception.
+#
 from functools import partial
 from itertools import ifilter
 from StringIO import StringIO
 
 from java2python.lib import FS
 from java2python.lib.colortools import *
+from java2python.parser import tokens
 
 
 class Factory(object):
-    """ Factory -> creates pre-configured callables for new factory type instances.
-
-    """
+    """ Factory -> creates pre-configured callables for new block instances. """
     types = {}
 
     def __init__(self, config):
 	self.config =  config
 
     def __getattr__(self, name):
-	return partial(self.types.get(name), self.config)
+	try:
+	    return partial(self.types[name], self.config)
+	except (KeyError, ):
+	    raise AttributeError('Factory missing "{0}" type.'.format(name))
 
 
 class FactoryTypeDetector(type):
@@ -41,14 +55,17 @@ class BaseTemplate(object):
     isClass = isComment = isExpression = isMethod = isModule = False
 
     def __init__(self, config, name=None, type=None, parent=None):
+	self.bases = []
+	self.children = []
 	self.config = config
-	self.name = name
-	self.type = type
-	self.parent = parent
+	self.decorators = []
 	self.factory = Factory(config)
-	attrs = 'bases children decorators modifiers parameters variables'
-	for attr in attrs.split():
-	    setattr(self, attr, [])
+	self.modifiers = []
+	self.name = name
+	self.parameters = []
+	self.parent = parent
+	self.type = type
+	self.variables = []
 	if parent:
 	    parent.children.append(self)
 	if self.isMethod:
@@ -69,6 +86,16 @@ class BaseTemplate(object):
 	handlers = self.configHandlers('Output')
 	return reduce(lambda v, func:func(self, v), handlers, self.dumps(-1))
 
+    def altIdent(self, name):
+	""" Returns an alternate identifier for the one given. """
+	for klass in self.parents(lambda v:v.isClass):
+	    if name in klass.variables:
+		method = self.parents(lambda v:v.isMethod).next()
+		if name in [p['name'] for p in method.parameters]:
+		    return name
+		return ('cls' if method.isStatic else 'self') + '.' + name
+	return name
+
     def configHandler(self, part, suffix='Handler', default=None):
 	""" Returns the config handler for this type of template. """
 	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
@@ -79,11 +106,10 @@ class BaseTemplate(object):
 	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
 	return self.config.handlers(name, default)
 
-    def dumps(self, level=0):
-	""" Dumps this template to a string. """
-	fd = StringIO()
-	self.dump(fd, level)
-	return fd.getvalue()
+    def configTransformers(self, visitor):
+	name = visitor.factoryTypeName
+	name = '{0}Transformers'.format(name[0].lower() + name[1:])
+	return name, self.config.handlers(name, ())
 
     def dump(self, fd, level=0):
 	""" Writes the Python source code for this template to the given file. """
@@ -94,6 +120,12 @@ class BaseTemplate(object):
 	    item.dump(fd, level+1)
 	for line in ifilter(isNotNone, self.iterEpilogue()):
 	    fd.write('{0}{1}\n'.format(indent, line))
+
+    def dumps(self, level=0):
+	""" Dumps this template to a string. """
+	fd = StringIO()
+	self.dump(fd, level)
+	return fd.getvalue()
 
     def dumpRepr(self, fd, level=0):
 	""" Writes a debug string for this template to the given file. """
@@ -138,18 +170,8 @@ class BaseTemplate(object):
 	""" Creates a parameter as a mapping. """
 	return dict(name=name, type=type)
 
-    def renameIdent(self, name):
-	isClass = lambda v:v.isClass
-	isMethod = lambda v:v.isMethod
-	for klass in self.parents(isClass):
-	    if name in klass.variables:
-		method = self.parents(isMethod).next()
-		if name in [p['name'] for p in method.parameters]:
-		    return name
-		return ('cls' if method.isStatic else 'self') + '.' + name
-	return name
-
     def parents(self, pred=lambda v:True):
+	""" Yield each parent in the family tree. """
 	while self:
 	    if pred(self):
 		yield self
@@ -207,22 +229,25 @@ class BaseExpressionTemplate(BaseTemplate):
 
 
 class BaseCommentTemplate(BaseExpressionTemplate):
+    """ BaseStatementTemplate -> base class for formatting Python comments. """
+
     def __repr__(self):
+	""" Returns the debug string representation of this comment. """
 	parts = [white(self.typeName+':'),
-		 black(self.left) + black(self.right) + black(self.tail)]
+		 black(self.left) + black(self.right) + black(self.tail), ]
 	return ' '.join(parts)
 
 
-class BaseStatementTemplate(BaseTemplate):
-    """ BaseStatementTemplate -> base class for formatting Python statements.
 
-    """
+class BaseStatementTemplate(BaseTemplate):
+    """ BaseStatementTemplate -> base class for formatting Python statements. """
+
     def __init__(self, config, keyword, fs=FS.lr, parent=None):
 	super(BaseStatementTemplate, self).__init__(config, parent=parent)
 	self.keyword = keyword
 	self.expr = self.factory.expr(left=keyword, fs=fs)
 
     def __repr__(self):
-	""" Returns the debug string representation of this template. """
-	parts = [green('statement'), white('keyword:')+cyan(self.keyword)]
+	""" Returns the debug string representation of this statement. """
+	parts = [green(self.typeName), white('keyword:')+cyan(self.keyword)]
 	return ' '.join(parts)
