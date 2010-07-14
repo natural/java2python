@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.compiler -> Visitors combined with templates to make blocks. """
+""" java2python.compiler.block -> Visitors combined with templates. """
 ##
 # This module defines classes which combine AST walking with source
 # generation.  We've put these two behaviors into separate modules,
