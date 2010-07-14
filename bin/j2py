@@ -8,7 +8,7 @@ from optparse import Option, OptionParser, OptionValueError
 from os.path import basename, splitext
 from time import time
 
-from java2python.block import Module
+from java2python.compiler import Module
 from java2python.config import Config
 from java2python.lib.colortools import colors
 from java2python.lib.transform import buildAST

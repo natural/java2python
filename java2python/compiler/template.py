@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.block.template -> Base classes for writing Python source. """
+""" java2python.compiler.template -> Base classes for writing Python source. """
 ##
 # This module defines base template types.  Each base class provides
 # string representation methods (__str__, __repr__, dump, dumps) for

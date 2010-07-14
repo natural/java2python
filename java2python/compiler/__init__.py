@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.block -> Visitors combined with templates to make blocks. """
+""" java2python.compiler -> Visitors combined with templates to make blocks. """
 ##
 # This module defines classes which combine AST walking with source
 # generation.  We've put these two behaviors into separate modules,
-# java2python.block.template for creating source code, and
-# java2python.block.visitor for walking Antlr trees.
+# java2python.compiler.template for creating source code, and
+# java2python.compiler.visitor for walking Antlr trees.
 #
 # Each of the base classes depends on the behavior of its counterpart.
 # This means they're very tightly coupled and that the classes are not
@@ -19,7 +19,7 @@
 #
 from itertools import chain, ifilter
 
-from java2python.block import template, visitor
+from java2python.compiler import template, visitor
 from java2python.lang import tokens
 from java2python.lib import FS
 

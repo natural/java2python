@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.block.visitor -> Base classes for walking ASTs. """
+""" java2python.compiler.visitor -> Base classes for walking ASTs. """
 ##
 #
 # This module defines the base visitor class, BaseVisitor.  It
