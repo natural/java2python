@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from java2python.compiler.block import Module
+from java2python.compiler.transformer import Transformer
 from java2python.lang import (
     Lexer, Parser, LocalSourceStream, LocalTokenStream, LocalTreeAdaptor
     )
 
 
-def buildAST(source, configs=(), debug=False):
+def buildAST(source, config=None, debug=False):
     sourceStream = LocalSourceStream(source)
     sourceLexer = Lexer(sourceStream)
     tokenStream = LocalTokenStream(sourceLexer)
@@ -29,6 +30,11 @@ def buildAST(source, configs=(), debug=False):
 
     return returnScope.tree
 
+
+def transformAST(tree, config):
+    return # bah
+    transformer = Transformer(config)
+    transformer(tree)
 
 
 if __name__ == '__main__':

@@ -32,20 +32,17 @@ from java2python.lib import colortools
 
 
 class Tokens(object):
-    _m = None
+    """ Tokens -> simplifies token id-name and name-id mapping. """
 
     def __init__(self):
-	self.cache = {}
+	self.cache, self.parserModule = {}, None
 
     def __getattr__(self, name):
 	return getattr(self.module, name)
 
     @property
     def commentTypes(self):
-	## perfomance optimization:
-	return (181, 182, )
-	## should be:
-	#return (self.module.COMMENT, self.module.LINE_COMMENT)
+	return (self.module.COMMENT, self.module.LINE_COMMENT, )
 
     @property
     def methodTypes(self):
@@ -63,11 +60,11 @@ class Tokens(object):
 
     @property
     def module(self):
-	m = self._m
-	if m is None:
+	module = self.parserModule
+	if module is None:
 	    import java2python.lang.JavaParser as module
-	    self._m = m = module
-	return m
+	    self.parserModule = module
+	return module
 
     @staticmethod
     def title(name):
@@ -232,6 +229,14 @@ class LocalTree(CommonTree):
 	node.parser = getattr(self, 'parser', None)
 	node.lexer = getattr(self, 'lexer', None)
 	return node
+
+    @property
+    def parserTokens(self):
+	return self.parser.input.tokens[self.tokenStartIndex:self.tokenStopIndex]
+
+    def select(self, selector):
+	pass
+
 
 
 class LocalTreeAdaptor(CommonTreeAdaptor):

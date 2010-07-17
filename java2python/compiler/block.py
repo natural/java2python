@@ -10,10 +10,10 @@
 # Each of the base classes depends on the behavior of its counterpart.
 # This means they're very tightly coupled and that the classes are not
 # very reusable.  The module split does allow for grouping of related
-# methods and does hide some of the more cluttered code.
+# methods and does hide some of the cluttered code.
 #
 # The template base class defines a factory for creating new block
-# instances.  This was necessary to avoid lookups to the global
+# instances.  This was necessary to avoid lookups to the module
 # namespace for classes that weren't there.  The factory also makes
 # creating block instances a bit easier.
 #
