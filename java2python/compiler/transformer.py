@@ -19,8 +19,6 @@
 ##
 # Configuration-based tree transformer.
 from java2python.lang import tokens
-from java2python.lang import SelectorLexer, SelectorParser
-
 
 from antlr3 import ANTLRStringStream, CommonTokenStream, Lexer, Parser
 from antlr3.tree import CommonTreeAdaptor, CommonTree
@@ -28,15 +26,7 @@ from antlr3.tree import CommonTreeAdaptor, CommonTree
 
 
 def parseSelector(text):
-    stream = ANTLRStringStream(text)
-    lexer = SelectorLexer.SelectorLexer(stream)
-    tokenStream = CommonTokenStream(lexer)
-    parser = SelectorParser.SelectorParser(tokenStream)
-    val = parser.selector()
-    return [val.tree] #.children
-    #return [val.tree] + val.tree.children
-
-## mini selector language?
+    return
 
 s1 = "METHOD_CALL DOT DOT (IDENT IDENT)"
 s1 = [tokens.METHOD_CALL, tokens.DOT, tokens.DOT, []]
@@ -90,18 +80,6 @@ class Transformer(object):
 				print gchild.text, gchild.children
 
 
-
-def selectorTokenNames():
-    mapping = {}
-    for name in SelectorParser.tokenNames:
-	value = getattr(SelectorParser, name, None)
-	if value:
-	    mapping[value] = name
-    return mapping
-
-selectorTokenNames = selectorTokenNames()
-
-
 def selectorDump(root, i=0):
     token = root.token
     typeName = selectorTokenNames[token.type]
@@ -124,42 +102,17 @@ if __name__ == '__main__':
     #tree.dump(sys.stdout)
 
 
-    print '0:'
-    for tree in parseSelector('*'):
-	selectorDump(tree)
-	print
-
-    print '1:'
-    for tree in parseSelector('FU'):
-	selectorDump(tree)
-	print
-
-    for tree in parseSelector('FU BAR BAZ'):
-	print '2:'
-	selectorDump(tree)
-	print
-
-
-    for tree in parseSelector('PAR > CHILD'):
-	print '4:'
-	selectorDump(tree)
-	print
-
-
-    for tree in parseSelector('AA BB[1] CC[2]'):
-	print '6:'
-	selectorDump(tree)
-	print
-
-
-    for tree in parseSelector('FIRST["r1"] SEC["r2"] ZZ[333] * YY'):
-	print '7:'
-	selectorDump(tree)
-	print
-
-
-
-    for tree in (): # parseSelector('DD["zz"] BB["text what"] ZZ[4] > AA[3] + YY[33]'):
-	print '8:'
-	selectorDump(tree)
-	print
+    selectors = [
+	'(*)',
+	'(FU)',
+	'(FU (BAR (BAZ)))',
+	'(PARENT (CHILD))',
+	'(APAR (ARRAY[1] (ARRAY[2])))',
+#	'FIRST["r1"] SEC["r2"] THIRD["r3"] YY[4] * ZZ',
+#	'FIRST["r1"] > SEC["r2"] THIRD["r3"]',
+	]
+    for index, selector in enumerate(selectors):
+	print '{0}: "{1}"'.format(index, selector)
+	for tree in  parseSelector(selector):
+	    selectorDump(tree)
+	    print

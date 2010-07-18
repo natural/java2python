@@ -1,7 +1,7 @@
 .PHONY: all clean
 .SILENT: clean
 
-all: JavaParser.py JavaLexer.py SelectorParser.py SelectorLexer.py
+all: JavaParser.py JavaLexer.py
 
 
 JavaParser.py: Java.g
@@ -10,13 +10,6 @@ JavaParser.py: Java.g
 
 JavaLexer.py: Java.g
 	antlr3 Java.g
-
-
-SelectorParser.py: Selector.g
-	antlr3 Selector.g
-
-SelectorLexer.py: Selector.g
-	antlr3 Selector.g
 
 
 clean:
