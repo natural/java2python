@@ -27,6 +27,8 @@
 # In some cases, noted below, the value or values may be a dotted path
 # to a python value.  In these cases, the value is imported as needed.
 
+import java2python.mod
+
 
 ## leading indent characters (or character).  this is a "last" option.
 leadingIndent = '    '
@@ -38,39 +40,39 @@ commentPrefix = '## '
 
 ## this is an 'every' handler sequence
 modulePrologueHandlers = [
-    'java2python.mod.simpleShebang',
-    'java2python.mod.simpleDocString',
-    'java2python.mod.configImports',
-    'java2python.mod.commentedImports',
-    'java2python.mod.commentedPackageName',
+    java2python.mod.simpleShebang,
+    java2python.mod.simpleDocString,
+    java2python.mod.configImports,
+    java2python.mod.commentedImports,
+    java2python.mod.commentedPackageName,
 ]
 
 ## this is an 'every' handler sequence
 moduleEpilogueHandlers = [
-    'java2python.mod.scriptMainStanza',
+    java2python.mod.scriptMainStanza,
 ]
 
 ## ???
 moduleOutputHandlers = [
-    'java2python.mod.outputSubs',
+    java2python.mod.outputSubs,
 ]
 
 ## handlers for doc strings.
 classDocStringHandlers = [
-    'java2python.mod.simpleDocString',
+    java2python.mod.simpleDocString,
 ]
 enumDocStringHandlers = [
-    'java2python.mod.simpleDocString',
+    java2python.mod.simpleDocString,
 ]
 methodDocStringHandlers = [
-    'java2python.mod.simpleDocString',
+    java2python.mod.simpleDocString,
 ]
 
 
 ## extra decorator methods
 methodExtraDecoratorHandlers = [
-    'java2python.mod.maybeClassMethod',
-    'java2python.mod.overloadedClassMethods',
+    java2python.mod.maybeClassMethod,
+    java2python.mod.overloadedClassMethods,
 ]
 
 
@@ -79,9 +81,9 @@ methodExtraDecoratorHandlers = [
 
 ## these next 4 handler values should get morphed into lists.
 
-classBaseHandler = 'java2python.mod.mapClassType'
-enumBaseHandler = 'java2python.mod.mapClassType'
-interfaceBaseHandler = 'java2python.mod.mapClassType'
+classBaseHandler = java2python.mod.mapClassType
+enumBaseHandler = java2python.mod.mapClassType
+interfaceBaseHandler = java2python.mod.mapClassType
 
 ##
 # Note that the following two enum value handlers are only called for
@@ -93,7 +95,7 @@ interfaceBaseHandler = 'java2python.mod.mapClassType'
 # This handler creates enum values on enum classes after they've been
 # defined.  The handler matches Java semantics fairly closely by using
 # strings.
-enumValueHandler = 'java2python.mod.enumConstStrings'
+enumValueHandler = java2python.mod.enumConstStrings
 
 # Alternatively, you can use this handler to construct enum values as
 # integers.
@@ -159,3 +161,19 @@ typeSubstitutionMap = {
     'java.lang.String' : 'str',
 }
 
+
+
+
+
+
+
+from java2python.lang.selector import *
+from java2python.mod import transforms
+
+transforms = [
+    (Type('NULL'), transforms.null2None),
+    (Type('FALSE'), transforms.false2False),
+    (Type('TRUE'), transforms.true2True),
+    (Type('IDENT'), transforms.keywordSafeIdent),
+    (Type('FLOATING_POINT_LITERAL'), transforms.syntaxSafeFloatLiteral),
+]

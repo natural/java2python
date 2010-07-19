@@ -3,11 +3,6 @@
 from java2python.lang import tokens
 
 
-class Transformer(object):
-    def __init__(self, configs=()):
-	self.configs = configs
-
-
 class Selector(object):
     """ Selector -> base for selectors; provides operator methods.
 
@@ -134,11 +129,11 @@ class Sibling(Selector):
 	return 'Sibling({0} + {1})'.format(self.e, self.f)
 
 
-def walkSelector(tree, selector):
+def walkTreeSelector(tree, selector):
     for item in selector(tree):
 	yield item
     for child in tree.children:
-	for item in walkSelector(child, selector):
+	for item in walkTreeSelector(child, selector):
 	    yield item
 
 
@@ -162,7 +157,7 @@ if __name__ == '__main__':
 
     for index, selector in enumerate(selectors):
 	print '{0}: {1}\n   ==== {2}'.format(index, selector.__doc__.strip(), selector)
-	for node in walkSelector(tree, selector):
+	for node in walkTreeSelector(tree, selector):
 	    name = str(node)
 	    ntype = tokens.map[node.type]
 	    args = (name, '') if name == ntype else (ntype, name)

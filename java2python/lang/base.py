@@ -24,8 +24,6 @@
 # instances.
 #
 ##
-import types
-from keyword import kwlist
 from antlr3 import ANTLRStringStream, CommonTokenStream, Lexer, Parser
 from antlr3.tree import CommonTreeAdaptor, CommonTree
 from java2python.lib import colortools
@@ -92,47 +90,12 @@ class LocalParser(Parser, LocalRecognizer):
 	super(LocalParser, self).__init__(input, state=state)
 
 
-def typeNames():
-    typs = [getattr(types, n) for n in dir(types) if not n.startswith('_')]
-    names = [t.__name__ for t in typs if isinstance(t, type)]
-    return ['None', 'True', 'False', ] + names
 
-
-def transformConstMethod(v):
-    def transformMethod(self, node):
-	node.token.text = v
-    return transformMethod
 
 
 class LocalLexer(Lexer, LocalRecognizer):
-    renameIdents = kwlist + typeNames()
-
     def __init__(self, input=None, state=None):
 	super(LocalLexer, self).__init__(input, state)
-
-    def transform(self, node):
-	title = tokens.title(tokens.map.get(node.token.type, ''))
-	if title:
-	    call = getattr(self, 'transform{0}'.format(title), lambda n:None)
-	    call(node)
-
-    transformFalse = transformConstMethod('False')
-    transformTrue = transformConstMethod('True')
-    transformNull = transformConstMethod('None')
-
-    def transformIdent(self, node):
-	ident = node.token.text
-	node.token.text = '%s_' % ident if ident in self.renameIdents else ident
-
-    def transformFloatingPointLiteral(self, node):
-	value = node.token.text
-        if value.startswith('.'):
-            value = '0' + value
-        if value.endswith(('f', 'd')):
-            value = value[:-1]
-        elif value.endswith(('l', 'L')):
-            value = value[:-1] + 'L'
-	node.token.text = value
 
 
 class LocalTree(CommonTree):

@@ -133,7 +133,7 @@ def main(options):
 
     info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
     info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
-    #info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
+    info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
     info('Encode:    %.4f seconds', timed['encode_finish'] - timed['encode'])
     info('Total:     %.4f seconds', timed['overall_finish'] - timed['overall'])
     return 0

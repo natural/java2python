@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from java2python.compiler.block import Module
-from java2python.compiler.transformer import Transformer
 from java2python.lang import (
-    Lexer, Parser, LocalSourceStream, LocalTokenStream, LocalTreeAdaptor
+    Lexer, Parser, LocalSourceStream, LocalTokenStream, LocalTreeAdaptor,
+    walkTreeSelector,
     )
 
 
@@ -17,7 +17,6 @@ def buildAST(source, config=None, debug=False):
     def callback(node):
 	node.parser = sourceParser
 	node.lexer = sourceLexer
-	sourceLexer.transform(node)
 
     treeAdaptor = LocalTreeAdaptor(callback)
     sourceParser.setTreeAdaptor(treeAdaptor)
@@ -32,9 +31,9 @@ def buildAST(source, config=None, debug=False):
 
 
 def transformAST(tree, config):
-    return # bah
-    transformer = Transformer(config)
-    transformer(tree)
+    for selector, call in config.handlers('transforms'):
+	for node in walkTreeSelector(tree, selector):
+	    call(node)
 
 
 if __name__ == '__main__':

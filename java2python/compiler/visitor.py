@@ -4,9 +4,8 @@
 ##
 #
 # This module defines the base visitor class, BaseVisitor.  It
-# implements the accept(...) and walk(...) methods.  The walk(...)
-# method handles finding and inserting blocks for hidden comment lexer
-# nodes.
+# implements the accept() and walk() methods.  The walk() method
+# handles finding and inserting blocks for hidden comment lexer nodes.
 #
 from functools import reduce
 from itertools import ifilter, izip, tee
@@ -41,9 +40,6 @@ class BaseVisitor(object):
 	self.insertComments(self, tree, tree.tokenStartIndex, memo)
 	visitor = self.accept(tree, memo)
 	if visitor:
-	    ## look for a transformation function
-	    #n, hs = self.configTransformers(visitor)
-	    #print '############', n, list(hs)
 	    for child in tree.children:
 		visitor.walk(child, memo)
 		self.insertComments(visitor, child, child.tokenStopIndex, memo)
