@@ -8,35 +8,29 @@ from java2python.lang import (
     )
 
 
-def buildAST(source, config=None, debug=False):
-    sourceStream = LocalSourceStream(source)
-    sourceLexer = Lexer(sourceStream)
-    tokenStream = LocalTokenStream(sourceLexer)
-    sourceParser = Parser(tokenStream, state=None)
+def buildAST(source, config=None):
+    lexer = Lexer(LocalSourceStream(source))
+    parser = Parser(LocalTokenStream(lexer))
 
-    def callback(node):
-	node.parser = sourceParser
-	node.lexer = sourceLexer
+    def setNodeRecognizers(node):
+	node.parser = parser
+	node.lexer = lexer
 
-    treeAdaptor = LocalTreeAdaptor(callback)
-    sourceParser.setTreeAdaptor(treeAdaptor)
-    returnScope = sourceParser.javaSource()
-
-    if debug:
-	for idx, tok in enumerate(sourceParser.input.tokens):
-	    print '{0}  {1}'.format(idx, tok)
-	print
-
-    return returnScope.tree
+    parser.setTreeAdaptor(LocalTreeAdaptor(setNodeRecognizers))
+    scope = parser.javaSource()
+    return scope.tree
 
 
 def transformAST(tree, config):
     for selector, call in config.handlers('transforms'):
 	for node in walkTreeSelector(tree, selector):
-	    call(node)
+	    call(node, config)
 
 
 if __name__ == '__main__':
     import sys
-    tree = buildAST(open(sys.argv[1]).read(), debug=True)
+    tree = buildAST(open(sys.argv[1]).read())
+    for idx, tok in enumerate(tree.parser.input.tokens):
+	print '{0}  {1}'.format(idx, tok)
+    print
     tree.dump(sys.stdout)

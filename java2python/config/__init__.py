@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from java2python.lib import getModule, getModuleValue
-
-
-def valueOf(item):
-    return getModuleValue(item) if isinstance(item, (basestring, )) else item
 
 
 class Config(object):
@@ -12,7 +7,7 @@ class Config(object):
 
     """
     def __init__(self, names):
-	self.configs = [getModule(name) for name in names]
+	self.configs = [self.load(name) for name in names]
 
     def __iter__(self):
 	return iter(self.configs)
@@ -26,19 +21,24 @@ class Config(object):
 		return getattr(config, key)
 	return default
 
-    def combined(self, key):
-	combined = {}
-	for mapping in self.every(key, {}):
-	    combined.update(mapping)
-	return combined
-
     def handler(self, key, default=None):
 	handler = self.last(key, default)
-	return valueOf(handler) if handler is not default else handler
+	return handler
 
     def handlers(self, key, default=None):
-	groups = self.every(key, default)
-	if groups is not default:
-	    for group in groups:
-		for handler in group or ():
-		    yield valueOf(handler)
+	handlers = self.last(key, default)
+	if handlers is default:
+	    return
+	for handler in handlers:
+	    yield handler
+
+    @staticmethod
+    def load(name):
+	""" load(name) -> import and return a module by name in dotted form.
+
+	Copied from the Python lib docs.
+	"""
+	mod = __import__(name)
+	for comp in name.split('.')[1:]:
+	    mod = getattr(mod, comp)
+	return mod

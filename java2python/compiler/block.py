@@ -85,8 +85,9 @@ class ClassTemplate(template.BaseTemplate):
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	handler = self.configHandler('Base', default=lambda v:v.bases)
-        bases = ', '.join(ifilter(None, handler(self)))
+	def iterBases():
+	    return chain(*(h(self) for h in self.configHandlers('Base')))
+        bases = ', '.join(ifilter(None, iterBases()))
 	bases = '({0})'.format(bases) if bases else ''
 	for deco in self.iterDecorators():
 	    yield '@{0}'.format(deco)
@@ -345,7 +346,6 @@ class MethodContentVisitor(visitor.BaseVisitor):
 	dtype = decl.firstChildOfType(tokens.TYPE)
 	tnames = dtype.findChildrenOfType(tokens.IDENT)
 	cname = '.'.join(n.text for n in tnames)
-	cname = self.config.combined('exceptionSubMap').get(cname, cname)
 	cvar = decl.firstChildOfType(tokens.IDENT)
 	block = node.firstChildOfType(tokens.BLOCK_SCOPE)
 	self.expr.fs = FS.lsrc
@@ -496,7 +496,7 @@ class MethodVisitor(MethodContentVisitor):
 	    ptype = list(ptype.findChildrenOfType(tokens.IDENT))[0].text
 	except:
 	    ptype = ptype.firstChild().text
-	ptype = self.config.combined('typeSubstitutionMap').get(ptype, ptype)
+	#ptype = self.config.last('typeSubs').get(ptype, ptype)
 	self.parameters.append(self.makeParam(ident.text, ptype))
 	return self
 

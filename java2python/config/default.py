@@ -1,44 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-##
 #
 # This is the default configuration file for java2python.  Unless
 # explicity disabled with the '-n' or '--nodefaults' options, the j2py
 # script will reference this file for runtime configuration.
 #
-# The j2py script accepts additional configuration modules with the
-# '-c' or '--config' arguments.  These arguments may be repeated.
-#
-# There are three flavors of options: every, last, and combined.  The
-# semantics are:
-#
-#  * every means the value is loaded from each configuration module and
-#    returned as a sequence.
-#
-#  * last means the value is selected from the last configuration
-#    module specified.  if no configuration modules are specified (and
-#    if the default is not disabled), the last value will be the value
-#    in this module.
-#
-#  * combined means that the values (dictionaries) will be merged in
-#    order and returned as a single dictionary.
-#
-# In some cases, noted below, the value or values may be a dotted path
-# to a python value.  In these cases, the value is imported as needed.
-
 import java2python.mod
 
 
-## leading indent characters (or character).  this is a "last" option.
-leadingIndent = '    '
+## leading indent character or characters.
+indentPrefix = '    '
 
 
-## prefix for comments.  this is a "last" option.
+## prefix for comments.
 commentPrefix = '## '
 
 
-## this is an 'every' handler sequence
+## generator-functions that yield lines for a module prologue.
 modulePrologueHandlers = [
     java2python.mod.simpleShebang,
     java2python.mod.simpleDocString,
@@ -47,43 +25,62 @@ modulePrologueHandlers = [
     java2python.mod.commentedPackageName,
 ]
 
-## this is an 'every' handler sequence
+
+## generator-functions that yield lines for a module epilogue.
 moduleEpilogueHandlers = [
     java2python.mod.scriptMainStanza,
 ]
 
-## ???
+
+## generator-functions that yield (possibly modified) source strings
+## for a module.
 moduleOutputHandlers = [
     java2python.mod.outputSubs,
 ]
 
-## handlers for doc strings.
+
+## generator-functions that yield doc strings for classes.
 classDocStringHandlers = [
     java2python.mod.simpleDocString,
 ]
+
+
+## generator-functions that yield doc strings for enums.
 enumDocStringHandlers = [
     java2python.mod.simpleDocString,
 ]
+
+
+## generator-functions that yield doc strings for methods.
 methodDocStringHandlers = [
     java2python.mod.simpleDocString,
 ]
 
 
-## extra decorator methods
+## generator-functions that yield extra method decorators.
 methodExtraDecoratorHandlers = [
     java2python.mod.maybeClassMethod,
     java2python.mod.overloadedClassMethods,
 ]
 
 
+## generator-functions that yield base types for classes.
+classBaseHandlers = [
+    java2python.mod.mapClassType,
+]
 
 
+## generator-functions that yield base types for enums.
+enumBaseHandlers = [
+    java2python.mod.mapClassType
+]
 
-## these next 4 handler values should get morphed into lists.
 
-classBaseHandler = java2python.mod.mapClassType
-enumBaseHandler = java2python.mod.mapClassType
-interfaceBaseHandler = java2python.mod.mapClassType
+## generator-functions that yield base types for interfaces.
+interfaceBaseHandlers = [
+    java2python.mod.mapClassType
+]
+
 
 ##
 # Note that the following two enum value handlers are only called for
@@ -105,7 +102,6 @@ enumValueHandler = java2python.mod.enumConstStrings
 
 ## not implemented:
 
-## interfaceWhateverHandlers = []
 ## move inner class definitions to the top of their outer class.
 ## allows the outer class to reference the inner class definition
 #bubbleInnerClasses = True
@@ -146,29 +142,20 @@ moduleOutputSubs = [
 ]
 
 
-## TODO:  stop using 'combined' to define this.
-exceptionSubMap = {
-    'IndexOutOfBoundsException' : 'IndexError',
-}
-
-## TODO: stop using 'combined' to define this.
-typeSubstitutionMap = {
+typeSubs = {
     'Boolean'          : 'bool',
     'Object'           : 'object',
     'String'           : 'str',
     'char'             : 'str',
     'double'           : 'float',
     'java.lang.String' : 'str',
+    'IndexOutOfBoundsException' : 'IndexError',
 }
-
-
-
-
-
 
 
 from java2python.lang.selector import *
 from java2python.mod import transforms
+
 
 transforms = [
     (Type('NULL'), transforms.null2None),
@@ -176,4 +163,5 @@ transforms = [
     (Type('TRUE'), transforms.true2True),
     (Type('IDENT'), transforms.keywordSafeIdent),
     (Type('FLOATING_POINT_LITERAL'), transforms.syntaxSafeFloatLiteral),
+    (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'), transforms.typeSub)
 ]

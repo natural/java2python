@@ -14,14 +14,14 @@ def renameIdents():
 renameIdents = renameIdents()
 
 
-def keywordSafeIdent(node):
+def keywordSafeIdent(node, config):
     ident = node.token.text
     if ident in renameIdents:
 	node.token.text = '%s_' % ident
 
 
 def constXform(v):
-    def xform(node):
+    def xform(node, config):
 	node.token.text = v
     return xform
 
@@ -31,7 +31,7 @@ false2False = constXform('False')
 true2True = constXform('True')
 
 
-def syntaxSafeFloatLiteral(node):
+def syntaxSafeFloatLiteral(node, config):
     value = node.token.text
     if value.startswith('.'):
 	value = '0' + value
@@ -42,3 +42,8 @@ def syntaxSafeFloatLiteral(node):
     node.token.text = value
 
 
+def typeSub(node, config):
+    ident = node.token.text
+    subs = config.last('typeSubs')
+    if ident in subs:
+	node.token.text = subs[ident]

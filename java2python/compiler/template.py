@@ -138,7 +138,7 @@ class BaseTemplate(object):
     @property
     def indent(self):
 	""" Returns the indent string for this item. """
-	return self.config.last('leadingIndent', '    ')
+	return self.config.last('indentPrefix', '    ')
 
     @property
     def isPublic(self):
