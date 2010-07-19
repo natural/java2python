@@ -1,95 +1,145 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-
-# works:
-# *                 match any token
-# E                 match any token of type E
-# E F               match any F token that is a descendant of an E token
-# E > F             match any F token that is a child of an E token
-# E, F              match any E token and any F token
-# E + F             match any F token immediately preceded by a sibling token E
-# E[n]              match any n-th child of E token
-
-# E:first-child     match any E token when E is the first child of its parent
-# E[fu]             match any E token with the 'fu' attribute set (any value)
-# E[fu="bar"]       match any E token with the 'fu' attribute is exactly equal to 'bar'
-
-
-##
-# Configuration-based tree transformer.
 from java2python.lang import tokens
 
-from antlr3 import ANTLRStringStream, CommonTokenStream, Lexer, Parser
-from antlr3.tree import CommonTreeAdaptor, CommonTree
-
-
-
-def parseSelector(text):
-    return
-
-s1 = "METHOD_CALL DOT DOT (IDENT IDENT)"
-s1 = [tokens.METHOD_CALL, tokens.DOT, tokens.DOT, []]
-s1 = "" # [method, dot, dot, [ident, ident]]
-selectors = (
-    [tokens.METHOD_CALL, ],
-    [tokens.METHOD_CALL, tokens.DOT, tokens.DOT, tokens.IDENT, ],
-    )
 
 class Transformer(object):
     def __init__(self, configs=()):
 	self.configs = configs
 
+
+class Selector(object):
+    """ Selector -> base for selectors; provides operator methods.
+
+    """
+    def __add__(self, other):
+	return Sibling(self, other)
+
+    def __and__(self, other):
+	return Descendant(self, other)
+
+    def __getitem__(self, key):
+	return Nth(self, key)
+
+    def __gt__(self, other):
+	return Child(self, other)
+
+
+class Nth(Selector):
+    """ E[n]    match any slice n of E
+
+    """
+    def __init__(self, e, key):
+	self.e, self.key = e, key
+
     def __call__(self, tree):
-	for selector in selectors:
-	    if self.match(selector, tree):
-		print '######### match:: ', selector
+	for etree in self.e(tree):
+	    try:
+		matches = tree.children[self.key]
+	    except (IndexError, ):
+		return
+	    if not isinstance(matches, (list, )):
+		matches = [matches]
+	    for child in matches:
+		yield child
 
-    def match(self, selector, tree):
-	if not selector:
-	    return True # false?
-	first, more = selector[0], selector[1:]
-	print '######', first, more
-	if first == tree.type:
-	    if more:
-		return self.match(more, tree.children[0])
-	    return True
-	for node in tree.children:
-	    if self.match(selector, node):
-		return True
-    def blah():
-	for node in tree.children:
-	    #title = 'transform{0}'.format(tokens.title(tokens.map[node.type]))
-	    #method = getattr(self, title, None)
-	    #if method:
-		#method(node)
-	    self(node)
+    def __str__(self):
+	return 'Nth({0})[{1}]'.format(self.e, self.key)
 
 
-    def __transformMethodCall(self, node):
-	if node.children:
-	    child = node.children[0]
-	    if child.type == tokens.DOT:
-		if child.children:
-		    gchild = child.children[0]
-		    if gchild.type == tokens.DOT:
-			if len(gchild.children) == 2:
-			    if gchild.children[0].type == tokens.IDENT and \
-				   gchild.children[1].type == tokens.IDENT:
-			        print '########## method call:', node, child.text,
-				print gchild.text, gchild.children
+class Child(Selector):
+    """ E > F    select any F that is a child of E
+
+    """
+    def __init__(self, e, f):
+	self.e, self.f = e, f
+
+    def __call__(self, tree):
+	for ftree in self.f(tree):
+	    for etree in self.e(tree.parent):
+		yield ftree
+
+    def __str__(self):
+	return 'Child({0} > {1})'.format(self.e, self.f)
 
 
-def selectorDump(root, i=0):
-    token = root.token
-    typeName = selectorTokenNames[token.type]
-    text = token.text
-    if text != typeName:
-	print '{0}{1}:{2}'.format('    '*i, typeName, text)
-    else:
-	print '{0}{1}'.format('    '*i, typeName)
-    for child in root.children:
-	selectorDump(child, i+1)
+class Type(Selector):
+    """ Type(T)    select any token of type T
+
+    """
+    def __init__(self, key, value=None):
+	self.key = key if isinstance(key, int) else getattr(tokens, key)
+	self.value = value
+
+    def __call__(self, tree):
+	if tree.token.type == self.key:
+	    if self.value is None or self.value == tree.token.text:
+		yield tree
+
+    def __str__(self):
+	## TODO: add value
+	return 'Type({0}:{1})'.format(tokens.map[self.key], self.key)
+
+
+class Star(Selector):
+    """ *    select any
+
+    """
+    def __call__(self, tree):
+	yield tree
+
+    def __str__(self):
+	return 'Star(*)'
+
+
+class Descendant(Selector):
+    """ E & F    select any F that is a descendant of E
+
+    """
+    def __init__(self, e, f):
+	self.e, self.f = e, f
+
+    def __call__(self, tree):
+	for ftree in self.f(tree):
+	    root, ftree = ftree, ftree.parent
+	    while ftree:
+		for etree in self.e(ftree):
+		    yield root
+		ftree = ftree.parent
+
+    def __str__(self):
+	return 'Descendant({0} & {1})'.format(self.e, self.f)
+
+
+class Sibling(Selector):
+    """ E + F    select any F immediately preceded by a sibling E
+
+    """
+    def __init__(self, e, f):
+	self.e, self.f = e, f
+
+    def __call__(self, node):
+	parent = node.parent
+	if not parent:
+	    return
+	for ftree in self.f(node):
+	    index = node.parent.children.index(ftree)
+	    if not index:
+		return
+	    previous = node.parent.children[index-1]
+	    for child in self.e(previous):
+		yield ftree
+
+    def __str__(self):
+	return 'Sibling({0} + {1})'.format(self.e, self.f)
+
+
+def walkSelector(tree, selector):
+    for item in selector(tree):
+	yield item
+    for child in tree.children:
+	for item in walkSelector(child, selector):
+	    yield item
 
 
 if __name__ == '__main__':
@@ -97,22 +147,24 @@ if __name__ == '__main__':
     from java2python.config import Config
     from java2python.compiler import buildAST
 
-    #source = open(sys.argv[1]).read()
-    #tree = buildAST(source, Config(()))
-    #tree.dump(sys.stdout)
+    source = open(sys.argv[1]).read()
+    tree = buildAST(source, Config(()))
+    tree.dump(sys.stdout)
 
 
     selectors = [
-	'(*)',
-	'(FU)',
-	'(FU (BAR (BAZ)))',
-	'(PARENT (CHILD))',
-	'(APAR (ARRAY[1] (ARRAY[2])))',
-#	'FIRST["r1"] SEC["r2"] THIRD["r3"] YY[4] * ZZ',
-#	'FIRST["r1"] > SEC["r2"] THIRD["r3"]',
-	]
+	Type('EXPR'),
+	Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
+        Type('CLASS')[2],
+	Type('METHOD_CALL') & Type('IDENT'),
+	Type('IDENT') + Type('IDENT'),
+    ]
+
     for index, selector in enumerate(selectors):
-	print '{0}: "{1}"'.format(index, selector)
-	for tree in  parseSelector(selector):
-	    selectorDump(tree)
-	    print
+	print '{0}: {1}\n   ==== {2}'.format(index, selector.__doc__.strip(), selector)
+	for node in walkSelector(tree, selector):
+	    name = str(node)
+	    ntype = tokens.map[node.type]
+	    args = (name, '') if name == ntype else (ntype, name)
+	    print '{0}---- match: {1} {2}'.format(*(' '*8, )+args)
+	print
