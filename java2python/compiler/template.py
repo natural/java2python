@@ -14,13 +14,12 @@
 # design and/or language limitations, and this case is no exception.
 #
 from functools import partial
-from itertools import ifilter
+from itertools import chain, ifilter
 from StringIO import StringIO
 
 from java2python.lang import tokens
 from java2python.lib import FS
 from java2python.lib.colortools import *
-
 
 
 class Factory(object):
@@ -48,8 +47,8 @@ class FactoryTypeDetector(type):
 	    pass
 
 
-class BaseTemplate(object):
-    """ BaseTemplate -> base class for formatting Python output.
+class Base(object):
+    """ Base -> base class for formatting Python output.
 
     """
     __metaclass__ = FactoryTypeDetector
@@ -190,14 +189,14 @@ class BaseTemplate(object):
 	return self.__class__.__name__.lower()
 
 
-class BaseExpressionTemplate(BaseTemplate):
-    """ BaseExpressionTemplate -> base class for formatting Python expressions.
+class BaseExpression(Base):
+    """ BaseExpression -> base class for formatting Python expressions.
 
     """
     isExpression = True
 
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
-	super(BaseExpressionTemplate, self).__init__(config, parent=parent)
+	super(BaseExpression, self).__init__(config, parent=parent)
 	self.left, self.right, self.fs, self.tail = left, right, fs, tail
 
     def __repr__(self):
@@ -240,8 +239,8 @@ class BaseExpressionTemplate(BaseTemplate):
 	    return False
 
 
-class BaseCommentTemplate(BaseExpressionTemplate):
-    """ BaseCommentTemplate -> base class for formatting Python comments. """
+class BaseComment(BaseExpression):
+    """ BaseComment -> base class for formatting Python comments. """
 
     def __repr__(self):
 	""" Returns the debug string representation of this comment. """
@@ -251,11 +250,11 @@ class BaseCommentTemplate(BaseExpressionTemplate):
 
 
 
-class BaseStatementTemplate(BaseTemplate):
-    """ BaseStatementTemplate -> base class for formatting Python statements. """
+class BaseStatement(Base):
+    """ BaseStatement -> base class for formatting Python statements. """
 
     def __init__(self, config, keyword, fs=FS.lr, parent=None):
-	super(BaseStatementTemplate, self).__init__(config, parent=parent)
+	super(BaseStatement, self).__init__(config, parent=parent)
 	self.keyword = keyword
 	self.expr = self.factory.expr(left=keyword, fs=fs)
 	self.expr.parent = self
@@ -264,3 +263,176 @@ class BaseStatementTemplate(BaseTemplate):
 	""" Returns the debug string representation of this statement. """
 	parts = [green(self.typeName), white('keyword:')+cyan(self.keyword)]
 	return ' '.join(parts)
+
+
+class Module(Base):
+    """ Module -> formatting for Python modules. """
+    isModule = True
+
+    def iterPrologue(self):
+	""" Yields the items in the prologue of this template. """
+	return chain(*(h(self) for h in self.configHandlers('Prologue')))
+
+    def iterBody(self):
+	""" Yields the items in the body of this template. """
+	get = lambda o, n:getattr(o, n, None)
+	children, prev = self.children, None
+	blank = self.factory.expr(left='\n')
+	def pred(c, p):
+	    return p and get(c, 'isClass') and not get(c, 'isComment') \
+		   and not get(p, 'isClass')
+	for child in children:
+	    if pred(child, prev):
+		yield blank
+	    yield child
+	    prev = child
+
+    def iterEpilogue(self):
+	""" Yields the items in the epilogue of this template. """
+	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
+
+
+##
+# class and class-like types
+
+
+class Class(Base):
+    """ Class -> formatting for Python classes. """
+    isClass = True
+
+    def iterDecorators(self):
+	""" Yields decorators for this method. """
+	def iterLines():
+	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
+	def iterOtherDecos():
+	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
+	return chain(self.decorators, iterOtherDecos(), iterLines())
+
+    def iterPrologue(self):
+	""" Yields the items in the prologue of this template. """
+	def iterBases():
+	    return chain(*(h(self) for h in self.configHandlers('Base')))
+        bases = ', '.join(ifilter(None, iterBases()))
+	bases = '({0})'.format(bases) if bases else ''
+	for deco in self.iterDecorators():
+	    yield '@{0}'.format(deco)
+	yield 'class {0}{1}:'.format(self.name, bases)
+
+    def iterBody(self):
+	""" Yields the items in the body of this template. """
+	def iterDocString():
+	    for handler in self.configHandlers('DocString'):
+		for line in handler(self):
+		    yield self.factory.expr(left=line)
+	def intersperseLines(lines):
+	    get = lambda o, n:getattr(o, n, None)
+	    blank, prev = self.factory.expr(), None
+	    for item in lines:
+		if type(item) != type(prev) and prev and not get(prev, 'isComment'):
+		    yield blank
+		elif get(item, 'isMethod') and get(prev, 'isMethod'):
+		    yield blank
+		elif get(prev, 'isClass'):
+		    yield blank
+		yield item
+		prev = item
+	body = list(super(Class, self).iterBody())
+	if self.config.last('reorderClassDefs'):
+	    body.sort(lambda x, y:-1 if x.isClass else 1)
+	docs = list(iterDocString())
+	more = [self.factory.expr(left='pass')] if not (body or docs) else []
+	return chain(docs, iter(body) if more else intersperseLines(body), more)
+
+    def iterEpilogue(self):
+	""" Yields the items in the epilogue of this template. """
+	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
+
+
+class Annotation(Class):
+    """ Annotation -> formatting for annotations converted to Python classes. """
+    def __init__(self, config, name=None, type=None, parent=None):
+	super(Annotation, self).__init__(config, name, type, parent)
+
+	m = self.factory.method(parent=self, name='__init__')
+	m.parameters.append(self.makeParam('*args', 'list'))
+	m.parameters.append(self.makeParam('**kwds', 'dict'))
+	## set attributes from kwds?
+
+	m = self.factory.method(parent=self, name='__call__')
+	m.parameters.append(self.makeParam('klass', 'type'))
+	self.factory.expr(parent=m, fs='setattr(klass, self.__class__.__name__, self)')
+	self.factory.expr(parent=m, fs='return klass')
+
+
+class Enum(Class):
+    """ Enum -> formatting for enums converted to Python classes. """
+
+class Interface(Class):
+    """ Interface -> formatting for interfaces converted to Python classes. """
+
+
+##
+# method and method content types
+
+
+class MethodContent(Base):
+    """ """
+
+class Method(Base):
+    """ MethodTemplte -> formatting for Python methods. """
+    isMethod = True
+
+    def iterDecorators(self):
+	""" Yields decorators for this method. """
+	def iterLines():
+	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
+	def iterOtherDecos():
+	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
+	return chain(self.decorators, iterOtherDecos(), iterLines())
+
+    def iterBody(self):
+	""" Yields the items in the body of this template. """
+	def iterDocString():
+	    for handler in self.configHandlers('DocString'):
+		for line in handler(self):
+		    yield self.factory.expr(left=line)
+	body = list(super(Method, self).iterBody())
+	docs = list(iterDocString())
+	more = [self.factory.expr(left='pass')] if not (body or docs) else []
+	return chain(docs, body, more)
+
+    def iterPrologue(self):
+	""" Yields items in this method declaration, maybe with decorators. """
+	for deco in self.iterDecorators():
+	    yield '@{0}'.format(deco)
+	params = ', '.join(p['name'] for p in self.parameters)
+	yield 'def {0}({1}):'.format(self.name, params)
+
+
+
+##
+# expression and comment types
+
+
+class Expression(BaseExpression):
+    """ Expression -> formatting for Python expressions. """
+
+
+class Comment(BaseComment):
+    """ """
+
+
+
+
+##
+# statement types
+
+
+class Statement(BaseStatement):
+    """ Statement -> formatting for Python statements. """
+
+    def iterPrologue(self):
+	""" Yields the keyword (and clause, if any) for this statement . """
+	yield self.expr
+
+
