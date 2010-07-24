@@ -40,7 +40,8 @@ class Tokens(object):
 
     @property
     def commentTypes(self):
-	return (self.module.COMMENT, self.module.LINE_COMMENT, )
+	mod = self.module
+	return (mod.COMMENT, mod.LINE_COMMENT, mod.JAVADOC_COMMENT, )
 
     @property
     def methodTypes(self):
@@ -181,6 +182,14 @@ class LocalTree(CommonTree):
     def findChildrenOfType(self, type):
 	""" Depth-first search that yields nodes of the given type. """
 	return self.findChildren(lambda c:c.type==type)
+
+    @property
+    def withinExpr(self):
+	parent = getattr(self.parent, 'parent', None) # skip first expr
+	while parent:
+	    if parent.type in (tokens.EXPR, ):
+		return True
+	    parent = parent.parent
 
     @property
     def parentType(self):

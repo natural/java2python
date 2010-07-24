@@ -65,7 +65,7 @@ class BaseVisitor(object):
 	#pred = lambda k:k.type in tokens.commentTypes and k.index not in cache
 	#for token in ifilter(pred, parser.input.tokens[0:index]):
 	for token in parser.input.tokens[memo.last:index]:
-	    if (token.type != 181 and token.type != 182) or token.index in cache:
+	    if token.type not in tokens.commentTypes or token.index in cache:
 		continue
 	    cache.add(token.index)
 	    isexp = getattr(block, 'isExpression', False)

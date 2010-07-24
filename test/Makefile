@@ -11,7 +11,7 @@ py_sources := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
 all: package_1 $(java_sources)
 
 package_1:
-	cd Package1 && ../../bin/j2py -i Class1.java  -o Class1.py
+	#@echo cd Package1 && ../../bin/j2py -i Class1.java  -o Class1.py
 
 $(java_sources):
 	@javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig

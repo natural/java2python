@@ -3,7 +3,8 @@
 
 from java2python.compiler.block import Module
 from java2python.lang import (
-    Lexer, Parser, LocalSourceStream, LocalTokenStream, LocalTreeAdaptor,
+    Lexer, Parser,
+    LocalSourceStream, LocalTokenStream, LocalTreeAdaptor,
     walkTreeSelector,
     )
 
@@ -22,9 +23,25 @@ def buildAST(source, config=None):
 
 
 def transformAST(tree, config):
-    for selector, call in config.handlers('transforms'):
+    for selector, call in config.handlers('astTransforms'):
 	for node in walkTreeSelector(tree, selector):
 	    call(node, config)
+
+
+
+def buildJavaDocAST(source):
+    from java2python.lang.JavaDocLexer import JavaDocLexer
+    from java2python.lang.JavaDocParser import JavaDocParser
+
+    lexer = JavaDocLexer(LocalSourceStream(source))
+    parser = JavaDocParser(LocalTokenStream(lexer))
+
+    scope = parser.commentBody()
+    return scope.tree
+
+
+def walkJavaDoc(tree, callback=lambda x:None):
+    pass
 
 
 if __name__ == '__main__':

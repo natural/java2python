@@ -1,8 +1,8 @@
 class ReallyQuickTest {
-    public foo() {
-	int b[] = {1, 2, 3};
-        int x;
-        int y = 3;
+    public eggs() {
+
+    fu(a+1, b+2, c+3);
+
     }
 
 }

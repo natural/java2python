@@ -112,6 +112,8 @@ class ClassTemplate(template.BaseTemplate):
 		yield item
 		prev = item
 	body = list(super(ClassTemplate, self).iterBody())
+	if self.config.last('reorderClassDefs'):
+	    body.sort(lambda x, y:-1 if x.isClass else 1)
 	docs = list(iterDocString())
 	more = [self.factory.expr(left='pass')] if not (body or docs) else []
 	return chain(docs, iter(body) if more else intersperseLines(body), more)
@@ -128,10 +130,10 @@ class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
 	""" Accept and ignore an annotation declaration. """
 	## this overrides the TypeDeclVisitorMixin implementation and
 	## ignores AT tokens; they're sent within the class modifier
-	## list and we have to use for them here.
+	## list and we have no use for them here.
 
     def acceptAnnotationMethodDecl(self, node, memo):
-	""" Accept and process a typed method declaration. """
+	""" Accept and process an annotation method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
 	return self.factory.method(name=ident.text, type=type, parent=self)
@@ -167,14 +169,17 @@ class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
 	for mod in node.children:
 	    if mod.type == tokens.AT:
 		## needs args, too
-		self.decorators.append(mod.firstChildOfType(tokens.IDENT).text)
+		deco = '{0}()'.format(mod.firstChildOfType(tokens.IDENT).text)
+		self.decorators.append(deco)
 	    else:
 		self.modifiers.append(mod.text)
 	return self
 
     def acceptVarDeclaration(self, node, memo):
 	""" Creates a new expression for a variable declaration. """
-	#mods = node.childrenOfType(tokens.MODIFIER_LIST)
+	## this is strikingly similar to
+	## MethodContentVisitor.acceptVarDeclaration; merge and fix.
+
 	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
 	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
 	    ident = vard.firstChildOfType(tokens.IDENT)
@@ -182,7 +187,16 @@ class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
     	    expr = vard.firstChildOfType(tokens.EXPR)
 	    child = self.factory.expr(left=ident.text, parent=self)
 	    assgn = child.pushRight(' = ')
-	    if expr:
+	    arinit = vard.firstChildOfType(tokens.ARRAY_INITIALIZER)
+	    if arinit:
+		assgn.right = exp = self.factory.expr(fs='['+FS.lr+']', parent=child)
+		children = list(arinit.childrenOfType(tokens.EXPR))
+		for c in children:
+		    fs = FS.lr if c is children[-1] else FS.lr + ', '
+		    exp.left = self.factory.expr(fs=fs, parent=child)
+		    exp.left.walk(c, memo)
+		    exp.right = exp = self.factory.expr(parent=child)
+	    elif expr:
 		assgn.walk(expr, memo)
 	    else:
 		typ = node.firstChildOfType(tokens.TYPE)
@@ -199,7 +213,18 @@ class ClassVisitor(TypeDeclVisitorMixin, visitor.BaseVisitor):
 
 class AnnotationTemplate(ClassTemplate):
     """ AnnotationTemplate -> formatting for annotations converted to Python classes. """
+    def __init__(self, config, name=None, type=None, parent=None):
+	super(AnnotationTemplate, self).__init__(config, name, type, parent)
 
+	m = self.factory.method(parent=self, name='__init__')
+	m.parameters.append(self.makeParam('*args', 'list'))
+	m.parameters.append(self.makeParam('**kwds', 'dict'))
+	## set attributes from kwds?
+
+	m = self.factory.method(parent=self, name='__call__')
+	m.parameters.append(self.makeParam('klass', 'type'))
+	self.factory.expr(parent=m, fs='setattr(klass, self.__class__.__name__, self)')
+	self.factory.expr(parent=m, fs='return klass')
 
 class AnnotationVisitor(ClassVisitor):
     """ AnnotationVisitor -> accepts AST branches for Java annotations. """
@@ -431,6 +456,7 @@ class MethodContentVisitor(visitor.BaseVisitor):
 	varDecls = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
 	for varDecl in varDecls.childrenOfType(tokens.VAR_DECLARATOR):
 	    ident = varDecl.firstChildOfType(tokens.IDENT)
+	    self.variables.append(ident.text)
 	    identExp = self.factory.expr(left=ident.text, parent=self)
 	    assgnExp = identExp.pushRight(' = ')
 	    declExp = varDecl.firstChildOfType(tokens.EXPR)
@@ -446,10 +472,14 @@ class MethodContentVisitor(visitor.BaseVisitor):
 		    exp.left.walk(child, memo)
 		    exp.right = exp = self.factory.expr()
 	    else:
-		typ = node.firstChildOfType(tokens.TYPE)
-		typ = typ.children[0].text
-		val = assgnExp.pushRight()
-		val.left = '{0}()'.format(typ) # wrong
+		if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
+		    val = assgnExp.pushRight()
+		    val.left = '[]'
+		else:
+		    typ = node.firstChildOfType(tokens.TYPE)
+		    typ = typ.children[0].text
+		    val = assgnExp.pushRight()
+		    val.left = '{0}()'.format(typ) # wrong
 	return self
 
     def acceptForEach(self, node, memo):
@@ -542,6 +572,12 @@ class ExpressionVisitor(visitor.BaseVisitor):
     acceptLessOrEqual = equalityExpression
     acceptLessThan = equalityExpression
     acceptNotEqual = equalityExpression
+    acceptOr = equalityExpression
+    acceptXor = equalityExpression
+    acceptAnd = equalityExpression
+    acceptShiftRight = equalityExpression
+    acceptShiftLeft = equalityExpression
+    acceptMod = equalityExpression
 
     def assignExpression(self, node, memo):
 	""" Accept and processes an assignment expression (Python statement). """
@@ -570,6 +606,15 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	""" Accept and process an ident expression. """
 	self.left = name = self.altIdent(node.text)
 
+    def acceptInstanceof(self, node, memo):
+	""" Accept and process an instanceof expression. """
+	self.fs = 'isinstance({right}, ({left}, ))'
+	self.right = self.factory.expr(parent=self)
+	self.right.walk(node.firstChildOfType(tokens.IDENT), memo)
+	self.left = self.factory.expr(parent=self)
+	self.left.walk(node.firstChildOfType(tokens.TYPE), memo)
+
+
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """
 	self.acceptMethodCall(node, memo) # probably wrong
@@ -581,41 +626,80 @@ class ExpressionVisitor(visitor.BaseVisitor):
 	self.fs = FS.l + '(' + FS.r + ')'
 	self.left = expr(parent=self)
 	self.left.walk(node.firstChild(), memo)
+	children = node.firstChildOfType(tokens.ARGUMENT_LIST).children
 	self.right = arg = expr(parent=self)
-	nodes = node.firstChildOfType(tokens.ARGUMENT_LIST).children
-	for tree in nodes:
-	    fs = FS.r + (', ' if tree is not nodes[-1] else '')
-	    arg.walk(tree, memo)
+	for child in children:
+	    fs = FS.r + (', ' if child is not children[-1] else '')
 	    arg.left = expr(fs=fs, parent=self)
-	    arg.left.walk(tree, memo)
-	    arg.right = arg = expr()
+	    arg.left.walk(child, memo)
+	    arg.right = arg = expr(parent=self)
 
-    def acceptPostInc(self, node, memo):
-	""" """
-	self.fs = FS.l + ' += 1'
-	self.left = self.factory.expr()
-	return self.left
+    def acceptDot(self, node, memo):
+	expr = self.factory.expr
+	self.fs = FS.l + '.' + FS.r
+	self.left, self.right = visitors = expr(), expr()
+	self.zipWalk(node.children, visitors, memo)
 
     def makeAcceptPreFormatted(fs):
 	def accept(self, node, memo):
 	    expr = self.factory.expr
 	    self.fs = fs
-	    self.left, self.right = visitors = expr(), expr()
-	    self.zipWalk(node.children, visitors, memo)
+	    self.left, self.right = vs = expr(parent=self), expr(parent=self)
+	    self.zipWalk(node.children, vs, memo)
 	return accept
 
-    acceptDot = makeAcceptPreFormatted(FS.l + '.' + FS.r)
-    acceptDiv = makeAcceptPreFormatted(FS.l + ' / ' +FS.r)
-    acceptMinus = makeAcceptPreFormatted(FS.l + ' - ' +FS.r)
-    acceptPlus = makeAcceptPreFormatted(FS.l + ' + ' +FS.r)
-    acceptStar = makeAcceptPreFormatted(FS.l + ' *' +FS.r)
     acceptArrayElementAccess = makeAcceptPreFormatted(FS.l + '[' + FS.r + ']')
+    acceptDiv = makeAcceptPreFormatted(FS.l + ' / ' + FS.r)
+    acceptLogicalAnd = makeAcceptPreFormatted(FS.l + ' and ' + FS.r)
+    acceptLogicalOr  = makeAcceptPreFormatted(FS.l + ' or ' + FS.r)
+    acceptLogicalNot  = makeAcceptPreFormatted('not ' + FS.l)
+
+    acceptMinus = makeAcceptPreFormatted(FS.l + ' - ' + FS.r)
+    acceptPlus = makeAcceptPreFormatted(FS.l + ' + ' + FS.r)
+    acceptStar = makeAcceptPreFormatted(FS.l + ' * ' + FS.r)
+    acceptUnaryPlus = makeAcceptPreFormatted('+' + FS.l)
+    acceptUnaryMinus = makeAcceptPreFormatted('-' + FS.l)
+    acceptNot = makeAcceptPreFormatted('~' + FS.l)
+
+    ## wrong.
+    acceptCastExpr  = makeAcceptPreFormatted(FS.l + '(' + FS.r + ')' )
+
+    def makeAcceptPrePost(suffix, pre=False):
+	def accept(self, node, memo):
+	    expr = self.factory.expr
+	    if node.withinExpr:
+		ident = node.firstChildOfType(tokens.IDENT).text
+		handler = self.configHandler('VariableNaming')
+		name = handler(ident)
+		block = self.parents(lambda x:x.isMethod).next()
+		if pre:
+		    left = ident
+		else:
+		    left = name
+		    block.insertChild(expr(fs=FS.l+' = '+FS.r, left=name, right=ident))
+		self.left = expr(parent=self, fs=FS.l, left=left)
+		block.insertChild(expr(fs=FS.l + suffix, left=ident))
+	    else:
+		self.fs = FS.l + suffix
+		self.left, self.right = vs = expr(parent=self), expr(parent=self)
+		self.zipWalk(node.children, vs, memo)
+	return accept
+
+    acceptPostInc = makeAcceptPrePost(' += 1')
+    acceptPreInc = makeAcceptPrePost(' += 1', pre=True)
+    acceptPostDec = makeAcceptPrePost(' -= 1')
+    acceptPreDec = makeAcceptPrePost(' -= 1', pre=True)
 
     def acceptSuperConstructorCall(self, node, memo):
 	cls = self.parents(lambda c:c.isClass).next()
 	fs = 'super(' + FS.l + ', self).__init__(' + FS.r + ')'
 	self.right = self.factory.expr(fs=fs, left=cls.name)
 	return self.right
+
+    def acceptStaticArrayCreator(self, node, memo):
+	self.right = self.factory.expr(fs='[None]*{left}')
+	self.right.left = self.factory.expr()
+	self.right.left.walk(node.firstChildOfType(tokens.EXPR), memo)
 
     def acceptThis(self, node, memo):
 	self.pushRight('self')

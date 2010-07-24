@@ -27,6 +27,7 @@ class Expr1 {
 	x &= 3;
         System.out.println(x);
 
+
 	//  and assign
 	x = 444;
 	x &= 0x0bc;
@@ -42,6 +43,7 @@ class Expr1 {
 	x %= 5;
         System.out.println(x);
 
+
 	// bit shift right assign
 	// shift right assign
 	// shift left assign
@@ -50,6 +52,8 @@ class Expr1 {
 	x = 3;
 	System.out.println(x==3 ? 1 : 0);
 	System.out.println(x!=3 ? 1 : 0);
+
+
 	String y = new String();
         System.out.println(y instanceof String ? "object" : "notobject");
 	System.out.println(x <= 0 ? 1 : 0);
@@ -62,6 +66,8 @@ class Expr1 {
 	// logical and
 	System.out.println(1 < 3 && 3 > 1 ? 1 : 0);
 
+
+
 	// or
 	System.out.println(4 | 2);
 
@@ -70,6 +76,7 @@ class Expr1 {
 
 	// and
 	System.out.println(3 & 2);
+
 
 	// equal
 	System.out.println(3 == 3 ? 1 : 0);
@@ -80,21 +87,27 @@ class Expr1 {
 	System.out.println(3 != 4 ? 1 : 0);
 
 
+
 	System.out.println(44 >> 3);
 	System.out.println(44 > 3 ? 1 : 0);
 	System.out.println(44 << 3);
 	System.out.println(44 < 3 ? 1 : 0);
 
+
 	x = 33;
 	System.out.println(x+1);
 	System.out.println(x-1);
-	System.out.println(x*2);
+	System.out.println(x*x*x);
 	System.out.println(x/2);
 	System.out.println(x%2);
+
+
 
 	x = -33;
 	System.out.println(-x);
 	System.out.println(+x);
+
+
 
 	// NB: these tests side-step the issue of using pre/post inc in
 	// expressions
@@ -108,11 +121,15 @@ class Expr1 {
 	x--;
 	System.out.println(x);
 
+
 	x = 55;
 	System.out.println(~x);
+
 	System.out.println(!false ? 1 : 0);
 
 	System.out.println( (Integer) x );
+/*
+*/
 
     }
 }

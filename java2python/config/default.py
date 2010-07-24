@@ -1,126 +1,145 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#
+
 # This is the default configuration file for java2python.  Unless
 # explicity disabled with the '-n' or '--nodefaults' options, the j2py
-# script will reference this file for runtime configuration.
-#
-import java2python.mod
+# script will import this module for runtime configuration.
+
+from java2python.mod import basic, transform
+from java2python.lang.selector import *
 
 
-## leading indent character or characters.
-indentPrefix = '    '
+# Leading indent character or characters.  Read PEP 8 before you
+# override this.
+indentPrefix = ' '*4
 
 
-## prefix for comments.
-commentPrefix = '## '
+# Prefix character or characters for comments.  Again, you should read
+# PEP 8 before you override this.
+commentPrefix = '# '
 
 
-## generator-functions that yield lines for a module prologue.
+# When true, class definitions will be bubbled to the top of their
+# container (outer class or module).
+reorderClassDefs = True
+
+
+# These generator-functions yield lines for a module prologue.
 modulePrologueHandlers = [
-    java2python.mod.simpleShebang,
-    java2python.mod.simpleDocString,
-    java2python.mod.configImports,
-    java2python.mod.commentedImports,
-    java2python.mod.commentedPackageName,
+    basic.simpleShebang,
+    basic.simpleDocString,
+    basic.configImports,
+    basic.commentedImports,
+    basic.commentedPackageName,
 ]
 
 
-## generator-functions that yield lines for a module epilogue.
+# These generator-functions yield lines for a module epilogue.
 moduleEpilogueHandlers = [
-    java2python.mod.scriptMainStanza,
+    basic.scriptMainStanza,
 ]
 
 
-## generator-functions that yield (possibly modified) source strings
-## for a module.
+# These generator-functions yield (possibly modified) source strings
+# for a module.  The 'outputSubs' handler references the list of
+# regular expression substitutions near the end of this module.
 moduleOutputHandlers = [
-    java2python.mod.outputSubs,
+    basic.outputSubs,
 ]
 
 
-## generator-functions that yield doc strings for classes.
+# These generator-functions yield doc strings for classes.
 classDocStringHandlers = [
-    java2python.mod.simpleDocString,
+    basic.simpleDocString,
 ]
 
 
-## generator-functions that yield doc strings for enums.
+# These generator-functions yield doc strings for enums.
 enumDocStringHandlers = [
-    java2python.mod.simpleDocString,
+    basic.simpleDocString,
 ]
 
 
-## generator-functions that yield doc strings for methods.
+# These generator-functions yield doc strings for methods.
 methodDocStringHandlers = [
-    java2python.mod.simpleDocString,
+    basic.simpleDocString,
 ]
 
 
-## generator-functions that yield extra method decorators.
+# These generator-functions yield extra method decorators.
 methodExtraDecoratorHandlers = [
-    java2python.mod.maybeClassMethod,
-    java2python.mod.overloadedClassMethods,
+    basic.maybeClassMethod,
+    basic.overloadedClassMethods,
 ]
 
 
-## generator-functions that yield base types for classes.
+# These generator-functions yield base types for classes.
 classBaseHandlers = [
-    java2python.mod.mapClassType,
+    basic.mapClassType,
 ]
 
 
-## generator-functions that yield base types for enums.
+# These generator-functions yield base types for enums.
 enumBaseHandlers = [
-    java2python.mod.mapClassType
+    basic.mapClassType
 ]
 
 
-## generator-functions that yield base types for interfaces.
+# generator-functions that yield base types for interfaces.
 interfaceBaseHandlers = [
-    java2python.mod.mapClassType
+    basic.mapClassType
 ]
 
-
-##
-# Note that the following two enum value handlers are only called for
-# basic enumerations, not enumerations that take arguments in a
-# constructor.  When those kinds of enum values are detected, the
-# package will create the enum values as instance of the enum class,
-# and these handlers will not be invoked.
 
 # This handler creates enum values on enum classes after they've been
 # defined.  The handler matches Java semantics fairly closely by using
-# strings.
-enumValueHandler = java2python.mod.enumConstStrings
+# strings.  Refer to the documentation for details.
+enumValueHandler = basic.enumConstStrings
 
 # Alternatively, you can use this handler to construct enum values as
 # integers.
-#enumValueHandler = 'java2python.mod.enumConstInts'
+#enumValueHandler = basic.enumConstInts
 
 
 
-## not implemented:
+expressionVariableNamingHandler = basic.globalNameCounter
 
-## move inner class definitions to the top of their outer class.
-## allows the outer class to reference the inner class definition
-#bubbleInnerClasses = True
 
-## minimum parameter count to trigger indentation of parameter names
-## in method declarations.  set to 0 to disable.
+# The AST transformation function uses these declarations to modify an
+# AST before compiling it to python source.  Having these declarations
+# in a config file gives clients an opportunity to change the
+# transformation behavior.
+
+astTransforms = [
+    (Type('NULL'),  transform.null2None),
+    (Type('FALSE'), transform.false2False),
+    (Type('TRUE'),  transform.true2True),
+    (Type('IDENT'), transform.keywordSafeIdent),
+
+    (Type('FLOATING_POINT_LITERAL'),
+     transform.syntaxSafeFloatLiteral),
+
+    (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
+     transform.typeSub)
+]
+
+
+# not implemented:
+
+# minimum parameter count to trigger indentation of parameter names
+# in method declarations.  set to 0 to disable.
 #minIndentParams = 5
 
-## these handle shift right and bit shift right assignments.
-#bsrHandler = 'java2python.mod.functionBsr'
-#bsrHandlerAssign = 'java2python.mod.functionBsrAssign'
+# these handle shift right and bit shift right assignments.
+#bsrHandler = 'basic.functionBsr'
+#bsrHandlerAssign = 'basic.functionBsrAssign'
 
 
-##
-# Below are values used by the handlers.  They're here for
+# Values below are used by the handlers.  They're here for
 # convenience.
 
 
-## module output subs.
+# module output subs.
 moduleOutputSubs = [
     (r'System\.out\.println\((.*)\)', r'print \1'),
     (r'System\.out\.print_\((.*?)\)', r'print \1,'),
@@ -136,32 +155,18 @@ moduleOutputSubs = [
     (r'\.getClass\(\)', '.__class__'),
     (r'\.getName\(\)', '.__name__'),
     (r'\.getInterfaces\(\)', '.__bases__'),
-    #(r'(\.self\.)', '.'),
     #(r'String\.valueOf\((.*?)\)', r'str(\1)'),
     #(r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
 ]
 
 
 typeSubs = {
-    'Boolean'          : 'bool',
-    'Object'           : 'object',
-    'String'           : 'str',
-    'char'             : 'str',
-    'double'           : 'float',
-    'java.lang.String' : 'str',
+    'Boolean' : 'bool',
     'IndexOutOfBoundsException' : 'IndexError',
+    'Integer' : 'int',
+    'Object' : 'object',
+    'String' : 'str',
+    'char' : 'str',
+    'double' : 'float',
+    'java.lang.String' : 'str',
 }
-
-
-from java2python.lang.selector import *
-from java2python.mod import transforms
-
-
-transforms = [
-    (Type('NULL'), transforms.null2None),
-    (Type('FALSE'), transforms.false2False),
-    (Type('TRUE'), transforms.true2True),
-    (Type('IDENT'), transforms.keywordSafeIdent),
-    (Type('FLOATING_POINT_LITERAL'), transforms.syntaxSafeFloatLiteral),
-    (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'), transforms.typeSub)
-]

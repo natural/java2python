@@ -1083,7 +1083,7 @@ WS  :  (' '|'\r'|'\t'|'\u000C'|'\n')
     ;
 
 COMMENT
-    :   '/*' ( options {greedy=false;} : . )* '*/'
+    :   '/*' ~('*') ( options {greedy=false;} : . )* '*/'
     {
     $channel = HIDDEN
     }
@@ -1091,6 +1091,13 @@ COMMENT
 
 LINE_COMMENT
     : '//' ~('\n'|'\r')* '\r'? '\n'
+    {
+    $channel = HIDDEN
+    }
+    ;
+
+JAVADOC_COMMENT
+    :   '/**' ( options {greedy=false;} : . )* '*/'
     {
     $channel = HIDDEN
     }

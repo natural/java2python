@@ -72,6 +72,10 @@ class BaseTemplate(object):
 	if self.isMethod:
 	    self.parameters.append(self.makeParam('self', 'object'))
 
+    def insertChild(self, child, index=-1):
+	self.children.insert(index, child)
+	child.parent = self
+
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
 	name = white('name:') + cyan(self.name) if self.name else ''
@@ -116,11 +120,13 @@ class BaseTemplate(object):
 	""" Writes the Python source code for this template to the given file. """
 	indent, isNotNone = level * self.indent, lambda x:x is not None
 	for line in ifilter(isNotNone, self.iterPrologue()):
-	    fd.write('{0}{1}\n'.format(indent, line))
+	    line = '{0}{1}\n'.format(indent, line)
+	    fd.write(line if line.strip() else '\n')
 	for item in self.iterBody():
 	    item.dump(fd, level+1)
 	for line in ifilter(isNotNone, self.iterEpilogue()):
-	    fd.write('{0}{1}\n'.format(indent, line))
+	    line = '{0}{1}\n'.format(indent, line)
+	    fd.write(line if line.strip() else '\n')
 
     def dumps(self, level=0):
 	""" Dumps this template to a string. """
@@ -196,13 +202,17 @@ class BaseExpressionTemplate(BaseTemplate):
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
-	parts = [blue(self.typeName)]
+	parts, parent, showfs = [blue(self.typeName)], self.parent, True
 	if isinstance(self.left, (basestring, )) and self.left:
-	    parts.append(white('left:')+yellow(self.left))
+	    parts.append(white('left:') + yellow(self.left))
+	    showfs = False
 	if isinstance(self.right, (basestring, )) and self.right:
-	    parts.append(white('right:')+yellow(self.right))
+	    parts.append(white('right:') + yellow(self.right))
+	    showfs = False
+	if showfs:
+	    parts.append(white('format:') + yellow(self.fs))
 	if self.tail:
-	    parts.append(white('tail:')+yellow(self.tail))
+	    parts.append(white('tail:') + yellow(self.tail))
 	return ' '.join(parts)
 
     def __str__(self):
@@ -211,7 +221,8 @@ class BaseExpressionTemplate(BaseTemplate):
 
     def dump(self, fd, level=0):
 	""" Writes the Python source code for this template to the given file. """
-	fd.write('{0}{1}\n'.format(self.indent*level, self))
+	line = '{0}{1}\n'.format(self.indent*level, self)
+	fd.write(line if line.strip() else '\n')
 
     def dumpRepr(self, fd, level=0):
 	""" Writes a debug string for this template to the given file. """
@@ -230,7 +241,7 @@ class BaseExpressionTemplate(BaseTemplate):
 
 
 class BaseCommentTemplate(BaseExpressionTemplate):
-    """ BaseStatementTemplate -> base class for formatting Python comments. """
+    """ BaseCommentTemplate -> base class for formatting Python comments. """
 
     def __repr__(self):
 	""" Returns the debug string representation of this comment. """
@@ -247,6 +258,7 @@ class BaseStatementTemplate(BaseTemplate):
 	super(BaseStatementTemplate, self).__init__(config, parent=parent)
 	self.keyword = keyword
 	self.expr = self.factory.expr(left=keyword, fs=fs)
+	self.expr.parent = self
 
     def __repr__(self):
 	""" Returns the debug string representation of this statement. """

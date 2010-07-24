@@ -4,9 +4,13 @@ class Class4 {
 	public static String x = "notnull";
     }
 
+    int foo = 3;
+
     class NestedInner {
 	public String y = "somenull";
     }
+
+    int bar = 4;
 
     public static void main(String[] args) {
 	Class4 c4 = new Class4();
