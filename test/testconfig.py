@@ -1,26 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from java2python.config import default
 
 
-## lines written at the beginning of each generated module.  this value
-## is cumulative, so when user-defined configuration modules specify
-## this value, those lines are written after these.
-modulePreamble = [
-#    'from threading import Lock',
-#    'from overloading import overloaded',
-#    'from java2python.config.examples import Annotation, Enum',
-    ]
-
-
-def addOverloading(obj):
-    yield 'from overloading import overloaded'
-
-
-modulePrologueHandlers = [
-    addOverloading,
-    ]
-
-moduleStringImports = [
+modulePrologueHandlers = default.modulePrologueHandlers + [
     'from overloading import overloaded',
 ]
 
@@ -44,24 +27,3 @@ outputSubs = [
     (r'(.*?)outer\.cls', r'\1outer'),
     (r'from java\.util import \*', ''),
     ]
-
-
-
-enumConstantHandlers = [
-#    'java2python.mods.enums.pyStrings',
-    'java2python.mods.enums.minJava',
-
-]
-
-classHandlers = [
-    #'java2python.mods.classes.sortMethods',
-    'java2python.mods.classes.updateConstructor',
-
-    'java2python.mods.classes.convertProperties',
-    'java2python.mods.classes.overloadMethods',
-    'java2python.mods.simpleDocString',
-    'java2python.mods.classes.insertModifiersAsComments',
-    'java2python.mods.classes.updateBases',
-    'java2python.mods.classes.updateAnnotation',
-
-]

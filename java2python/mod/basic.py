@@ -66,6 +66,7 @@ def outputSubs(obj, text):
     return text
 
 
+
 def mapClassType(obj):
     bases = obj.bases or ('object', )
     for name in bases:
@@ -107,3 +108,15 @@ def simpleInterfaces(method):
 def globalNameCounter(original, counter=count()):
     return '__{0}_{1}'.format(original, counter.next())
 
+
+
+def getBsrSrc():
+    from inspect import getsource
+    from java2python.mod.includes import bsr
+    return getsource(bsr)
+
+
+def insertBsr(module):
+    if getattr(module, 'needsBsrFunc', False):
+	for line in getBsrSrc().split('\n'):
+	    yield line

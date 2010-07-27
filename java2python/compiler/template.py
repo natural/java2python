@@ -103,12 +103,18 @@ class Base(object):
     def configHandler(self, part, suffix='Handler', default=None):
 	""" Returns the config handler for this type of template. """
 	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
-	return self.config.handler(name, default)
+	return self.config.last(name, default)
 
-    def configHandlers(self, part, suffix='Handlers', default=None):
+    def configHandlers(self, part, suffix='Handlers'):
 	""" Returns config handlers for this type of template """
 	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
-	return self.config.handlers(name, default)
+	for handler in self.config.last(name, ()):
+	    if isinstance(handler, (basestring, )):
+		def wrapper(*args, **kwds):
+		    yield handler
+		yield wrapper
+	    else:
+		yield handler
 
     def configTransformers(self, visitor):
 	name = visitor.factoryTypeName

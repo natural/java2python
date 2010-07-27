@@ -5,5 +5,6 @@ class Assign2 {
 
         x >>>= 1;
         System.out.println(x);
+        x >>>= 3;
     }
 }

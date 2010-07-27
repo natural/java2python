@@ -149,7 +149,7 @@ def config(argv):
 		      help='Write to OUTPUTFILE.  May use - for stdout.',
 		      metavar='OUTPUTFILE', default=None)
     parser.add_option('-c', '--config', dest='configs',
-		      help='Use CONFIG module (not file).  May be repeated.',
+		      help='Use CONFIG file or module.  May be repeated.',
 		      metavar='CONFIG', default=[],
 		      action='append')
     parser.add_option('-n', '--nodefaults', dest='includedefaults',

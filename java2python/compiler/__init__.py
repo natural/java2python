@@ -9,33 +9,34 @@ from java2python.lang import (
     )
 
 
+
+def makeRecognizersCallback(lexer, parser):
+    def setRecognizers(node):
+	node.lexer = lexer
+	node.parser = parser
+    return setRecognizers
+
+
 def buildAST(source, config=None):
     lexer = Lexer(LocalSourceStream(source))
     parser = Parser(LocalTokenStream(lexer))
-
-    def setNodeRecognizers(node):
-	node.parser = parser
-	node.lexer = lexer
-
-    parser.setTreeAdaptor(LocalTreeAdaptor(setNodeRecognizers))
+    adapter = LocalTreeAdaptor(makeRecognizersCallback(lexer, parser))
+    parser.setTreeAdaptor(adapter)
     scope = parser.javaSource()
     return scope.tree
 
 
 def transformAST(tree, config):
-    for selector, call in config.handlers('astTransforms'):
+    for selector, call in config.last('astTransforms', ()):
 	for node in walkTreeSelector(tree, selector):
 	    call(node, config)
-
 
 
 def buildJavaDocAST(source):
     from java2python.lang.JavaDocLexer import JavaDocLexer
     from java2python.lang.JavaDocParser import JavaDocParser
-
     lexer = JavaDocLexer(LocalSourceStream(source))
     parser = JavaDocParser(LocalTokenStream(lexer))
-
     scope = parser.commentBody()
     return scope.tree
 

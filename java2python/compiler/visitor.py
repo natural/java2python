@@ -243,6 +243,12 @@ class Interface(Class):
 class MethodContent(Base):
     """ MethodContent -> accepts trees for blocks within methods. """
 
+    def acceptBreak(self, node, memo):
+	""" Accept and process a break statement. """
+	if node.parent and node.parent.type in (tokens.CASE, tokens.DEFAULT):
+	    return
+	breakStat = self.factory.statement('break', parent=self)
+
     def acceptWhile(self, node, memo):
 	""" Accept and process a while block. """
 	# WHILE - PARENTESIZED_EXPR - BLOCK_SCOPE
@@ -470,6 +476,7 @@ class Method(ClassMethodSharedMixin, MethodContent):
 	self.parameters.append(param)
 	return self
 
+
 class Expression(Base):
     """ Class -> accepts trees for expression objects. """
 
@@ -507,6 +514,22 @@ class Expression(Base):
     acceptShiftLeft = equalityExpression
     acceptMod = equalityExpression
 
+    def acceptBitShiftRight(self, node, memo):
+	expr = self.factory.expr
+	self.fs = 'bsr(' + FS.l + ', ' + FS.r + ')'
+	self.left, self.right = visitors = expr(parent=self), expr()
+	self.zipWalk(node.children, visitors, memo)
+	module = self.parents(lambda x:x.isModule).next()
+	module.needsBsrFunc = True
+
+    def acceptBitShiftRightAssign(self, node, memo):
+	expr = self.factory.expr
+	self.fs = FS.l + ' = bsr(' + FS.l + ', ' + FS.r + ')'
+	self.left, self.right = visitors = expr(parent=self), expr()
+	self.zipWalk(node.children, visitors, memo)
+	module = self.parents(lambda x:x.isModule).next()
+	module.needsBsrFunc = True
+
     def assignExpression(self, node, memo):
 	""" Accept and processes an assignment expression (Python statement). """
 	expr = self.factory.expr
@@ -541,7 +564,6 @@ class Expression(Base):
 	self.right.walk(node.firstChildOfType(tokens.IDENT), memo)
 	self.left = self.factory.expr(parent=self)
 	self.left.walk(node.firstChildOfType(tokens.TYPE), memo)
-
 
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """

@@ -31,6 +31,7 @@ modulePrologueHandlers = [
     basic.configImports,
     basic.commentedImports,
     basic.commentedPackageName,
+    basic.insertBsr,
 ]
 
 
@@ -75,7 +76,7 @@ methodExtraDecoratorHandlers = [
 
 # These generator-functions yield base types for classes.
 classBaseHandlers = [
-    basic.mapClassType,
+    basic.mapClassType
 ]
 
 

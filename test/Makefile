@@ -14,7 +14,7 @@ package_1:
 	#@echo cd Package1 && ../../bin/j2py -i Class1.java  -o Class1.py
 
 $(java_sources):
-	@javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c testconfig
+	@javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c ./testconfig.py
 	@chmod u+x $(basename $@).py
 	@bash ./compare_outputs.sh "java -ea $(basename $@)" "python $(basename $@).py" "$@" && rm "$(basename $@).py" "$(basename $@).class"
 

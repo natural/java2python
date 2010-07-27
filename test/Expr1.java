@@ -128,8 +128,10 @@ class Expr1 {
 	System.out.println(!false ? 1 : 0);
 
 	System.out.println( (Integer) x );
-/*
-*/
+
+
+	x = 7;
+	System.out.println(x >>> 1);
 
     }
 }

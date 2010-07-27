@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from functools import reduce
+from imp import load_source
+from os import path
 
 
 class Config(object):
@@ -9,36 +12,20 @@ class Config(object):
     def __init__(self, names):
 	self.configs = [self.load(name) for name in names]
 
-    def __iter__(self):
-	return iter(self.configs)
-
     def every(self, key, default=None):
-	return [getattr(config, key, default) for config in self]
+	return [getattr(config, key, default) for config in self.configs]
 
     def last(self, key, default=None):
-	for config in reversed(list(self)):
+	for config in reversed(self.configs):
 	    if hasattr(config, key):
 		return getattr(config, key)
 	return default
 
-    def handler(self, key, default=None):
-	handler = self.last(key, default)
-	return handler
-
-    def handlers(self, key, default=None):
-	handlers = self.last(key, default)
-	if handlers is default:
-	    return
-	for handler in handlers:
-	    yield handler
-
     @staticmethod
     def load(name):
-	""" load(name) -> import and return a module by name in dotted form.
-
-	Copied from the Python lib docs.
-	"""
-	mod = __import__(name)
-	for comp in name.split('.')[1:]:
-	    mod = getattr(mod, comp)
+	""" import and return a module from dotted form or filename. """
+	if path.exists(name):
+	    mod = load_source(str(hash(name)), name)
+	else:
+	    mod = reduce(getattr, name.split('.')[1:], __import__(name))
 	return mod
