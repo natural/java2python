@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from itertools import count
+from logging import info, warn
+from os import path
 from re import sub as rxsub
 
 
@@ -14,19 +16,32 @@ def simpleDocString(obj):
     yield '"""'
 
 
-def configImports(module):
-    if 0:
-	yield ''
+def commentedImports(module, expr):
+    module.factory.comment(parent=module, left=expr, fs='import: {left}')
 
 
-def commentedImports(module):
-    if 0:
-	yield ''
+def simpleImports(module, expr):
+    module.factory.expr(parent=module, left=expr, fs='import {left}')
+
+def commentedPackages(module, expr):
+    module.factory.comment(parent=module, left=expr, fs='package: {left}')
 
 
-def commentedPackageName(module):
-    if 0:
-	yield ''
+def namespacePackages(module, expr):
+    source = module.sourceFilename
+    if not source:
+	warn('namespace package not created; source input not named.')
+	return
+    initname = path.join(path.dirname(source), '__init__.py')
+    if path.exists(initname):
+	warn('namespace package not created; __init__.py exists.')
+	return
+    with open(initname, 'w') as initfile:
+	initfile.write('from pkgutil import extend_path\n')
+	initfile.write('__path__ = extend_path(__path__, __name__)\n')
+	## wrong
+	initfile.write('\nfrom {0} import {0}\n'.format(module.name))
+    info('created __init__.py file for package %s.', expr)
 
 
 def enumConstInts(enum, index, name):

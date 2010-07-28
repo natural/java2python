@@ -100,8 +100,23 @@ class ModuleClassSharedMixin(object):
     acceptEnum = makeAcceptType('enum')
     acceptInterface = makeAcceptType('interface')
 
+
+
 class Module(ModuleClassSharedMixin, Base):
     """ Module -> accepts AST branches for module-level objects. """
+
+    def makeAcceptHandledDecl(part):
+	def accept(self, node, memo):
+	    expr = self.factory.expr()
+	    expr.walk(node.firstChild(), memo)
+	    handler = self.configHandler(part)
+	    if handler:
+		handler(self, expr)
+	return accept
+
+    acceptImport = makeAcceptHandledDecl('ImportDeclaration')
+    acceptPackage = makeAcceptHandledDecl('PackageDeclaration')
+
 
 
 class ClassMethodSharedMixin(object):
@@ -568,6 +583,10 @@ class Expression(Base):
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """
 	self.acceptMethodCall(node, memo) # probably wrong
+	typeIdent = node.firstChildOfType(tokens.QUALIFIED_TYPE_IDENT)
+	if typeIdent and typeIdent.children:
+	    ids = [self.altIdent(child.text) for child in typeIdent.children]
+	    self.left = '.'.join(ids) # wrong
 
     def acceptMethodCall(self, node, memo):
 	""" Accept and process a method call. """

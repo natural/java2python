@@ -4,9 +4,8 @@ python := python -B
 j2py = ../bin/j2py
 
 
-java_files := $(wildcard *.java)
-class_files := $(wildcard *.class)
 python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
+test_targets := $(notdir $(basename $(wildcard *.java)))
 
 
 .PHONY: all clean
@@ -14,7 +13,7 @@ python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
 
 
 all:
-	@echo run something else for now
+	$(MAKE) $(test_targets)
 
 
 clean:
@@ -39,5 +38,4 @@ parsers:
 
 
 %: %.py
-	@bash -c "diff <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[OKAY] $@"
-
+	@bash -c "diff -q <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[PASS] $@"

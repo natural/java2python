@@ -1,14 +1,2 @@
 #!/bin/bash
-
-
-make parser &>/dev/null
-
-if [ $? -eq 0 ]
-then
-    PYTHONPATH=$PYTHONPATH:..:. ../bin/j2py -c testconfig "$@"
-else
-    echo make failed
-fi
-
-
-
+../bin/j2py -c configs "$@"

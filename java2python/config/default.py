@@ -28,9 +28,6 @@ reorderClassDefs = True
 modulePrologueHandlers = [
     basic.simpleShebang,
     basic.simpleDocString,
-    basic.configImports,
-    basic.commentedImports,
-    basic.commentedPackageName,
     basic.insertBsr,
 ]
 
@@ -104,6 +101,19 @@ enumValueHandler = basic.enumConstStrings
 
 
 expressionVariableNamingHandler = basic.globalNameCounter
+
+
+# This handler simply creates comments in the file for package
+# declarations.
+modulePackageDeclarationHandler = basic.commentedPackages
+
+# This handler can be used instead to create __init__.py files for
+# 'namespace packages' via pkgutil.
+modulePackageDeclarationHandler = basic.namespacePackages
+
+
+moduleImportDeclarationHandler = basic.commentedImports
+moduleImportDeclarationHandler = basic.simpleImports
 
 
 # The AST transformation function uses these declarations to modify an

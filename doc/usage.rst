@@ -25,23 +25,23 @@ If no input filename is given (or if the input filename is ``-``),
 Options and Arguments
 =====================
 
-The :command:`j2py` command accepts several options that control its
-behavior.  To change code generation behavior, refer to the
-:ref:`customization` chapter.
+The :command:`j2py` command accepts options that alter its behavior.
+The behavior of the code generator is not part of the command itself;
+to change code generation behavior, refer to the :ref:`customization`
+chapter.
 
 
 Code generation:
 
-
   * .. option:: -i NAME, --input NAME
 
-    Read from the specified file.  Specify ``-`` for ``stdin``.  If
-    not given the command will read from ``stdin``.
+    Read from the given file.  Specify ``-`` for ``stdin``.  If not
+    given the command will read from ``stdin``.
 
   * .. option:: -o NAME, --output NAME
 
-    Write to the specified file.  Specify ``-`` for ``stdout``.  If
-    not given the command will write to ``stdout``.
+    Write to the given file.  Specify ``-`` for ``stdout``.  If not
+    given the command will write to ``stdout``.
 
   * .. option:: -l LEVEL, --loglevel LEVEL
 
@@ -54,9 +54,19 @@ Code generation:
     Use the specified configuration module or file.  This option may
     be repeated.
 
-    Configuration values are retrieved in reverse order, i.e., from
-    the final value given to the first given, with the default
+    Configuration modules/files are referenced in reverse order, i.e.,
+    from the final value given to the first given, with the default
     configuration referenced last.
+
+    See the :ref:`customization` chapter for details of the
+    configuration system and available configuration points.
+
+  * .. option:: -d DIR, --configdir DIR
+
+    Use the given directory name to match input filenames to
+    configuration filenames.  For example, to translate
+    ``FooBar.java`` and use the configuration stored in
+    ``./cfg/FooBar.py``, specify ``-d ./cfg``.
 
   * .. option:: -n, --nodefaults
 
@@ -70,7 +80,6 @@ Code generation:
     output is always disabled in those environments.
 
 Development:
-
 
   * .. option:: -p, --python-tree
 

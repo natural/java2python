@@ -5,7 +5,7 @@ import sys
 from collections import defaultdict
 from logging import _levelNames as logLevels, exception, warning, info, basicConfig
 from optparse import Option, OptionParser, OptionValueError
-from os.path import basename, splitext
+from os import path
 from time import time
 
 from java2python.compiler import Module, buildAST, transformAST
@@ -45,7 +45,7 @@ class LocalOption(Option):
     TYPE_CHECKER['loglevel'] = checkLogLevel
 
 
-def profileMain(options):
+def mainProfile(options):
     if options.profile:
 	import cProfile, pstats
 	prof = cProfile.Profile()
@@ -58,21 +58,30 @@ def profileMain(options):
 	return main(options)
 
 
+def configFromDir(inname, dirname):
+    name = path.join(dirname, path.basename(path.splitext(inname)[0]))
+    return '%s.py' % path.abspath(name)
+
+
 def main(options):
     timed = defaultdict(time)
     timed['overall']
-
-    configs = options.configs
-    if options.includedefaults:
-        configs.insert(0, 'java2python.config.default')
 
     filein = fileout = filedefault = '-'
     if options.inputfile and not isinstance(options.inputfile, file):
 	filein = options.inputfile
     if options.outputfile and not isinstance(options.outputfile, file):
-	fileout = basename(options.outputfile)
+	fileout = path.basename(options.outputfile)
     elif fileout != filedefault:
-	fileout = '%s.py' % (splitext(filein)[0])
+	fileout = '%s.py' % (path.splitext(filein)[0])
+
+    configs = options.configs
+    if options.configdir and not isinstance(filein, file):
+	dirconfigname = configFromDir(filein, options.configdir)
+	if path.exists(dirconfigname):
+	    configs.insert(0, dirconfigname)
+    if options.includedefaults:
+        configs.insert(0, 'java2python.config.default')
 
     try:
 	if filein != '-':
@@ -99,7 +108,8 @@ def main(options):
 
     timed['visit']
     module = Module(config)
-    module.name = splitext(basename(filein))[0] if filein != '-' else '<stdin>'
+    module.sourceFilename = path.abspath(filein) if filein != '-' else None
+    module.name = path.splitext(path.basename(filein))[0] if filein != '-' else '<stdin>'
     module.walk(tree)
     timed['visit_finish']
 
@@ -121,7 +131,7 @@ def main(options):
 	    output = sys.stdout
 	else:
 	    output = open(fileout, 'w')
-	module.name = splitext(filein)[0] if filein != '-' else '<stdin>'
+	module.name = path.splitext(filein)[0] if filein != '-' else '<stdin>'
 	print >> output, source
 
     try:
@@ -140,40 +150,43 @@ def main(options):
 
 
 def config(argv):
-    parser = OptionParser(option_class=LocalOption,
-                          version='%prog ' + version)
-    parser.add_option('-i', '--input', dest='inputfile',
-		      help='Read from INPUTFILE.  May use - for stdin.',
-		      metavar='INPUTFILE', default=None)
-    parser.add_option('-o', '--output', dest='outputfile',
-		      help='Write to OUTPUTFILE.  May use - for stdout.',
-		      metavar='OUTPUTFILE', default=None)
-    parser.add_option('-c', '--config', dest='configs',
-		      help='Use CONFIG file or module.  May be repeated.',
-		      metavar='CONFIG', default=[],
-		      action='append')
-    parser.add_option('-n', '--nodefaults', dest='includedefaults',
-		      help='Ignore default configuration module.',
-		      default=True, action='store_false')
-    parser.add_option('-l', '--loglevel', dest='loglevel',
-		      help='Set log level by name or value.',
-		      default='WARN', type='loglevel')
-    parser.add_option('-p', '--python-tree', dest='pytree',
-		      help='Print python object tree to stderr.',
-		      default=False, action='store_true')
-    parser.add_option('-j', '--java-ast', dest='javaast',
-		      help='Print java source AST tree to stderr.',
-		      default=False, action='store_true')
-    parser.add_option('-f', '--profile', dest='profile',
-		      help='Profile execution and print results to stderr.',
-		      default=False, action='store_true')
-    parser.add_option('-s', '--skip-source', dest='skipsource',
-		      help='Skip writing translated source; useful when printing trees',
-		      default=False, action='store_true')
-    parser.add_option('-r', '--nocolor', dest='nocolor',
-		      help='Disable color output.' +\
-  		          ('  No effect on Win OS.' if isWindows() else ''),
-		      default=False, action='store_true')
+    parser = OptionParser(option_class=LocalOption, version='%prog '+version)
+    addopt = parser.add_option
+    addopt('-i', '--input', dest='inputfile',
+	   help='Read from INPUTFILE.  May use - for stdin.',
+	   metavar='INPUTFILE', default=None)
+    addopt('-o', '--output', dest='outputfile',
+	   help='Write to OUTPUTFILE.  May use - for stdout.',
+	   metavar='OUTPUTFILE', default=None)
+    addopt('-c', '--config', dest='configs',
+	   help='Use CONFIG file or module.  May be repeated.',
+	   metavar='CONFIG', default=[],
+	   action='append')
+    addopt('-d', '--configdir', dest='configdir',
+	   help='Use DIR to match input filename with config filename.',
+	   metavar='DIR', default=None)
+    addopt('-n', '--nodefaults', dest='includedefaults',
+	   help='Ignore default configuration module.',
+	   default=True, action='store_false')
+    addopt('-l', '--loglevel', dest='loglevel',
+	   help='Set log level by name or value.',
+	   default='WARN', type='loglevel')
+    addopt('-p', '--python-tree', dest='pytree',
+	   help='Print python object tree to stderr.',
+	   default=False, action='store_true')
+    addopt('-j', '--java-ast', dest='javaast',
+	   help='Print java source AST tree to stderr.',
+	   default=False, action='store_true')
+    addopt('-f', '--profile', dest='profile',
+	   help='Profile execution and print results to stderr.',
+	   default=False, action='store_true')
+    addopt('-s', '--skip-source', dest='skipsource',
+	   help='Skip writing translated source; useful when printing trees',
+	   default=False, action='store_true')
+    addopt('-r', '--nocolor', dest='nocolor',
+	   help='Disable color output.' +\
+	       ('  No effect on Win OS.' if isWindows() else ''),
+	   default=False, action='store_true')
 
     options, args = parser.parse_args(argv)
     if len(args) > 2:
@@ -194,4 +207,4 @@ def config(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(profileMain(config(sys.argv)))
+    sys.exit(mainProfile(config(sys.argv)))

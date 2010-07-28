@@ -248,6 +248,12 @@ class BaseExpression(Base):
 class BaseComment(BaseExpression):
     """ BaseComment -> base class for formatting Python comments. """
 
+    def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
+	super(BaseComment, self).__init__(config, left, right, fs, parent, tail)
+	if not fs.strip().startswith('#'):
+	    prefix = self.config.last('commentPrefix', '# ')
+	    self.fs = prefix + self.fs
+
     def __repr__(self):
 	""" Returns the debug string representation of this comment. """
 	parts = [white(self.typeName+':'),
