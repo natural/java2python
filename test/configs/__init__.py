@@ -4,7 +4,7 @@ from java2python.config import default
 
 
 modulePrologueHandlers = default.modulePrologueHandlers + [
-    'from overloading import overloaded',
+    'from configs.overloading import overloaded',
 ]
 
 

@@ -1,34 +1,43 @@
-PYTHONPATH=$PYTHONPATH:..:.
-## CLASSPATH=.
-
-java_sources := $(wildcard *.java)
-py_sources := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
-
-
-.SILENT: clean
-.PHONY: all $(java_sources) $(python_sources) clean X
-
-all: package_1 $(java_sources)
-
-package_1:
-	#@echo cd Package1 && ../../bin/j2py -i Class1.java  -o Class1.py
-
-$(java_sources):
-	@javac $@  && ../bin/j2py -i $@ -o $(basename $@).py -c ./testconfig.py
-	@chmod u+x $(basename $@).py
-	@bash ./compare_outputs.sh "java -ea $(basename $@)" "python $(basename $@).py" "$@" && rm "$(basename $@).py" "$(basename $@).class"
+javac := javac
+java := java
+python := python -B
+j2py = ../bin/j2py
 
 
-%.py: %.java testconfig.py
-	../bin/j2py -i $< -o $@ -c testconfig
-	python $@
+java_files := $(wildcard *.java)
+class_files := $(wildcard *.class)
+python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
 
-%: %.java
-	javac $<
-	java $@
+
+.PHONY: all clean
+.SILENT: %:
+
+
+all:
+	@echo run something else for now
+
 
 clean:
-	rm -f *.class *.pyc $(py_sources)
+	@rm -f *.class *.pyc $(python_files)
 
-parser:
-	cd ../java2python/lang && make
+
+packages:
+	@cd Package1 && javac Class1.java
+	@cd Package1 && ../$(j2py) -i Class1.java  -o Class1.py
+
+
+parsers:
+	@cd ../java2python/lang && make -s
+
+
+%.class:
+	@$(javac) $(addsuffix .java, $(basename $@))
+
+
+%.py: %.class
+	@$(j2py) -i $(addsuffix .java, $(basename $@)) -o $@ -c ./configs/__init__.py
+
+
+%: %.py
+	@bash -c "diff <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[OKAY] $@"
+
