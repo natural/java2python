@@ -1,0 +1,4 @@
+#!/bin/bash
+cd _build/dirhtml && python -m SimpleHTTPServer
+
+
