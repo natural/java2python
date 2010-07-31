@@ -2,19 +2,19 @@
 # -*- coding: utf-8 -*-
 """ java2python.compiler.template -> Base classes for writing Python source. """
 ##
-# This module defines base template types.  Each base class provides
-# string representation methods (__str__, __repr__, dump, dumps) for
-# serializing instances as source code.  The base types also provide
-# many utility methods.
+# This module defines templates, blocks of Python source code, that
+# can be easily manipulated and written.  Each base provides string
+# methods (__str__, dump, dumps) serializing instances as source code.
+# The base types also provide many utility methods.
 #
-# The Factory class is used by the BaseTemplate class to provide
-# runtime lookup of concrete classes; this was necessary to
-# accommodate splitting the behavior of the blocks package into
-# multiple modules.  So-called patterns are usually a sign of a bad
-# design and/or language limitations, and this case is no exception.
-#
+# The Factory class is used to to provide runtime lookup of concrete
+# classes; this was necessary to accommodate splitting the behavior of
+# the compiler subpackage into multiple modules.  So-called patterns
+# are usually a sign of a bad design and/or language limitations, and
+# this case is no exception.
+
 from functools import partial
-from itertools import chain, ifilter
+from itertools import chain, ifilter, imap
 from StringIO import StringIO
 
 from java2python.lang import tokens
@@ -52,7 +52,8 @@ class Base(object):
 
     """
     __metaclass__ = FactoryTypeDetector
-    isClass = isComment = isExpression = isMethod = isModule = False
+    isAnnotation = isClass = isComment = isEnum = isExpression = \
+    isInterface = isMethod = isModule = isStatement = False
 
     def __init__(self, config, name=None, type=None, parent=None):
 	self.bases = []
@@ -68,12 +69,6 @@ class Base(object):
 	self.variables = []
 	if parent:
 	    parent.children.append(self)
-	if self.isMethod:
-	    self.parameters.append(self.makeParam('self', 'object'))
-
-    def insertChild(self, child, index=-1):
-	self.children.insert(index, child)
-	child.parent = self
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
@@ -89,6 +84,11 @@ class Base(object):
 	""" Returns the Python source code representation of this template. """
 	handlers = self.configHandlers('Output')
 	return reduce(lambda v, func:func(self, v), handlers, self.dumps(-1))
+
+    def adopt(self, child, index=-1):
+	""" Adds child to this objecs children and sets the childs parent. """
+	self.children.insert(index, child)
+	child.parent = self
 
     def altIdent(self, name):
 	""" Returns an alternate identifier for the one given. """
@@ -108,29 +108,21 @@ class Base(object):
     def configHandlers(self, part, suffix='Handlers'):
 	""" Returns config handlers for this type of template """
 	name = '{0}{1}{2}'.format(self.typeName, part, suffix)
-	for handler in self.config.last(name, ()):
-	    if isinstance(handler, (basestring, )):
-		def wrapper(*args, **kwds):
-		    yield handler
-		yield wrapper
-	    else:
-		yield handler
-
-    def configTransformers(self, visitor):
-	name = visitor.factoryTypeName
-	name = '{0}Transformers'.format(name[0].lower() + name[1:])
-	return name, self.config.handlers(name, ())
+	return imap(self.toIter, self.config.last(name, ()))
 
     def dump(self, fd, level=0):
 	""" Writes the Python source code for this template to the given file. """
 	indent, isNotNone = level * self.indent, lambda x:x is not None
+	lineFormat = '{0}{1}\n'.format
 	for line in ifilter(isNotNone, self.iterPrologue()):
-	    line = '{0}{1}\n'.format(indent, line)
+	    line = lineFormat(indent, line)
 	    fd.write(line if line.strip() else '\n')
+	for item in ifilter(isNotNone, self.iterHead()):
+	    item.dump(fd, level+1)
 	for item in self.iterBody():
 	    item.dump(fd, level+1)
 	for line in ifilter(isNotNone, self.iterEpilogue()):
-	    line = '{0}{1}\n'.format(indent, line)
+	    line = lineFormat(indent, line)
 	    fd.write(line if line.strip() else '\n')
 
     def dumps(self, level=0):
@@ -168,7 +160,12 @@ class Base(object):
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	yield None
+	return chain(*(h(self) for h in self.configHandlers('Prologue')))
+
+    def iterHead(self):
+	""" Yields the items in the head of this template. """
+	items = chain(*(h(self) for h in self.configHandlers('Head')))
+	return imap(self.toExpr, items)
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
@@ -176,7 +173,7 @@ class Base(object):
 
     def iterEpilogue(self):
 	""" Yields the items in the epilogue of this template. """
-	yield None
+	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
 
     def makeParam(self, name, type):
 	""" Creates a parameter as a mapping. """
@@ -190,19 +187,42 @@ class Base(object):
 	    self = self.parent
 
     @property
+    def className(self):
+	""" Returns the name of the class of this item. """
+	return self.__class__.__name__
+
+    @property
     def typeName(self):
 	""" Returns the name of this template type. """
-	return self.__class__.__name__.lower()
+	return self.className.lower()
+
+    def toExpr(self, value):
+	""" Returns an expression for the given value if it is a string. """
+	try:
+	    return self.factory.expr(left=value+'')
+	except (TypeError, ):
+	    return value
+
+    def toIter(self, value):
+	""" Returns an iterator for the given value if it is a string. """
+	try:
+	    value + ''
+	except (TypeError, ):
+	    return value
+	else:
+	    def wrapper(*a, **b):
+		yield value
+	    return wrapper
 
 
-class BaseExpression(Base):
-    """ BaseExpression -> base class for formatting Python expressions.
+class Expression(Base):
+    """ Expression -> formatting for Python expressions.
 
     """
     isExpression = True
 
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
-	super(BaseExpression, self).__init__(config, parent=parent)
+	super(Expression, self).__init__(config, parent=parent)
 	self.left, self.right, self.fs, self.tail = left, right, fs, tail
 
     def __repr__(self):
@@ -217,7 +237,7 @@ class BaseExpression(Base):
 	if showfs:
 	    parts.append(white('format:') + yellow(self.fs))
 	if self.tail:
-	    parts.append(white('tail:') + yellow(self.tail))
+	    parts.append(white('tail:') + black(self.tail))
 	return ' '.join(parts)
 
     def __str__(self):
@@ -240,17 +260,20 @@ class BaseExpression(Base):
     def isComment(self):
 	""" True if this expression is a comment. """
 	try:
-	    return self.left.startswith('#')
+	    return self.left.strip().startswith('#')
 	except (AttributeError, ):
 	    return False
 
 
-class BaseComment(BaseExpression):
-    """ BaseComment -> base class for formatting Python comments. """
+class Comment(Expression):
+    """ Comment -> formatting for Python comments.
+
+    """
+    isComment = True
 
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
-	super(BaseComment, self).__init__(config, left, right, fs, parent, tail)
-	if not fs.strip().startswith('#'):
+	super(Comment, self).__init__(config, left, right, fs, parent, tail)
+	if False:# not fs.strip().startswith('#'): # wha?
 	    prefix = self.config.last('commentPrefix', '# ')
 	    self.fs = prefix + self.fs
 
@@ -262,11 +285,14 @@ class BaseComment(BaseExpression):
 
 
 
-class BaseStatement(Base):
-    """ BaseStatement -> base class for formatting Python statements. """
+class Statement(Base):
+    """ Statement -> formatting for Python statements.
+
+    """
+    isStatement = True
 
     def __init__(self, config, keyword, fs=FS.lr, parent=None):
-	super(BaseStatement, self).__init__(config, parent=parent)
+	super(Statement, self).__init__(config, parent=parent)
 	self.keyword = keyword
 	self.expr = self.factory.expr(left=keyword, fs=fs)
 	self.expr.parent = self
@@ -276,100 +302,87 @@ class BaseStatement(Base):
 	parts = [green(self.typeName), white('keyword:')+cyan(self.keyword)]
 	return ' '.join(parts)
 
+    def iterPrologue(self):
+	""" Yields the keyword (and clause, if any) for this statement . """
+	yield self.expr
+
 
 class Module(Base):
-    """ Module -> formatting for Python modules. """
-    isModule = True
+    """ Module -> formatting for Python modules.
 
-    def iterPrologue(self):
-	""" Yields the items in the prologue of this template. """
-	return chain(*(h(self) for h in self.configHandlers('Prologue')))
+    """
+    isModule = True
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
-	get = lambda o, n:getattr(o, n, None)
-	children, prev = self.children, None
-	blank = self.factory.expr(left='\n')
-	def pred(c, p):
-	    return p and get(c, 'isClass') and not get(c, 'isComment') \
-		   and not get(p, 'isClass')
-	for child in children:
-	    if pred(child, prev):
+	blank, prev = self.factory.expr(), None
+	def pred(p, c):
+	    return (p and not p.isClass) and (c.isClass and not c.isComment)
+	for child in super(Module, self).iterBody():
+	    if pred(prev, child):
 		yield blank
 	    yield child
 	    prev = child
 
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
 
-
-##
-# class and class-like types
-
-
-class Class(Base):
-    """ Class -> formatting for Python classes. """
-    isClass = True
-
-    def iterDecorators(self):
-	""" Yields decorators for this method. """
-	def iterLines():
-	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
-	def iterOtherDecos():
-	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
-	return chain(self.decorators, iterOtherDecos(), iterLines())
+class ClassMethodSharedMixin(object):
+    """ ClassMethodSharedMixin -> shared methods for Class and Method types. """
 
     def iterPrologue(self):
 	""" Yields the items in the prologue of this template. """
-	def iterBases():
-	    return chain(*(h(self) for h in self.configHandlers('Base')))
-        bases = ', '.join(ifilter(None, iterBases()))
+	prologue = super(ClassMethodSharedMixin, self).iterPrologue()
+	return chain(prologue, self.decorators, self.iterDecl())
+
+
+class Class(ClassMethodSharedMixin, Base):
+    """ Class -> formatting for Python classes.
+
+    """
+    isClass = True
+
+    def iterBases(self):
+	""" Yields the base classes for this type. """
+	return iter(self.bases or ['object'])
+
+    def iterDecl(self):
+	""" Yields the declaration for this type. """
+        bases = ', '.join(self.iterBases())
 	bases = '({0})'.format(bases) if bases else ''
-	for deco in self.iterDecorators():
-	    yield '@{0}'.format(deco)
 	yield 'class {0}{1}:'.format(self.name, bases)
 
     def iterBody(self):
 	""" Yields the items in the body of this template. """
-	def iterDocString():
-	    for handler in self.configHandlers('DocString'):
-		for line in handler(self):
-		    yield self.factory.expr(left=line)
-	def intersperseLines(lines):
-	    get = lambda o, n:getattr(o, n, None)
+	def sprinkleBlanks(body):
 	    blank, prev = self.factory.expr(), None
-	    for item in lines:
-		if type(item) != type(prev) and prev and not get(prev, 'isComment'):
-		    yield blank
-		elif get(item, 'isMethod') and get(prev, 'isMethod'):
-		    yield blank
-		elif get(prev, 'isClass'):
-		    yield blank
+	    for item in body:
+		if prev:
+		    if type(prev) != type(item) and not prev.isComment:
+			yield blank
+		    elif item.isMethod and prev.isMethod:
+			yield blank
+		    elif prev.isClass:
+			yield blank
 		yield item
 		prev = item
+	head = any(self.iterHead())
 	body = list(super(Class, self).iterBody())
-	if self.config.last('reorderClassDefs'):
-	    body.sort(lambda x, y:-1 if x.isClass else 1)
-	docs = list(iterDocString())
-	more = [self.factory.expr(left='pass')] if not (body or docs) else []
-	return chain(docs, iter(body) if more else intersperseLines(body), more)
-
-    def iterEpilogue(self):
-	""" Yields the items in the epilogue of this template. """
-	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
+	tail = () if (body or head) else [self.factory.expr(left='pass')]
+	body = () if tail else sprinkleBlanks(body)
+	return chain(body, tail)
 
 
 class Annotation(Class):
-    """ Annotation -> formatting for annotations converted to Python classes. """
+    """ Annotation -> formatting for annotations converted to Python classes.
+
+    """
+    isAnnotation = True
+
     def __init__(self, config, name=None, type=None, parent=None):
 	super(Annotation, self).__init__(config, name, type, parent)
-
 	m = self.factory.method(parent=self, name='__init__')
 	m.parameters.append(self.makeParam('*args', 'list'))
 	m.parameters.append(self.makeParam('**kwds', 'dict'))
 	## set attributes from kwds?
-
 	m = self.factory.method(parent=self, name='__call__')
 	m.parameters.append(self.makeParam('klass', 'type'))
 	self.factory.expr(parent=m, fs='setattr(klass, self.__class__.__name__, self)')
@@ -377,74 +390,41 @@ class Annotation(Class):
 
 
 class Enum(Class):
-    """ Enum -> formatting for enums converted to Python classes. """
+    """ Enum -> formatting for enums converted to Python classes.
+
+    """
+    isEnum = True
+
 
 class Interface(Class):
-    """ Interface -> formatting for interfaces converted to Python classes. """
+    """ Interface -> formatting for interfaces converted to Python classes.
 
-
-##
-# method and method content types
+    """
+    isInterface = True
 
 
 class MethodContent(Base):
-    """ """
+    """ MethodContent -> formatting for content within Python methods. """
 
-class Method(Base):
-    """ MethodTemplte -> formatting for Python methods. """
+
+class Method(ClassMethodSharedMixin, Base):
+    """ Method -> formatting for Python methods.
+
+    """
     isMethod = True
 
-    def iterDecorators(self):
-	""" Yields decorators for this method. """
-	def iterLines():
-	    return chain(*(h(self) for h in self.configHandlers('Prologue')))
-	def iterOtherDecos():
-	    return chain(*(h(self) for h in self.configHandlers('ExtraDecorator')))
-	return chain(self.decorators, iterOtherDecos(), iterLines())
+    def __init__(self, config, name=None, type=None, parent=None):
+	super(Method, self).__init__(config, name, type, parent)
+	self.parameters.append(self.makeParam('self', 'object'))
 
-    def iterBody(self):
-	""" Yields the items in the body of this template. """
-	def iterDocString():
-	    for handler in self.configHandlers('DocString'):
-		for line in handler(self):
-		    yield self.factory.expr(left=line)
-	body = list(super(Method, self).iterBody())
-	docs = list(iterDocString())
-	more = [self.factory.expr(left='pass')] if not (body or docs) else []
-	return chain(docs, body, more)
-
-    def iterPrologue(self):
-	""" Yields items in this method declaration, maybe with decorators. """
-	for deco in self.iterDecorators():
-	    yield '@{0}'.format(deco)
-	params = ', '.join(p['name'] for p in self.parameters)
+    def iterDecl(self):
+	""" Yields the declaration for this method template. """
+	params = ', '.join(param['name'] for param in self.parameters)
 	yield 'def {0}({1}):'.format(self.name, params)
 
-
-
-##
-# expression and comment types
-
-
-class Expression(BaseExpression):
-    """ Expression -> formatting for Python expressions. """
-
-
-class Comment(BaseComment):
-    """ """
-
-
-
-
-##
-# statement types
-
-
-class Statement(BaseStatement):
-    """ Statement -> formatting for Python statements. """
-
-    def iterPrologue(self):
-	""" Yields the keyword (and clause, if any) for this statement . """
-	yield self.expr
-
-
+    def iterBody(self):
+	""" Yields the items in the body of this method template. """
+	head = any(self.iterHead())
+	body = list(super(Method, self).iterBody())
+	tail = () if (body or head) else [self.factory.expr(left='pass')]
+	return chain(body, tail)

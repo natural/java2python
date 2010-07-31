@@ -81,13 +81,6 @@ def outputSubs(obj, text):
     return text
 
 
-
-def mapClassType(obj):
-    bases = obj.bases or ('object', )
-    for name in bases:
-	yield name
-
-
 def overloadedClassMethods(method):
     """
     NB: this implementation does not handle overloaded static (or
@@ -100,29 +93,23 @@ def overloadedClassMethods(method):
     for i, m in enumerate(methods[1:]):
         args = [p['type'] for p in m.parameters]
 	args = ', '.join(args)
-        m.decorators.append('{0}.register({1})'.format(method.name, args))
+        m.decorators.append('@{0}.register({1})'.format(method.name, args))
         m.name = '{0}_{1}'.format(method.name, i)
     # for this one only:
-    yield 'overloaded'
+    yield '@overloaded'
 
 
 def maybeClassMethod(method):
     if method.isStatic and 'classmethod' not in method.decorators:
-	yield 'classmethod'
+	yield '@classmethod'
 
-
-def simpleInterfaces(method):
-    mkExpr = partial(Expression, module.config,
-		     format='raise NotImplementedError({left})')
-    for iface in module.interfaces:
-	for method in iface.methods:
-	    expr = mkExpr(left='"Method \'%s\' is abstract"' % method.name)
-	    method.children.insert(0, expr)
+def maybeAbstractMethod(method):
+    if method.parent and method.parent.isInterface:
+	yield '@abstractmethod'
 
 
 def globalNameCounter(original, counter=count()):
     return '__{0}_{1}'.format(original, counter.next())
-
 
 
 def getBsrSrc():
@@ -131,7 +118,21 @@ def getBsrSrc():
     return getsource(bsr)
 
 
-def insertBsr(module):
+def maybeBsr(module):
     if getattr(module, 'needsBsrFunc', False):
 	for line in getBsrSrc().split('\n'):
 	    yield line
+
+
+# this function implies that there should be a separate modification
+# stage where client code like this can mutate the templates generated
+# by the compiler.  this works, but it not really what the prologue
+# handlers are meant to do.  the various interface functions fall into
+# the category of mutators also.
+
+# also, the output handers seem to be a special case of this
+# desired mutator-function.
+
+def classContentSort(obj):
+    obj.children.sort(lambda x, y:-1 if x.isClass else 1)
+

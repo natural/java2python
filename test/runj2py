@@ -1,2 +1,2 @@
 #!/bin/bash
-../bin/j2py -c configs "$@"
+../bin/j2py -d configs "$@"

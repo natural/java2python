@@ -2,11 +2,8 @@
 # -*- coding: utf-8 -*-
 """ java2python.compiler.visitor -> Base classes for walking ASTs. """
 ##
-#
-# This module defines the base visitor class, Base.  It
-# implements the accept() and walk() methods.  The walk() method
-# handles finding and inserting blocks for hidden comment lexer nodes.
-#
+# Needs some introductory comments.
+
 from functools import reduce
 from itertools import ifilter, izip, tee
 from re import compile as rxcompile, sub as rxsub
@@ -17,15 +14,16 @@ from java2python.lib import FS
 
 class Memo(object):
     """ Memo -> AST walking luggage. """
+
     def __init__(self):
 	self.comments, self.last = set(), 0
 
 
 class Base(object):
-    """ Base -> Base class for AST visitors. """
-    commentSubs = (
-	rxcompile('^\s*/(\*)+'), rxcompile('(\*)+/\s*$'), rxcompile('^\s*//'),
-    )
+    """ Base -> Base class for AST visitors.
+
+    """
+    commentSubs = map(rxcompile, ('^\s*/(\*)+', '(\*)+/\s*$', '^\s*//'))
 
     def accept(self, node, memo):
 	""" Accept a node, possibly creating a child visitor. """
@@ -38,17 +36,18 @@ class Base(object):
 	if not tree:
 	    return
 	memo = Memo() if memo is None else memo
-	self.insertComments(self, tree, tree.tokenStartIndex, memo)
+	insertc = self.insertComments
+	insertc(self, tree, tree.tokenStartIndex, memo)
 	visitor = self.accept(tree, memo)
 	if visitor:
 	    for child in tree.children:
 		visitor.walk(child, memo)
-		self.insertComments(visitor, child, child.tokenStopIndex, memo)
-	self.insertComments(self, tree, tree.tokenStopIndex, memo)
-	## we've got to cheat and check to see if this is a
-	## compilation unit node.  if so, scan any remaining tokens.
-	if tree.token.type == tokens.JAVA_SOURCE:
-	    self.insertComments(self, tree, len(tree.parser.input.tokens), memo)
+		insertc(visitor, child, child.tokenStopIndex, memo)
+	insertc(self, tree, tree.tokenStopIndex, memo)
+	if tree.isJavaSource: # cheat but cheap
+	    insertc(self, tree, len(tree.parser.input.tokens), memo)
+	for handler in self.configHandlers('PostWalk', suffix='Mutators'):
+	    handler(self)
 
     def zipWalk(self, nodes, visitors, memo):
 	""" Walk the given nodes zipped with the given visitors. """
@@ -59,18 +58,11 @@ class Base(object):
 	""" Add comments to the block from tokens in the tree. """
 	cache, parser = memo.comments, tree.parser
 	prefix = self.config.last('commentPrefix', '# ')
-
-	## the next for loop should read like this, but it's pretty
-	## slow that way:
-	#
-	#pred = lambda k:k.type in tokens.commentTypes and k.index not in cache
-	#for token in ifilter(pred, parser.input.tokens[0:index]):
 	for token in parser.input.tokens[memo.last:index]:
 	    if token.type not in tokens.commentTypes or token.index in cache:
-		continue
+		continue # lambda in the for statement was slow.
 	    cache.add(token.index)
-	    isexp = getattr(block, 'isExpression', False)
-	    if isexp and (token.line == parser.input.tokens[index].line):
+	    if block.isExpression and (token.line==parser.input.tokens[index].line):
   	        block.tail += '' if block.tail.startswith(prefix) else prefix
 		block.tail += ''.join(self.stripComment(token.text))
 	    else:
@@ -101,7 +93,6 @@ class ModuleClassSharedMixin(object):
     acceptInterface = makeAcceptType('interface')
 
 
-
 class Module(ModuleClassSharedMixin, Base):
     """ Module -> accepts AST branches for module-level objects. """
 
@@ -118,26 +109,23 @@ class Module(ModuleClassSharedMixin, Base):
     acceptPackage = makeAcceptHandledDecl('PackageDeclaration')
 
 
-
 class ClassMethodSharedMixin(object):
     def acceptModifierList(self, node, memo):
 	""" Accept and process class and method modifiers. """
-	## this is pretty bad.  wrong.
+	# this is pretty bad.  wrong.
 	for mod in node.children:
 	    if mod.type == tokens.AT:
-		## needs args, too
-		deco = '{0}()'.format(mod.firstChildOfType(tokens.IDENT).text)
+		# needs args, too
+		name = mod.firstChildOfType(tokens.IDENT).text
+		deco = self.factory.expr(left=name, fs='@{left}()')
 		self.decorators.append(deco)
 	    else:
 		if node.parentType in tokens.methodTypes:
-		    self.modifiers.extend(n.text for n in node.children) ## wrong
+		    self.modifiers.extend(n.text for n in node.children) # wrong
 		    if self.isStatic:
 			self.parameters[0]['name'] = 'cls'
 		self.modifiers.append(mod.text)
 	return self
-
-
-
 
 
 class Class(ModuleClassSharedMixin, ClassMethodSharedMixin, Base):
@@ -145,9 +133,9 @@ class Class(ModuleClassSharedMixin, ClassMethodSharedMixin, Base):
 
     def acceptAt(self, node, memo):
 	""" Accept and ignore an annotation declaration. """
-	## this overrides the ModuleClassSharedMixin implementation and
-	## ignores AT tokens; they're sent within the class modifier
-	## list and we have no use for them here.
+	# this overrides the ModuleClassSharedMixin implementation and
+	# ignores AT tokens; they're sent within the class modifier
+	# list and we have no use for them here.
 
 
     def acceptConstructorDecl(self, node, memo):
@@ -155,7 +143,7 @@ class Class(ModuleClassSharedMixin, ClassMethodSharedMixin, Base):
 	method = self.factory.method(name='__init__', type=self.name, parent=self)
 	superCalls = node.findChildrenOfType(tokens.SUPER_CONSTRUCTOR_CALL)
 	if not any(superCalls) and any(self.bases):
-	    ## from the java tutorial:
+	    # from the java tutorial:
 	    # Note: If a constructor does not explicitly invoke a
 	    # superclass constructor, the Java compiler automatically
 	    # inserts a call to the no-argument constructor of the
@@ -169,19 +157,18 @@ class Class(ModuleClassSharedMixin, ClassMethodSharedMixin, Base):
 	names = (n.text for n in node.findChildrenOfType(tokens.IDENT))
 	self.bases.extend(names)
 
+    acceptImplementsClause = acceptExtendsClause
+
     def acceptFunctionMethodDecl(self, node, memo):
 	""" Accept and process a typed method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
 	return self.factory.method(name=ident.text, type=type, parent=self)
 
-    acceptImplementsClause = acceptExtendsClause
-
-
     def acceptVarDeclaration(self, node, memo):
 	""" Creates a new expression for a variable declaration. """
-	## this is strikingly similar to
-	## MethodContent.acceptVarDeclaration; merge and fix.
+	# this is strikingly similar to
+	# MethodContent.acceptVarDeclaration; merge and fix.
 
 	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
 	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
@@ -213,8 +200,10 @@ class Class(ModuleClassSharedMixin, ClassMethodSharedMixin, Base):
 	ident = node.firstChildOfType(tokens.IDENT)
 	return self.factory.method(name=ident.text, type='void', parent=self)
 
+
 class Annotation(Class):
     """ Annotation -> accepts AST branches for Java annotations. """
+
     def acceptAnnotationMethodDecl(self, node, memo):
 	""" Accept and process an annotation method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
@@ -247,12 +236,8 @@ class Enum(Class):
 	return self
 
 
-
-
 class Interface(Class):
     """ Interface -> accepts AST branches for Java interfaces. """
-
-
 
 
 class MethodContent(Base):
@@ -293,10 +278,10 @@ class MethodContent(Base):
 	parNode = node.firstChildOfType(tokens.PARENTESIZED_EXPR)
 	lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
 	caseNodes = lblNode.children
-        ## empty switch statement
+        # empty switch statement
 	if not len(caseNodes):
 	    return
-	## we have at least one node...
+	# we have at least one node...
 	parExpr = self.factory.expr()
 	parExpr.walk(parNode)
 	eqFs = FS.l + '==' + FS.r
@@ -347,10 +332,10 @@ class MethodContent(Base):
 
     def acceptIf(self, node, memo):
 	""" Accept and process an if statement. """
-	## the parser will feed us one of three forms:
-	## bare if:          PARENTESIZED_EXPR - BLOCK_SCOPE
-	## if with else:     PARENTESIZED_EXPR - BLOCK_SCOPE - BLOCK_SCOPE
-	## if with else if:  PARENTESIZED_EXPR - BLOCK_SCOPE - IF
+	# the parser will feed us one of three forms:
+	# bare if:          PARENTESIZED_EXPR - BLOCK_SCOPE
+	# if with else:     PARENTESIZED_EXPR - BLOCK_SCOPE - BLOCK_SCOPE
+	# if with else if:  PARENTESIZED_EXPR - BLOCK_SCOPE - IF
 	children = node.children
 	ifStat = self.factory.statement('if', fs=FS.lsrc, parent=self)
 	ifStat.expr.walk(children[0], memo)
@@ -453,8 +438,6 @@ class MethodContent(Base):
 	inExpr = identExpr.right = self.factory.expr()
 	inExpr.walk(node.firstChildOfType(tokens.EXPR), memo)
 	forBlock = self.factory.methodContent(parent=self)
-	#print '############', [tokens.map[n.type] for n in node.children]
-	#forBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
 	forBlock.walk(node.children[4], memo)
 
     def acceptFor(self, node, memo):
@@ -474,8 +457,7 @@ class Method(ClassMethodSharedMixin, MethodContent):
     def acceptFormalParamStdDecl(self, node, memo):
 	""" Accept and process a single parameter declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
-
-        # wrong, wrong, wrong.
+	# wrong
 	ptype = list(node.findChildrenOfType(tokens.TYPE))[0]
 	try:
 	    ptype = list(ptype.findChildrenOfType(tokens.IDENT))[0].text
@@ -493,7 +475,7 @@ class Method(ClassMethodSharedMixin, MethodContent):
 
 
 class Expression(Base):
-    """ Class -> accepts trees for expression objects. """
+    """ Expression -> accepts trees for expression objects. """
 
     def textExpression(self, node, memo):
 	""" Assigns node text to the left side of this expression. """
@@ -590,7 +572,7 @@ class Expression(Base):
 
     def acceptMethodCall(self, node, memo):
 	""" Accept and process a method call. """
-	## note: this creates one too many expression levels.
+	# NB: this creates one too many expression levels.
 	expr = self.factory.expr
 	self.fs = FS.l + '(' + FS.r + ')'
 	self.left = expr(parent=self)
@@ -629,8 +611,7 @@ class Expression(Base):
     acceptUnaryPlus = makeAcceptPreFormatted('+' + FS.l)
     acceptUnaryMinus = makeAcceptPreFormatted('-' + FS.l)
     acceptNot = makeAcceptPreFormatted('~' + FS.l)
-
-    ## wrong.
+    # wrong.
     acceptCastExpr  = makeAcceptPreFormatted(FS.l + '(' + FS.r + ')' )
 
     def makeAcceptPrePost(suffix, pre=False):
@@ -645,9 +626,9 @@ class Expression(Base):
 		    left = ident
 		else:
 		    left = name
-		    block.insertChild(expr(fs=FS.l+' = '+FS.r, left=name, right=ident))
+		    block.adopt(expr(fs=FS.l+' = '+FS.r, left=name, right=ident))
 		self.left = expr(parent=self, fs=FS.l, left=left)
-		block.insertChild(expr(fs=FS.l + suffix, left=ident))
+		block.adopt(expr(fs=FS.l + suffix, left=ident))
 	    else:
 		self.fs = FS.l + suffix
 		self.left, self.right = vs = expr(parent=self), expr(parent=self)
@@ -691,7 +672,8 @@ class Expression(Base):
 
 
 class Comment(Expression):
-    """ """
+    """ Comment -> really implemented only for the type making in __init__.py """
+
 
 class Statement(MethodContent):
     """ Statement -> accepts AST branches for statement objects. """

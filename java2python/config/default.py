@@ -9,26 +9,22 @@ from java2python.mod import basic, transform
 from java2python.lang.selector import *
 
 
-# Leading indent character or characters.  Read PEP 8 before you
-# override this.
+# Leading indent character or characters.  Four spaces are used
+# because that is the recommendation of PEP 8.
 indentPrefix = ' '*4
 
 
-# Prefix character or characters for comments.  Again, you should read
-# PEP 8 before you override this.
+# Prefix character or characters for comments.  The hash+space is
+# recommended by PEP 8.
 commentPrefix = '# '
 
 
-# When true, class definitions will be bubbled to the top of their
-# container (outer class or module).
-reorderClassDefs = True
-
-
-# These generator-functions yield lines for a module prologue.
+# These values are strings or generator-functions that yield strings
+# for a module prologue.
 modulePrologueHandlers = [
     basic.simpleShebang,
     basic.simpleDocString,
-    basic.insertBsr,
+    basic.maybeBsr,
 ]
 
 
@@ -46,51 +42,40 @@ moduleOutputHandlers = [
 ]
 
 
-# These generator-functions yield doc strings for classes.
-classDocStringHandlers = [
+classHeadHandlers = [
     basic.simpleDocString,
 ]
 
 
-# These generator-functions yield doc strings for enums.
-enumDocStringHandlers = [
+classPostWalkMutators = [
+    basic.classContentSort,
+]
+
+
+enumHeadHandlers = [
+    basic.simpleDocString,
+]
+
+interfaceHeadHandlers = [
+    basic.simpleDocString,
+    '__metaclass__ = ABCMeta',
+]
+
+
+methodHeadHandlers = [
     basic.simpleDocString,
 ]
 
 
-# These generator-functions yield doc strings for methods.
-methodDocStringHandlers = [
-    basic.simpleDocString,
-]
-
-
-# These generator-functions yield extra method decorators.
-methodExtraDecoratorHandlers = [
+methodPrologueHandlers = [
+    basic.maybeAbstractMethod,
     basic.maybeClassMethod,
     basic.overloadedClassMethods,
 ]
 
 
-# These generator-functions yield base types for classes.
-classBaseHandlers = [
-    basic.mapClassType
-]
-
-
-# These generator-functions yield base types for enums.
-enumBaseHandlers = [
-    basic.mapClassType
-]
-
-
-# generator-functions that yield base types for interfaces.
-interfaceBaseHandlers = [
-    basic.mapClassType
-]
-
-
 # This handler creates enum values on enum classes after they've been
-# defined.  The handler matches Java semantics fairly closely by using
+# defined.  The handler tries to matches Java semantics by using
 # strings.  Refer to the documentation for details.
 enumValueHandler = basic.enumConstStrings
 
@@ -99,13 +84,16 @@ enumValueHandler = basic.enumConstStrings
 #enumValueHandler = basic.enumConstInts
 
 
-
+# When the compiler needs to make up a variable name (for example, to
+# emulate assignment expressions), it calls this handler to produce a
+# new one.
 expressionVariableNamingHandler = basic.globalNameCounter
 
 
 # This handler simply creates comments in the file for package
 # declarations.
 modulePackageDeclarationHandler = basic.commentedPackages
+
 
 # This handler can be used instead to create __init__.py files for
 # 'namespace packages' via pkgutil.
@@ -140,10 +128,6 @@ astTransforms = [
 # minimum parameter count to trigger indentation of parameter names
 # in method declarations.  set to 0 to disable.
 #minIndentParams = 5
-
-# these handle shift right and bit shift right assignments.
-#bsrHandler = 'basic.functionBsr'
-#bsrHandlerAssign = 'basic.functionBsrAssign'
 
 
 # Values below are used by the handlers.  They're here for
@@ -181,3 +165,6 @@ typeSubs = {
     'double' : 'float',
     'java.lang.String' : 'str',
 }
+
+
+

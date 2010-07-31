@@ -5,13 +5,13 @@
 # This module defines classes which combine AST walking with source
 # generation.  We've put these two behaviors into separate modules,
 # java2python.compiler.template for creating source code, and
-# java2python.compiler.visitor for walking Antlr trees.
+# java2python.compiler.visitor for walking ANTLR trees.
 #
 # Each of the classes depends on the behavior of its counterpart.
 # This means they're very tightly coupled and that the classes are not
 # very reusable.  The module split does allow for grouping of related
 # methods and does hide some of the cluttered code.
-#
+
 from java2python.compiler import template, visitor
 
 

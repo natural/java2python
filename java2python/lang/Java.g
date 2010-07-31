@@ -42,7 +42,6 @@ options {
     language=Python;
     output=AST;
     ASTLabelType=CommonTree;
-    superClass=LocalParser;
 }
 
 
@@ -217,17 +216,6 @@ tokens {
     VAR_DECLARATOR;
     VAR_DECLARATOR_LIST;
     VOID_METHOD_DECL;
-}
-
-@parser::header {
-    from java2python.lang.base import LocalParser
-}
-
-@lexer::header {
-    ##// the following line replaces antlr's base lexer class with our own.
-    ##// this is required because we can't specify the lexer base
-    ##// class directly.
-    from java2python.lang.base import LocalLexer as Lexer
 }
 
 
