@@ -30,7 +30,7 @@ parsers:
 
 
 %.class:
-	@$(javac) $(addsuffix .java, $(basename $@))
+	[ -s $(addsuffix .java, $(basename $@)) ] && $(javac) $(addsuffix .java, $(basename $@))
 
 
 %.py: %.class

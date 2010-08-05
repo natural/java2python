@@ -175,9 +175,12 @@ class Base(object):
 	""" Yields the items in the epilogue of this template. """
 	return chain(*(h(self) for h in self.configHandlers('Epilogue')))
 
-    def makeParam(self, name, type):
+    def makeParam(self, name, type, **kwds):
 	""" Creates a parameter as a mapping. """
-	return dict(name=name, type=type)
+	param = dict(name=name, type=type)
+	if 'default' in kwds:
+	    param['default'] = kwds['default']
+	return param
 
     def parents(self, pred=lambda v:True):
 	""" Yield each parent in the family tree. """
@@ -379,14 +382,6 @@ class Annotation(Class):
 
     def __init__(self, config, name=None, type=None, parent=None):
 	super(Annotation, self).__init__(config, name, type, parent)
-	m = self.factory.method(parent=self, name='__init__')
-	m.parameters.append(self.makeParam('*args', 'list'))
-	m.parameters.append(self.makeParam('**kwds', 'dict'))
-	## set attributes from kwds?
-	m = self.factory.method(parent=self, name='__call__')
-	m.parameters.append(self.makeParam('klass', 'type'))
-	self.factory.expr(parent=m, fs='setattr(klass, self.__class__.__name__, self)')
-	self.factory.expr(parent=m, fs='return klass')
 
 
 class Enum(Class):
@@ -419,7 +414,11 @@ class Method(ClassMethodSharedMixin, Base):
 
     def iterDecl(self):
 	""" Yields the declaration for this method template. """
-	params = ', '.join(param['name'] for param in self.parameters)
+	def formatParam(p):
+	    if 'default' in p:
+		return '{0}={1}'.format(p['name'], p['default'])
+	    return p['name']
+	params = ', '.join(formatParam(param) for param in self.parameters)
 	yield 'def {0}({1}):'.format(self.name, params)
 
     def iterBody(self):

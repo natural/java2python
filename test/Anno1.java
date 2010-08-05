@@ -1,9 +1,6 @@
 @interface AnnotationExample {
     int id();
-    String title() default "unset";
-
-    public static final int a = 3;
-
+    String title() default "simple string";
 }
 
 
@@ -15,8 +12,6 @@ class Anno1 {
 
     @AnnotationExample(id=2, title="test method")
     public static int foo(int a) {
-	System.out.println(a);
-	return a;
+        return 2;
     }
-
 }

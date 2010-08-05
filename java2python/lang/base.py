@@ -48,14 +48,8 @@ class Tokens(object):
 	return (mod.COMMENT, mod.LINE_COMMENT, mod.JAVADOC_COMMENT, )
 
     @property
-    def methodTypes(self):
-	""" Well-known method types. """
-	mod = self.module
-        return (mod.VOID_METHOD_DECL, mod.FUNCTION_METHOD_DECL, )
-
-    @property
     def map(self):
-	""" tokentype -> tokenname mapping as a dictionary """
+	""" (tokentype, tokenname) mapping as a dictionary """
 	cache, module = self.cache, self.module
 	if cache:
 	    return cache
@@ -63,6 +57,12 @@ class Tokens(object):
 	mapping = [(k, v) for k, v in mapping if k is not None]
 	cache.update(mapping)
 	return cache
+
+    @property
+    def methodTypes(self):
+	""" Well-known method types. """
+	mod = self.module
+        return (mod.VOID_METHOD_DECL, mod.FUNCTION_METHOD_DECL, )
 
     @property
     def module(self):

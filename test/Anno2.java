@@ -4,6 +4,14 @@
 
     public static final int a = 3;
 
+    int y = 3;
+    public class InnerAnno {
+	int z = 3;
+	public void bar(int x) {
+	}
+    }
+
+
 }
 
 
