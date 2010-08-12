@@ -319,11 +319,11 @@ class Module(Base):
     def iterBody(self):
 	""" Yields the items in the body of this template. """
 	blank, prev = self.factory.expr(), None
-	def pred(p, c):
-	    return (p and not p.isClass) and (c.isClass and not c.isComment)
 	for child in super(Module, self).iterBody():
-	    if pred(prev, child):
+	    if prev and not prev.isComment:
 		yield blank
+		if prev and prev.isClass and child and child.isClass:
+		    yield blank
 	    yield child
 	    prev = child
 

@@ -1,17 +1,27 @@
-@interface AnnotationExample {
-    int id();
+@interface AnnoEx {
     String title() default "simple string";
+    int value() default 0;
 }
 
 
-@AnnotationExample(id=1)
+
+
+
+@AnnoEx(value=3, title="asdf")
 class Anno1 {
+
+    @AnnoEx
+    public static void zero() {}
+
+    @AnnoEx(1)
+    public static void one() {}
+
+    @AnnoEx(value=2, title="bar")
+    public static void two() {}
+
     public static void main(String[] args) {
         System.out.println("a");
     }
 
-    @AnnotationExample(id=2, title="test method")
-    public static int foo(int a) {
-        return 2;
-    }
+
 }

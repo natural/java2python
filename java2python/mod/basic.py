@@ -23,6 +23,7 @@ def commentedImports(module, expr):
 def simpleImports(module, expr):
     module.factory.expr(parent=module, left=expr, fs='import {left}')
 
+
 def commentedPackages(module, expr):
     module.factory.comment(parent=module, left=expr, fs='package: {left}')
 
@@ -39,7 +40,7 @@ def namespacePackages(module, expr):
     with open(initname, 'w') as initfile:
 	initfile.write('from pkgutil import extend_path\n')
 	initfile.write('__path__ = extend_path(__path__, __name__)\n')
-	## wrong
+	# wrong
 	initfile.write('\nfrom {0} import {0}\n'.format(module.name))
     info('created __init__.py file for package %s.', expr)
 
@@ -124,15 +125,12 @@ def maybeBsr(module):
 	    yield line
 
 
-# this function implies that there should be a separate modification
-# stage where client code like this can mutate the templates generated
-# by the compiler.  this works, but it not really what the prologue
-# handlers are meant to do.  the various interface functions fall into
-# the category of mutators also.
-
-# also, the output handers seem to be a special case of this
-# desired mutator-function.
-
 def classContentSort(obj):
     obj.children.sort(lambda x, y:-1 if x.isClass else 1)
+
+
+def zopeInterfaceMethodMutator(obj):
+    for method in [c for c in obj.children if c.isMethod]:
+	if method.parameters and method.parameters[0]['name'] == 'self':
+	    method.parameters.pop(0)
 

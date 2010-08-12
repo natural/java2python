@@ -1,8 +1,7 @@
 class ReallyQuickTest {
-    public eggs() {
-
-    fu(a+1, b+2, c+3);
-
+    public void method() {
+	    Fu.Bar.Baz a, b, c;
+	    Eggs z = new Eggs(44, 33);
     }
 
 }

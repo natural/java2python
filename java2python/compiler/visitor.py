@@ -5,7 +5,7 @@
 # Needs some introductory comments.
 
 from functools import reduce, partial
-from itertools import ifilter, izip
+from itertools import ifilter, ifilterfalse, izip, tee
 from logging import debug
 from re import compile as recompile, sub as resub
 
@@ -72,6 +72,8 @@ class Base(object):
 	comIns(self, tree, tree.tokenStopIndex, memo)
 	if tree.isJavaSource:
 	    comIns(self, tree, len(tree.parser.input.tokens), memo)
+	# fixme: we're calling the mutators far too frequently instead
+	# of only once per object after its walk is finished.
 	for handler in self.configHandlers('PostWalk', suffix='Mutators'):
 	    handler(self)
 
@@ -79,6 +81,22 @@ class Base(object):
 	""" Walk the given nodes zipped with the given visitors. """
 	for node, visitor in izip(nodes, visitors):
 	    visitor.walk(node, memo)
+
+    def nodeTypeToString(self, node):
+	""" Returns the TYPE or QUALIFIED_TYPE_IDENT of the given node. """
+	# (TYPE primitiveType
+	#  | TYPE qualifiedTypeIdent
+        #  | TYPE qualifiedTypeIdentSimplified
+	#  ) arrayDeclaratorList?
+	alt = self.altIdent
+	ntype = node.firstChildOfType(tokens.TYPE)
+	nnext = ntype.children[0]
+	if nnext.type == tokens.QUALIFIED_TYPE_IDENT:
+	    names = [alt(t.text) for t in nnext.childrenOfType(tokens.IDENT)]
+	    stype = '.'.join(names)
+	else:
+	    stype = nnext.text
+	return alt(stype)
 
 
 class TypeAcceptor(object):
@@ -125,26 +143,77 @@ class ModifiersAcceptor(object):
     """
     def acceptModifierList(self, node, memo):
 	""" Accept and process class and method modifiers. """
-	# modifier lists come with class, interface, enum and
-	# annotation declarations.  they also come with method and var
-	# decls; see those methods in the Class definition.
+	isAnno = lambda token:token.type==tokens.AT
+	for ano in ifilter(isAnno, node.children):
+	    self.nodesToAnnos(ano, memo)
+	for mod in ifilterfalse(isAnno, node.children):
+	    self.nodesToModifiers(mod, node)
+	return self
 
-	for branch in [c for c in node.children if c.type==tokens.AT]:
-	    # TODO: walk annotation correctly
-	    name = branch.firstChildOfType(tokens.IDENT).text
+    def nodesToAnnos(self, branch, memo):
+	""" Convert the annotations in the given branch to a decorator. """
+	name = branch.firstChildOfType(tokens.IDENT).text
+	init = branch.firstChildOfType(tokens.ANNOTATION_INIT_BLOCK)
+	if not init:
 	    deco = self.factory.expr(left=name, fs='@{left}()')
+	else:
+	    defKey = init.firstChildOfType(tokens.ANNOTATION_INIT_DEFAULT_KEY)
+	    if defKey:
+		deco = self.factory.expr(left=name, fs='@{left}({right})')
+		deco.right = right = self.factory.expr(parent=deco)
+		right.walk(defKey.firstChild())
+	    else:
+		deco = self.factory.expr(left=name, fs='@{left}({right})')
+		arg = deco.right = self.factory.expr(parent=deco)
+		keys = init.firstChildOfType(tokens.ANNOTATION_INIT_KEY_LIST)
+		for child in keys.children:
+		    fs, expr = child.text + '={right}', child.firstChild()
+		    fs += (', ' if child is not keys.children[-1] else '')
+		    arg.left = self.factory.expr(fs=fs, parent=arg)
+		    arg.left.walk(expr, memo)
+		    arg.right = arg = self.factory.expr(parent=arg)
 	    self.decorators.append(deco)
 
-	for branch in [c for c in node.children if c.type != tokens.AT]:
-	    if node.parentType in tokens.methodTypes:
-		self.modifiers.extend(n.text for n in node.children) # wrong
-		if self.isStatic:
-		    self.parameters[0]['name'] = 'cls'
-	    self.modifiers.append(branch.text)
+    def nodesToModifiers(self, branch, root):
+	""" Convert the modifiers in the given branch to template modifiers. """
+	if root.parentType in tokens.methodTypes:
+	    self.modifiers.extend(n.text for n in root.children)
+	    if self.isStatic and self.parameters:
+		self.parameters[0]['name'] = 'cls'
+	self.modifiers.append(branch.text)
+
+
+class VarAcceptor(object):
+    def acceptVarDeclaration(self, node, memo):
+	""" Creates a new expression for a variable declaration. """
+	varDecls = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
+	for varDecl in varDecls.childrenOfType(tokens.VAR_DECLARATOR):
+	    ident = varDecl.firstChildOfType(tokens.IDENT)
+	    self.variables.append(ident.text)
+	    identExp = self.factory.expr(left=ident.text, parent=self)
+	    declExp = varDecl.firstChildOfType(tokens.EXPR)
+	    assgnExp = identExp.pushRight(' = ')
+	    declArr = varDecl.firstChildOfType(tokens.ARRAY_INITIALIZER)
+	    if declExp:
+		assgnExp.walk(declExp, memo)
+            elif declArr:
+		assgnExp.right = exp = self.factory.expr(fs='['+FS.lr+']', parent=identExp)
+		children = list(declArr.childrenOfType(tokens.EXPR))
+		for child in children:
+		    fs = FS.lr if child is children[-1] else FS.lr + ', '
+		    exp.left = self.factory.expr(fs=fs, parent=identExp)
+		    exp.left.walk(child, memo)
+		    exp.right = exp = self.factory.expr(parent=identExp)
+	    else:
+		if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
+		    val = assgnExp.pushRight('[]')
+		else:
+		    typ = self.nodeTypeToString(node)
+		    val = assgnExp.pushRight('{0}()'.format(typ))
 	return self
 
 
-class Class(TypeAcceptor, ModifiersAcceptor, Base):
+class Class(VarAcceptor, TypeAcceptor, ModifiersAcceptor, Base):
     """ Class -> accepts AST branches for class-level objects.
 
     """
@@ -182,36 +251,6 @@ class Class(TypeAcceptor, ModifiersAcceptor, Base):
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
 	mods = node.firstChildOfType(tokens.MODIFIER_LIST)
 	return self.factory.method(name=ident.text, type=type, parent=self)
-
-    def acceptVarDeclaration(self, node, memo):
-	""" Creates a new expression for a variable declaration. """
-	# this is strikingly similar to
-	# MethodContent.acceptVarDeclaration; merge and fix.
-	mods = node.firstChildOfType(tokens.MODIFIER_LIST)
-	decl = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
-	for vard in decl.childrenOfType(tokens.VAR_DECLARATOR):
-	    ident = vard.firstChildOfType(tokens.IDENT)
-	    self.variables.append(ident.text)
-    	    expr = vard.firstChildOfType(tokens.EXPR)
-	    child = self.factory.expr(left=ident.text, parent=self)
-	    assgn = child.pushRight(' = ')
-	    arinit = vard.firstChildOfType(tokens.ARRAY_INITIALIZER)
-	    if arinit:
-		assgn.right = exp = self.factory.expr(fs='['+FS.lr+']', parent=child)
-		children = list(arinit.childrenOfType(tokens.EXPR))
-		for c in children:
-		    fs = FS.lr if c is children[-1] else FS.lr + ', '
-		    exp.left = self.factory.expr(fs=fs, parent=child)
-		    exp.left.walk(c, memo)
-		    exp.right = exp = self.factory.expr(parent=child)
-	    elif expr:
-		assgn.walk(expr, memo)
-	    else:
-		typ = node.firstChildOfType(tokens.TYPE)
-		typ = typ.children[0].text
-		val = assgn.pushRight()
-		val.left = '{0}()'.format(typ) # wrong
-	return self
 
     def acceptVoidMethodDecl(self, node, memo):
 	""" Accept and process a void method declaration. """
@@ -341,10 +380,17 @@ class MethodContent(Base):
 	ifStat.expr.walk(parNode, memo)
 	breakStat = self.factory.statement('break', parent=ifStat)
 
+    goodExprParents = (
+	tokens.BLOCK_SCOPE,
+	tokens.CASE,
+	tokens.DEFAULT,
+	tokens.FOR_EACH
+    )
+
     def acceptExpr(self, node, memo):
 	""" Creates a new expression. """
-	goodParents = (tokens.BLOCK_SCOPE, tokens.CASE, tokens.DEFAULT, tokens.FOR_EACH)
-	if node.parentType in goodParents: # wrong
+	# this works but isn't precise
+	if node.parentType in self.goodExprParents:
 	    return self.factory.expr(parent=self)
 
     def acceptFor(self, node, memo):
@@ -466,44 +512,18 @@ class MethodContent(Base):
 	    finStat = self.factory.statement('finally', fs=FS.lc, parent=self)
 	    finStat.walk(finNode, memo)
 
+    goodReturnParents = (
+	tokens.BLOCK_SCOPE,
+    )
+
     def acceptReturn(self, node, memo):
 	""" Creates a new return expression. """
-	if node.parentType == tokens.BLOCK_SCOPE: # wrong
+	# again, this works but isn't as precise as it should be
+	if node.parentType in self.goodReturnParents:
 	    expr = self.factory.expr(left='return', parent=self)
 	    if node.children:
 		expr.fs, expr.right = FS.lsr, self.factory.expr(parent=expr)
 		expr.right.walk(node, memo)
-
-    def acceptVarDeclaration(self, node, memo):
-	""" Creates a new expression for a variable declaration. """
-	varDecls = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
-	for varDecl in varDecls.childrenOfType(tokens.VAR_DECLARATOR):
-	    ident = varDecl.firstChildOfType(tokens.IDENT)
-	    self.variables.append(ident.text)
-	    identExp = self.factory.expr(left=ident.text, parent=self)
-	    assgnExp = identExp.pushRight(' = ')
-	    declExp = varDecl.firstChildOfType(tokens.EXPR)
-	    declArr = varDecl.firstChildOfType(tokens.ARRAY_INITIALIZER)
-	    if declExp:
-		assgnExp.walk(declExp, memo)
-            elif declArr:
-		assgnExp.right = exp = self.factory.expr(fs='['+FS.lr+']')
-		children = list(declArr.childrenOfType(tokens.EXPR))
-		for child in children:
-		    fs = FS.lr if child is children[-1] else FS.lr + ', '
-		    exp.left = self.factory.expr(fs=fs)
-		    exp.left.walk(child, memo)
-		    exp.right = exp = self.factory.expr()
-	    else:
-		if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
-		    val = assgnExp.pushRight()
-		    val.left = '[]'
-		else:
-		    typ = node.firstChildOfType(tokens.TYPE)
-		    typ = typ.children[0].text
-		    val = assgnExp.pushRight()
-		    val.left = '{0}()'.format(typ) # wrong
-	return self
 
     def acceptWhile(self, node, memo):
 	""" Accept and process a while block. """
@@ -514,18 +534,14 @@ class MethodContent(Base):
 	whileStat.walk(blkNode, memo)
 
 
-class Method(ModifiersAcceptor, MethodContent):
+class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
     """ Method -> accepts AST branches for method-level objects.
 
     """
     def acceptFormalParamStdDecl(self, node, memo):
 	""" Accept and process a single parameter declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
-	ptype = list(node.findChildrenOfType(tokens.TYPE))[0] # wrong
-	try:
-	    ptype = list(ptype.findChildrenOfType(tokens.IDENT))[0].text
-	except (IndexError, ):
-	    ptype = ptype.firstChild().text
+	ptype = self.nodeTypeToString(node)
 	self.parameters.append(self.makeParam(ident.text, ptype))
 	return self
 
@@ -596,7 +612,7 @@ class Expression(Base):
 	return acceptPreformatted
 
     acceptArrayElementAccess = makeNodePreformattedExpr(FS.l + '[' + FS.r + ']')
-    acceptCastExpr  = makeNodePreformattedExpr(FS.l + '(' + FS.r + ')' ) # wrong.
+    acceptCastExpr  = makeNodePreformattedExpr(FS.l + '(' + FS.r + ')' ) # problem?
     acceptDiv = makeNodePreformattedExpr(FS.l + ' / ' + FS.r)
     acceptLogicalAnd = makeNodePreformattedExpr(FS.l + ' and ' + FS.r)
     acceptLogicalNot = makeNodePreformattedExpr('not ' + FS.l)
@@ -655,11 +671,11 @@ class Expression(Base):
 
     def acceptClassConstructorCall(self, node, memo):
 	""" Accept and process a class constructor call. """
-	self.acceptMethodCall(node, memo) # probably wrong
+	self.acceptMethodCall(node, memo)
 	typeIdent = node.firstChildOfType(tokens.QUALIFIED_TYPE_IDENT)
 	if typeIdent and typeIdent.children:
-	    ids = [self.altIdent(child.text) for child in typeIdent.children]
-	    self.left = '.'.join(ids) # wrong
+	    names = [self.altIdent(child.text) for child in typeIdent.children]
+	    self.left = '.'.join(names)
 
     def acceptDot(self, node, memo):
 	""" Accept and process a dotted expression. """
@@ -674,7 +690,7 @@ class Expression(Base):
 
     def acceptIdent(self, node, memo):
 	""" Accept and process an ident expression. """
-	self.left = name = self.altIdent(node.text)
+	self.left = self.altIdent(node.text)
 
     def acceptInstanceof(self, node, memo):
 	""" Accept and process an instanceof expression. """

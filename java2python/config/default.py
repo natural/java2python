@@ -56,9 +56,15 @@ enumHeadHandlers = [
     basic.simpleDocString,
 ]
 
+
 interfaceHeadHandlers = [
     basic.simpleDocString,
     '__metaclass__ = ABCMeta',
+]
+
+
+interfacePostWalkMutators = [
+    basic.zopeInterfaceMethodMutator,
 ]
 
 

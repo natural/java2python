@@ -11,6 +11,12 @@ class Class10 implements Base, Extra {
     return 0;
     }
 
+    public void other(Class10 v) {
+    }
+
+    public void other() {
+    }
+
     public static void main(String[] args) {
         Class10 i = new Class10();
         System.out.println(i.getClass().getName());
