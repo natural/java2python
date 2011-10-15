@@ -4,8 +4,8 @@
 ##
 # This module defines templates, blocks of Python source code, that
 # can be easily manipulated and written.  Each base provides string
-# methods (__str__, dump, dumps) serializing instances as source code.
-# The base types also provide many utility methods.
+# methods (__str__, dump, dumps) for serializing instances as source
+# code.  The base types also provide many utility methods.
 #
 # The Factory class is used to to provide runtime lookup of concrete
 # classes; this was necessary to accommodate splitting the behavior of
@@ -94,7 +94,10 @@ class Base(object):
 	""" Returns an alternate identifier for the one given. """
 	for klass in self.parents(lambda v:v.isClass):
 	    if name in klass.variables:
-		method = self.parents(lambda v:v.isMethod).next()
+		try:
+		    method = self.parents(lambda v:v.isMethod).next()
+		except (StopIteration, ):
+		    return name
 		if name in [p['name'] for p in method.parameters]:
 		    return name
 		return ('cls' if method.isStatic else 'self') + '.' + name

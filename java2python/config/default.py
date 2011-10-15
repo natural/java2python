@@ -103,7 +103,7 @@ modulePackageDeclarationHandler = basic.commentedPackages
 
 # This handler can be used instead to create __init__.py files for
 # 'namespace packages' via pkgutil.
-modulePackageDeclarationHandler = basic.namespacePackages
+# modulePackageDeclarationHandler = basic.namespacePackages
 
 
 moduleImportDeclarationHandler = basic.commentedImports

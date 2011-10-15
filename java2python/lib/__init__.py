@@ -3,6 +3,9 @@
 
 
 class FS(object):
+    """ Format string abbreviations.
+
+    """
     l = '{left}'
     r = '{right}'
     c = ':'
@@ -11,11 +14,14 @@ class FS(object):
     lsr = l + ' ' + r
     lsrc = lsr + c
 
-    #instance = 'isinstance(' + l + ', (' + t + ', ))'
     @classmethod
     def op(cls, op):
+        """ Returns a format string for the given operation.
+
+        """
+        l, r = cls.l, cls.r
 	if op == '>>>':
-	    return '({left} & (2**32+{left})) >> {right}'
+	    return '(' + l + ' & (2**32+' + l + ')) >> ' + r
 	if op == '>>>=':
-	    return '{left} = bsr({left}, {right})'
-	return cls.l + ' ' + op + ' ' + cls.r
+	    return l + ' = bsr(' + l + ', ' + r + ')'
+	return l + ' ' + op + ' ' + r
