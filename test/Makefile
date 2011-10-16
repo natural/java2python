@@ -5,7 +5,7 @@ j2py = ../bin/j2py
 
 
 python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
-test_targets := $(notdir $(basename $(wildcard *.java)))
+test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
 
 .PHONY: all clean
@@ -34,7 +34,7 @@ parsers:
 
 
 %.py: %.class
-	@$(j2py) -i $(addsuffix .java, $(basename $@)) -o $@ -d configs
+	@$(j2py) -i $(addsuffix .java, $(basename $@)) -o $@ -c configs/__init__.py -d configs
 
 %: %.py
 	@bash -c "diff -q <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[PASS] $@"
