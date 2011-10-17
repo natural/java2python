@@ -384,13 +384,15 @@ class MethodContent(Base):
 	tokens.BLOCK_SCOPE,
 	tokens.CASE,
 	tokens.DEFAULT,
-	tokens.FOR_EACH
+	tokens.FOR_EACH,
+        tokens.METHOD_CALL,
+        tokens.ARGUMENT_LIST,
     )
 
     def acceptExpr(self, node, memo):
 	""" Creates a new expression. """
 	# this works but isn't precise
-	if node.parentType in self.goodExprParents:
+        if node.parentType in self.goodExprParents:
 	    return self.factory.expr(parent=self)
 
     def acceptFor(self, node, memo):
@@ -519,7 +521,7 @@ class MethodContent(Base):
     def acceptReturn(self, node, memo):
 	""" Creates a new return expression. """
 	# again, this works but isn't as precise as it should be
-	if node.parentType in self.goodReturnParents:
+        if node.parentType: # in self.goodReturnParents:
 	    expr = self.factory.expr(left='return', parent=self)
 	    if node.children:
 		expr.fs, expr.right = FS.lsr, self.factory.expr(parent=expr)
@@ -681,7 +683,7 @@ class Expression(Base):
 	""" Accept and process a dotted expression. """
 	expr = self.factory.expr
 	self.fs = FS.l + '.' + FS.r
-	self.left, self.right = visitors = expr(), expr()
+	self.left, self.right = visitors = expr(parent=self), expr()
 	self.zipWalk(node.children, visitors, memo)
 
     def acceptExpr(self, node, memo):

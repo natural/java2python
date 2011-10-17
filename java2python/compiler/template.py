@@ -92,7 +92,9 @@ class Base(object):
 
     def altIdent(self, name):
 	""" Returns an alternate identifier for the one given. """
+        #print '## looking for name:', name, 'parent count:', [(type(x), type(x.parent)) for x in self.parents()]
 	for klass in self.parents(lambda v:v.isClass):
+            #print '#### looking inside', klass.name, klass.variables
 	    if name in klass.variables:
 		try:
 		    method = self.parents(lambda v:v.isMethod).next()
@@ -100,7 +102,10 @@ class Base(object):
 		    return name
 		if name in [p['name'] for p in method.parameters]:
 		    return name
+                if name in method.variables:
+                    return name
 		return ('cls' if method.isStatic else 'self') + '.' + name
+        #print
 	return name
 
     def configHandler(self, part, suffix='Handler', default=None):

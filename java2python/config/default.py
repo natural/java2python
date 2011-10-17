@@ -149,6 +149,7 @@ moduleOutputSubs = [
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
     (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     (r'(\s)(\S*?)(\.toString\(\))', r'\1\2.__str__()'),
+    (r'(\s)def toString', r'\1def __str__'),
     (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),
     (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),

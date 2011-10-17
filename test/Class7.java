@@ -21,9 +21,9 @@ class Class7 {
 	System.out.println(a);
 	System.out.println(b);
 
-	Class7 d = new Class7();
-	d.x();
-	d.y();
-	d.z(3);
+	Class7 c = new Class7();
+	c.x();
+	c.y();
+	c.z(3);
     }
 }
