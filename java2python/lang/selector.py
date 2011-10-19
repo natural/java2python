@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" java2python.lang.selector -> """
 from java2python.lang import tokens
 
 
@@ -8,21 +9,52 @@ class Selector(object):
 
     """
     def __add__(self, other):
+        """ C + C => S
+
+        Produces a Sibling selector from this one and the right hand
+        side of the expression.
+        """
 	return Sibling(self, other)
 
     def __and__(self, other):
+        """ C & C => S
+
+        Produces a Descendant selector from this one and the right
+        hand side of the expression.
+        """
 	return Descendant(self, other)
 
     def __getitem__(self, key):
+        """ C[n] => S
+
+        Produces an Nth child selector from this one at the given key.
+
+        This is where we could support attribute selectors like C[type='void'].
+        """
 	return Nth(self, key)
 
     def __gt__(self, other):
+        """ C > C => S
+
+        Produces a Child selector from this one and the right hand
+        side of the expression.
+        """
 	return Child(self, other)
 
 
-class Nth(Selector):
-    """ E[n]    match any slice n of E
+    def walk(self, tree):
+        for item in self(tree):
+            yield item
+        for child in tree.children:
+            for item in self.walk(child):
+                yield item
 
+
+class Nth(Selector):
+    """ E[n] ->  match any slice n of E
+
+    Similar to the :nth-child pseudo selector in CSS, but without the
+    support for keywords like 'odd', 'even', etc.
     """
     def __init__(self, e, key):
 	self.e, self.key = e, key
@@ -61,6 +93,7 @@ class Child(Selector):
 class Type(Selector):
     """ Type(T)    select any token of type T
 
+    Similar to the type selector in CSS.
     """
     def __init__(self, key, value=None):
 	self.key = key if isinstance(key, int) else getattr(tokens, key)
@@ -72,13 +105,37 @@ class Type(Selector):
 		yield tree
 
     def __str__(self):
-	## TODO: add value
-	return 'Type({0}:{1})'.format(tokens.map[self.key], self.key)
+        val = '' if self.value is None else '={0}'.format(self.value)
+	return 'Type({0}{1}:{2})'.format(tokens.map[self.key], val, self.key)
+
+
+class Token(Selector):
+    """ Token(T)    select any token by matching attributes.
+
+    Similar to the type selector in CSS.
+    """
+    # channel=None, index=None, input=None, line=None, start=None, stop=None, text=None, type=None
+
+    def __init__(self, **attrs):
+        self.attrs = attrs
+        if isinstance(attrs.get('type'), (basestring, )):
+            self.attrs['type'] = getattr(tokens, attrs.get('type'))
+
+    def __call__(self, tree):
+        items = self.attrs.items()
+        if all(getattr(tree.token, k)==v for k, v in items if v is not None):
+            yield tree
+
+    def __str__(self):
+        items = self.attrs.items()
+        keys = ('{}={}'.format(k, v) for k, v in items if v is not None)
+	return 'Token({})'.format(', '.join(keys))
 
 
 class Star(Selector):
     """ *    select any
 
+    Similar to the * selector in CSS.
     """
     def __call__(self, tree):
 	yield tree
@@ -127,39 +184,3 @@ class Sibling(Selector):
 
     def __str__(self):
 	return 'Sibling({0} + {1})'.format(self.e, self.f)
-
-
-def walkTreeSelector(tree, selector):
-    for item in selector(tree):
-	yield item
-    for child in tree.children:
-	for item in walkTreeSelector(child, selector):
-	    yield item
-
-
-if __name__ == '__main__':
-    import sys
-    from java2python.config import Config
-    from java2python.compiler import buildAST
-
-    source = open(sys.argv[1]).read()
-    tree = buildAST(source, Config(()))
-    tree.dump(sys.stdout)
-
-
-    selectors = [
-	Type('EXPR'),
-	Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
-        Type('CLASS')[2],
-	Type('METHOD_CALL') & Type('IDENT'),
-	Type('IDENT') + Type('IDENT'),
-    ]
-
-    for index, selector in enumerate(selectors):
-	print '{0}: {1}\n   ==== {2}'.format(index, selector.__doc__.strip(), selector)
-	for node in walkTreeSelector(tree, selector):
-	    name = str(node)
-	    ntype = tokens.map[node.type]
-	    args = (name, '') if name == ntype else (ntype, name)
-	    print '{0}---- match: {1} {2}'.format(*(' '*8, )+args)
-	print

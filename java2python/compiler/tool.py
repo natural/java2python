@@ -6,9 +6,7 @@
 #
 #    $ python -m java2python.compiler.tool ./SomeClass.java
 
-from java2python.lang import (
-    Lexer, Parser, StringStream, TokenStream, TreeAdaptor, walkTreeSelector,
-    )
+from java2python.lang import Lexer, Parser, StringStream, TokenStream, TreeAdaptor
 
 
 def buildAST(source, config=None):
@@ -22,7 +20,7 @@ def buildAST(source, config=None):
 
 def transformAST(tree, config):
     for selector, call in config.last('astTransforms', ()):
-	for node in walkTreeSelector(tree, selector):
+        for node in selector.walk(tree):
 	    call(node, config)
 
 

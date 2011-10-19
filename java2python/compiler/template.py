@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 """ java2python.compiler.template -> Base classes for writing Python source. """
 ##
-# This module defines templates, blocks of Python source code, that
-# can be easily manipulated and written.  Each base provides string
-# methods (__str__, dump, dumps) for serializing instances as source
-# code.  The base types also provide many utility methods.
+# This module defines templates -- blocks of Python source code --
+# that can be easily manipulated and written.  Each base provides
+# string methods (__str__, dump, dumps) for serializing instances as a
+# source code string.  The base types also provide many utility
+# methods.
 #
 # The Factory class is used to to provide runtime lookup of concrete
 # classes; this was necessary to accommodate splitting the behavior of
@@ -13,9 +14,9 @@
 # are usually a sign of a bad design and/or language limitations, and
 # this case is no exception.
 
+from cStringIO import StringIO
 from functools import partial
 from itertools import chain, ifilter, imap
-from StringIO import StringIO
 
 from java2python.lang import tokens
 from java2python.lib import FS
@@ -23,7 +24,24 @@ from java2python.lib.colortools import *
 
 
 class Factory(object):
-    """ Factory -> creates pre-configured callables for new block instances. """
+    """ Factory -> creates pre-configured callables for new block instances.
+
+    The templates use an instance of this class as a quick and simple
+    interface to create new templates like this:
+
+        stat = self.factory.statement()
+
+    The `__getattr__` method does the work of looking up and returning
+    the appropriate template class.  The lookup depends on the types
+    registry, which is populated by the FactoryTypeDetector metaclass
+    below.
+
+    The important thing to realize regarding this factory is this:
+    when an attribute is requested (`self.factory.expr` for example),
+    the factory locates the type and returns a constructor for it with
+    the config object pre-applied.
+
+    """
     types = {}
 
     def __init__(self, config):
@@ -39,6 +57,16 @@ class Factory(object):
 class FactoryTypeDetector(type):
     """ FactoryTypeDetector -> detects factory-creatable types as they are defined.
 
+    As subclasses are created they are checked for an attribute called
+    `factoryTypeName`.  If present, that key is used to populate the
+    factory type registry above.
+
+    Note that the actual subclasses are not created here (none of
+    these specify a `factoryTypeName`).  Actual factory types are
+    created in `java2python.compiler.block`.  This is because we're
+    after not templates, but visitors combined with templates, aka
+    blocks.  Refer to the `blocks` module for the specific factory
+    type names.
     """
     def __init__(cls, name, bases, namespace):
 	try:
@@ -49,6 +77,38 @@ class FactoryTypeDetector(type):
 
 class Base(object):
     """ Base -> base class for formatting Python output.
+
+    This class defines a large set of attributes and methods for the
+    other concrete templates defined below.  The items defined here
+    can be grouped as follows:
+
+    * References
+
+    This class defines `bases`, `children`, `decorators`, etc. for
+    tracking the relationship between this instance and other blocks.
+
+    * Type Information
+
+    This class defines many is-A properties, such as isClass,
+    isModule, isVoid, etc.  Subclasses typically override one or more
+    of these with an attribute or property.
+
+    * Configuration
+
+    This class provides utility methods for retrieving values from the
+    run-time configuration.  See the definition of `configHandler` and
+    `configHandlers` for details.
+
+    * Serialization
+
+    This class provides a default implementation for subclasses to
+    serialize their instances as Python source code strings.  Notably,
+    the `__str__` method is provided, which in turn defers most of its
+    work to the `dumps` method.  Subclasses provide different
+    implementations of these methods where needed.
+
+    Also, the `__repr__` method is defined by this class for printing
+    a the template as tree for debugging.
 
     """
     __metaclass__ = FactoryTypeDetector
@@ -92,9 +152,7 @@ class Base(object):
 
     def altIdent(self, name):
 	""" Returns an alternate identifier for the one given. """
-        #print '## looking for name:', name, 'parent count:', [(type(x), type(x.parent)) for x in self.parents()]
 	for klass in self.parents(lambda v:v.isClass):
-            #print '#### looking inside', klass.name, klass.variables
 	    if name in klass.variables:
 		try:
 		    method = self.parents(lambda v:v.isMethod).next()
@@ -105,7 +163,6 @@ class Base(object):
                 if name in method.variables:
                     return name
 		return ('cls' if method.isStatic else 'self') + '.' + name
-        #print
 	return name
 
     def configHandler(self, part, suffix='Handler', default=None):
@@ -281,12 +338,6 @@ class Comment(Expression):
 
     """
     isComment = True
-
-    def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
-	super(Comment, self).__init__(config, left, right, fs, parent, tail)
-	if False:# not fs.strip().startswith('#'): # wha?
-	    prefix = self.config.last('commentPrefix', '# ')
-	    self.fs = prefix + self.fs
 
     def __repr__(self):
 	""" Returns the debug string representation of this comment. """

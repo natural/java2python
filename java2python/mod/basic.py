@@ -1,16 +1,34 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" java2python.mod.basic -> functions to revise generated source strings. """
 from itertools import count
 from logging import info, warn
 from os import path
 from re import sub as rxsub
 
 
-def simpleShebang(module):
+def shebangLine(module):
+    """ yields the canonical python shebang line. """
     yield '#!/usr/bin/env python'
 
 
+def encodingLine(encoding='utf-8'):
+    """ returns a function to yield the specified encoding line.
+
+    Note that this function isn't wired up because the encoding is
+    specified for the source directly, and adding this line produces a
+    syntax error when the compile function is used.
+    """
+    def line(module):
+        yield '# -*- coding: {0} -*-'.format(encoding)
+    return line
+
+
 def simpleDocString(obj):
+    """ yields multiple lines for a default docstring.
+
+    This generator works for modules, classes, and functions.
+    """
     yield '""" generated source for {0} {1}'.format(obj.typeName, obj.name)
     yield ''
     yield '"""'

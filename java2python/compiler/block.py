@@ -12,22 +12,30 @@
 # very reusable.  The module split does allow for grouping of related
 # methods and does hide some of the cluttered code.
 
+from sys import modules
 from java2python.compiler import template, visitor
 
 
-def makeType(name, ftn=None):
-    bases = (getattr(template, name), getattr(visitor, name))
-    namespace = dict(factoryTypeName=ftn if ftn else name.lower())
-    return type(name, bases, namespace)
+def newType(className, factoryTypeName):
+    """ Creates a class derived from template.className and visitor.className """
+    bases = (getattr(template, className), getattr(visitor, className))
+    return type(className, bases, dict(factoryTypeName=factoryTypeName))
 
 
-Annotation = makeType('Annotation', 'at')
-Class = makeType('Class', 'klass')
-Comment = makeType('Comment')
-Enum = makeType('Enum')
-Expression = makeType('Expression', 'expr')
-Interface = makeType('Interface')
-Method = makeType('Method')
-MethodContent = makeType('MethodContent', 'methodContent')
-Module = makeType('Module')
-Statement = makeType('Statement')
+def addTypeToModule((cn, ftn)):
+    """ Adds a new type to this module. """
+    setattr(modules[__name__], cn, newType(cn, ftn))
+
+
+map(addTypeToModule, (
+    ('Annotation', 'at'),
+    ('Class', 'klass'),
+    ('Comment', 'comment'),
+    ('Enum', 'enum'),
+    ('Expression', 'expr'),
+    ('Interface', 'interface'),
+    ('Method', 'method'),
+    ('MethodContent', 'methodContent'),
+    ('Module', 'module'),
+    ('Statement', 'statement'),
+))

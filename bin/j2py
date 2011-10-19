@@ -137,7 +137,7 @@ def main(options):
     try:
         compile(source, '<string>', 'exec')
     except (SyntaxError, ), ex:
-        warning('Generated source has invalid syntax.')
+        warning('Generated source has invalid syntax. %s', ex)
     else:
         info('Generated source has valid syntax.')
 

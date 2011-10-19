@@ -1,5 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" java2python.lang.base -> lexer and parser support classes. """
+##
+# This module provides the following:
+#
+# * `Tokens`
+#
+# This class is used to create the single `token` instance in this
+# module.  It is used to map between parser tokens and their ids and
+# vice-versa.
+#
+# * `TreeAdaptor`
+#
+# This class is used by `java2python.compiler.tool`, where the
+# `buildAST` function associates an instance of it to a parser.  The
+# `TreeAdaptor` class creates `LocalTree` instances.
+#
+# * `LocalTree`
+#
+# This class provides a slew of extra utility methods that are useful
+# when inspecting and printing tree nodes.
+#
 
 ##
 # ANTLR notes:
@@ -25,9 +46,12 @@
 # Tree objects.  Our adaptor, TreeAdaptor, creates the LocalTree
 # instances.
 #
-##
+
+from cStringIO import StringIO
+
 from antlr3 import ANTLRStringStream as StringStream, CommonTokenStream as TokenStream
 from antlr3.tree import CommonTreeAdaptor, CommonTree
+
 from java2python.lib import colortools
 
 
@@ -143,10 +167,15 @@ class LocalTree(CommonTree):
 	    token, indent = root.token, '    ' * offset
 	    start, stop = root.tokenStartIndex, root.tokenStopIndex
 	    idxes, ttyp = '', tokens.map.get(token.type, '?')
+            line = token.line
 	    if start and stop and start == stop:
-		idxes = ' [{0}]'.format(start)
+		idxes = 'start={}'.format(start)
 	    elif start and stop:
-	        idxes = ' [{0}:{1}]'.format(start, stop)
+	        idxes = 'start={}, stop={}'.format(start, stop)
+            if line:
+                idxes = 'line={}{}{}'.format(line, ', ' if idxes else '', idxes)
+            idxes = ' [{}]'.format(idxes) if idxes else ''
+            idxes = colortools.black(idxes)
 	    args = [indent, self.colorType(ttyp), '', idxes, '']
 	    if extras(token.text, ttyp):
 		args[2] = ' ' + self.colorText(ttyp, token.text)
@@ -160,6 +189,12 @@ class LocalTree(CommonTree):
 		for line in self.colorComments(com):
 		    print >> fd, '{0}{1}'.format(indent, line)
 	innerDump(self, level)
+
+    def dumps(self, level=0):
+	""" Dump this token to a string. """
+	fd = StringIO()
+	self.dump(fd, level)
+	return fd.getvalue()
 
     def dupNode(self):
 	""" Called by the parser to create a duplicate of this tree. """

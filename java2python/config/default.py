@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+##
 # This is the default configuration file for java2python.  Unless
-# explicity disabled with the '-n' or '--nodefaults' options, the j2py
+# explicity disabled with the '-n' or '--nodefaults' option, the j2py
 # script will import this module for runtime configuration.
 
 from java2python.mod import basic, transform
@@ -11,7 +12,7 @@ from java2python.lang.selector import *
 
 # Leading indent character or characters.  Four spaces are used
 # because that is the recommendation of PEP 8.
-indentPrefix = ' '*4
+indentPrefix = ' ' * 4
 
 
 # Prefix character or characters for comments.  The hash+space is
@@ -19,34 +20,38 @@ indentPrefix = ' '*4
 commentPrefix = '# '
 
 
-# These values are strings or generator-functions that yield strings
+# These values are strings or generators that yield strings
 # for a module prologue.
 modulePrologueHandlers = [
-    basic.simpleShebang,
+    basic.shebangLine,
     basic.simpleDocString,
     basic.maybeBsr,
 ]
 
 
-# These generator-functions yield lines for a module epilogue.
+# These generators yield lines for a module epilogue.
 moduleEpilogueHandlers = [
     basic.scriptMainStanza,
 ]
 
 
-# These generator-functions yield (possibly modified) source strings
-# for a module.  The 'outputSubs' handler references the list of
+# These generators yield (possibly modified) source strings for a
+# module.  The `basic.outputSubs` handler references the list of
 # regular expression substitutions near the end of this module.
 moduleOutputHandlers = [
     basic.outputSubs,
 ]
 
 
+# These generators yield doc strings for a class.
 classHeadHandlers = [
     basic.simpleDocString,
 ]
 
 
+# These generators are called after a class has been completely
+# generated; this specific one sorts method bodies by name.
+# NB:  the code generator doesn't actually use this.
 classPostWalkMutators = [
     basic.classContentSort,
 ]
@@ -81,7 +86,7 @@ methodPrologueHandlers = [
 
 
 # This handler creates enum values on enum classes after they've been
-# defined.  The handler tries to matches Java semantics by using
+# defined.  The handler tries to match Java semantics by using
 # strings.  Refer to the documentation for details.
 enumValueHandler = basic.enumConstStrings
 
@@ -106,9 +111,13 @@ modulePackageDeclarationHandler = basic.commentedPackages
 # modulePackageDeclarationHandler = basic.namespacePackages
 
 
-moduleImportDeclarationHandler = basic.commentedImports
+# This handler is turns java imports into python imports. No mapping
+# of packages is performed:
 moduleImportDeclarationHandler = basic.simpleImports
 
+# This import decl. handler can be used instead to produce comments
+# instead of import statements:
+# moduleImportDeclarationHandler = basic.commentedImports
 
 # The AST transformation function uses these declarations to modify an
 # AST before compiling it to python source.  Having these declarations
@@ -172,6 +181,3 @@ typeSubs = {
     'double' : 'float',
     'java.lang.String' : 'str',
 }
-
-
-
