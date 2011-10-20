@@ -1,37 +1,104 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import os
+import sys
+import unittest
 
-from java2python.config import Config
 from java2python.compiler import buildAST
 from java2python.lang import tokens
 from java2python.lang.selector import Token, Type
+from java2python.lib import colortools
 
 
-if __name__ == '__main__':
-    import sys, os
+def setUpModule():
     fn = os.path.join(os.path.dirname(__file__), 'Selector1.java')
-    source = open(fn).read()
-    tree = buildAST(source, Config(()))
-    tree.dump(sys.stdout)
+    SelectorTest.tree = buildAST(open(fn).read())
+    SelectorTest.tree.dump(sys.stdout)
 
-    selectors = [
-#	Type('EXPR'),
-#	Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
-#        Type('CLASS')[2],
-#	Type('METHOD_CALL') & Type('IDENT'),
-#	Type('IDENT') + Type('IDENT'),
-        Type('CLASS') > Type('IDENT'),
-        Type('IDENT', 'foo'),
-        Token(text='foo'),
-        Token(type='BLOCK_SCOPE', line=2) & Token(type='IDENT', text='foo')
-    ]
 
-    for index, selector in enumerate(selectors):
-	print 'Selector Test {0}:\n   ==== {1}'.format(index, selector)
-        for node in selector.walk(tree):
-	    name = str(node)
-	    ntype = tokens.map[node.type]
-	    args = (name, '') if name == ntype else (ntype, name)
-	    print '{0}---- match: {1} {2}'.format(*(' '*8, )+args)
-            print '{0}---- token: {1}'.format(' '*8, node.dumps() )
-	print
+class SelectorTest(unittest.TestCase):
+    def walk(self, selector):
+        return list(selector.walk(self.tree))
+
+    def assertNodes(self, nodes, length):
+        self.assertTrue(nodes)
+        self.assertEqual(len(nodes), length)
+
+    def shortDescription(self):
+        fs = 'Description: {}\nSelector: {}\n'
+        args = (colortools.cyan(self.description), colortools.yellow(self.selector))
+        return fs.format(*args)
+
+    @classmethod
+    def make(cls, count):
+        def t(self):
+            nodes = self.walk(self.selector)
+            self.assertNodes(nodes, count)
+        return t
+
+
+class TestIdentChildOfClass(SelectorTest):
+    description = 'select one IDENT node that is a child of a CLASS node'
+    selector = Type('CLASS') > Type('IDENT')
+    test = SelectorTest.make(1)
+
+
+class TestIdentWithText(SelectorTest):
+    description = 'select two IDENT nodes with text "foo"'
+    selector = Type('IDENT', 'foo')
+    test = SelectorTest.make(2)
+
+
+class TestTokensWithText(SelectorTest):
+    description = 'select two nodes with text "foo"'
+    selector = Token(text='foo')
+    test = SelectorTest.make(2)
+
+
+class TestTokenCallableCombo(SelectorTest):
+    description = 'select BLOCK_SCOPE on line 7'
+    selector = Token(type=lambda t: t.type == tokens.BLOCK_SCOPE, line=7)
+    test = SelectorTest.make(1)
+
+
+class TestTokenMultipleCallables(SelectorTest):
+    description = 'select BLOCK_SCOPE on line 2 or 7'
+    selector = Token(type=lambda t: t.type == tokens.BLOCK_SCOPE, line=lambda t:t.line in (2, 7))
+    test = SelectorTest.make(2)
+
+
+class TestTokenChildCallable(SelectorTest):
+    description = 'select BLOCK_SCOPE with one child IDENT starting with "f"'
+    selector = Token(type=lambda t: t.type == tokens.BLOCK_SCOPE) & Token(type='IDENT', text=lambda tok:tok.text.startswith('f'))
+    test = SelectorTest.make(1)
+
+
+class TestNthChildWithExtraChecks(SelectorTest):
+    description = 'select two children of FORMAL_PARAM_STD_DECL at index 2 '
+    selector = Type('FORMAL_PARAM_STD_DECL')[2]
+
+    def test(self):
+        nodes = self.walk(self.selector)
+        self.assertNodes(nodes, 2)
+        self.assertEquals(nodes[0].type, tokens.IDENT)
+        self.assertEquals(nodes[1].type, tokens.IDENT)
+        self.assertEquals(nodes[0].text, 'x')
+        self.assertEquals(nodes[1].text, 'y')
+
+
+class TestDirectChildren(SelectorTest):
+    description = 'select two TYPE nodes that are children of a VAR_DECLARATION node'
+    selector = Type('VAR_DECLARATION') > Type('TYPE')
+    test = SelectorTest.make(2)
+
+
+class TestSimpleSiblings(SelectorTest):
+    description = 'select three IDENT nodes that are siblings of a MODIFIER_LIST'
+    selector = Type('MODIFIER_LIST') + Type('IDENT')
+    test = SelectorTest.make(3)
+
+
+class TestClassIdent(SelectorTest):
+    description = 'select one IDENT node that is a child of a CLASS node'
+    selector = Type('CLASS') > Type('IDENT')
+    test = SelectorTest.make(1)

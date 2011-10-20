@@ -14,6 +14,7 @@ test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
 all:
 	$(MAKE) $(test_targets)
+	@cd selector && make
 
 
 clean:

@@ -5,9 +5,8 @@ from java2python.lang import tokens
 
 
 class Selector(object):
-    """ Selector -> base for selectors; provides operator methods.
+    """ Selector -> base for selectors; provides operator methods. """
 
-    """
     def __add__(self, other):
         """ C + C => S
 
@@ -23,6 +22,10 @@ class Selector(object):
         hand side of the expression.
         """
 	return Descendant(self, other)
+
+    def __call__(self, *args, **kwds):
+        """ Subclasses must implement. """
+        raise NotImplementedError('Selector class cannot be called.')
 
     def __getitem__(self, key):
         """ C[n] => S
@@ -41,13 +44,42 @@ class Selector(object):
         """
 	return Child(self, other)
 
-
     def walk(self, tree):
+        """ Select items from the tree and from the tree children. """
         for item in self(tree):
             yield item
         for child in tree.children:
             for item in self.walk(child):
                 yield item
+
+
+class Token(Selector):
+    """ Token(...) -> select tokens by matching attributes.
+
+    """
+    # channel=None, index=None, input=None, line=None, start=None, stop=None, text=None, type=None
+
+    def __init__(self, **attrs):
+        self.attrs = attrs
+        if isinstance(attrs.get('type'), (basestring, )):
+            self.attrs['type'] = getattr(tokens, attrs.get('type'))
+
+    def __call__(self, tree):
+        items = self.attrs.items()
+        token = tree.token
+
+        def match_or_call(k, v):
+            if callable(v):
+                return v(token)
+            return getattr(token, k)==v
+
+        if all(match_or_call(k, v) for k, v in items if v is not None):
+            yield tree
+
+    def __str__(self):
+        items = self.attrs.items()
+        keys = ('{}={}'.format(k, v) for k, v in items if v is not None)
+	return 'Token({})'.format(', '.join(keys))
 
 
 class Nth(Selector):
@@ -107,29 +139,6 @@ class Type(Selector):
     def __str__(self):
         val = '' if self.value is None else '={0}'.format(self.value)
 	return 'Type({0}{1}:{2})'.format(tokens.map[self.key], val, self.key)
-
-
-class Token(Selector):
-    """ Token(T)    select any token by matching attributes.
-
-    Similar to the type selector in CSS.
-    """
-    # channel=None, index=None, input=None, line=None, start=None, stop=None, text=None, type=None
-
-    def __init__(self, **attrs):
-        self.attrs = attrs
-        if isinstance(attrs.get('type'), (basestring, )):
-            self.attrs['type'] = getattr(tokens, attrs.get('type'))
-
-    def __call__(self, tree):
-        items = self.attrs.items()
-        if all(getattr(tree.token, k)==v for k, v in items if v is not None):
-            yield tree
-
-    def __str__(self):
-        items = self.attrs.items()
-        keys = ('{}={}'.format(k, v) for k, v in items if v is not None)
-	return 'Token({})'.format(', '.join(keys))
 
 
 class Star(Selector):

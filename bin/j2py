@@ -93,15 +93,15 @@ def main(options):
         print 'IOError: %s.' % (msg, )
         return code
 
-    config = Config(configs)
     timed['comp']
     try:
-	tree = buildAST(source, config)
+	tree = buildAST(source)
     except (Exception, ), exc:
         exception('exception while parsing')
         return 1
     timed['comp_finish']
 
+    config = Config(configs)
     timed['xform']
     transformAST(tree, config)
     timed['xform_finish']
@@ -117,6 +117,11 @@ def main(options):
     source = unicode(module)
     timed['encode_finish']
     timed['overall_finish']
+
+    if options.lexertokens:
+        for idx, tok in enumerate(tree.parser.input.tokens):
+            print >> sys.stderr, '{0}  {1}'.format(idx, tok)
+	print >> sys.stderr
 
     if options.javaast:
 	tree.dump(sys.stderr)
@@ -171,6 +176,9 @@ def config(argv):
     addopt('-l', '--loglevel', dest='loglevel',
 	   help='Set log level by name or value.',
 	   default='WARN', type='loglevel')
+    addopt('-t', '--lexer-tokens', dest='lexertokens',
+	   help='Print lexer tokens to stderr.',
+	   default=False, action='store_true')
     addopt('-p', '--python-tree', dest='pytree',
 	   help='Print python object tree to stderr.',
 	   default=False, action='store_true')
