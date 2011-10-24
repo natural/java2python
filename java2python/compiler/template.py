@@ -426,6 +426,8 @@ class Class(ClassMethodSharedMixin, Base):
 			yield blank
 		yield item
 		prev = item
+        for handler in self.configHandlers('PostWalk'):
+            handler(self)
 	head = any(self.iterHead())
 	body = list(super(Class, self).iterBody())
 	tail = () if (body or head) else [self.factory.expr(left='pass')]

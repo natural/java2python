@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+""" j2py -> Java to Python compiler script.
 
+This is all very ordinary.  We import the package bits, open and read
+a file, translate it, and write it out.
+
+"""
 import sys
 from collections import defaultdict
 from logging import _levelNames as logLevels, exception, warning, info, basicConfig
@@ -17,15 +22,18 @@ version = '0.5'
 
 
 def isWindows():
+    """ True if running on Windows. """
     return sys.platform.startswith('win')
 
 
 def badLogLevel(name, value):
+    """ Raise an error indicating a bad log level. """
     msg = 'option %s: invalid loglevel: %r'
     raise OptionValueError(msg % (name, value))
 
 
 def checkLogLevel(option, opt, value):
+    """ Option type checker (see LocalOption class) to verify a log level. """
     try:
         lvl = int(value)
     except (ValueError, ):
@@ -40,12 +48,14 @@ def checkLogLevel(option, opt, value):
 
 
 class LocalOption(Option):
+    """ Supplements the Option class with our log level checker. """
     TYPES = Option.TYPES + ('loglevel', )
     TYPE_CHECKER = Option.TYPE_CHECKER.copy()
     TYPE_CHECKER['loglevel'] = checkLogLevel
 
 
-def mainProfile(options):
+def profileMain(options):
+    """ Runs our main function with profiling if indicated by options. """
     if options.profile:
 	import cProfile, pstats
 	prof = cProfile.Profile()
@@ -59,11 +69,13 @@ def mainProfile(options):
 
 
 def configFromDir(inname, dirname):
+    """ Returns a file name from the given config directory. """
     name = path.join(dirname, path.basename(path.splitext(inname)[0]))
     return '%s.py' % path.abspath(name)
 
 
 def main(options):
+    """ Compile the indicated java source with the given options. """
     timed = defaultdict(time)
     timed['overall']
 
@@ -155,6 +167,7 @@ def main(options):
 
 
 def config(argv):
+    """ Return an options object from the given argument sequence. """
     parser = OptionParser(option_class=LocalOption, version='%prog '+version)
     addopt = parser.add_option
     addopt('-i', '--input', dest='inputfile',
@@ -215,4 +228,4 @@ def config(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(mainProfile(config(sys.argv)))
+    sys.exit(profileMain(config(sys.argv)))

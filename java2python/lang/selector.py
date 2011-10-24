@@ -1,25 +1,42 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.lang.selector -> """
+""" :mod:`java2python.lang.selector` -- Declarative AST node selection
+=======================================================================
+
+.. module:: java2python.lang.selector
+    :synopsis: Declarative AST node selection.
+.. moduleauthor:: Troy Melhase <troy@gci.net>
+
+This module provides classes for simple AST node selection that can be
+easily combined to form complex, declarative rules for retrieving AST
+nodes.
+
+The classes are similar to CSS selectors, with a nod to Python parsing
+libraries like LEPL and PyParsing.  At the moment, only a few very
+basic selector types are implemented, but those that are here already
+provide all of the functionality necessary for use within the package.
+
+Projects using java2python should regard this subpackage as
+experimental.  While the interfaces are not expected to change, the
+semantics may.  Use with caution.
+"""
 from java2python.lang import tokens
 
 
 class Selector(object):
-    """ Selector -> base for selectors; provides operator methods. """
+    """ Base class for concrete selectors; provides operator methods. """
 
     def __add__(self, other):
-        """ C + C => S
+        """ E + F
 
-        Produces a Sibling selector from this one and the right hand
-        side of the expression.
+        Like CSS "E + F": an F element immediately preceded by an E element
         """
-	return Sibling(self, other)
+	return AdjacentSibling(self, other)
 
     def __and__(self, other):
-        """ C & C => S
+        """ E & F
 
-        Produces a Descendant selector from this one and the right
-        hand side of the expression.
+        Like CSS "E F":  an F element descendant of an E element
         """
 	return Descendant(self, other)
 
@@ -28,21 +45,25 @@ class Selector(object):
         raise NotImplementedError('Selector class cannot be called.')
 
     def __getitem__(self, key):
-        """ C[n] => S
+        """ E[n]
 
-        Produces an Nth child selector from this one at the given key.
-
-        This is where we could support attribute selectors like C[type='void'].
+        Like CSS "E:nth-child(n)": an E element, the n-th child of its parent
         """
 	return Nth(self, key)
 
     def __gt__(self, other):
-        """ C > C => S
+        """ E > F
 
-        Produces a Child selector from this one and the right hand
-        side of the expression.
+        Like CSS: "E > F": an F element child of an E element
         """
 	return Child(self, other)
+
+    def __div__(self, other):
+        """ E / F
+
+        Produces a AnySibling.
+        """
+	return AnySibling(self, other)
 
     def walk(self, tree):
         """ Select items from the tree and from the tree children. """
@@ -56,11 +77,24 @@ class Selector(object):
 class Token(Selector):
     """ Token(...) -> select tokens by matching attributes.
 
+    Token is the most generic and flexible Selector; using it,
+    arbitrary nodes of any type, line number, position, and/or text
+    can be selected.
+
+    Calling Token() without any keywords is equivalent to:
+
+        Token(channel=None, index=None, input=None, line=None,
+              start=None, stop=None, text=None, type=None)
+
+    Note that the value of each keyword can be a constant or a
+    callable.  When callables are specified, they are passed a the
+    token and should return a bool.
     """
-    # channel=None, index=None, input=None, line=None, start=None, stop=None, text=None, type=None
 
     def __init__(self, **attrs):
         self.attrs = attrs
+        ## we support strings so that the client can refer to the
+        ## token name that way instead of via lookup or worse, integer.
         if isinstance(attrs.get('type'), (basestring, )):
             self.attrs['type'] = getattr(tokens, attrs.get('type'))
 
@@ -172,7 +206,7 @@ class Descendant(Selector):
 	return 'Descendant({0} & {1})'.format(self.e, self.f)
 
 
-class Sibling(Selector):
+class AdjacentSibling(Selector):
     """ E + F    select any F immediately preceded by a sibling E
 
     """
@@ -180,16 +214,37 @@ class Sibling(Selector):
 	self.e, self.f = e, f
 
     def __call__(self, node):
-	parent = node.parent
-	if not parent:
+	if not node.parent:
 	    return
 	for ftree in self.f(node):
-	    index = node.parent.children.index(ftree)
-	    if not index:
-		return
-	    previous = node.parent.children[index-1]
-	    for child in self.e(previous):
-		yield ftree
+            index = node.parent.children.index(ftree)
+            if not index:
+                return
+            previous = node.parent.children[index-1]
+            for child in self.e(previous):
+                yield ftree
 
     def __str__(self):
-	return 'Sibling({0} + {1})'.format(self.e, self.f)
+	return 'AdjacentSibling({} + {})'.format(self.e, self.f)
+
+
+class AnySibling(Selector):
+    """ E / F    select any F preceded by a sibling E
+
+    """
+    def __init__(self, e, f):
+	self.e, self.f = e, f
+
+    def __call__(self, node):
+	if not node.parent:
+	    return
+	for ftree in self.f(node):
+            index = node.parent.children.index(ftree)
+            if not index:
+                return
+            for prev in node.parent.children[:index]:
+                for child in self.e(prev):
+                    yield ftree
+
+    def __str__(self):
+	return 'AnySibling({} / {})'.format(self.e, self.f)

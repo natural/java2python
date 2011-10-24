@@ -144,6 +144,29 @@ def maybeBsr(module):
 
 
 def classContentSort(obj):
+    isMethod = lambda x:x and x.isMethod
+
+    def iterBody(body):
+        group = []
+        for value in body:
+            if isMethod(value):
+                group.append(value)
+                yield group
+                group = []
+            else:
+                group.append(value)
+        yield group
+
+    def sortBody(group):
+        methods = [item for item in group if isMethod(item)]
+        return methods[0].name if methods else -1
+
+    gx = list(iterBody(obj.children))
+    sgx = sorted(gx, key=sortBody)
+    sgx = [item for sublist in sgx for item in sublist]
+    obj.children = sgx
+
+    return
     obj.children.sort(lambda x, y:-1 if x.isClass else 1)
 
 

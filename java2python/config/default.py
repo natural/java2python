@@ -52,7 +52,7 @@ classHeadHandlers = [
 # These generators are called after a class has been completely
 # generated; this specific one sorts method bodies by name.
 # NB:  the code generator doesn't actually use this.
-classPostWalkMutators = [
+classPostWalkHandlers = [
     basic.classContentSort,
 ]
 

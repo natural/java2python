@@ -93,9 +93,15 @@ class TestDirectChildren(SelectorTest):
 
 
 class TestSimpleSiblings(SelectorTest):
-    description = 'select three IDENT nodes that are siblings of a MODIFIER_LIST'
+    description = 'select three IDENT nodes that are adjacent siblings of a MODIFIER_LIST'
     selector = Type('MODIFIER_LIST') + Type('IDENT')
     test = SelectorTest.make(3)
+
+
+class TestSimpleAnySibling(SelectorTest):
+    description = 'select three FORMAL_PARAM_LIST nodes that are non-adjacent siblings of a MODIFIER_LIST'
+    selector = Type('MODIFIER_LIST') / Type('FORMAL_PARAM_LIST')
+    test = SelectorTest.make(2)
 
 
 class TestClassIdent(SelectorTest):

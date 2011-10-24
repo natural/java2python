@@ -10,7 +10,7 @@ What it Does
 |j2py| reads the Java source files you give it and produces
 somewhat-roughly-equivalent Python source code.  It tries to make the
 same decisions you would if you were porting the code manually.  It
-can perform the translation faster and more accuratly than you could,
+can perform the translation faster and more accurately than you could,
 because it's a dumb machine that does what its told and you're a smart
 person with lots of books you haven't read and a love of chocolate so
 sometimes you're easily distracted and make mistakes.  Like me and
@@ -41,8 +41,8 @@ How it Works
 
 |j2py| first converts the source code you give it into an abstract
 syntax tree.  (That's a lie, really.  |j2py| doesn't do this step,
-Antlr does this step, and Antlr is a whole lot bigger and cooler than
-|j2py| could ever be.  Obviously, really smart people worked on Antlr
+ANTLR does this step, and ANTLR is a whole lot bigger and cooler than
+|j2py| could ever be.  Obviously, really smart people worked on ANTLR
 and only one fairly dim one worked on |j2py|).
 
 After the syntax tree is constructed, it's walked and its nodes are
@@ -63,16 +63,16 @@ of Java source code that you can't make into nice and neat and obvious
 Python equivalents.
 
 To get around these trouble spots, |j2py| takes one of two approaches
-(and sometimes both if she's feeling especially fiesty or if you
+(and sometimes both if she's feeling especially feisty or if you
 haven't paid her much attention lately).  The first approach is to try
 and make the problem go away.  For example, in Java the `if` statement
-can contain an assigment expression::
+can contain an assignment expression::
 
     if (++x == 0) { ... }
 
-There isn't a single statement equivalent in Python because assigments
+There isn't a single statement equivalent in Python because assignments
 are statements there, not expressions.  So |j2py| does what it can,
-presuably what you would do::
+presumably what you would do::
 
     x += 1
     if x == 0:
@@ -82,7 +82,7 @@ Careful readers will have spotted just how close we came to driving
 over a cliff with that `++x` expression.  If the increment had been
 done on the other side of the variable, the meaning of the statement
 would have changed and the Python code would have been wrong.
-Fortuatly, I've driven by lots of cliffs and have been scared by all
+Fortunately, I've driven by lots of cliffs and have been scared by all
 of them so I thought of this ahead of time and decided to do something
 about it::
 
@@ -96,7 +96,7 @@ will get translated to::
         ...
 
 See what |j2py| did there?  It tried to do what you would do.  For
-further explaination and enumeration see the :ref:`features` chapter.
+further explanation and enumeration see the :ref:`features` chapter.
 
 
 Why Bother?
