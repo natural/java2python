@@ -161,13 +161,10 @@ def classContentSort(obj):
         methods = [item for item in group if isMethod(item)]
         return methods[0].name if methods else -1
 
-    gx = list(iterBody(obj.children))
-    sgx = sorted(gx, key=sortBody)
-    sgx = [item for sublist in sgx for item in sublist]
-    obj.children = sgx
+    grp = list(iterBody(obj.children))
+    grpsrt = sorted(grp, key=sortBody)
+    obj.children = [item for grp in grpsrt for item in grp]
 
-    return
-    obj.children.sort(lambda x, y:-1 if x.isClass else 1)
 
 
 def zopeInterfaceMethodMutator(obj):

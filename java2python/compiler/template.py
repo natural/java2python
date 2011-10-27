@@ -19,8 +19,7 @@ from functools import partial
 from itertools import chain, ifilter, imap
 
 from java2python.lang import tokens
-from java2python.lib import FS
-from java2python.lib.colortools import *
+from java2python.lib import FS, colors
 
 
 class Factory(object):
@@ -132,12 +131,12 @@ class Base(object):
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
-	name = white('name:') + cyan(self.name) if self.name else ''
-	parts = [green(self.typeName), name]
+	name = colors.white('name:') + colors.cyan(self.name) if self.name else ''
+	parts = [colors.green(self.typeName), name]
 	if self.type:
-	    parts.append(white('type:') + cyan(self.type))
+	    parts.append(colors.white('type:') + colors.cyan(self.type))
 	if self.modifiers:
-	    parts.append(white('modifiers:') + cyan(','.join(self.modifiers)))
+	    parts.append(colors.white('modifiers:') + colors.cyan(','.join(self.modifiers)))
 	return ' '.join(parts)
 
     def __str__(self):
@@ -295,17 +294,17 @@ class Expression(Base):
 
     def __repr__(self):
 	""" Returns the debug string representation of this template. """
-	parts, parent, showfs = [blue(self.typeName)], self.parent, True
+	parts, parent, showfs = [colors.blue(self.typeName)], self.parent, True
 	if isinstance(self.left, (basestring, )) and self.left:
-	    parts.append(white('left:') + yellow(self.left))
+	    parts.append(colors.white('left:') + colors.yellow(self.left))
 	    showfs = False
 	if isinstance(self.right, (basestring, )) and self.right:
-	    parts.append(white('right:') + yellow(self.right))
+	    parts.append(colors.white('right:') + colors.yellow(self.right))
 	    showfs = False
 	if showfs:
-	    parts.append(white('format:') + yellow(self.fs))
+	    parts.append(colors.white('format:') + colors.yellow(self.fs))
 	if self.tail:
-	    parts.append(white('tail:') + black(self.tail))
+	    parts.append(colors.white('tail:') + colors.black(self.tail))
 	return ' '.join(parts)
 
     def __str__(self):
@@ -341,8 +340,8 @@ class Comment(Expression):
 
     def __repr__(self):
 	""" Returns the debug string representation of this comment. """
-	parts = [white(self.typeName+':'),
-		 black(self.left) + black(self.right) + black(self.tail), ]
+	parts = [colors.white(self.typeName+':'),
+		 colors.black(self.left) + colors.black(self.right) + colors.black(self.tail), ]
 	return ' '.join(parts)
 
 
@@ -361,7 +360,7 @@ class Statement(Base):
 
     def __repr__(self):
 	""" Returns the debug string representation of this statement. """
-	parts = [green(self.typeName), white('keyword:')+cyan(self.keyword)]
+	parts = [colors.green(self.typeName), colors.white('keyword:')+colors.cyan(self.keyword)]
 	return ' '.join(parts)
 
     def iterPrologue(self):

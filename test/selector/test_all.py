@@ -7,7 +7,7 @@ import unittest
 from java2python.compiler import buildAST
 from java2python.lang import tokens
 from java2python.lang.selector import Token, Type
-from java2python.lib import colortools
+from java2python.lib import colors
 
 
 def setUpModule():
@@ -26,7 +26,7 @@ class SelectorTest(unittest.TestCase):
 
     def shortDescription(self):
         fs = 'Description: {}\nSelector: {}\n'
-        args = (colortools.cyan(self.description), colortools.yellow(self.selector))
+        args = (colors.cyan(self.description), colors.yellow(self.selector))
         return fs.format(*args)
 
     @classmethod

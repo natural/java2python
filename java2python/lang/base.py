@@ -52,7 +52,7 @@ from cStringIO import StringIO
 from antlr3 import ANTLRStringStream as StringStream, CommonTokenStream as TokenStream
 from antlr3.tree import CommonTreeAdaptor, CommonTree
 
-from java2python.lib import colortools
+from java2python.lib import colors
 
 
 class Tokens(object):
@@ -125,15 +125,15 @@ class LocalTree(CommonTree):
 
     """
     colorTypeMap = {
-	'CLASS'            : colortools.green,
-	'JAVA_SOURCE'      : colortools.green,
-	'VOID_METHOD_DECL' : colortools.green,
-	'IDENT'            : colortools.yellow,
-	'TYPE'             : colortools.magenta,
-	'EXPR'             : colortools.blue,
-	'TRUE'             : colortools.yellow,
-	'FALSE'            : colortools.yellow,
-	'NULL'             : colortools.yellow,
+	'CLASS'            : colors.green,
+	'JAVA_SOURCE'      : colors.green,
+	'VOID_METHOD_DECL' : colors.green,
+	'IDENT'            : colors.yellow,
+	'TYPE'             : colors.magenta,
+	'EXPR'             : colors.blue,
+	'TRUE'             : colors.yellow,
+	'FALSE'            : colors.yellow,
+	'NULL'             : colors.yellow,
     }
 
     def __init__(self, payload, lexer=None, parser=None):
@@ -146,18 +146,18 @@ class LocalTree(CommonTree):
 
     def colorType(self, tokenType):
 	""" Returns a color suitable for the given token type. """
-	return self.colorTypeMap.get(tokenType, colortools.white)(tokenType)
+	return self.colorTypeMap.get(tokenType, colors.white)(tokenType)
 
     def colorText(self, tokenType, tokenText):
 	""" Returns a colorized string from the given token type and text. """
-	return self.colorTypeMap.get(tokenType, colortools.white)(tokenText)
+	return self.colorTypeMap.get(tokenType, colors.white)(tokenText)
 
     def colorComments(self, token):
 	""" Formats, colors, and returns the comment text from the given token. """
 	ttyp = tokens.map.get(token.type)
 	text = token.text.replace('\n', '\\n').replace('\r', '\\r').replace('\t', '\\t')
 	item = '{0} [{1}:{2}] {3}'.format(ttyp, token.start, token.stop, text)
-	yield colortools.black(item)
+	yield colors.black(item)
 
     def dump(self, fd, level=0):
 	""" Writes a debug representation of this tree to the given file. """
@@ -175,7 +175,7 @@ class LocalTree(CommonTree):
             if line:
                 idxes = 'line={}{}{}'.format(line, ', ' if idxes else '', idxes)
             idxes = ' [{}]'.format(idxes) if idxes else ''
-            idxes = colortools.black(idxes)
+            idxes = colors.black(idxes)
 	    args = [indent, self.colorType(ttyp), '', idxes, '']
 	    if extras(token.text, ttyp):
 		args[2] = ' ' + self.colorText(ttyp, token.text)

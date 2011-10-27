@@ -50,10 +50,11 @@ classHeadHandlers = [
 
 
 # These generators are called after a class has been completely
-# generated; this specific one sorts method bodies by name.
-# NB:  the code generator doesn't actually use this.
+# generated.  The class content sorter sorts the methods of a class by
+# name.  It's commented out because its output differs so greatly
+# from its input, and because it's really not very useful.
 classPostWalkHandlers = [
-    basic.classContentSort,
+    ## basic.classContentSort,
 ]
 
 

@@ -15,7 +15,7 @@ from time import time
 
 from java2python.compiler import Module, buildAST, transformAST
 from java2python.config import Config
-from java2python.lib.colortools import colors
+from java2python.lib import escapes
 
 
 version = '0.5'
@@ -221,7 +221,7 @@ def config(argv):
     ## these next statements don't belong here, but this is as good a
     ## place as any.
     if isWindows() or options.nocolor:
-	colors.clear()
+	escapes.clear()
     fmt = '# %(levelname)s %(funcName)s: %(message)s'
     basicConfig(level=options.loglevel, format=fmt)
     return options
