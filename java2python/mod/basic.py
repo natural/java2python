@@ -172,3 +172,10 @@ def zopeInterfaceMethodMutator(obj):
 	if method.parameters and method.parameters[0]['name'] == 'self':
 	    method.parameters.pop(0)
 
+
+def defaultBases(obj):
+    return iter(obj.bases or ['object'])
+
+
+def zopeInterfaceBases(obj):
+    return ['zope.interface.Interface']

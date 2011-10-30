@@ -48,6 +48,13 @@ classHeadHandlers = [
     basic.simpleDocString,
 ]
 
+classBaseHandlers = [
+    basic.defaultBases,
+]
+
+interfaceBaseHandlers = [
+    basic.zopeInterfaceBases,
+]
 
 # These generators are called after a class has been completely
 # generated.  The class content sorter sorts the methods of a class by

@@ -403,7 +403,9 @@ class Class(ClassMethodSharedMixin, Base):
 
     def iterBases(self):
 	""" Yields the base classes for this type. """
-	return iter(self.bases or ['object'])
+        for handler in self.configHandlers('Base'):
+            for base in handler(self):
+                yield base
 
     def iterDecl(self):
 	""" Yields the declaration for this type. """
