@@ -6,6 +6,7 @@ from java2python.config import default
 modulePrologueHandlers = default.modulePrologueHandlers + [
     'from configs.overloading import overloaded',
     'from abc import ABCMeta, abstractmethod',
+    'import zope.interface',
 ]
 
 

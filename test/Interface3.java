@@ -12,6 +12,8 @@ interface C0 extends B0, B1 {
 }
 
 
+class Nothing {};
+
 class Interface3 implements C0 {
     public void m(int x) {
         System.out.println(x);

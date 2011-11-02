@@ -253,6 +253,15 @@ class Base(object):
 		yield self
 	    self = self.parent
 
+    def find(self, pred=lambda v:True):
+        """ Yield each child in the family tree. """
+        for child in self.children:
+            if pred(child):
+                yield child
+            if hasattr(child, 'find'):
+                for value in child.find(pred):
+                    yield value
+
     @property
     def className(self):
 	""" Returns the name of the class of this item. """
@@ -403,9 +412,7 @@ class Class(ClassMethodSharedMixin, Base):
 
     def iterBases(self):
 	""" Yields the base classes for this type. """
-        for handler in self.configHandlers('Base'):
-            for base in handler(self):
-                yield base
+	return chain(*(h(self) for h in self.configHandlers('Base')))
 
     def iterDecl(self):
 	""" Yields the declaration for this type. """
@@ -474,13 +481,17 @@ class Method(ClassMethodSharedMixin, Base):
 	super(Method, self).__init__(config, name, type, parent)
 	self.parameters.append(self.makeParam('self', 'object'))
 
+    def iterParams(self):
+        """ Yields the parameters of this method template. """
+	return chain(*(h(self) for h in self.configHandlers('Param')))
+
     def iterDecl(self):
 	""" Yields the declaration for this method template. """
 	def formatParam(p):
 	    if 'default' in p:
 		return '{0}={1}'.format(p['name'], p['default'])
 	    return p['name']
-	params = ', '.join(formatParam(param) for param in self.parameters)
+	params = ', '.join(formatParam(param) for param in self.iterParams())
 	yield 'def {0}({1}):'.format(self.name, params)
 
     def iterBody(self):

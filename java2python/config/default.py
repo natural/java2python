@@ -48,12 +48,16 @@ classHeadHandlers = [
     basic.simpleDocString,
 ]
 
+methodParamHandlers = [
+    basic.defaultParams,
+]
+
 classBaseHandlers = [
     basic.defaultBases,
 ]
 
 interfaceBaseHandlers = [
-    basic.zopeInterfaceBases,
+    basic.defaultBases,
 ]
 
 # These generators are called after a class has been completely
@@ -77,7 +81,6 @@ interfaceHeadHandlers = [
 
 
 interfacePostWalkMutators = [
-    basic.zopeInterfaceMethodMutator,
 ]
 
 

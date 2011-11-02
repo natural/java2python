@@ -166,16 +166,43 @@ def classContentSort(obj):
     obj.children = [item for grp in grpsrt for item in grp]
 
 
+def defaultParams(obj):
+    return iter(obj.parameters)
 
-def zopeInterfaceMethodMutator(obj):
-    for method in [c for c in obj.children if c.isMethod]:
-	if method.parameters and method.parameters[0]['name'] == 'self':
-	    method.parameters.pop(0)
+def zopeInterfaceMethodParams(obj):
+    if not obj.parent.isInterface:
+        for param in obj.parameters:
+            yield param
+    else:
+        for index, param in enumerate(obj.parameters):
+            if index != 0 and param['name'] != 'self':
+                yield param
+
+
+normalBases = ('object', )
 
 
 def defaultBases(obj):
-    return iter(obj.bases or ['object'])
+    return iter(obj.bases or normalBases)
 
 
 def zopeInterfaceBases(obj):
-    return ['zope.interface.Interface']
+    return iter(obj.bases or ['zope.interface.Interface'])
+
+
+def implAny(obj):
+    for module in obj.parents(lambda x:x.isModule):
+        for name in obj.bases:
+            if any(module.find(lambda v:v.name == name)):
+                return True
+
+
+
+def zopeImplementsClassBases(obj):
+    return iter(normalBases) if implAny(obj) else defaultBases(obj)
+
+
+def zopeImplementsClassHead(obj):
+    if implAny(obj):
+        for cls in obj.bases:
+            yield 'zope.interface.implements({})'.format(cls)
