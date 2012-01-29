@@ -718,6 +718,11 @@ class Expression(Base):
 	    arg.left.walk(child, memo)
 	    arg.right = arg = expr(parent=self)
 
+    def acceptThisConstructorCall(self, node, memo):
+	""" Accept and process a 'this(...)' constructor call. """
+	self.acceptMethodCall(node, memo)
+        self.left = 'self.__init__'
+
     def acceptStaticArrayCreator(self, node, memo):
 	""" Accept and process a static array expression. """
 	self.right = self.factory.expr(fs='[None]*{left}')
