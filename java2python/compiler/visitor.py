@@ -729,6 +729,11 @@ class Expression(Base):
 	self.right.left = self.factory.expr()
 	self.right.left.walk(node.firstChildOfType(tokens.EXPR), memo)
 
+    def acceptSuper(self, node, memo):
+        """ Accept and process a super expression. """
+	cls = self.parents(lambda c:c.isClass).next()        
+        self.right = self.factory.expr(fs='super({name}, self)'.format(name=cls.name))
+
     def acceptSuperConstructorCall(self, node, memo):
 	""" Accept and process a super constructor call. """
 	cls = self.parents(lambda c:c.isClass).next()
