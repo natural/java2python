@@ -43,7 +43,7 @@ def simpleImports(module, expr):
 
 
 def commentedPackages(module, expr):
-    module.factory.comment(parent=module, left=expr, fs='package: {left}')
+    module.factory.comment(parent=module, left=expr, fs='# package: {left}')
 
 
 def namespacePackages(module, expr):

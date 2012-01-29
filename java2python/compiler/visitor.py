@@ -250,7 +250,7 @@ class Class(VarAcceptor, TypeAcceptor, ModifiersAcceptor, Base):
 	ident = node.firstChildOfType(tokens.IDENT)
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
 	mods = node.firstChildOfType(tokens.MODIFIER_LIST)
-	return self.factory.method(name=ident.text, type=type, parent=self)
+        return self.factory.method(name=ident.text, type=type, parent=self)
 
     def acceptVoidMethodDecl(self, node, memo):
 	""" Accept and process a void method declaration. """
@@ -456,7 +456,7 @@ class MethodContent(Base):
 	if not len(caseNodes):
 	    return
 	# we have at least one node...
-	parExpr = self.factory.expr()
+	parExpr = self.factory.expr(parent=self)
 	parExpr.walk(parNode)
 	eqFs = FS.l + '==' + FS.r
 	for caseIdx, caseNode in enumerate(caseNodes):
@@ -470,7 +470,7 @@ class MethodContent(Base):
 		caseExpr = self.factory.statement('else', fs=FS.lc, parent=self)
 
 	    if not isDefault:
-		right = self.factory.expr()
+		right = self.factory.expr(parent=parExpr)
 		right.walk(caseNode.firstChildOfType(tokens.EXPR))
 		caseExpr.expr.right = self.factory.expr(left=parExpr, right=right, fs=eqFs)
 		caseContent = self.factory.methodContent(parent=self)
@@ -486,6 +486,7 @@ class MethodContent(Base):
 		    caseContent.walk(child, memo)
 		if not caseNode.children:
 		    self.factory.expr(left='pass', parent=caseContent)
+        self.children.remove(parExpr)
 
     def acceptThrow(self, node, memo):
 	""" Accept and process a throw statement. """

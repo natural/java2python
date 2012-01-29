@@ -141,11 +141,19 @@ astTransforms = [
     (Type('TRUE'),  transform.true2True),
     (Type('IDENT'), transform.keywordSafeIdent),
 
+
     (Type('FLOATING_POINT_LITERAL'),
      transform.syntaxSafeFloatLiteral),
 
+    (Type('TYPE') > Type('BOOLEAN'),
+     transform.typeSub),
+
+    (Type('TYPE') > Type('DOUBLE'),
+     transform.typeSub),
+
     (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
-     transform.typeSub)
+     transform.typeSub),
+
 ]
 
 
@@ -184,6 +192,7 @@ moduleOutputSubs = [
 
 typeSubs = {
     'Boolean' : 'bool',
+    'boolean' : 'bool',
     'IndexOutOfBoundsException' : 'IndexError',
     'Integer' : 'int',
     'Object' : 'object',

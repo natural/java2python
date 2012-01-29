@@ -1,0 +1,11 @@
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+
+.DS_Store
+
+java2python/lang/Java.tokens
+java2python/lang/JavaLexer.py
+java2python/lang/JavaParser.py
