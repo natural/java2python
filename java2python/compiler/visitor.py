@@ -364,6 +364,8 @@ class MethodContent(Base):
 	cname = '.'.join(n.text for n in tnames)
 	cvar = decl.firstChildOfType(tokens.IDENT)
 	block = node.firstChildOfType(tokens.BLOCK_SCOPE)
+        if not block.children:
+	    self.factory.expr(left='pass', parent=self)
 	self.expr.fs = FS.lsrc
 	self.expr.right = self.factory.expr(fs=FS.l+' as '+FS.r, left=cname, right=cvar)
 	self.walk(block, memo)
