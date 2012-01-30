@@ -41,11 +41,21 @@ class Base(object):
 	prefix = self.config.last('commentPrefix', '# ')
 	cache, parser, comTypes = memo.comments, tree.parser, tokens.commentTypes
 	comNew = lambda t:t.type in comTypes and t.index not in cache
+
 	for tok in ifilter(comNew, parser.input.tokens[memo.last:index]):
 	    cache.add(tok.index)
-	    if tmpl.isExpression and tok.line==parser.input.tokens[index].line:
-  	        tmpl.tail += prefix if not tmpl.tail.startswith(prefix) else ''
-		tmpl.tail += ''.join(self.stripComment(tok.text))
+
+            # loop over parents until we find the top expression
+            base = tmpl
+            while base:
+                if base and base.parent and base.parent.isExpression:
+                    base = base.parent
+                else:
+                    break
+
+	    if hasattr(base, 'tail') and tok.line==parser.input.tokens[index].line:
+  	        base.tail += prefix if not base.tail.startswith(prefix) else ''
+		base.tail += ''.join(self.stripComment(tok.text))
 	    else:
 		for line in self.stripComment(tok.text):
 		    self.factory.comment(left=prefix, right=line, parent=self)
@@ -250,12 +260,14 @@ class Class(VarAcceptor, TypeAcceptor, ModifiersAcceptor, Base):
 	ident = node.firstChildOfType(tokens.IDENT)
 	type = node.firstChildOfType(tokens.TYPE).children[0].text
 	mods = node.firstChildOfType(tokens.MODIFIER_LIST)
+        self.variables.append(ident.text)
         return self.factory.method(name=ident.text, type=type, parent=self)
 
     def acceptVoidMethodDecl(self, node, memo):
 	""" Accept and process a void method declaration. """
 	ident = node.firstChildOfType(tokens.IDENT)
 	mods = node.firstChildOfType(tokens.MODIFIER_LIST)
+        self.variables.append(ident.text)
 	return self.factory.method(name=ident.text, type='void', parent=self)
 
 
@@ -352,9 +364,17 @@ class MethodContent(Base):
 
     def acceptBreak(self, node, memo):
 	""" Accept and process a break statement. """
-	if node.parent and node.parent.type in (tokens.CASE, tokens.DEFAULT):
-	    return
-	breakStat = self.factory.statement('break', parent=self)
+        # possible parents of a break statement:  switch, while, do, for
+        # we want to skip inserting a break statement if we're inside a switch.
+        insert, ok_types = True, [tokens.WHILE, tokens.DO, tokens.FOR]
+        for parent in node.parents():
+            if parent.type == tokens.SWITCH:
+                insert = False
+                break
+            if parent.type in ok_types:
+                break
+        if insert:
+            breakStat = self.factory.statement('break', parent=self)
 
     def acceptCatch(self, node, memo):
 	""" Accept and process a catch statement. """
@@ -536,7 +556,10 @@ class MethodContent(Base):
 	parNode, blkNode = node.children
 	whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
 	whileStat.expr.walk(parNode, memo)
-	whileStat.walk(blkNode, memo)
+        if not blkNode.children:
+            self.factory.expr(left='pass', parent=whileStat)
+        else:
+            whileStat.walk(blkNode, memo)
 
 
 class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
@@ -719,6 +742,7 @@ class Expression(Base):
 	    arg.left = expr(fs=fs, parent=self)
 	    arg.left.walk(child, memo)
 	    arg.right = arg = expr(parent=self)
+
 
     def acceptThisConstructorCall(self, node, memo):
 	""" Accept and process a 'this(...)' constructor call. """

@@ -237,6 +237,13 @@ class LocalTree(CommonTree):
 	""" Returns the type of the parent tree. """
 	return self.parent.type
 
+    def parents(self, pred=lambda v:True):
+	""" Yield each parent in the family tree. """
+	while self:
+	    if pred(self):
+		yield self
+	    self = self.parent
+
     @property
     def parserTokens(self):
 	""" Returns the sequence of tokens used to create this tree. """
