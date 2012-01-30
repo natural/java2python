@@ -4,7 +4,7 @@ java2python
 Simple but effective tool to translate Java source code into Python.
 
 
-There are [lots of docs](./java2python/doc/index.md), [plenty of tests](././java2python/test/), and [many options](./java2python/doc/customizations.md) for controlling code generation.
+There are [lots of docs](./java2python/tree/master/doc/index.md), [plenty of tests](./java2python/tree/master/test/), and [many options](./java2python/tree/master/doc/customizations.md) for controlling code generation.
 
 I'm in the process of finalizing the documentation and packaging a release.  That will be release 0.5 when it's done.  If you're looking for old releases, check the [downloads](./java2python/downloads) link above.
 
