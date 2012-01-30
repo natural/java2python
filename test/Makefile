@@ -23,7 +23,7 @@ clean:
 
 packages:
 	@cd Package1 && javac Class1.java
-	@cd Package1 && ../$(j2py) -i Class1.java  -o Class1.py
+	@cd Package1 && ../$(j2py) Class1.java Class1.py
 
 
 parsers:
@@ -35,7 +35,7 @@ parsers:
 
 
 %.py: %.class
-	@$(j2py) -i $(addsuffix .java, $(basename $@)) -o $@ -c configs/__init__.py -d configs
+	@$(j2py) $(addsuffix .java, $(basename $@)) $@ -c configs/__init__.py -d configs
 
 %: %.py
 	@bash -c "diff -q <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[PASS] $@"
