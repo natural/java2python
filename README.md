@@ -3,29 +3,34 @@ Simple but effective tool to translate Java source code into Python.
 Here's a quick example.  First, the Java source:
 
 
-    $ cat HelloWorldApp.java
-    class HelloWorldApp {
+    $ cat HelloWorld.java
+    // This is the HelloWorld class with it's single method.
+    class HelloWorld {
         public static void main(String[] args) {
-            System.out.println('Hello, world.');
-            System.out.println(args);
+            System.out.println("Hello, world.");
         }
     }
 
 Next, we translate:
 
-    $ j2py -i HelloWorldApp.java
+    $ j2py HelloWorld.java
     #!/usr/bin/env python
-    # -*- coding: utf-8 -*-
+    """ generated source for module HelloWorld
 
-    class HelloWorldApp(object):
-        ''' generated source for HelloWorldApp
+    """
+    #  This is the HelloWorld class with it's single method.
+    class HelloWorld(object):
+        """ generated source for class HelloWorld
 
-        '''
+        """
         @classmethod
         def main(cls, args):
-            print 'Hello, world.'
-            print args
+            """ generated source for method main
+
+            """
+            print "Hello, world."
+
 
     if __name__ == '__main__':
         import sys
-        HelloWorldApp.main(sys.argv)
+        HelloWorld.main(sys.argv)
