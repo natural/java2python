@@ -151,12 +151,13 @@ def main(options):
 	module.name = path.splitext(filein)[0] if filein != '-' else '<stdin>'
 	print >> output, source
 
-    try:
-        compile(source, '<string>', 'exec')
-    except (SyntaxError, ), ex:
-        warning('Generated source has invalid syntax. %s', ex)
-    else:
-        info('Generated source has valid syntax.')
+    if not options.skipcompile:
+        try:
+            compile(source, '<string>', 'exec')
+        except (SyntaxError, ), ex:
+            warning('Generated source has invalid syntax. %s', ex)
+        else:
+            info('Generated source has valid syntax.')
 
     info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
     info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
@@ -183,30 +184,33 @@ def config(argv):
     addopt('-d', '--configdir', dest='configdir',
 	   help='Use DIR to match input filename with config filename.',
 	   metavar='DIR', default=None)
-    addopt('-n', '--nodefaults', dest='includedefaults',
-	   help='Ignore default configuration module.',
-	   default=True, action='store_false')
-    addopt('-l', '--loglevel', dest='loglevel',
-	   help='Set log level by name or value.',
-	   default='WARN', type='loglevel')
-    addopt('-t', '--lexer-tokens', dest='lexertokens',
-	   help='Print lexer tokens to stderr.',
-	   default=False, action='store_true')
-    addopt('-p', '--python-tree', dest='pytree',
-	   help='Print python object tree to stderr.',
+    addopt('-f', '--profile', dest='profile',
+	   help='Profile execution and print results to stderr.',
 	   default=False, action='store_true')
     addopt('-j', '--java-ast', dest='javaast',
 	   help='Print java source AST tree to stderr.',
 	   default=False, action='store_true')
-    addopt('-f', '--profile', dest='profile',
-	   help='Profile execution and print results to stderr.',
+    addopt('-k', '--skip-compile', dest='skipcompile',
+	   help='Skip compile check on translated source.',
 	   default=False, action='store_true')
-    addopt('-s', '--skip-source', dest='skipsource',
-	   help='Skip writing translated source; useful when printing trees',
+    addopt('-l', '--loglevel', dest='loglevel',
+	   help='Set log level by name or value.',
+	   default='WARN', type='loglevel')
+    addopt('-n', '--nodefaults', dest='includedefaults',
+	   help='Ignore default configuration module.',
+	   default=True, action='store_false')
+    addopt('-p', '--python-tree', dest='pytree',
+	   help='Print python object tree to stderr.',
 	   default=False, action='store_true')
     addopt('-r', '--nocolor', dest='nocolor',
 	   help='Disable color output.' +\
 	       ('  No effect on Win OS.' if isWindows() else ''),
+	   default=False, action='store_true')
+    addopt('-s', '--skip-source', dest='skipsource',
+	   help='Skip writing translated source; useful when printing trees',
+	   default=False, action='store_true')
+    addopt('-t', '--lexer-tokens', dest='lexertokens',
+	   help='Print lexer tokens to stderr.',
 	   default=False, action='store_true')
 
     options, args = parser.parse_args(argv)
