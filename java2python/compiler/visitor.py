@@ -390,6 +390,11 @@ class MethodContent(Base):
 	self.expr.right = self.factory.expr(fs=FS.l+' as '+FS.r, left=cname, right=cvar)
 	self.walk(block, memo)
 
+
+    def acceptContinue(self, node, memo):
+        """ Accept and process a continue statement. """
+        contStat = self.factory.statement('continue', fs=FS.lsr, parent=self)
+
     def acceptDo(self, node, memo):
 	""" Accept and process a do-while block. """
 	# DO - BLOCK_SCOPE - PARENTESIZED_EXPR
