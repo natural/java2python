@@ -24,4 +24,3 @@ def bsr(value, bits):
         return (tmp | (0x40000000 // 2**(bits-1)))
     else:
         return tmp
-

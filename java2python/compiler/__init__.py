@@ -34,4 +34,4 @@ def transformAST(tree, config):
     """ Walk the tree and apply the transforms in the config. """
     for selector, call in config.last('astTransforms', ()):
         for node in selector.walk(tree):
-	    call(node, config)
+            call(node, config)

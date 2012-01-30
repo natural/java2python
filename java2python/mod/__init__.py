@@ -15,5 +15,3 @@
 #
 # the `java2python.mod.transform` module contains values and functions
 # for transforming input AST nodes.
-
-

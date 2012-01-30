@@ -21,11 +21,11 @@ class FS(object):
 
         """
         l, r = cls.l, cls.r
-	if op == '>>>':
-	    return '(' + l + ' & (2**32+' + l + ')) >> ' + r
-	if op == '>>>=':
-	    return l + ' = bsr(' + l + ', ' + r + ')'
-	return l + ' ' + op + ' ' + r
+        if op == '>>>':
+            return '(' + l + ' & (2**32+' + l + ')) >> ' + r
+        if op == '>>>=':
+            return l + ' = bsr(' + l + ', ' + r + ')'
+        return l + ' ' + op + ' ' + r
 
 
 escapes = {

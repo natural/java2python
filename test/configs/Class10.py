@@ -1,5 +1,3 @@
-
-
 from java2python.config.default import modulePrologueHandlers
 
 modulePrologueHandlers += [

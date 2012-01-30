@@ -31,14 +31,14 @@ class Selector(object):
 
         Like CSS "E + F": an F element immediately preceded by an E element
         """
-	return AdjacentSibling(self, other)
+        return AdjacentSibling(self, other)
 
     def __and__(self, other):
         """ E & F
 
         Like CSS "E F":  an F element descendant of an E element
         """
-	return Descendant(self, other)
+        return Descendant(self, other)
 
     def __call__(self, *args, **kwds):
         """ Subclasses must implement. """
@@ -49,21 +49,21 @@ class Selector(object):
 
         Like CSS "E:nth-child(n)": an E element, the n-th child of its parent
         """
-	return Nth(self, key)
+        return Nth(self, key)
 
     def __gt__(self, other):
         """ E > F
 
         Like CSS: "E > F": an F element child of an E element
         """
-	return Child(self, other)
+        return Child(self, other)
 
     def __div__(self, other):
         """ E / F
 
         Produces a AnySibling.
         """
-	return AnySibling(self, other)
+        return AnySibling(self, other)
 
     def walk(self, tree):
         """ Select items from the tree and from the tree children. """
@@ -113,7 +113,7 @@ class Token(Selector):
     def __str__(self):
         items = self.attrs.items()
         keys = ('{}={}'.format(k, v) for k, v in items if v is not None)
-	return 'Token({})'.format(', '.join(keys))
+        return 'Token({})'.format(', '.join(keys))
 
 
 class Nth(Selector):
@@ -123,21 +123,21 @@ class Nth(Selector):
     support for keywords like 'odd', 'even', etc.
     """
     def __init__(self, e, key):
-	self.e, self.key = e, key
+        self.e, self.key = e, key
 
     def __call__(self, tree):
-	for etree in self.e(tree):
-	    try:
-		matches = tree.children[self.key]
-	    except (IndexError, ):
-		return
-	    if not isinstance(matches, (list, )):
-		matches = [matches]
-	    for child in matches:
-		yield child
+        for etree in self.e(tree):
+            try:
+                matches = tree.children[self.key]
+            except (IndexError, ):
+                return
+            if not isinstance(matches, (list, )):
+                matches = [matches]
+            for child in matches:
+                yield child
 
     def __str__(self):
-	return 'Nth({0})[{1}]'.format(self.e, self.key)
+        return 'Nth({0})[{1}]'.format(self.e, self.key)
 
 
 class Child(Selector):
@@ -145,15 +145,15 @@ class Child(Selector):
 
     """
     def __init__(self, e, f):
-	self.e, self.f = e, f
+        self.e, self.f = e, f
 
     def __call__(self, tree):
-	for ftree in self.f(tree):
-	    for etree in self.e(tree.parent):
-		yield ftree
+        for ftree in self.f(tree):
+            for etree in self.e(tree.parent):
+                yield ftree
 
     def __str__(self):
-	return 'Child({0} > {1})'.format(self.e, self.f)
+        return 'Child({0} > {1})'.format(self.e, self.f)
 
 
 class Type(Selector):
@@ -162,17 +162,17 @@ class Type(Selector):
     Similar to the type selector in CSS.
     """
     def __init__(self, key, value=None):
-	self.key = key if isinstance(key, int) else getattr(tokens, key)
-	self.value = value
+        self.key = key if isinstance(key, int) else getattr(tokens, key)
+        self.value = value
 
     def __call__(self, tree):
-	if tree.token.type == self.key:
-	    if self.value is None or self.value == tree.token.text:
-		yield tree
+        if tree.token.type == self.key:
+            if self.value is None or self.value == tree.token.text:
+                yield tree
 
     def __str__(self):
         val = '' if self.value is None else '={0}'.format(self.value)
-	return 'Type({0}{1}:{2})'.format(tokens.map[self.key], val, self.key)
+        return 'Type({0}{1}:{2})'.format(tokens.map[self.key], val, self.key)
 
 
 class Star(Selector):
@@ -181,10 +181,10 @@ class Star(Selector):
     Similar to the * selector in CSS.
     """
     def __call__(self, tree):
-	yield tree
+        yield tree
 
     def __str__(self):
-	return 'Star(*)'
+        return 'Star(*)'
 
 
 class Descendant(Selector):
@@ -192,18 +192,18 @@ class Descendant(Selector):
 
     """
     def __init__(self, e, f):
-	self.e, self.f = e, f
+        self.e, self.f = e, f
 
     def __call__(self, tree):
-	for ftree in self.f(tree):
-	    root, ftree = ftree, ftree.parent
-	    while ftree:
-		for etree in self.e(ftree):
-		    yield root
-		ftree = ftree.parent
+        for ftree in self.f(tree):
+            root, ftree = ftree, ftree.parent
+            while ftree:
+                for etree in self.e(ftree):
+                    yield root
+                ftree = ftree.parent
 
     def __str__(self):
-	return 'Descendant({0} & {1})'.format(self.e, self.f)
+        return 'Descendant({0} & {1})'.format(self.e, self.f)
 
 
 class AdjacentSibling(Selector):
@@ -211,12 +211,12 @@ class AdjacentSibling(Selector):
 
     """
     def __init__(self, e, f):
-	self.e, self.f = e, f
+        self.e, self.f = e, f
 
     def __call__(self, node):
-	if not node.parent:
-	    return
-	for ftree in self.f(node):
+        if not node.parent:
+            return
+        for ftree in self.f(node):
             index = node.parent.children.index(ftree)
             if not index:
                 return
@@ -225,7 +225,7 @@ class AdjacentSibling(Selector):
                 yield ftree
 
     def __str__(self):
-	return 'AdjacentSibling({} + {})'.format(self.e, self.f)
+        return 'AdjacentSibling({} + {})'.format(self.e, self.f)
 
 
 class AnySibling(Selector):
@@ -233,12 +233,12 @@ class AnySibling(Selector):
 
     """
     def __init__(self, e, f):
-	self.e, self.f = e, f
+        self.e, self.f = e, f
 
     def __call__(self, node):
-	if not node.parent:
-	    return
-	for ftree in self.f(node):
+        if not node.parent:
+            return
+        for ftree in self.f(node):
             index = node.parent.children.index(ftree)
             if not index:
                 return
@@ -247,4 +247,4 @@ class AnySibling(Selector):
                     yield ftree
 
     def __str__(self):
-	return 'AnySibling({} / {})'.format(self.e, self.f)
+        return 'AnySibling({} / {})'.format(self.e, self.f)

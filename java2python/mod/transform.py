@@ -29,13 +29,13 @@ def keywordSafeIdent(node, config, invalid=invalidPythonNames()):
     """ Validates and possibly renames a Java identifier. """
     ident = node.token.text
     if ident in invalid:
-	node.token.text = '%s_' % ident
+        node.token.text = '%s_' % ident
 
 
 def makeConst(v):
     """ Returns a closure that indiscriminately changes node text to a value. """
     def xform(node, config):
-	node.token.text = v
+        node.token.text = v
     return xform
 
 
@@ -50,11 +50,11 @@ def syntaxSafeFloatLiteral(node, config):
     """ Ensures a Java float literal is a valid Python float literal. """
     value = node.token.text
     if value.startswith('.'):
-	value = '0' + value
+        value = '0' + value
     if value.endswith(('f', 'd')):
-	value = value[:-1]
+        value = value[:-1]
     elif value.endswith(('l', 'L')):
-	value = value[:-1] + 'L'
+        value = value[:-1] + 'L'
     node.token.text = value
 
 
@@ -67,4 +67,4 @@ def typeSub(node, config):
     ident = node.token.text
     subs = config.last('typeSubs')
     if ident in subs:
-	node.token.text = subs[ident]
+        node.token.text = subs[ident]

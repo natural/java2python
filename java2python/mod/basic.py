@@ -49,17 +49,17 @@ def commentedPackages(module, expr):
 def namespacePackages(module, expr):
     source = module.sourceFilename
     if not source:
-	warn('namespace package not created; source input not named.')
-	return
+        warn('namespace package not created; source input not named.')
+        return
     initname = path.join(path.dirname(source), '__init__.py')
     if path.exists(initname):
-	warn('namespace package not created; __init__.py exists.')
-	return
+        warn('namespace package not created; __init__.py exists.')
+        return
     with open(initname, 'w') as initfile:
-	initfile.write('from pkgutil import extend_path\n')
-	initfile.write('__path__ = extend_path(__path__, __name__)\n')
-	# wrong
-	initfile.write('\nfrom {0} import {0}\n'.format(module.name))
+        initfile.write('from pkgutil import extend_path\n')
+        initfile.write('__path__ = extend_path(__path__, __name__)\n')
+        # wrong
+        initfile.write('\nfrom {0} import {0}\n'.format(module.name))
     info('created __init__.py file for package %s.', expr)
 
 
@@ -79,24 +79,24 @@ if __name__ == '__main__':
 
 def scriptMainStanza(module):
     def filterClass(x):
-	return x.isClass and x.name==module.name
+        return x.isClass and x.name==module.name
 
     def filterMethod(x):
-	return x.isMethod and x.isPublic and x.isStatic and \
-	       x.isVoid and x.name=='main'
+        return x.isMethod and x.isPublic and x.isStatic and \
+               x.isVoid and x.name=='main'
 
     for cls in [c for c in module.children if filterClass(c)]:
-	if [m for m in cls.children if filterMethod(m)]:
-	    yield scriptTemplate.format(indent=module.indent, name=module.name)
-	    break
+        if [m for m in cls.children if filterMethod(m)]:
+            yield scriptTemplate.format(indent=module.indent, name=module.name)
+            break
 
 
 def outputSubs(obj, text):
     subsname = '{0}OutputSubs'.format(obj.typeName)
     subs = obj.config.every(subsname, [])
     for sub in subs:
-	for pattern, repl in sub:
-	    text = rxsub(pattern, repl, text)
+        for pattern, repl in sub:
+            text = rxsub(pattern, repl, text)
     return text
 
 
@@ -111,7 +111,7 @@ def overloadedClassMethods(method):
         return
     for i, m in enumerate(methods[1:]):
         args = [p['type'] for p in m.parameters]
-	args = ', '.join(args)
+        args = ', '.join(args)
         m.decorators.append('@{0}.register({1})'.format(method.name, args))
         m.name = '{0}_{1}'.format(method.name, i)
     # for this one only:
@@ -120,11 +120,11 @@ def overloadedClassMethods(method):
 
 def maybeClassMethod(method):
     if method.isStatic and 'classmethod' not in method.decorators:
-	yield '@classmethod'
+        yield '@classmethod'
 
 def maybeAbstractMethod(method):
     if method.parent and method.parent.isInterface:
-	yield '@abstractmethod'
+        yield '@abstractmethod'
 
 
 def globalNameCounter(original, counter=count()):
@@ -139,8 +139,8 @@ def getBsrSrc():
 
 def maybeBsr(module):
     if getattr(module, 'needsBsrFunc', False):
-	for line in getBsrSrc().split('\n'):
-	    yield line
+        for line in getBsrSrc().split('\n'):
+            yield line
 
 
 def classContentSort(obj):
