@@ -1,4 +1,4 @@
-## java2python Documentation Index
+# java2python Documentation Index
 
 
 Please read the [introduction](./intro.md) for information about what the

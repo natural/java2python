@@ -1,13 +1,13 @@
-## Introduction
+# Introduction
 
-### What it Does
+## What it Does
 
 java2python reads the Java source files you give it and produces somewhat
 roughly equivalent Python source code.  It tries to make the same decisions
 you would if you were porting the code manually.  It can perform the
 translation faster and more accurately than you could (usually).
 
-### Where It's Useful
+## Where It's Useful
 
 java2python can help in two situations.  First, if you're doing a one-time
 port of a Java project to Python, it can save you a lot of time and
@@ -18,7 +18,7 @@ Python port and keep the port up to date, you'll find that java2python can
 help tremendously.  The per-project and per-file configuration system
 helps out a lot in this area.
 
-### Where It's Not
+## Where It's Not
 
 Where java2python is not useful is also important.  It won't be useful to you
 if you expect your newly translated Python code to run correctly the first
@@ -26,11 +26,11 @@ time.  The platforms are too different and this tool is too limited for that
 to happen.  Also, you won't find java2python very useful if you expect to
 convert Java sources at runtime.  I suppose you could try, but I wouldn't.
 
-### How it Works
+## How it Works
 
 java2python first converts the source code you give it into an abstract syntax
 tree.  (That's a lie, really.  java2python doesn't do this step,
-[ANTLR](www.antlr.org) does this step, and ANTLR is a whole lot bigger and
+[ANTLR](http://www.antlr.org) does this step, and ANTLR is a whole lot bigger and
 cooler than java2python could ever be.  Obviously, really smart people worked
 on ANTLR and only one fairly dim one worked on java2python).
 
@@ -94,7 +94,7 @@ See what java2python did there?  It tried to do what you would do.  For
 further explanation and enumeration see the [features](features.md) page.
 
 
-### Why Bother?
+## Why Bother?
 
 I bothered to write this because I needed a Java package to run on the
 CPython interpreter.  I got tired of porting by hand, so I wrote this
