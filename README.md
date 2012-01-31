@@ -7,11 +7,14 @@ There are [lots of docs](./java2python/tree/master/doc/index.md), [plenty of tes
 
 I'm in the process of finalizing the documentation and packaging a release.  That will be release 0.5 when it's done.  If you're looking for old releases, check the [downloads](./java2python/downloads) link above.
 
-Hello, world example:
+Here's a very simple example.  First we show the file:
 
 ```bash
     $ cat HelloWorld.java
 ```
+
+And we get this:
+
 ```java    
     // This is the HelloWorld class with a single method.
     class HelloWorld {
@@ -21,9 +24,15 @@ Hello, world example:
     }
 ```
 
+Next we run our program:
+
+
 ```bash
     $ j2py HelloWorld.java
 ```
+
+And we get this:
+
 ```python
     #!/usr/bin/env python
     """ generated source for module HelloWorld
@@ -45,3 +54,4 @@ Hello, world example:
         import sys
         HelloWorld.main(sys.argv)
 ```
+
