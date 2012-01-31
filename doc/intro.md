@@ -1,5 +1,7 @@
 ## Introduction
 
+This is an introduction.  Just like the title told you it would be.
+
 ### What it Does
 
 java2python reads the Java source files you give it and produces somewhat
