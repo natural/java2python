@@ -1,4 +1,4 @@
-# java2python Documentation Index
+## java2python Documentation Index
 
 
 Please read the [introduction](./intro.md) for information about what the
@@ -8,7 +8,7 @@ the tool.  When you really get going, you'll want to read the
 [features](./features.md) page to learn what you can do.
 
 
-## Contents
+### Contents
 
 * [Index (this page)](index.md)
 * [Introduction](intro.md)
