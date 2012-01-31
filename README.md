@@ -9,15 +9,22 @@ I'm in the process of finalizing the documentation and packaging a release.  Tha
 
 Hello, world example:
 
+```bash
     $ cat HelloWorld.java
+```
+```java    
     // This is the HelloWorld class with a single method.
     class HelloWorld {
         public static void main(String[] args) {
             System.out.println("Hello, world.");
         }
     }
+```
 
+```bash
     $ j2py HelloWorld.java
+```
+```python
     #!/usr/bin/env python
     """ generated source for module HelloWorld
 
@@ -34,8 +41,7 @@ Hello, world example:
             """
             print "Hello, world."
 
-
     if __name__ == '__main__':
         import sys
         HelloWorld.main(sys.argv)
-
+```
