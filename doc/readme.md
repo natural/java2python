@@ -11,7 +11,7 @@ the tool.  When you really get going, you'll want to read the
 
 These are the docs we've got:
 
-* [Index (this page)](index.md)
+* [Index (this page)](readme.md)
 * [Introduction](intro.md)
 * [Features](features.md)
 * [Usage](usage.md)
