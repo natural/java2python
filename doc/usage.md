@@ -1,55 +1,51 @@
-.. _usage:
+## Usage
 
-*****
-Usage
-*****
-
-Basic Invocation
-================
-
-The simplest way to invoke |j2py| is with the :command:`j2py` command
-and the name of an input file::
-
-    $ j2py SourceFile.java
-
-The input file may also be specified with the :option:`-i` (or :option:`--input`) option.
-
-The generated source code will be written to ``stdout`` by default.
-It can be redirected via the shell or by specifying the :option:`-o`
-(or :option:`--output`) option and a filename.
-
-If no input filename is given (or if the input filename is ``-``),
-:command:`j2py` reads from ``stdin``.
+This page describes how to invoke the java2python script, `j2py`.
 
 
-Options and Arguments
-=====================
+### Basic Use
 
-The :command:`j2py` command accepts options that alter its behavior.
+The simplest way to use java2python is with the `j2py` command
+and the name of an input file and output file:
+
+```bash
+$ j2py [INPUT] [OUTPUT]
+```
+
+Both are optional, but you'll usually supply an input file.  For example:
+
+```bash
+$ j2py SourceFile.java
+```
+
+
+### Options and Arguments
+
+The `j2py` command accepts options that alter its behavior.
 The behavior of the code generator is not part of the command itself;
-to change code generation behavior, refer to the :ref:`customization`
-chapter.
+to change code generation behavior, refer to the [customization](customization.md)
+page.
 
 
 Code generation:
 
-  * .. option:: -i NAME, --input NAME
+  * `[INPUT]`
 
-    Read from the given file.  Specify ``-`` for ``stdin``.  If not
-    given the command will read from ``stdin``.
+    Read from the given file.  Specify `-` for `stdin`.  If not
+    given the command will read from `stdin`.
 
-  * .. option:: -o NAME, --output NAME
+  * `[OUTPUT]`
 
-    Write to the given file.  Specify ``-`` for ``stdout``.  If not
-    given the command will write to ``stdout``.
+    Write to the given file.  Specify `-` for `stdout`.  If not
+    given the command will write to `stdout`.
 
-  * .. option:: -l LEVEL, --loglevel LEVEL
+  * `-l LEVEL`, `--loglevel LEVEL`
 
     Set the logging package to the specified log level.  The log level
-    may given as an integer (e.g., ``50`` for critical) or by name
-    (e.g., ``CRTICIAL``, ``Critical``, or ``critical``).
+    may given as an integer (e.g., `50` for critical) or by name
+    (e.g., `CRITICAL`, `Critical`, or `critical`).
 
-  * .. option:: -c NAME, --config NAME
+  * `-c NAME`, `--config NAME`
 
     Use the specified configuration module or file.  This option may
     be repeated.
@@ -58,57 +54,62 @@ Code generation:
     from the final value given to the first given, with the default
     configuration referenced last.
 
-    See the :ref:`customization` chapter for details of the
+    See the [customization](customization.md) page for details of the
     configuration system and available configuration points.
 
-  * .. option:: -d DIR, --configdir DIR
+  * `-d DIR`, `--configdir DIR`
 
-    Use the given directory name to match input filenames to
-    configuration filenames.  For example, to translate
-    ``FooBar.java`` and use the configuration stored in
-    ``./cfg/FooBar.py``, specify ``-d ./cfg``.
+    Use the given directory name to match input file names to
+    configuration file names.  For example, to translate
+    `FooBar.java` and use the configuration stored in
+    `./cfg/FooBar.py`, specify `-d ./cfg`.
 
-  * .. option:: -n, --nodefaults
+  * `-k`, `--skip-compile`
+
+    Do not check the output for valid Python syntax by byte compiling it.
+
+  * `-n`, `--nodefaults`
 
     Ignore the default configuration module.
 
-  * .. option:: -r, --nocolor
+  * `-r`, `--nocolor`
 
     Disable colorized output.
 
-    This option has no effect on Windows systems because colorized
-    output is always disabled in those environments.
+    Colorized output is not available on Windows and this option has no effect
+    there.
+
 
 Development:
 
-  * .. option:: -p, --python-tree
+  * `-p`, `--python-tree`
 
     Print a representation of the internal Python code tree.
-    Representation is written to ``stderr``.
+    Representation is written to `stderr`.
 
-  * .. option:: -j, --java-ast
+  * `-j`, `--java-ast`
 
     Print a representation of the Java abstract syntax tree.
-    Representation is written to ``stderr``.
+    Representation is written to `stderr`.
 
-  * .. option:: -f, --profile
+  * `-f`, `--profile`
 
-    Profile execution and print the results to ``stederr``.
+    Profile execution and print the results to `stderr`.
 
-  * .. option:: -s, --skip-source
+  * `-s`, `--skip-source`
 
     Do not write generated source.  This most useful in development of
-    |j2py| itself and when combined with :option:`-p` and/or
-    :option:`-j`.
+    java2python itself and when combined with `-p` and/or
+    `-j`.
 
 
 Meta:
 
-  * .. option:: -h, --help
+  * `-h`, `--help`
 
     Show a help message and exit
 
-  * .. option:: --version
+  * `-v`, `--version`
 
     Show the program version number and exit.
 
