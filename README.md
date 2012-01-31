@@ -1,5 +1,4 @@
-java2python
------------
+## java2python
 
 Simple but effective tool to translate Java source code into Python.
 
