@@ -10,48 +10,48 @@ I'm in the process of finalizing the documentation and packaging a release.  Tha
 Here's a very simple example.  First we show the file:
 
 ```bash
-    $ cat HelloWorld.java
+$ cat HelloWorld.java
 ```
 
 And we get this:
 
 ```java    
-    // This is the HelloWorld class with a single method.
-    class HelloWorld {
-        public static void main(String[] args) {
-            System.out.println("Hello, world.");
-        }
+// This is the HelloWorld class with a single method.
+class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello, world.");
     }
+}
 ```
 
 Next we run our program:
 
 
 ```bash
-    $ j2py HelloWorld.java
+$ j2py HelloWorld.java
 ```
 
 And we get this:
 
 ```python
-    #!/usr/bin/env python
-    """ generated source for module HelloWorld
+#!/usr/bin/env python
+""" generated source for module HelloWorld
+
+"""
+#  This is the HelloWorld class with a single method.
+class HelloWorld(object):
+    """ generated source for class HelloWorld
 
     """
-    #  This is the HelloWorld class with a single method.
-    class HelloWorld(object):
-        """ generated source for class HelloWorld
+    @classmethod
+    def main(cls, args):
+        """ generated source for method main
 
         """
-        @classmethod
-        def main(cls, args):
-            """ generated source for method main
+        print "Hello, world."
 
-            """
-            print "Hello, world."
-
-    if __name__ == '__main__':
-        import sys
-        HelloWorld.main(sys.argv)
+if __name__ == '__main__':
+    import sys
+    HelloWorld.main(sys.argv)
 ```
 
