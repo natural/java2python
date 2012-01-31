@@ -1,4 +1,4 @@
-## java2python Documentation Index
+## java2python Documentation
 
 Please read the [introduction](./intro.md) for information about what the
 package does, how it works, and why it was created.  From there you should
@@ -11,7 +11,6 @@ the tool.  When you really get going, you'll want to read the
 
 These are the docs we've got:
 
-* [Index (this page)](readme.md)
 * [Introduction](intro.md)
 * [Features](features.md)
 * [Usage](usage.md)
