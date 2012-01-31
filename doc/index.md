@@ -11,9 +11,9 @@ the tool.  When you really get going, you'll want to read the
 Contents
 ---------
 
-    * [Index (this page)](index.md)
-    * [Introduction](intro.md)
-    * [Features](features.md)
-    * [Usage](usage.md)
-    * [Customization](customization.md)
-    * [Glossary](glossary.md)
+* [Index (this page)](index.md)
+* [Introduction](intro.md)
+* [Features](features.md)
+* [Usage](usage.md)
+* [Customization](customization.md)
+* [Glossary](glossary.md)
