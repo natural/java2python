@@ -1,210 +1,80 @@
-.. _features:
+## Translation Features
 
-********************
-Translation Features
-********************
-
-The |j2py| package can translate any syntactically valid Java source
+The java2python package can translate any syntactically valid Java source
 code file.  The generated Python code is not guaranteed to run, nor is
-guaranteed to be syntatically valid Python.  However, |j2py| works
+guaranteed to be syntatically valid Python.  However, java2python works
 well many cases, and in some of those, it creates perfectly usable and
 workable Python code.
 
-The remainder of this chapter describes how Java language features are
+The remainder of this page describes how Java language features are
 translated into Python constructs.
 
 
-General Approach
-================
+### General Approach
 
-The approach taken by |j2py| is to favor readability over correctness
-for two reasons: first, it is quite rare to find Java source code that
-will can be translated directly to Python without modification because
-of semantic and run-time differences, and second, |j2py| is meant to
-aid in one-time and ongoing translation projects.
+The approach taken by java2python is to favor readability over correctness.
 
+### What Works
 
-What Works Well (Unless You Try Really Hard to Break It)
-========================================================
+#### Identifiers and Qualified Identifiers
 
+java2python copies identifiers from source to target, modifying the value only when:
 
-What Works Mostly (Or Sometimes if You're Lucky)
-================================================
+  * the identifier conflicts with a Python keyword or builtin, or
+  * the identifier has an explicit lexical transformation
 
 
-What Works Barely (Or Not at All)
-=================================
+#### Literals: Integer, Floating Point, Character, String, Boolean and Null
+
+Literals are copied from source to target with the following modifications:
+
+  * `null` is changed to `None`
+  * `false` is changed to `False`
+  * `true` is changed to `True`
+  * if necessary, floating point literals are modified to become valid Python values
+  * string and character literals are translated as Python strings
+
+Transformation of literal values happens at the AST level; see the
+`astTransforms` configuration value for details.
+
+#### Expressions
+
+##### ConstantExpression
+
+Constant expressions are translated to their Python equivalents.
+
+##### Ternary Expressions
+
+Ternary expressions are translated to their Python form (`val if condition else other`)
 
 
-A (Mostly) Complete List
-=========================
+#### Prefix Operators
 
-The following list is an edited version of the grammar presented in
-JLS3.  The list has been edited for clarity and conciseness and |j2py|
-support for each construct is noted as well.
+All of the Java prefix operators are supported:
 
-http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
+        ++        --    !    ~    +    -
 
+In the case of `++` and `--`, java2python translates to `+= 1` and `-= 1`.  If necessary, those expressions are moved outside of statements.
 
+#### Assignment Operators
 
+All of the following assignment operators are translated into their Python equivalents:
+     
+    =    +=    -=    *=    /=    &=    |=    ^=    %=    <<=    >>=
 
+The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are mapped to a function; if java2python detects code that uses either of these, it replaces the operator with that function and includes the function within the output.  This behavior is controlled by the `modulePrologueHandlers` config item.
 
+#### Infix Operators
 
-  * ``Identifier: IDENTIFIER``
+The following operators are translated to their Python equivalents:
 
-    |j2py| copies identifiers from source to target, modifying the value only when:
+    ||    &&    |    ^    &    ==    !=    <    >
+    <=    >=    <<   >>   >>>  +     -     *    /    %
 
-    * the identifier conflicts with a Python keyword or builtin, or
-    * the identifier has an explicit lexical transformation
+Refer to the note above regarding bit shift right.
 
-  * ``QualifiedIdentifier: Identifier { . Identifier }``
+#### Basic Types
 
-    Same behavior as Identifier; each value is examined and transformed individullly
-
-  * ``Literal: IntegerLiteral | FloatingPointLiteral | CharacterLiteral | StringLiteral | BooleanLiteral | NullLiteral``
-
-    Literals are copied from source to target with the following modifications:
-
-    * ``null`` is changed to ``None``
-    * ``false`` is changed to ``False``
-    * ``true`` is changed to ``True``
-    * if necessary, floating point literals are modified to become valid Python values
-    * string and character literals are translated as Python strings
-
-    Transformation of literal values happens at the AST level; see the
-    ``astTransforms`` configuration value for details.
-
-    * ``Expression: Expression1 [AssignmentOperator Expression1]]``
-
-      Refer to the individual expression types below.
-
-    * ``AssignmentOperator:
-        =
-        +=
-        -=
-        *=
-        /=
-        &=
-        |=
-        ^=
-        %=
-        <<=
-        >>=
-        >>>=
-        ``
-
-
-Type:
-        Identifier [TypeArguments]{   .   Identifier [TypeArguments]} {[]}
-        BasicType
-
-TypeArguments:
-        < TypeArgument {, TypeArgument} >
-
-TypeArgument:
-        Type
-        ? [( extends |super ) Type]
-
-StatementExpression:
-        Expression
-
-ConstantExpression:
-        Expression
-
-Expression1:
-        Expression2 [Expression1Rest]
-
-Expression1Rest:
-        ?   Expression   :   Expression1
-
-Expression2 :
-        Expression3 [Expression2Rest]
-
-Expression2Rest:
-        {InfixOp Expression3}
-        Expression3 instanceof Type
-
-InfixOp:
-        ||
-        &&
-        |
-        ^
-        &
-        ==
-        !=
-        <
-        >
-        <=
-        >=
-        <<
-        >>
-        >>>
-        +
-        -
-        *
-        /
-        %
-
-Expression3:
-        PrefixOp Expression3
-        (   Expression | Type   )   Expression3
-        Primary {Selector} {PostfixOp}
-
-Primary:
-        ParExpression
-        NonWildcardTypeArguments (ExplicitGenericInvocationSuffix | this
-Arguments)
-  this [Arguments]
-  super SuperSuffix
-        Literal
-  new Creator
-        Identifier { . Identifier }[ IdentifierSuffix]
-        BasicType {[]} .class
-   void.class
-
-IdentifierSuffix:
-        [ ( ] {[]} .   class | Expression ])
-        Arguments
-        .   ( class | ExplicitGenericInvocation | this | super Arguments | new
-[NonWildcardTypeArguments] InnerCreator )
-
-ExplicitGenericInvocation:
-        NonWildcardTypeArguments ExplicitGenericInvocationSuffix
-
-NonWildcardTypeArguments:
-        < TypeList >
-
-
-ExplicitGenericInvocationSuffix:
-     super SuperSuffix
-        Identifier Arguments
-
-
-PrefixOp:
-        ++
-        --
-        !
-        ~
-        +
-        -
-
-PostfixOp:
-        ++
-        --
-
-Selector: Selector:
-        . Identifier [Arguments]
-        . ExplicitGenericInvocation
-        . this
-   . super SuperSuffix
-        . new [NonWildcardTypeArguments] InnerCreator
-        [ Expression ]
-
-SuperSuffix:
-        Arguments
-        . Identifier [Arguments]
-
-BasicType:
   byte
   short
   char
@@ -213,6 +83,103 @@ BasicType:
   float
   double
   boolean
+
+#### Types, Interfaces, Enums
+
+Java classes, interfaces, and enums are translated into Python classes.
+
+In the case of interfaces, the strategy is configurable.  By default, interfaces are translated to classes utilizing the ABCMeta class.  The package includes config handlers that can translate to simple classes (inheriting from `object`), or from Zope Interfaces.
+
+Enums are also translated via a configurable strategy.  By default, enumerated values are created as class attributes with string values.  The package includes a config handler to create class attributes with integer values.
+
+#### Statements
+
+##### assert
+        
+assert Expression [ : Expression] ;
+
+##### if
+
+if ParExpression Statement [else Statement]
+
+##### for
+
+for ( ForControl ) Statement
+
+##### while and do
+
+while ParExpression Statement
+     
+do Statement while ParExpression   ;
+
+##### try and catch
+     
+try Block ( Catches | [Catches] finally Block )
+
+##### switch
+
+switch ParExpression { SwitchBlockStatementGroups }
+
+##### synchronized
+
+synchronized ParExpression Block
+
+##### return
+
+return [Expression] ;
+
+##### throw
+
+throw Expression   ;
+
+##### break
+
+break [Identifier]
+
+###### continue
+
+continue [Identifier]
+
+
+
+#### Other Keywords:  new, super, this, void.class, instanceof
+
+
+    this [Arguments]
+    super SuperSuffix
+        Literal
+    new Creator
+        Identifier { . Identifier }[ IdentifierSuffix]
+        BasicType {[]} .class
+    void.class
+
+    ExplicitGenericInvocation:
+        NonWildcardTypeArguments ExplicitGenericInvocationSuffix
+
+    NonWildcardTypeArguments:
+        < TypeList >
+
+
+    ExplicitGenericInvocationSuffix:
+     super SuperSuffix
+        Identifier Arguments
+
+##### Annotations
+
+  Annotation
+  public
+  protected
+  private
+  static
+  abstract
+  final
+  native
+  synchronized
+  transient
+  volatile
+  strictfp
+
+#### The Rest
 
 Arguments:
         ( [Expression { , Expression }] )
@@ -260,19 +227,7 @@ LocalVariableDeclarationStatement:
 
 Statement:
         Block
-        assert Expression [ : Expression] ;
-     if ParExpression Statement [else Statement]
-     for ( ForControl ) Statement
-     while ParExpression Statement
-     do Statement while ParExpression   ;
-     try Block ( Catches | [Catches] finally Block )
-     switch ParExpression { SwitchBlockStatementGroups }
-     synchronized ParExpression Block
-     return [Expression] ;
-     throw Expression   ;
-     break [Identifier]
-     continue [Identifier]
-        ;
+
         StatementExpression ;
         Identifier   :   Statement
 
@@ -331,18 +286,7 @@ ForInit:
         StatementExpression Expressions
 
 Modifier:
-  Annotation
-  public
-  protected
-  private
-  static
-  abstract
-  final
-  native
-  synchronized
-  transient
-  volatile
-        strictfp
+
 
 VariableDeclarators:
         VariableDeclarator { ,   VariableDeclarator }
@@ -373,7 +317,7 @@ CompilationUnit:
 {TypeDeclaration}
 
 ImportDeclaration:
-     import [ static] Identifier {   .   Identifier } [   .     *   ] ;
+     import [ static] Identifier {   .   Identifier } [   .   *   ] ;
 
 TypeDeclaration:
         ClassOrInterfaceDeclaration
@@ -548,3 +492,6 @@ MethodBody:
 
 EnumConstantName:
         Identifier
+
+
+http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
