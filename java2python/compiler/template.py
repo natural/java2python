@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.compiler.template -> Base classes for writing Python source. """
-##
-# This module defines templates -- blocks of Python source code --
-# that can be easily manipulated and written.  Each base provides
+# java2python.compiler.template -> Base classes for writing Python source.
+#
+# This module defines templates -- chunks of Python source code --
+# that can be easily manipulated and written.  Each class provides
 # string methods (__str__, dump, dumps) for serializing instances as a
-# source code string.  The base types also provide many utility
-# methods.
+# source code string.
 #
 # The Factory class is used to to provide runtime lookup of concrete
 # classes; this was necessary to accommodate splitting the behavior of
@@ -25,17 +24,17 @@ from java2python.lib import FS, colors
 class Factory(object):
     """ Factory -> creates pre-configured callables for new block instances.
 
-    The templates use an instance of this class as a quick and simple
-    interface to create new templates like this:
+    Both templates and visitors use an instance of this class as a simple
+    interface to create new blocks like this:
 
         stat = self.factory.statement()
 
     The `__getattr__` method does the work of looking up and returning
-    the appropriate template class.  The lookup depends on the types
+    the appropriate block class.  The lookup depends on the types
     registry, which is populated by the FactoryTypeDetector metaclass
     below.
 
-    The important thing to realize regarding this factory is this:
+    One important thing to realize regarding this factory is this:
     when an attribute is requested (`self.factory.expr` for example),
     the factory locates the type and returns a constructor for it with
     the config object pre-applied.
@@ -57,19 +56,20 @@ class FactoryTypeDetector(type):
     """ FactoryTypeDetector -> detects factory-creatable types as they are defined.
 
     As subclasses are created they are checked for an attribute called
-    `factoryTypeName`.  If present, that key is used to populate the
-    factory type registry above.
+    `factoryName`.  If present, that key is used to populate the
+    type registry in the Factory class.
 
-    Note that the actual subclasses are not created here (none of
-    these specify a `factoryTypeName`).  Actual factory types are
-    created in `java2python.compiler.block`.  This is because we're
-    after not templates, but visitors combined with templates, aka
-    blocks.  Refer to the `blocks` module for the specific factory
+    Note that the actual subclasses are not created here (templates and
+    visitors do not specify a `factoryName`).  Actual factory types are created
+    in `java2python.compiler.block`.  This is because we're after not
+    templates or visitors, but rather visitors combined with templates (aka
+    blocks).  Refer to the `blocks` module for the specific factory
     type names.
+
     """
     def __init__(cls, name, bases, namespace):
         try:
-            Factory.types[cls.factoryTypeName] = cls
+            Factory.types[cls.factoryName] = cls
         except (AttributeError, ):
             pass
 
@@ -95,7 +95,7 @@ class Base(object):
     * Configuration
 
     This class provides utility methods for retrieving values from the
-    run-time configuration.  See the definition of `configHandler` and
+    runtime configuration.  See the definition of `configHandler` and
     `configHandlers` for details.
 
     * Serialization
@@ -292,9 +292,8 @@ class Base(object):
 
 
 class Expression(Base):
-    """ Expression -> formatting for Python expressions.
+    """ Expression -> formatting for Python expressions. """
 
-    """
     isExpression = True
 
     def __init__(self, config, left='', right='', fs=FS.lr, parent=None, tail=''):
@@ -342,9 +341,8 @@ class Expression(Base):
 
 
 class Comment(Expression):
-    """ Comment -> formatting for Python comments.
+    """ Comment -> formatting for Python comments. """
 
-    """
     isComment = True
 
     def __repr__(self):
@@ -356,9 +354,8 @@ class Comment(Expression):
 
 
 class Statement(Base):
-    """ Statement -> formatting for Python statements.
+    """ Statement -> formatting for Python statements. """
 
-    """
     isStatement = True
 
     def __init__(self, config, keyword, fs=FS.lr, parent=None):
@@ -378,9 +375,7 @@ class Statement(Base):
 
 
 class Module(Base):
-    """ Module -> formatting for Python modules.
-
-    """
+    """ Module -> formatting for Python modules. """
     isModule = True
 
     def iterBody(self):
@@ -405,9 +400,7 @@ class ClassMethodSharedMixin(object):
 
 
 class Class(ClassMethodSharedMixin, Base):
-    """ Class -> formatting for Python classes.
-
-    """
+    """ Class -> formatting for Python classes. """
     isClass = True
 
     def iterBases(self):
@@ -444,9 +437,7 @@ class Class(ClassMethodSharedMixin, Base):
 
 
 class Annotation(Class):
-    """ Annotation -> formatting for annotations converted to Python classes.
-
-    """
+    """ Annotation -> formatting for annotations converted to Python classes. """
     isAnnotation = True
 
     def __init__(self, config, name=None, type=None, parent=None):
@@ -454,16 +445,12 @@ class Annotation(Class):
 
 
 class Enum(Class):
-    """ Enum -> formatting for enums converted to Python classes.
-
-    """
+    """ Enum -> formatting for enums converted to Python classes. """
     isEnum = True
 
 
 class Interface(Class):
-    """ Interface -> formatting for interfaces converted to Python classes.
-
-    """
+    """ Interface -> formatting for interfaces converted to Python classes. """
     isInterface = True
 
 
@@ -472,9 +459,7 @@ class MethodContent(Base):
 
 
 class Method(ClassMethodSharedMixin, Base):
-    """ Method -> formatting for Python methods.
-
-    """
+    """ Method -> formatting for Python methods. """
     isMethod = True
 
     def __init__(self, config, name=None, type=None, parent=None):

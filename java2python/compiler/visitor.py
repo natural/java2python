@@ -1,8 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.compiler.visitor -> Base classes for walking ASTs. """
-##
-# Needs some introductory comments.
+# java2python.compiler.visitor -> Base classes for walking ASTs.
+#
+# This module defines classes that accept nodes during AST walking.  These
+# classes are the primary source of the language translation semantics as
+# implemented by java2python.
+#
+# These classes implement the node handling behavior of the block classes built
+# at runtime.  These classes use their factory callable more often than their
+# template counterparts; during walking, the typical behavior is to either define
+# the specific Python source, or to defer it to another block, or both.
+
 
 from functools import reduce, partial
 from itertools import ifilter, ifilterfalse, izip, tee
@@ -14,17 +22,15 @@ from java2python.lib import FS
 
 
 class Memo(object):
-    """ Memo -> AST walking luggage.
+    """ Memo -> AST walking luggage. """
 
-    """
     def __init__(self):
         self.comments, self.last = set(), 0
 
 
 class Base(object):
-    """ Base ->  Parent class for AST visitors.
+    """ Base ->  Parent class for AST visitors. """
 
-    """
     commentSubs = map(recompile, ['^\s*/(\*)+', '(\*)+/\s*$', '^\s*//'])
 
     def accept(self, node, memo):
@@ -94,10 +100,6 @@ class Base(object):
 
     def nodeTypeToString(self, node):
         """ Returns the TYPE or QUALIFIED_TYPE_IDENT of the given node. """
-        # (TYPE primitiveType
-        #  | TYPE qualifiedTypeIdent
-        #  | TYPE qualifiedTypeIdentSimplified
-        #  ) arrayDeclaratorList?
         alt = self.altIdent
         ntype = node.firstChildOfType(tokens.TYPE)
         nnext = ntype.children[0]
@@ -110,9 +112,8 @@ class Base(object):
 
 
 class TypeAcceptor(object):
-    """ TypeAcceptor -> shared visitor method(s) for type declarations.
+    """ TypeAcceptor -> shared visitor method(s) for type declarations. """
 
-    """
     def makeAcceptType(ft):
         """ Creates an accept function for the given factory type. """
         def acceptType(self, node, memo):
@@ -129,9 +130,8 @@ class TypeAcceptor(object):
 
 
 class Module(TypeAcceptor, Base):
-    """ Module -> accepts AST branches for module-level objects.
+    """ Module -> accepts AST branches for module-level objects. """
 
-    """
     def makeAcceptHandledDecl(part):
         """ Creates an accept function for a decl to be processed by a handler. """
         def acceptDecl(self, node, memo):
@@ -148,9 +148,8 @@ class Module(TypeAcceptor, Base):
 
 
 class ModifiersAcceptor(object):
-    """ ModifiersAcceptor -> shared behavior of classes and methods.
+    """ ModifiersAcceptor -> shared behavior of classes and methods. """
 
-    """
     def acceptModifierList(self, node, memo):
         """ Accept and process class and method modifiers. """
         isAnno = lambda token:token.type==tokens.AT
@@ -194,6 +193,8 @@ class ModifiersAcceptor(object):
 
 
 class VarAcceptor(object):
+    """ Mixin for blocks that accept handle var declarations. """
+
     def acceptVarDeclaration(self, node, memo):
         """ Creates a new expression for a variable declaration. """
         varDecls = node.firstChildOfType(tokens.VAR_DECLARATOR_LIST)
@@ -224,9 +225,8 @@ class VarAcceptor(object):
 
 
 class Class(VarAcceptor, TypeAcceptor, ModifiersAcceptor, Base):
-    """ Class -> accepts AST branches for class-level objects.
+    """ Class -> accepts AST branches for class-level objects. """
 
-    """
     def nodeIdentsToBases(self, node, memo):
         """ Turns node idents into template bases. """
         idents = node.findChildrenOfType(tokens.IDENT)
@@ -272,9 +272,8 @@ class Class(VarAcceptor, TypeAcceptor, ModifiersAcceptor, Base):
 
 
 class Annotation(Class):
-    """ Annotation -> accepts AST branches for Java annotations.
+    """ Annotation -> accepts AST branches for Java annotations. """
 
-    """
     def acceptAnnotationTopLevelScope(self, node, memo):
         """ Accept and process an annotation scope. """
         # We're processing the entire annotation top level scope here
@@ -321,9 +320,8 @@ class Annotation(Class):
 
 
 class Enum(Class):
-    """ Enum -> accepts AST branches for Java enums.
+    """ Enum -> accepts AST branches for Java enums. """
 
-    """
     def acceptEnumTopLevelScope(self, node, memo):
         """ Accept and process an enum scope """
         idents = node.childrenOfType(tokens.IDENT)
@@ -353,9 +351,7 @@ class Interface(Class):
 
 
 class MethodContent(Base):
-    """ MethodContent -> accepts trees for blocks within methods.
-
-    """
+    """ MethodContent -> accepts trees for blocks within methods. """
 
     def acceptAssert(self, node, memo):
         """ Accept and process an assert statement. """
@@ -568,9 +564,8 @@ class MethodContent(Base):
 
 
 class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
-    """ Method -> accepts AST branches for method-level objects.
+    """ Method -> accepts AST branches for method-level objects. """
 
-    """
     def acceptFormalParamStdDecl(self, node, memo):
         """ Accept and process a single parameter declaration. """
         ident = node.firstChildOfType(tokens.IDENT)
@@ -587,9 +582,8 @@ class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
 
 
 class Expression(Base):
-    """ Expression -> accepts trees for expression objects.
+    """ Expression -> accepts trees for expression objects. """
 
-    """
     def nodeTextExpr(self, node, memo):
         """ Assigns node text to the left side of this expression. """
         self.left = node.text

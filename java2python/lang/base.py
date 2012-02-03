@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.lang.base -> lexer and parser support classes. """
-##
+# java2python.lang.base -> lexer and parser support classes.
+#
 # This module provides the following:
 #
 # * `Tokens`
@@ -22,7 +22,7 @@
 # when inspecting and printing tree nodes.
 #
 
-##
+
 # ANTLR notes:
 #
 # recognizers: lexer, parser, treeparser
@@ -109,7 +109,7 @@ tokens = Tokens()
 
 
 class TreeAdaptor(CommonTreeAdaptor):
-    """ TreeAdaptor -> defered tree node creator (for parsers) """
+    """ TreeAdaptor -> defered tree node creator (for parsers). """
 
     def __init__(self, lexer, parser):
         # CommonTreeAdaptor doesn't need to be __init__'ed
@@ -121,9 +121,7 @@ class TreeAdaptor(CommonTreeAdaptor):
 
 
 class LocalTree(CommonTree):
-    """ LocalTree -> like CommonTree, but with much more stuff
-
-    """
+    """ LocalTree -> like CommonTree, but with more stuff. """
     colorTypeMap = {
         'CLASS'            : colors.green,
         'JAVA_SOURCE'      : colors.green,

@@ -1,25 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" :mod:`java2python.lang.selector` -- Declarative AST node selection
-=======================================================================
+# java2python.lang.selector -> declarative AST node selection
+#
+# This module provides classes for simple AST node selection that can be
+# easily combined to form complex, declarative rules for retrieving AST
+# nodes.
+#
+# The classes are similar to CSS selectors, with a nod to Python parsing
+# libraries like LEPL and PyParsing.  At the moment, only a few very
+# basic selector types are implemented, but those that are here already
+# provide all of the functionality necessary for use within the package.
+#
+# Projects using java2python should regard this subpackage as
+# experimental.  While the interfaces are not expected to change, the
+# semantics may.  Use with caution.
 
-.. module:: java2python.lang.selector
-    :synopsis: Declarative AST node selection.
-.. moduleauthor:: Troy Melhase <troy@gci.net>
-
-This module provides classes for simple AST node selection that can be
-easily combined to form complex, declarative rules for retrieving AST
-nodes.
-
-The classes are similar to CSS selectors, with a nod to Python parsing
-libraries like LEPL and PyParsing.  At the moment, only a few very
-basic selector types are implemented, but those that are here already
-provide all of the functionality necessary for use within the package.
-
-Projects using java2python should regard this subpackage as
-experimental.  While the interfaces are not expected to change, the
-semantics may.  Use with caution.
-"""
 from java2python.lang import tokens
 
 
@@ -141,9 +136,8 @@ class Nth(Selector):
 
 
 class Child(Selector):
-    """ E > F    select any F that is a child of E
+    """ E > F    select any F that is a child of E """
 
-    """
     def __init__(self, e, f):
         self.e, self.f = e, f
 
@@ -188,9 +182,8 @@ class Star(Selector):
 
 
 class Descendant(Selector):
-    """ E & F    select any F that is a descendant of E
+    """ E & F    select any F that is a descendant of E """
 
-    """
     def __init__(self, e, f):
         self.e, self.f = e, f
 
@@ -207,9 +200,8 @@ class Descendant(Selector):
 
 
 class AdjacentSibling(Selector):
-    """ E + F    select any F immediately preceded by a sibling E
+    """ E + F    select any F immediately preceded by a sibling E """
 
-    """
     def __init__(self, e, f):
         self.e, self.f = e, f
 
@@ -229,9 +221,8 @@ class AdjacentSibling(Selector):
 
 
 class AnySibling(Selector):
-    """ E / F    select any F preceded by a sibling E
+    """ E / F    select any F preceded by a sibling E """
 
-    """
     def __init__(self, e, f):
         self.e, self.f = e, f
 

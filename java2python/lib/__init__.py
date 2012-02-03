@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# java2python.lib -> common library bits.
+
 from functools import partial
 
 
 class FS(object):
-    """ Format string abbreviations.
-
-    """
+    """ Format string abbreviations. """
     l = '{left}'
     r = '{right}'
     c = ':'
@@ -17,9 +17,7 @@ class FS(object):
 
     @classmethod
     def op(cls, op):
-        """ Returns a format string for the given operation.
-
-        """
+        """ Returns a format string for the given operation. """
         l, r = cls.l, cls.r
         if op == '>>>':
             return '(' + l + ' & (2**32+' + l + ')) >> ' + r
@@ -38,7 +36,7 @@ escapes = {
     'RED'     : '\033[91m',
     'WHITE'   : '\033[97m',
     'YELLOW'  : '\033[93m',
-}
+    }
 
 
 def escape(color, value):

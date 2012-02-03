@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.mod.transform -> input AST transformer functions and constants. """
-
-##
+# java2python.mod.transform -> input AST transformer functions and constants.
 #
 # This module provides several transformation functions which are
 # simple callables that modify AST nodes.  These functions are not
 # responsible for selecting nodes, only changing the node content.
-# Thus, we have AST generation decoupled from AST traversal and
+# This gives us AST generation decoupled from AST traversal and
 # modification.
 #
-#  See the `java2python.config.default` and
-# `java2python.lang.selector` modules to understand how and when
-# selectors are associated with these callables.
+# See the java2python.config.default and java2python.lang.selector modules to
+# understand how and when selectors are associated with these callables.
 
 import keyword
 import types
@@ -39,8 +36,8 @@ def makeConst(v):
     return xform
 
 
-# create transformers for mapping well-known Java idents into their
-# Python counterparts.
+# Create transformers for mapping well-known Java idents into their
+# Python counterparts:
 null2None = makeConst('None')
 false2False = makeConst('False')
 true2True = makeConst('True')

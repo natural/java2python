@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-##
 # This is the default configuration file for java2python.  Unless
 # explicity disabled with the '-n' or '--nodefaults' option, the j2py
 # script will import this module for runtime configuration.

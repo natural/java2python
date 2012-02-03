@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.config -> subpackage for run-time configuration. """
+# java2python.config -> subpackage for run-time configuration.
 
 from functools import reduce
 from imp import load_source
@@ -8,7 +8,7 @@ from os import path
 
 
 class Config(object):
-    """ Config -> wraps multiple configuration modules """
+    """ Config -> wraps multiple configuration modules. """
 
     def __init__(self, names):
         self.configs = [self.load(name) for name in names]
@@ -18,7 +18,7 @@ class Config(object):
         return [getattr(config, key, default) for config in self.configs]
 
     def last(self, key, default=None):
-        """ Returns the value at the given key from the last config module to define it. """
+        """ Returns the value at the key from the last config defining it. """
         for config in reversed(self.configs):
             if hasattr(config, key):
                 return getattr(config, key)

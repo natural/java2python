@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-""" java2python.mod.basic -> functions to revise generated source strings. """
+# java2python.mod.basic -> functions to revise generated source strings.
+
 from itertools import count
 from logging import info, warn
 from os import path
@@ -169,6 +170,7 @@ def classContentSort(obj):
 def defaultParams(obj):
     return iter(obj.parameters)
 
+
 def zopeInterfaceMethodParams(obj):
     if not obj.parent.isInterface:
         for param in obj.parameters:
@@ -195,7 +197,6 @@ def implAny(obj):
         for name in obj.bases:
             if any(module.find(lambda v:v.name == name)):
                 return True
-
 
 
 def zopeImplementsClassBases(obj):
