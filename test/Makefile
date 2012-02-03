@@ -35,7 +35,7 @@ parsers:
 
 
 %.py: %.class
-	@$(j2py) $(addsuffix .java, $(basename $@)) $@ -c configs/__init__.py -d configs
+	@$(j2py) $(addsuffix .java, $(basename $@)) $@ -c configs/defaults.py -d configs
 
 %: %.py
 	@bash -c "diff -q <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[PASS] $@"
