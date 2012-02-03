@@ -71,10 +71,11 @@ def main(options):
         fileout = '%s.py' % (path.splitext(filein)[0])
 
     configs = options.configs
-    if options.configdir and not isinstance(filein, file):
-        dirconfigname = configFromDir(filein, options.configdir)
-        if path.exists(dirconfigname):
-            configs.insert(0, dirconfigname)
+    if options.configdirs and not isinstance(filein, file):
+        for configdir in options.configdirs:
+            dirname = configFromDir(filein, configdir)
+            if path.exists(dirname):
+                configs.insert(0, dirname)
     if options.includedefaults:
         configs.insert(0, 'java2python.config.default')
 
@@ -183,11 +184,10 @@ def config(argv):
         metavar='OUTPUTFILE', default=None)
     add('-c', '--config', dest='configs',
         help='Use CONFIG file or module.  May be repeated.',
-        metavar='CONFIG', default=[],
-        action='append')
-    add('-d', '--configdir', dest='configdir',
+        metavar='CONFIG', default=[], action='append')
+    add('-d', '--configdir', dest='configdirs',
         help='Use DIR to match input filename with config filename.',
-        metavar='DIR', default=None)
+        metavar='DIR', default=[], action='append')
     add('-f', '--profile', dest='profile',
         help='Profile execution and print results to stderr.',
         default=False, action='store_true')
@@ -223,6 +223,7 @@ def config(argv):
         ns.inputfile = sys.stdin
     if ns.outputfile == '-':
         ns.outputfile = sys.stdout
+
     configColors(ns.nocolor)
     configLogging(ns.loglevel)
     return ns

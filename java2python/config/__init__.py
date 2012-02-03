@@ -12,6 +12,8 @@ class Config(object):
 
     def __init__(self, names):
         self.configs = [self.load(name) for name in names]
+        for config in self.configs:
+            print '## CONFIG', config
 
     def every(self, key, default=None):
         """ Returns the value at the given key from each config module. """
