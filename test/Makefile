@@ -7,6 +7,8 @@ j2py = ../bin/j2py
 python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
 test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
+export PYTHONPATH := $(PYTHONPATH):.
+
 
 .PHONY: all clean
 .SILENT: %:
@@ -14,6 +16,7 @@ test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
 all:
 	$(MAKE) $(test_targets)
+
 
 selectors:
 	@cd selector && make
@@ -37,7 +40,7 @@ parsers:
 
 
 %.py: %.class
-	@$(j2py) $(addsuffix .java, $(basename $@)) $@ -c configs/defaults.py -d configs
+	@$(j2py) $(addsuffix .java, $(basename $@)) $@ -c configs.defaults -d configs
 
 %: %.py
 	@bash -c "diff -q <($(python) $(addsuffix .py, $@)) <(java -ea $@)" && echo "[PASS] $@"
