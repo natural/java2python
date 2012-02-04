@@ -28,8 +28,8 @@ Literals are copied from source to target with the following modifications:
   * `null` is changed to `None`
   * `false` is changed to `False`
   * `true` is changed to `True`
-  * if necessary, floating point literals are modified to become valid Python values
-  * string and character literals are translated as Python strings
+  * if necessary, floating point literals are changed to valid Python values
+  * string and character literals are changed to Python strings
 
 Transformation of literal values happens at the AST level; see the
 `astTransforms` configuration value for details.
@@ -49,7 +49,7 @@ Ternary expressions are translated to their Python form (`val if condition else 
 
 All of the Java prefix operators are supported:
 
-        ++        --    !    ~    +    -
+        ++    --    !    ~    +    -
 
 In the case of `++` and `--`, java2python translates to `+= 1` and `-= 1`.  If necessary, those expressions are moved outside of statements.
 
@@ -59,7 +59,7 @@ All of the following assignment operators are translated into their Python equiv
      
     =    +=    -=    *=    /=    &=    |=    ^=    %=    <<=    >>=
 
-The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are mapped to a function; if java2python detects code that uses either of these, it replaces the operator with that function and includes the function within the output.  This behavior is controlled by the `modulePrologueHandlers` config item.
+The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are mapped to a function; if java2python detects code that uses either of these, it replaces the operator with that function and includes the function within the output.  This behavior is controlled by the `modulePrologueHandlers` config handler.
 
 #### Infix Operators
 
@@ -74,75 +74,66 @@ Refer to the note above regarding bit shift right.
 
 The basic Java types are mapped to Python types as follows:
 
-    byte    => int
-    short   => int
-    char    => str
-    int     => int
-    long    => long
-    float   => float
-    double  => float
-    boolean => bool
+*    `byte`, `short`, `int`, and `long` become `int`
+*    `char` becomes  `str`
+*    `float` and `double` become `float`
+*    `boolean` becomes `bool`
 
 #### Types, Interfaces, Enums
 
 Java classes, interfaces, and enums are translated into Python classes.
 
 In the case of interfaces, the strategy is configurable.  By default,
-interfaces are translated to classes utilizing the ABCMeta class.  The package
+interfaces are translated to classes utilizing the `ABCMeta` class.  The package
 includes config handlers that can translate to simple classes (inheriting from
-`object`), or from Zope Interfaces.
+`object`), or from Zope Interfaces.  Interface base types are controlled via the `interfaceBaseHandlers` config item.  The `interfaceHeadHandlers` config item controls the
+metaclass.
 
 Enums are also translated via a configurable strategy.  By default, enumerated
 values are created as class attributes with string values.  The package
-includes a config handler to create class attributes with integer values.
+includes a config handler to create class attributes with integer values.  The config handler
+that controls enumeration value construction is `enumValueHandler`.
+
 
 #### Statements
 
 ##### assert
-        
-assert Expression [ : Expression] ;
+Java `assert` statements are translated to equivalent Python `assert` statements.
 
 ##### if
+Java `if` statements are translated to equivalent Python `if` statements.
 
-if ParExpression Statement [else Statement]
 
 ##### for
-
-for ( ForControl ) Statement
+Java `for` statements are translated to equivalent Python `for` statements.
 
 ##### while and do
-
-while ParExpression Statement
-     
-do Statement while ParExpression   ;
+Java `while` and `do` statements are translated to equivalent Python `while` statements.
 
 ##### try and catch
+Java `try` and `catch` statements are translated to equivalent Python `try` and `except` statements.
      
-try Block ( Catches | [Catches] finally Block )
-
-##### switch
-
-switch ParExpression { SwitchBlockStatementGroups }
+##### switch and case
+Java `switch` and `case` statements are translated to equivalent Python `if` statements.
 
 ##### synchronized
 
-synchronized ParExpression Block
+The compiler currently discards the `synchronized` Java statement.  This is incorrect behavior.  The correct behavior is (and will be) to apply a synchronized decorator to a function wrapping the construct.
 
 ##### return
+Java `return` statements are translated to equivalent Python `return` statements.
 
-return [Expression] ;
 
 ##### throw
-
-throw Expression   ;
+Java `throw` statements are translated to equivalent Python `throw` statements.
 
 ##### break
-
-break [Identifier]
+Java `break` statements are translated to equivalent Python `break` statements.  However, a Java `break` statement with an identifier (e.g., `break FOO`) is not supported.  If the compiler detects such a statement, a waring will be printed and the translated source will not
+contain the original label.
 
 ###### continue
-
-continue [Identifier]
+Java `continue` statements are translated to equivalent Python `continue` statements.  However, a Java `continue` statement with an identifier (e.g., `continue FOO`) is not supported.  If the compiler detects such a statement, a waring will be printed and the translated source will not
+contain the original label.
 
 
 
