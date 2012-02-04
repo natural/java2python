@@ -1,4 +1,4 @@
-class Comments4 {
+class Comments0 {
 
     static void bar(int x) {
         System.out.println(x);
