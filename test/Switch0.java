@@ -1,4 +1,4 @@
-class Switch6 {
+class Switch0 {
 
     public static void main(String[] args) {
         int x = 0;

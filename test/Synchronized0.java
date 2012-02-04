@@ -1,4 +1,4 @@
-class Synchronized1 {
+class Synchronized0 {
     private long c1 = 0;
     private long c2 = 0;
     private Object lock1 = new Object();
@@ -18,7 +18,7 @@ class Synchronized1 {
     }
 
     public static void main(String[] args) {
-        Synchronized1 obj = new Synchronized1();
+        Synchronized0 obj = new Synchronized0();
         obj.inc1();
         obj.inc2();
 	System.out.println( obj.c1 );

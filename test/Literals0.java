@@ -1,7 +1,6 @@
-class Literals1 {
+class Literals0 {
     public static void main (String [] args) {
 
-        Literals1 lit = new Literals1();
         int h = 0xAA;
         int o = 034;
         float f = .3f;

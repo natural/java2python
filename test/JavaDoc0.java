@@ -3,7 +3,7 @@
  *
  * @see some class docs
  */
-class JavaDoc1 {
+class JavaDoc0 {
     /**
      * Method documentation in Java Doc format.
      *

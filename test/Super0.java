@@ -4,7 +4,7 @@ class Base {
     }
 }
 
-class Super1 extends Base {
+class Super0 extends Base {
 
     public int foo(int y) {
         int retval = super.foo(y);
@@ -13,7 +13,7 @@ class Super1 extends Base {
 
     public static void main(String[] args) {
 
-        Super1 x = new Super1();
+        Super0 x = new Super0();
 
         System.out.println(x.foo(3));
 

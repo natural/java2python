@@ -1,4 +1,4 @@
-class Property2 {
+class Property0 {
     int m_bar = 0;
 
     public int barProp() {
@@ -14,7 +14,7 @@ class Property2 {
     }
 
     public static void main(String[] args) {
-	Property2 p = new Property2();
+	Property0 p = new Property0();
         System.out.println(p.barProp());
 	p.barProp(1);
         System.out.println(p.barProp());

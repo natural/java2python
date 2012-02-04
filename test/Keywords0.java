@@ -1,4 +1,4 @@
-public class Keywords1 {
+public class Keywords0 {
     public static void main(String[] args) {
 
 	String and = "this is and";
