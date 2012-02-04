@@ -1,4 +1,4 @@
-class BasicTypes {
+class BasicTypes0 {
     public static void main(String[] args) {
 
         byte B = 127;

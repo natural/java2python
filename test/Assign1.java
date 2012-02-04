@@ -1,4 +1,4 @@
-class Assign2 {
+class Assign1 {
     public static void main(String[] args) {
         int x = 42;
         System.out.println(x);

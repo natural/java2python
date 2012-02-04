@@ -1,4 +1,4 @@
-class Break2 {
+class Break0 {
     public static void main(String[] args) {
 	int x = 0;
 	foo:

@@ -1,4 +1,4 @@
-public class Array2  {
+public class Array1  {
     static Integer a[] = {1, 2, 3};
 
     void foo(int i) {
@@ -6,7 +6,7 @@ public class Array2  {
     }
 
     public static void main(String[] args) {
-	Array2 ar = new Array2();
+	Array1 ar = new Array1();
 	ar.foo(0);
     }
 }
