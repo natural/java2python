@@ -2,12 +2,9 @@
 
 The java2python package can translate any syntactically valid Java source
 code file.  The generated Python code is not guaranteed to run, nor is
-guaranteed to be syntatically valid Python.  However, java2python works
+guaranteed to be syntactically valid Python.  However, java2python works
 well many cases, and in some of those, it creates perfectly usable and
 workable Python code.
-
-The remainder of this page describes how Java language features are
-translated into Python constructs.
 
 
 ### General Approach
@@ -75,22 +72,29 @@ Refer to the note above regarding bit shift right.
 
 #### Basic Types
 
-  byte
-  short
-  char
-  int
-  long
-  float
-  double
-  boolean
+The basic Java types are mapped to Python types as follows:
+
+    byte    => int
+    short   => int
+    char    => str
+    int     => int
+    long    => long
+    float   => float
+    double  => float
+    boolean => bool
 
 #### Types, Interfaces, Enums
 
 Java classes, interfaces, and enums are translated into Python classes.
 
-In the case of interfaces, the strategy is configurable.  By default, interfaces are translated to classes utilizing the ABCMeta class.  The package includes config handlers that can translate to simple classes (inheriting from `object`), or from Zope Interfaces.
+In the case of interfaces, the strategy is configurable.  By default,
+interfaces are translated to classes utilizing the ABCMeta class.  The package
+includes config handlers that can translate to simple classes (inheriting from
+`object`), or from Zope Interfaces.
 
-Enums are also translated via a configurable strategy.  By default, enumerated values are created as class attributes with string values.  The package includes a config handler to create class attributes with integer values.
+Enums are also translated via a configurable strategy.  By default, enumerated
+values are created as class attributes with string values.  The package
+includes a config handler to create class attributes with integer values.
 
 #### Statements
 
@@ -166,18 +170,18 @@ continue [Identifier]
 
 ##### Annotations
 
-  Annotation
-  public
-  protected
-  private
-  static
-  abstract
-  final
-  native
-  synchronized
-  transient
-  volatile
-  strictfp
+    Annotation
+    public
+    protected
+    private
+    static
+    abstract
+    final
+    native
+    synchronized
+    transient
+    volatile
+    strictfp
 
 #### The Rest
 
