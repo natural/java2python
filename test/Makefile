@@ -14,6 +14,8 @@ test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
 all:
 	$(MAKE) $(test_targets)
+
+selectors:
 	@cd selector && make
 
 
@@ -22,8 +24,8 @@ clean:
 
 
 packages:
-	@cd Package1 && javac Class1.java
-	@cd Package1 && ../$(j2py) Class1.java Class1.py
+	@cd Package0 && javac Class0.java
+	@cd Package0 && ../$(j2py) Class0.java Class0.py
 
 
 parsers:

@@ -1,8 +1,8 @@
-import Package1.*;
+import Package0.*;
 
-class UsePackage1 {
+class UsePackage0 {
     public static void main(String[] args) {
-	Package1.Class1 c = new Package1.Class1();
+	Package0.Class0 c = new Package0.Class0();
         System.out.println( c.m() );
     }
 }

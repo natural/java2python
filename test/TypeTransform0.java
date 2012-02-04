@@ -1,4 +1,4 @@
-class TypeTransform {
+class TypeTransform0 {
     public boolean b;
     public double d;
 

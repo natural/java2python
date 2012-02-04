@@ -1,4 +1,4 @@
-class Try1 {
+class Try0 {
 
     public static void main(String[] args) {
         try {
