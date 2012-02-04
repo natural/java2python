@@ -1,5 +1,5 @@
 // tests basic class member lookup; python code changes 'x' to 'self.x'
-class Class6 {
+class Class06 {
     int x = 42;
 
     public void spam() {
@@ -8,7 +8,7 @@ class Class6 {
     };
 
     public static void main(String[] args) {
-        Class6 c = new Class6();
+        Class06 c = new Class06();
         c.spam();
     }
 }

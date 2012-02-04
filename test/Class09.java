@@ -1,4 +1,4 @@
-class Class9 {
+class Class09 {
     class Inner {
         void check() {
             System.out.println(42);
@@ -6,7 +6,7 @@ class Class9 {
     }
 
     public static void main(String[] args) {
-        Class9 outer = new Class9();
+        Class09 outer = new Class09();
 	Inner i = outer.new Inner();
         i.check();
     }

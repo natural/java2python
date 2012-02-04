@@ -1,5 +1,5 @@
 // tests inner class instance declaration and creation
-class Class4 {
+class Class04 {
     static class StaticInner {
 	public static String x = "notnull";
     }
@@ -13,7 +13,7 @@ class Class4 {
     int bar = 4;
 
     public static void main(String[] args) {
-	Class4 c4 = new Class4();
+	Class04 c4 = new Class04();
 
 	StaticInner si = new StaticInner();
         System.out.println(si.x);

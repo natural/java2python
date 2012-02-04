@@ -1,12 +1,12 @@
 // tests method calling with single argument
-class Class3 {
+class Class03 {
     public int m1(int x) {
         System.out.println(x);
         return x;
     }
 
     public static void main(String[] args) {
-	Class3 c = new Class3();
+	Class03 c = new Class03();
         System.out.println(c.m1(3));
     }
 }

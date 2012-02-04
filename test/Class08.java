@@ -1,4 +1,4 @@
-class Class8 {
+class Class08 {
     public int one() {
 	return 1;
     }
@@ -11,7 +11,7 @@ class Class8 {
     }
 
     public static void main(String[] args) {
-        Class8 fm = new Class8();
+        Class08 fm = new Class08();
         System.out.println(fm.one());
         fm.two(123);
     }

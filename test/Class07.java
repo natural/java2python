@@ -1,4 +1,4 @@
-class Class7 {
+class Class07 {
     static int a = 1;
     private static int b = 2;
     private int c;
@@ -21,7 +21,7 @@ class Class7 {
 	System.out.println(a);
 	System.out.println(b);
 
-	Class7 c = new Class7();
+	Class07 c = new Class07();
 	c.x();
 	c.y();
 	c.z(3);
