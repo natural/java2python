@@ -13,7 +13,7 @@ enum Color {
     }
 }
 
-class Enum2 {
+class Enum0 {
     public static void main(String[] args) {
         System.out.println(Color.WHITE.code());
     }

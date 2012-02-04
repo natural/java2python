@@ -1,4 +1,4 @@
-class DoWhile2 {
+class DoWhile0 {
     public static void main(String[] args) {
 	int x = 10;
 	do {

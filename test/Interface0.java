@@ -14,7 +14,7 @@ interface C0 extends B0, B1 {
 
 class Nothing {};
 
-class Interface3 implements C0 {
+class Interface0 implements C0 {
     public void m(int x) {
         System.out.println(x);
     }
@@ -24,7 +24,7 @@ class Interface3 implements C0 {
     }
 
     public static void main(String[] args) {
-	Interface3 i = new Interface3();
+	Interface0 i = new Interface0();
         i.m(0);
         i.n(1);
     }

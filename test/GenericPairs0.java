@@ -26,7 +26,7 @@ class Pair<T, S>{
 
 
 
-class GenericPairs {
+class GenericPairs0 {
 
     public void printLines(List<String> strings) {
         for (String s: strings) {
