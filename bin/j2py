@@ -37,27 +37,27 @@ def logLevel(value):
     return lvl
 
 
-def profileMain(options):
-    """ Runs our main function with profiling if indicated by options. """
-    if options.profile:
-        import cProfile, pstats
-        prof = cProfile.Profile()
-        prof.runcall(main, options)
-        stats = pstats.Stats(prof, stream=sys.stderr)
-        stats.strip_dirs().sort_stats('cumulative')
-        stats.print_stats().print_callers()
-        return 0
-    else:
-        return main(options)
-
-
 def configFromDir(inname, dirname):
     """ Returns a file name from the given config directory. """
     name = path.join(dirname, path.basename(path.splitext(inname)[0]))
     return '%s.py' % path.abspath(name)
 
 
-def main(options):
+def runMain(options):
+    """ Runs our main function with profiling if indicated by options. """
+    if options.profile:
+        import cProfile, pstats
+        prof = cProfile.Profile()
+        prof.runcall(runTransform, options)
+        stats = pstats.Stats(prof, stream=sys.stderr)
+        stats.strip_dirs().sort_stats('cumulative')
+        stats.print_stats().print_callers()
+        return 0
+    else:
+        return runTransform(options)
+
+
+def runTransform(options):
     """ Compile the indicated java source with the given options. """
     timed = defaultdict(time)
     timed['overall']
@@ -168,7 +168,7 @@ def configColors(nocolor):
         escapes.clear()
 
 
-def config(argv):
+def configScript(argv):
     """ Return an options object from the given argument sequence. """
     parser = ArgumentParser(
         description='Translate Java source code to Python.',
@@ -230,4 +230,4 @@ def config(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(profileMain(config(sys.argv[1:])))
+    sys.exit(runMain(configScript(sys.argv[1:])))
