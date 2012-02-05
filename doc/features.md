@@ -241,4 +241,6 @@ JavaDoc comments are preserved as Python comments.
 
 ### References
 
-* Java language specification:  http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
+Java language specification:  http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
+
+ 
