@@ -3,21 +3,21 @@
 Simple but effective tool to translate Java source code into Python.
 
 
+The java2python package can translate any syntactically valid Java source code
+file.  The generated Python code is not guaranteed to run, nor is guaranteed to
+be syntactically valid Python.  However, java2python works well many cases, and
+in some of those, it creates perfectly usable and workable Python code.
+
 There are [lots of docs][], [plenty of tests][], and [many options][] for
 controlling code generation.
 
-I'm in the process of finalizing the documentation and packaging a release.
-That will be release 0.5 when it's done.  If you're looking for old releases,
-check the [downloads][] link above.
+If you're looking for old releases, check the [downloads][] link above.
 
-Here's a very simple example.  First we show the file:
+Here's a very simple example:
 
 ```bash
 $ cat HelloWorld.java
 ```
-
-And we get this:
-
 ```java    
 // This is the HelloWorld class with a single method.
 class HelloWorld {
@@ -33,24 +33,17 @@ Next we run our program:
 ```bash
 $ j2py HelloWorld.java
 ```
-
-And we get this:
-
 ```python
 #!/usr/bin/env python
-""" generated source for module HelloWorld
+""" generated source for module HelloWorld """
 
-"""
 #  This is the HelloWorld class with a single method.
 class HelloWorld(object):
-    """ generated source for class HelloWorld
+    """ generated source for class HelloWorld """
 
-    """
     @classmethod
     def main(cls, args):
-        """ generated source for method main
-
-        """
+        """ generated source for method main """
         print "Hello, world."
 
 if __name__ == '__main__':

@@ -15,10 +15,12 @@ The [Translation Details][] page documents how the package translates Java
 syntax to Python.
 
 #### Usage
+
 The [Usage][] page explains how to run the `j2py` script.
 
 
 #### Customization
+
 The [Customization][] doc describes how to customize translation behavior.
 
 

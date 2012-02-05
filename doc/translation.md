@@ -1,10 +1,5 @@
 ## Translation Features
 
-The java2python package can translate any syntactically valid Java source code
-file.  The generated Python code is not guaranteed to run, nor is guaranteed to
-be syntactically valid Python.  However, java2python works well many cases, and
-in some of those, it creates perfectly usable and workable Python code.
-
 
 ### General Approach
 
