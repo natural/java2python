@@ -14,7 +14,7 @@
 
 from functools import reduce, partial
 from itertools import ifilter, ifilterfalse, izip, tee
-from logging import debug
+from logging import debug, warn
 from re import compile as recompile, sub as resub
 
 from java2python.lang import tokens
@@ -370,6 +370,8 @@ class MethodContent(Base):
             if parent.type in ok_types:
                 break
         if insert:
+            if len(node.children):
+                warn('Detected unhandled break statement with label; generated code incorrect.')
             breakStat = self.factory.statement('break', parent=self)
 
     def acceptCatch(self, node, memo):
@@ -390,6 +392,8 @@ class MethodContent(Base):
     def acceptContinue(self, node, memo):
         """ Accept and process a continue statement. """
         contStat = self.factory.statement('continue', fs=FS.lsr, parent=self)
+        if len(node.children):
+            warn('Detected unhandled continue statement with label; generated code incorrect.')
 
     def acceptDo(self, node, memo):
         """ Accept and process a do-while block. """

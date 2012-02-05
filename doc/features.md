@@ -136,11 +136,11 @@ Java `return` statements are translated to equivalent Python `return` statements
 Java `throw` statements are translated to equivalent Python `throw` statements.
 
 ##### break
-Java `break` statements are translated to equivalent Python `break` statements.  However, a Java `break` statement with an identifier (e.g., `break FOO`) is not supported.  If the compiler detects such a statement, a waring will be printed and the translated source will not
+Java `break` statements are translated to equivalent Python `break` statements.  However, a Java `break` statement with an identifier (e.g., `break FOO`) is not supported.  If the compiler detects such a statement, a warning will be printed and the translated source will not
 contain the original label.
 
 ###### continue
-Java `continue` statements are translated to equivalent Python `continue` statements.  However, a Java `continue` statement with an identifier (e.g., `continue FOO`) is not supported.  If the compiler detects such a statement, a waring will be printed and the translated source will not
+Java `continue` statements are translated to equivalent Python `continue` statements.  However, a Java `continue` statement with an identifier (e.g., `continue FOO`) is not supported.  If the compiler detects such a statement, a warning will be printed and the translated source will not
 contain the original label.
 
 
