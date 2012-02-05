@@ -511,6 +511,19 @@ class MethodContent(Base):
                     self.factory.expr(left='pass', parent=caseContent)
         self.children.remove(parExpr)
 
+    def acceptSynchronized(self, node, memo):
+        """ Accept and process a synchronized statement (not a modifier). """
+        module = self.parents(lambda x:x.isModule).next()
+        module.needsSyncHelpers = True
+        if node.parent.type == tokens.MODIFIER_LIST:
+            # Skip any synchronized modifier
+            return
+        lockName = self.configHandler('LockFunction', 'Name', 'lock_for_object')
+        withFs = '{left} %s({right}):' % lockName
+        sync = self.factory.statement('with', fs=withFs, parent=self)
+        sync.expr.walk(node.children[0], memo)
+        sync.walk(node.children[1], memo)
+
     def acceptThrow(self, node, memo):
         """ Accept and process a throw statement. """
         throw = self.factory.statement('raise', fs=FS.lsr, parent=self)

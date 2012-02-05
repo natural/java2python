@@ -118,7 +118,15 @@ Java `switch` and `case` statements are translated to equivalent Python `if` sta
 
 ##### synchronized
 
-The compiler currently discards the `synchronized` Java statement.  This is incorrect behavior.  The correct behavior is (and will be) to apply a synchronized decorator to a function wrapping the construct.
+In the case of a `synchronized` method or static method, the compiler will include a decorator, `@synchronized` in
+the method or static method preamble.  In the case of a `synchronized` block, the compiler will translate to this form:
+
+    with lock_for_object(expr):
+        ...
+
+The `lock_for_object` callable is the default and can be controlled via the `methodLockFunctionName` config item.
+Also of note, the default `modulePrologueHandlers` uses a generator named `maybeSyncHelpers` to include
+Python helper code for synchronization.
 
 ##### return
 Java `return` statements are translated to equivalent Python `return` statements.

@@ -123,9 +123,17 @@ def maybeClassMethod(method):
     if method.isStatic and 'classmethod' not in method.decorators:
         yield '@classmethod'
 
+
 def maybeAbstractMethod(method):
     if method.parent and method.parent.isInterface:
         yield '@abstractmethod'
+
+
+def maybeSynchronizedMethod(method):
+    if 'synchronized' in method.modifiers:
+        module = method.parents(lambda x:x.isModule).next()
+        module.needsSyncHelpers = True
+        yield '@synchronized'
 
 
 def globalNameCounter(original, counter=count()):
@@ -134,13 +142,25 @@ def globalNameCounter(original, counter=count()):
 
 def getBsrSrc():
     from inspect import getsource
-    from java2python.mod.includes import bsr
+    from java2python.mod.include.bsr import bsr
     return getsource(bsr)
+
+
+def getSyncHelpersSrc():
+    from inspect import getsource
+    from java2python.mod.include import sync
+    return getsource(sync)
 
 
 def maybeBsr(module):
     if getattr(module, 'needsBsrFunc', False):
         for line in getBsrSrc().split('\n'):
+            yield line
+
+
+def maybeSyncHelpers(module):
+    if getattr(module, 'needsSyncHelpers', False):
+        for line in getSyncHelpersSrc().split('\n'):
             yield line
 
 

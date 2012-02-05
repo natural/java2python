@@ -25,6 +25,7 @@ modulePrologueHandlers = [
     basic.shebangLine,
     basic.simpleDocString,
     basic.maybeBsr,
+    basic.maybeSyncHelpers,
 ]
 
 
@@ -50,6 +51,10 @@ classHeadHandlers = [
 methodParamHandlers = [
     basic.defaultParams,
 ]
+
+# This is the name of the callable used to construct locks for an object with
+# the synchronized keyword.
+methodLockFunctionName = 'lock_for_object'
 
 classBaseHandlers = [
     basic.defaultBases,
@@ -91,6 +96,8 @@ methodHeadHandlers = [
 methodPrologueHandlers = [
     basic.maybeAbstractMethod,
     basic.maybeClassMethod,
+    # NB:  synchronized should come after classmethod
+    basic.maybeSynchronizedMethod,
     basic.overloadedClassMethods,
 ]
 
