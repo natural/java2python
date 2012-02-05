@@ -27,7 +27,7 @@ to change code generation behavior, refer to the [customization](customization.m
 page.
 
 
-Code generation:
+#### Code Generation
 
   * `[INPUT]`
 
@@ -39,7 +39,7 @@ Code generation:
     Write to the given file.  Specify `-` for `stdout`.  If not
     given the command will write to `stdout`.
 
-  * `-l LEVEL`, `--loglevel LEVEL`
+  * `-l LEVEL`, `--log-level LEVEL`
 
     Set the logging package to the specified log level.  The log level
     may given as an integer (e.g., `50` for critical) or by name
@@ -57,10 +57,12 @@ Code generation:
     See the [customization](customization.md) page for details of the
     configuration system and available configuration points.
 
-  * `-d DIR`, `--configdir DIR`
+  * `-d DIR`, `--config-dir DIR`
 
     Use the given directory name to match input file names to
-    configuration file names.  For example, to translate
+    configuration file names.  This option may be repeated.
+    
+    For example, to translate
     `FooBar.java` and use the configuration stored in
     `./cfg/FooBar.py`, specify `-d ./cfg`.
 
@@ -68,11 +70,11 @@ Code generation:
 
     Do not check the output for valid Python syntax by byte compiling it.
 
-  * `-n`, `--nodefaults`
+  * `-n`, `--no-defaults`
 
     Ignore the default configuration module.
 
-  * `-r`, `--nocolor`
+  * `-r`, `--no-color`
 
     Disable colorized output.
 
@@ -80,7 +82,7 @@ Code generation:
     there.
 
 
-Development:
+#### Development
 
   * `-p`, `--python-tree`
 
@@ -103,7 +105,7 @@ Development:
     `-j`.
 
 
-Meta:
+#### Meta
 
   * `-h`, `--help`
 

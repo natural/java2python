@@ -177,15 +177,15 @@ def config(argv):
 
     add = parser.add_argument
     add(dest='inputfile', nargs='?',
-        help='Read from INPUTFILE.  May use - for stdin (default).',
-        metavar='INPUTFILE', default=None)
+        help='Read from INPUT.  May use - for stdin (default).',
+        metavar='INPUT', default=None)
     add(dest='outputfile', nargs='?',
-        help='Write to OUTPUTFILE.  May use - for stdout (default).',
-        metavar='OUTPUTFILE', default=None)
+        help='Write to OUTPUT.  May use - for stdout (default).',
+        metavar='OUTPUT', default=None)
     add('-c', '--config', dest='configs',
         help='Use CONFIG file or module.  May be repeated.',
         metavar='CONFIG', default=[], action='append')
-    add('-d', '--configdir', dest='configdirs',
+    add('-d', '--config-dir', dest='configdirs',
         help='Use DIR to match input filename with config filename.',
         metavar='DIR', default=[], action='append')
     add('-f', '--profile', dest='profile',
@@ -197,16 +197,16 @@ def config(argv):
     add('-k', '--skip-compile', dest='skipcompile',
         help='Skip compile check on translated source.',
         default=False, action='store_true')
-    add('-l', '--loglevel', dest='loglevel',
+    add('-l', '--log-level', dest='loglevel',
         help='Set log level by name or value.',
         default='WARN', type=logLevel)
-    add('-n', '--nodefaults', dest='includedefaults',
+    add('-n', '--no-defaults', dest='includedefaults',
         help='Ignore default configuration module.',
         default=True, action='store_false')
     add('-p', '--python-tree', dest='pytree',
         help='Print python object tree to stderr.',
         default=False, action='store_true')
-    add('-r', '--nocolor', dest='nocolor',
+    add('-r', '--no-color', dest='nocolor',
         help='Disable color output.' +\
             ('  No effect on Win OS.' if isWindows() else ''),
         default=False, action='store_true')
