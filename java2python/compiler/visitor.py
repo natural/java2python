@@ -798,6 +798,14 @@ class Expression(Base):
         visitors = (self.right.left, self.left, self.right.right)
         self.zipWalk(node.children, visitors, memo)
 
+    def acceptVoid(self, node, memo):
+        """ Accept and process a the void half of a void.class expression. """
+        self.pushRight('None')
+
+    def acceptClass(self, node, memo):
+        """ Accept and process a .class expression. """
+        self.pushRight('__class__')
+
     def pushRight(self, value=''):
         """ Creates a new right expression, sets it, and returns it. """
         self.right = self.factory.expr(left=value, parent=self)
