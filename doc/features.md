@@ -34,7 +34,7 @@ Transformation of literal values happens at the AST level; see the
 
 ### Expressions
 
-#### Constant Expression
+#### Constant Expressions
 
 Constant expressions are translated to their Python equivalents.
 
@@ -44,7 +44,7 @@ Ternary expressions are translated to their Python form (`val if condition else
 other`)
 
 
-### Prefix Operators
+#### Prefix Operators
 
 All of the Java prefix operators are supported:
 
@@ -53,7 +53,7 @@ All of the Java prefix operators are supported:
 In the case of `++` and `--`, java2python translates to `+= 1` and `-= 1`.  If
 necessary, those expressions are moved outside of statements.
 
-### Assignment Operators
+#### Assignment Operators
 
 All of the following assignment operators are translated into their Python
 equivalents:
@@ -66,7 +66,7 @@ replaces the operator with that function and includes the function within the
 output.  This behavior is controlled by the `modulePrologueHandlers` config
 handler.
 
-### Infix Operators
+#### Infix Operators
 
 The following operators are translated to their Python equivalents:
 
