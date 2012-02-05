@@ -1,4 +1,4 @@
-## java2python Customization
+## Customization
 
 The java2python compiler defers a significant amount of its processing to
 handlers defined within configuration files.  These configuration files,

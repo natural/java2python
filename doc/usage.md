@@ -1,4 +1,4 @@
-## java2python Usage
+## Usage
 
 This page describes how to invoke the java2python script, `j2py`.
 

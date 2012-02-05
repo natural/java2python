@@ -1,4 +1,4 @@
-## java2python Installation
+## Installation
 
 ### New School
 
