@@ -1,25 +1,25 @@
-# Translation Features
+## Translation Features
 
-The java2python package can translate any syntactically valid Java source
-code file.  The generated Python code is not guaranteed to run, nor is
-guaranteed to be syntactically valid Python.  However, java2python works
-well many cases, and in some of those, it creates perfectly usable and
-workable Python code.
+The java2python package can translate any syntactically valid Java source code
+file.  The generated Python code is not guaranteed to run, nor is guaranteed to
+be syntactically valid Python.  However, java2python works well many cases, and
+in some of those, it creates perfectly usable and workable Python code.
 
 
-## General Approach
+### General Approach
 
 The approach taken by java2python is to favor readability over correctness.
 
-## Identifiers and Qualified Identifiers
+### Identifiers and Qualified Identifiers
 
-java2python copies identifiers from source to target, modifying the value only when:
+java2python copies identifiers from source to target, modifying the value only
+when:
 
   * the identifier conflicts with a Python keyword or builtin, or
   * the identifier has an explicit lexical transformation
 
 
-## Literals: Integer, Floating Point, Character, String, Boolean and Null
+### Literals: Integer, Floating Point, Character, String, Boolean and Null
 
 Literals are copied from source to target with the following modifications:
 
@@ -32,34 +32,41 @@ Literals are copied from source to target with the following modifications:
 Transformation of literal values happens at the AST level; see the
 `astTransforms` configuration value for details.
 
-## Expressions
+### Expressions
 
-### Constant Expression
+#### Constant Expression
 
 Constant expressions are translated to their Python equivalents.
 
-### Ternary Expressions
+#### Ternary Expressions
 
-Ternary expressions are translated to their Python form (`val if condition else other`)
+Ternary expressions are translated to their Python form (`val if condition else
+other`)
 
 
-## Prefix Operators
+### Prefix Operators
 
 All of the Java prefix operators are supported:
 
         ++    --    !    ~    +    -
 
-In the case of `++` and `--`, java2python translates to `+= 1` and `-= 1`.  If necessary, those expressions are moved outside of statements.
+In the case of `++` and `--`, java2python translates to `+= 1` and `-= 1`.  If
+necessary, those expressions are moved outside of statements.
 
-## Assignment Operators
+### Assignment Operators
 
-All of the following assignment operators are translated into their Python equivalents:
+All of the following assignment operators are translated into their Python
+equivalents:
      
     =    +=    -=    *=    /=    &=    |=    ^=    %=    <<=    >>=
 
-The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are mapped to a function; if java2python detects code that uses either of these, it replaces the operator with that function and includes the function within the output.  This behavior is controlled by the `modulePrologueHandlers` config handler.
+The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are
+mapped to a function; if java2python detects code that uses either of these, it
+replaces the operator with that function and includes the function within the
+output.  This behavior is controlled by the `modulePrologueHandlers` config
+handler.
 
-## Infix Operators
+### Infix Operators
 
 The following operators are translated to their Python equivalents:
 
@@ -68,7 +75,7 @@ The following operators are translated to their Python equivalents:
 
 Refer to the note above regarding bit shift right.
 
-## Basic Types
+### Basic Types
 
 The basic Java types are mapped to Python types as follows:
 
@@ -77,125 +84,161 @@ The basic Java types are mapped to Python types as follows:
 *    `float` and `double` become `float`
 *    `boolean` becomes `bool`
 
-### Arrays
+#### Arrays
 
-Java arrays and array access expressions are translated to their Python equivalents.
+Java arrays and array access expressions are translated to their Python
+equivalents.
 
 
-## Types, Interfaces, Enums
+### Types, Interfaces, Enums
 
 Java classes, interfaces, and enums are translated into Python classes.
 
 In the case of interfaces, the strategy is configurable.  By default,
-interfaces are translated to classes utilizing the `ABCMeta` class.  The package
-includes config handlers that can translate to simple classes (inheriting from
-`object`), or from Zope Interfaces.  Interface base types are controlled via the `interfaceBaseHandlers` config item.  The `interfaceHeadHandlers` config item controls the
-metaclass.
+interfaces are translated to classes utilizing the `ABCMeta` class.  The
+package includes config handlers that can translate to simple classes
+(inheriting from `object`), or from Zope Interfaces.  Interface base types are
+controlled via the `interfaceBaseHandlers` config item.  The
+`interfaceHeadHandlers` config item controls the metaclass.
 
 Enums are also translated via a configurable strategy.  By default, enumerated
 values are created as class attributes with string values.  The package
-includes a config handler to create class attributes with integer values.  The config handler
-that controls enumeration value construction is `enumValueHandler`.
+includes a config handler to create class attributes with integer values.  The
+config handler that controls enumeration value construction is
+`enumValueHandler`.
 
 
-## Statements
+### Statements
 
-### assert
-Java `assert` statements are translated to equivalent Python `assert` statements.
+#### assert
 
-### if
+Java `assert` statements are translated to equivalent Python `assert`
+statements.
+
+#### if
+
 Java `if` statements are translated to equivalent Python `if` statements.
 
 
-### for
+#### for
+
 Java `for` statements are translated to equivalent Python `for` statements.
 
-### while and do
-Java `while` and `do` statements are translated to equivalent Python `while` statements.
+#### while and do
 
-### try and catch
-Java `try` and `catch` statements are translated to equivalent Python `try` and `except` statements.
+Java `while` and `do` statements are translated to equivalent Python `while`
+statements.
+
+#### try and catch
+
+Java `try` and `catch` statements are translated to equivalent Python `try` and
+`except` statements.
      
-### switch and case
-Java `switch` and `case` statements are translated to equivalent Python `if` statements.
+#### switch and case
 
-### synchronized
+Java `switch` and `case` statements are translated to equivalent Python `if`
+statements.
 
-In the case of a `synchronized` method or static method, the compiler will include a decorator, `@synchronized` in
-the method or static method preamble.  In the case of a `synchronized` block, the compiler will translate to this form:
+#### synchronized
+
+In the case of a `synchronized` method or static method, the compiler will
+include a decorator, `@synchronized` in the method or static method preamble.
+In the case of a `synchronized` block, the compiler will translate to this
+form:
 
     with lock_for_object(expr):
         ...
 
-The `lock_for_object` callable is the default and can be controlled via the `methodLockFunctionName` config item.
-Also of note, the default `modulePrologueHandlers` uses a generator named `maybeSyncHelpers` to include
+The `lock_for_object` callable is the default and can be controlled via the
+`methodLockFunctionName` config item.  Also of note, the default
+`modulePrologueHandlers` uses a generator named `maybeSyncHelpers` to include
 Python helper code for synchronization.
 
-### return
-Java `return` statements are translated to equivalent Python `return` statements.
+#### return
+
+Java `return` statements are translated to equivalent Python `return`
+statements.
 
 
-### throw
+#### throw
+
 Java `throw` statements are translated to equivalent Python `throw` statements.
 
-### break
-Java `break` statements are translated to equivalent Python `break` statements.  However, a Java `break` statement with an identifier (e.g., `break FOO`) is not supported.  If the compiler detects such a statement, a warning will be printed and the translated source will not
-contain the original label.
+#### break
 
-### continue
-Java `continue` statements are translated to equivalent Python `continue` statements.  However, a Java `continue` statement with an identifier (e.g., `continue FOO`) is not supported.  If the compiler detects such a statement, a warning will be printed and the translated source will not
-contain the original label.
+Java `break` statements are translated to equivalent Python `break` statements.
+However, a Java `break` statement with an identifier (e.g., `break FOO`) is not
+supported.  If the compiler detects such a statement, a warning will be printed
+and the translated source will not contain the original label.
+
+#### continue
+
+Java `continue` statements are translated to equivalent Python `continue`
+statements.  However, a Java `continue` statement with an identifier (e.g.,
+`continue FOO`) is not supported.  If the compiler detects such a statement, a
+warning will be printed and the translated source will not contain the original
+label.
 
 
-## Other Keywords
+### Other Keywords
 
-### this
+#### this
 
 The `this` Java keyword is translated to the Python pseudo keyword `self`.
 
-### instanceof
+#### instanceof
 
-The `instance of` Java keyword is translated to the `isinstance(…)` Python function call.
+The `instance of` Java keyword is translated to the `isinstance(…)` Python
+function call.
 
-### super
+#### super
 
 The Java keyword `super` is translated to the `super(…)` Python function call.
 
-### .class
+#### .class
 
-The compiler translates Java `.class` expressions to `.__class__` attribute references.
+The compiler translates Java `.class` expressions to `.__class__` attribute
+references.
 
-### void
+#### void
 
-The Java keyword `void` is typically discarded by the compiler.  In the case of the `void.class` form, the compiler translates the expression to `None.__class__`.
+The Java keyword `void` is typically discarded by the compiler.  In the case of
+the `void.class` form, the compiler translates the expression to
+`None.__class__`.
 
 
-## Annotations
+### Annotations
 
-Annotations are typically dropped by the compiler.  The following Java annotations have little or no meaning in Python, and are discarded:
+Annotations are typically dropped by the compiler.  The following Java
+annotations have little or no meaning in Python, and are discarded:
 
     public    protected    private    abstract    final    native    transient
     volatile  strictfp
 
-### static
+#### static
 
-The `static` method keyword is translated to a `@classmethod` decorator for the corresponding method.
+The `static` annotation is translated to a `@classmethod` decorator for the
+corresponding method.
 
-### synchronized
+#### synchronized
 
-When used as a method or static method annotation, the `synchronized` keyword is translated to a `@synchronized` method decorator.  This behavior is controllable via the `methodPrologueHandlers` config item.
+When used as a method or static method annotation, the `synchronized` keyword
+is translated to a `@synchronized` method decorator.  This behavior is
+controllable via the `methodPrologueHandlers` config item.
 
 See the note above regarding the use of `synchronized` within blocks.
 
-## Comments
+### Comments
 
-Both Java end-of-line comments and multi-line comments are translated to Python comments.  The comment prefix is `# ` by default, and is controllable via the `commentPrefix` config item.
+Both Java end-of-line comments and multi-line comments are translated to Python
+comments.  The comment prefix is `# ` (hash plus space) by default, and is
+controllable via the `commentPrefix` config item.
 
-### JavaDoc
+#### JavaDoc
 
 JavaDoc comments are preserved as Python comments.
 
 
-## References
+### References
 
 * Java language specification:  http://java.sun.com/docs/books/jls/third_edition/html/syntax.html

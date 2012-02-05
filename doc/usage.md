@@ -1,4 +1,4 @@
-## Usage
+## java2python Usage
 
 This page describes how to invoke the java2python script, `j2py`.
 
@@ -23,7 +23,7 @@ $ j2py SourceFile.java
 
 The `j2py` command accepts options that alter its behavior.
 The behavior of the code generator is not part of the command itself;
-to change code generation behavior, refer to the [customization](customization.md)
+to change code generation behavior, refer to the [customization][]
 page.
 
 
@@ -54,7 +54,7 @@ page.
     from the final value given to the first given, with the default
     configuration referenced last.
 
-    See the [customization](customization.md) page for details of the
+    See the [customization][] page for details of the
     configuration system and available configuration points.
 
   * `-d DIR`, `--config-dir DIR`
@@ -116,3 +116,5 @@ page.
     Show the program version number and exit.
 
 
+
+[customization]: https://github.com/natural/java2python/tree/master/doc/customization.md
