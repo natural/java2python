@@ -95,10 +95,11 @@ explanation and enumeration see the [features][] page.
 
 ### Why Bother?
 
-I bothered to write this because I needed a Java package to run on the CPython
-interpreter.  I got tired of porting by hand, so I wrote this instead.  And
+I bothered to write this because [I needed a Java package][1] to run on the CPython
+interpreter.  I got tired of porting by hand so I wrote this instead.  And
 it's an interesting problem (kind of).
 
 
 [ANTLR]: http://www.antlr.org
 [features]: https://github.com/natural/java2python/tree/master/doc/features.md
+[1]:  http://roundrockriver.wordpress.com/2007/02/15/automated-translation-of-java-to-python/

@@ -8,6 +8,23 @@ line. See the [usage][] page for instructions on specifying additional configs.
 The default configuration module is `java2python.config.default`.  Refer to [the source
 of that module][1] for its values and additional descriptions.
 
+### Usage
+
+To change the behavior of some or all of the config items, create a Python
+file, define the items you want, and specify that file when invoking `j2py`.
+
+For example, if you would like to change the comment prefix to `##`, you might
+do this:
+
+    $ echo "indentPrefix = '##'" >> myconfig.py
+
+Then run the script:
+
+    $ j2py SomeJavaSource.java -c myconfig.py 
+
+The config files are Python modules, so you can use the full power of Python
+when writing your configurations.
+
 ### A Note About Some of the Names:  Prologue, Base, Head, and Epilogue
 
 When a config point has `Prologue` in its name, it means that the item will be
@@ -31,38 +48,40 @@ be responsible for generating code after the body of the item.  The only
 recognized epilogue config point is `moduleEpilogueHandlers`, which generates a
 main script stanza if necessary.
 
+
+
 ### Customization Points
 
-* indentPrefix
-* commentPrefix
-* expressionVariableNamingHandler
+#### <a name="indentPrefix"></a>indentPrefix
+#### <a name="commentPrefix"></a>commentPrefix
+#### <a name="expressionVariableNamingHandler"></a>expressionVariableNamingHandler
 
-* modulePrologueHandlers
-* moduleEpilogueHandlers
-* moduleOutputHandlers
-* modulePackageDeclarationHandler
-* moduleImportDeclarationHandler
-* moduleOutputSubs
-
-
-* classHeadHandlers
-* classBaseHandlers
-* classPostWalkHandlers
-
-* interfaceBaseHandlers
-* interfaceHeadHandlers
-
-* enumHeadHandlers
-* enumValueHandler
+#### <a name="modulePrologueHandlers"></a>modulePrologueHandlers
+#### <a name="moduleEpilogueHandlers"></a>moduleEpilogueHandlers
+#### <a name="moduleOutputHandlers"></a>moduleOutputHandlers
+#### <a name="modulePackageDeclarationHandler"></a>modulePackageDeclarationHandler
+#### <a name="moduleImportDeclarationHandler"></a>moduleImportDeclarationHandler
+#### <a name="moduleOutputSubs"></a>moduleOutputSubs
 
 
-* methodParamHandlers
-* methodLockFunctionName
-* methodHeadHandlers
-* methodPrologueHandlers
+#### <a name="classHeadHandlers"></a>classHeadHandlers
+#### <a name="classBaseHandlers"></a>classBaseHandlers
+#### <a name="classPostWalkHandlers"></a>classPostWalkHandlers
 
-* astTransforms
-* typeSubs
+#### <a name="interfaceBaseHandlers"></a>interfaceBaseHandlers
+#### <a name="interfaceHeadHandlers"></a>interfaceHeadHandlers
+
+#### <a name="enumHeadHandlers"></a>enumHeadHandlers
+#### <a name="enumValueHandler"></a>enumValueHandler
+
+
+#### <a name="methodParamHandlers"></a>methodParamHandlers
+#### <a name="methodLockFunctionName"></a>methodLockFunctionName
+#### <a name="methodHeadHandlers"></a>methodHeadHandlers
+#### <a name="methodPrologueHandlers"></a>methodPrologueHandlers
+
+#### <a name="astTransforms"></a>astTransforms
+#### <a name="typeSubs"></a>typeSubs
 
 
 [usage]: https://github.com/natural/java2python/tree/master/doc/usage.md
