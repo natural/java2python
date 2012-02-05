@@ -8,6 +8,9 @@ file.  The generated Python code is not guaranteed to run, nor is guaranteed to
 be syntactically valid Python.  However, java2python works well many cases, and
 in some of those, it creates perfectly usable and workable Python code.
 
+For more information, read the [introduction][].  To install, refer to the
+[installation][] page.
+
 There are [lots of docs][], [plenty of tests][], and [many options][] for
 controlling code generation.
 
@@ -52,7 +55,9 @@ if __name__ == '__main__':
 ```
 
 
-[lots of docs]: https://github.com/natural/java2python/tree/master/doc/
-[plenty of tests]: https://github.com/natural/java2python/tree/master/test/
-[many options]: https://github.com/natural/java2python/tree/master/doc/customization.md
 [downloads]: https://github.com/natural/java2python/downloads
+[installation]: https://github.com/natural/java2python/tree/master/doc/install.md
+[introduction]: https://github.com/natural/java2python/tree/master/doc/intro.md
+[lots of docs]: https://github.com/natural/java2python/tree/master/doc/
+[many options]: https://github.com/natural/java2python/tree/master/doc/customization.md
+[plenty of tests]: https://github.com/natural/java2python/tree/master/test/
