@@ -90,7 +90,7 @@ if mangled_name_for_x == 0:
 ```
 
 See what java2python did there?  It tried to do what you would do.  For further
-explanation and enumeration see the [features][] page.
+explanation and enumeration see the [translation details][] page.
 
 
 ### Why Bother?
@@ -101,5 +101,5 @@ it's an interesting problem (kind of).
 
 
 [ANTLR]: http://www.antlr.org
-[features]: https://github.com/natural/java2python/tree/master/doc/features.md
+[translation details]: https://github.com/natural/java2python/tree/master/doc/translation.md
 [1]:  http://roundrockriver.wordpress.com/2007/02/15/automated-translation-of-java-to-python/
