@@ -32,6 +32,9 @@ The latest source can be installed directly from github:
 
     # pip install --upgrade https://github.com/natural/java2python/zipball/master
 
+You'll want to clone or fork the repo to work on the project, however.
+
+
 ### Dependencies
 
 The runtime dependency for java2python is the [Python runtime][] for [ANTLR][].
