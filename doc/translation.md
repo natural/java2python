@@ -25,7 +25,7 @@ Literals are copied from source to target with the following modifications:
   * string and character literals are changed to Python strings
 
 Transformation of literal values happens at the AST level; see the
-`astTransforms` configuration value for details.
+[`astTransforms`][1] configuration value for details.
 
 ### Expressions
 
@@ -239,3 +239,6 @@ JavaDoc comments are preserved as Python comments.
 Java language specification:  http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
 
  
+
+
+[1]: https://github.com/natural/java2python/tree/master/doc/customization.md#astTransforms

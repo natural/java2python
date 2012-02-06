@@ -122,11 +122,13 @@ These values are strings or generators that yield strings for a module
 prologue.
 
 Default:
-```[basic.shebangLine,
-    basic.simpleDocString,
-    basic.maybeBsr,
-    basic.maybeSyncHelpers
-    ]```
+```
+[basic.shebangLine,
+ basic.simpleDocString,
+ basic.maybeBsr,
+ basic.maybeSyncHelpers
+]
+```
 
 
 #### <a name="moduleEpilogueHandlers"></a>moduleEpilogueHandlers
@@ -248,11 +250,12 @@ These generators yield values for the module prologue.
 
 Default:
 
-```[basic.maybeAbstractMethod,
-    basic.maybeClassMethod,
-    basic.maybeSynchronizedMethod,
-    basic.overloadedClassMethods,
-    ]
+```
+[basic.maybeAbstractMethod,
+ basic.maybeClassMethod,
+ basic.maybeSynchronizedMethod,
+ basic.overloadedClassMethods,
+]
 ```
 
 #### <a name="astTransforms"></a>astTransforms
