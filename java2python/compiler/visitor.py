@@ -774,6 +774,19 @@ class Expression(Base):
             arg.left.walk(child, memo)
             arg.right = arg = expr(parent=self)
 
+    skipParensParents = (
+        tokens.IF,
+        tokens.WHILE,
+        tokens.SWITCH,
+        tokens.SYNCHRONIZED,
+        )
+
+    def acceptParentesizedExpr(self, node, memo):
+        if node.parent.type not in self.skipParensParents:
+            right = self.pushRight()
+            right.fs = '(' + FS.lr + ')'
+            return right
+        return self
 
     def acceptThisConstructorCall(self, node, memo):
         """ Accept and process a 'this(...)' constructor call. """
