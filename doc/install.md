@@ -4,7 +4,7 @@
 
 Kids these days have it easy:
 
-    $ pip install java2python
+    # pip install java2python
 
 ### Old School
 
@@ -12,20 +12,25 @@ Kids these days have it easy:
 
 We need the ANTLR Python runtime before we can install java2python:
 
-    $ wget http://www.antlr.org/download/antlr-3.1.3.tar.gz
-    $ tar xfz antlr-3.1.3.tar.gz
-    $ cd antlr-3.1.3/runtime/Python/
-    $ python setup.py install
+    # wget http://www.antlr.org/download/antlr-3.1.3.tar.gz
+    # tar xfz antlr-3.1.3.tar.gz
+    # cd antlr-3.1.3/runtime/Python/
+    # python setup.py install
 
 #### Install java2python
 
 Now the goodness:
 
-    $ wget https://github.com/downloads/natural/java2python/java2python-0.5.tar.gz
-    $ tar xfz java2python-0.5.tar.gz
-    $ cd java2python
-    $ python setup.py install
+    # wget https://github.com/downloads/natural/java2python/java2python-0.5.tar.gz
+    # tar xfz java2python-0.5.tar.gz
+    # cd java2python
+    # python setup.py install
 
+### Development Version
+
+The latest source can be installed directly from github:
+
+    # pip install --upgrade https://github.com/natural/java2python/zipball/master
 
 ### Dependencies
 
