@@ -93,14 +93,14 @@ In the case of interfaces, the strategy is configurable.  By default,
 interfaces are translated to classes utilizing the `ABCMeta` class.  The
 package includes config handlers that can translate to simple classes
 (inheriting from `object`), or from Zope Interfaces.  Interface base types are
-controlled via the `interfaceBaseHandlers` config item.  The
-`interfaceHeadHandlers` config item controls the metaclass.
+controlled via the [`interfaceBaseHandlers`][2] config item.  The
+[`interfaceHeadHandlers`][3] config item controls the metaclass.
 
 Enums are also translated via a configurable strategy.  By default, enumerated
 values are created as class attributes with string values.  The package
 includes a config handler to create class attributes with integer values.  The
 config handler that controls enumeration value construction is
-`enumValueHandler`.
+[`enumValueHandler`][4].
 
 
 ### Statements
@@ -145,8 +145,8 @@ form:
         ...
 
 The `lock_for_object` callable is the default and can be controlled via the
-`methodLockFunctionName` config item.  Also of note, the default
-`modulePrologueHandlers` uses a generator named `maybeSyncHelpers` to include
+[`methodLockFunctionName`][5] config item.  Also of note, the default
+[`modulePrologueHandlers`][6] uses a generator named `maybeSyncHelpers` to include
 Python helper code for synchronization.
 
 #### return
@@ -219,7 +219,7 @@ corresponding method.
 
 When used as a method or static method annotation, the `synchronized` keyword
 is translated to a `@synchronized` method decorator.  This behavior is
-controllable via the `methodPrologueHandlers` config item.
+controllable via the [`methodPrologueHandlers`][7] config item.
 
 See the note above regarding the use of `synchronized` within blocks.
 
@@ -227,7 +227,7 @@ See the note above regarding the use of `synchronized` within blocks.
 
 Both Java end-of-line comments and multi-line comments are translated to Python
 comments.  The comment prefix is `# ` (hash plus space) by default, and is
-controllable via the `commentPrefix` config item.
+controllable via the [`commentPrefix`][8] config item.
 
 #### JavaDoc
 
@@ -238,7 +238,12 @@ JavaDoc comments are preserved as Python comments.
 
 Java language specification:  http://java.sun.com/docs/books/jls/third_edition/html/syntax.html
 
- 
-
 
 [1]: https://github.com/natural/java2python/tree/master/doc/customization.md#astTransforms
+[2]: https://github.com/natural/java2python/tree/master/doc/customization.md#interfaceBaseHandlers
+[3]: https://github.com/natural/java2python/tree/master/doc/customization.md#interfaceHeadHandlers
+[4]: https://github.com/natural/java2python/tree/master/doc/customization.md#enumValueHandler
+[5]: https://github.com/natural/java2python/tree/master/doc/customization.md#methodLockFunctionName
+[6]: https://github.com/natural/java2python/tree/master/doc/customization.md#modulePrologueHandlers
+[7]: https://github.com/natural/java2python/tree/master/doc/customization.md#methodPrologueHandlers
+[8]: https://github.com/natural/java2python/tree/master/doc/customization.md#commentPrefix
