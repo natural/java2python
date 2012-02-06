@@ -71,6 +71,6 @@ setup(
         'bin/j2py',
         ],
 
-    install_requires=['antlr_python_runtime=3.1.3'],
+    install_requires=['antlr_python_runtime==3.1.3'],
 
     )
