@@ -181,7 +181,7 @@ moduleOutputSubs = [
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
-    (r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
+    #(r'(\w+)\.get\((.*?)\)', r'\1[\2]'),
     (r'(\s)(\S*?)(\.toString\(\))', r'\1\2.__str__()'),
     (r'(\s)def toString', r'\1def __str__'),
     (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),

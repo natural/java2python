@@ -58,7 +58,7 @@ equivalents:
 The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are
 mapped to a function; if java2python detects code that uses either of these, it
 replaces the operator with that function and includes the function within the
-output.  This behavior is controlled by the `modulePrologueHandlers` config
+output.  This behavior is controlled by the [`modulePrologueHandlers`][6] config
 handler.
 
 #### Infix Operators
@@ -114,6 +114,9 @@ statements.
 
 Java `if` statements are translated to equivalent Python `if` statements.
 
+#### import
+
+The processing import statements is delegated to the [`moduleImportDeclarationHandler`][9].
 
 #### for
 
@@ -183,7 +186,7 @@ The `this` Java keyword is translated to the Python pseudo keyword `self`.
 
 #### instanceof
 
-The `instance of` Java keyword is translated to the `isinstance(…)` Python
+The `instanceof` Java keyword is translated to the `isinstance(…)` Python
 function call.
 
 #### super
@@ -205,7 +208,7 @@ the `void.class` form, the compiler translates the expression to
 ### Annotations
 
 Annotations are typically dropped by the compiler.  The following Java
-annotations have little or no meaning in Python, and are discarded:
+annotations have little or no meaning in Python and are discarded:
 
     public    protected    private    abstract    final    native    transient
     volatile  strictfp
@@ -247,3 +250,4 @@ Java language specification:  http://java.sun.com/docs/books/jls/third_edition/h
 [6]: https://github.com/natural/java2python/tree/master/doc/customization.md#modulePrologueHandlers
 [7]: https://github.com/natural/java2python/tree/master/doc/customization.md#methodPrologueHandlers
 [8]: https://github.com/natural/java2python/tree/master/doc/customization.md#commentPrefix
+[9]: https://github.com/natural/java2python/tree/master/doc/customization.md#moduleImportDeclarationHandler

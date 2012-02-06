@@ -30,9 +30,7 @@ def simpleDocString(obj):
 
     This generator works for modules, classes, and functions.
     """
-    yield '""" generated source for {0} {1}'.format(obj.typeName, obj.name)
-    yield ''
-    yield '"""'
+    yield '""" generated source for {0} {1} """'.format(obj.typeName, obj.name)
 
 
 def commentedImports(module, expr):

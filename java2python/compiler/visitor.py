@@ -448,19 +448,17 @@ class MethodContent(Base):
 
     def acceptIf(self, node, memo):
         """ Accept and process an if statement. """
-        # the parser will feed us one of three forms:
-        # bare if:          PARENTESIZED_EXPR - BLOCK_SCOPE
-        # if with else:     PARENTESIZED_EXPR - BLOCK_SCOPE - BLOCK_SCOPE
-        # if with else if:  PARENTESIZED_EXPR - BLOCK_SCOPE - IF
         children = node.children
         ifStat = self.factory.statement('if', fs=FS.lsrc, parent=self)
         ifStat.expr.walk(children[0], memo)
-        if node.children[1].type == tokens.BLOCK_SCOPE:
-            ifBlock = self.factory.methodContent(parent=self)
-            ifBlock.walk(node.children[1], memo)
-        elif node.children[1].type == tokens.EXPR:
+
+        if node.children[1].type == tokens.EXPR:
             ifBlock = self.factory.expr(parent=ifStat)
             ifBlock.walk(node.children[1], memo)
+        else:
+            ifBlock = self.factory.methodContent(parent=self)
+            ifBlock.walk(node.children[1], memo)
+
         if len(children) == 3:
             nextNode = children[2]
             nextType = nextNode.type
@@ -468,21 +466,21 @@ class MethodContent(Base):
             while nextType == tokens.IF:
                 nextStat = self.factory.statement('elif', fs=FS.lsrc, parent=self)
                 nextStat.expr.walk(nextNode.children[0], memo)
-                if nextNode.children[1].type == tokens.BLOCK_SCOPE:
-                    nextBlock = self.factory.methodContent(parent=self)
-                else:
+                if nextNode.children[1].type == tokens.EXPR:
                     nextBlock = self.factory.expr(parent=nextStat)
+                else:
+                    nextBlock = self.factory.methodContent(parent=self)
                 nextBlock.walk(nextNode.children[1], memo)
                 nextNode = nextNode.children[2]
                 nextType = nextNode.type
 
-            if nextType == tokens.BLOCK_SCOPE:
-                self.factory.statement('else', fs=FS.lc, parent=self)
-                self.factory.methodContent(parent=self).walk(nextNode, memo)
-            elif nextType == tokens.EXPR:
+            if nextType == tokens.EXPR:
                 elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
                 elseBlock = self.factory.expr(parent=elseStat)
                 elseBlock.walk(nextNode, memo)
+            else: # nextType != tokens.BLOCK_SCOPE:
+                self.factory.statement('else', fs=FS.lc, parent=self)
+                self.factory.methodContent(parent=self).walk(nextNode, memo)
 
 
     def acceptSwitch(self, node, memo):
@@ -582,6 +580,7 @@ class MethodContent(Base):
             if node.children:
                 expr.fs, expr.right = FS.lsr, self.factory.expr(parent=expr)
                 expr.right.walk(node, memo)
+            return expr
 
     def acceptWhile(self, node, memo):
         """ Accept and process a while block. """

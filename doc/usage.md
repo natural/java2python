@@ -12,7 +12,7 @@ and the name of an input file and output file:
 $ j2py [INPUT] [OUTPUT]
 ```
 
-Both are optional, but you'll usually supply an input file.  For example:
+Both are optional, but you'll usually supply an input file:
 
 ```bash
 $ j2py SourceFile.java
@@ -75,7 +75,7 @@ page.
 
   * `-k`, `--skip-compile`
 
-    Do not check the output for valid Python syntax by byte compiling it.
+    Do not byte compile the output to test for valid Python syntax.
 
   * `-n`, `--no-defaults`
 
@@ -85,7 +85,7 @@ page.
 
     Disable colorized output.
 
-    Colorized output is not available on Windows and this option has no effect
+    Colorized output is not available on Windows and this option is ignored
     there.
 
 
