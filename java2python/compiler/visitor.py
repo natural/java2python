@@ -455,24 +455,35 @@ class MethodContent(Base):
         children = node.children
         ifStat = self.factory.statement('if', fs=FS.lsrc, parent=self)
         ifStat.expr.walk(children[0], memo)
-        ifBlock = self.factory.methodContent(parent=self)
-        ifBlock.walk(node.children[1], memo)
+        if node.children[1].type == tokens.BLOCK_SCOPE:
+            ifBlock = self.factory.methodContent(parent=self)
+            ifBlock.walk(node.children[1], memo)
+        elif node.children[1].type == tokens.EXPR:
+            ifBlock = self.factory.expr(parent=ifStat)
+            ifBlock.walk(node.children[1], memo)
         if len(children) == 3:
             nextNode = children[2]
             nextType = nextNode.type
+
             while nextType == tokens.IF:
                 nextStat = self.factory.statement('elif', fs=FS.lsrc, parent=self)
                 nextStat.expr.walk(nextNode.children[0], memo)
-                nextBlock = self.factory.methodContent(parent=self)
+                if nextNode.children[1].type == tokens.BLOCK_SCOPE:
+                    nextBlock = self.factory.methodContent(parent=self)
+                else:
+                    nextBlock = self.factory.expr(parent=nextStat)
                 nextBlock.walk(nextNode.children[1], memo)
-                try:
-                    nextNode = nextNode.children[2]
-                    nextType = nextNode.type
-                except (IndexError, ):
-                    nextType = None
+                nextNode = nextNode.children[2]
+                nextType = nextNode.type
+
             if nextType == tokens.BLOCK_SCOPE:
                 self.factory.statement('else', fs=FS.lc, parent=self)
                 self.factory.methodContent(parent=self).walk(nextNode, memo)
+            elif nextType == tokens.EXPR:
+                elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
+                elseBlock = self.factory.expr(parent=elseStat)
+                elseBlock.walk(nextNode, memo)
+
 
     def acceptSwitch(self, node, memo):
         """ Accept and process a switch block. """
