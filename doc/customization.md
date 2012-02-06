@@ -5,26 +5,35 @@ handlers defined within configuration files.  These configuration files,
 directories, and modules are supplied to the `j2py` script on the command
 line. See the [usage][] page for instructions on specifying additional configs.
 
-The default configuration module is `java2python.config.default`.  Refer to [the source
-of that module][1] for its values and additional descriptions.
+The default configuration module is `java2python.config.default`.  Refer to
+[the source of that module][1] for details and additional descriptions.
 
 
 ### Usage
 
-To change the behavior of some or all of the config items, create a Python
-file, define the items you want, and specify that file when invoking `j2py`.
+To change the behavior of some or all of these config items, create a Python
+file, define in it the items you want, and specify that file when invoking
+`j2py`.
 
 For example, if you would like to change the comment prefix to `##`, you might
 do this:
 
-    $ echo "indentPrefix = '##'" >> myconfig.py
+    $ echo "indentPrefix = '##'" >> ./myconfig.py
 
 Then run the script:
 
-    $ j2py SomeJavaSource.java -c myconfig.py 
+    $ j2py SomeJavaSource.java -c ./myconfig.py 
 
 The config files are Python modules, so you can use the full power of Python
-when writing your configurations.
+when writing them.
+
+
+### Defaults
+
+Many of the defaults are built using values imported from the
+`java2python.mod.basic` module.  Refer to the [source of that module][2] for
+details.  The `java2python.mod` subpackage contains other modules with
+additional config handlers.
 
 
 ### A Note About Some of the Names:  Prologue, Base, Head, and Epilogue
@@ -46,8 +55,8 @@ item.  For example:
 
 Finally, when a config point contains `Epilogue`, it means that the item will
 be responsible for generating code after the body of the item.  The only
-recognized epilogue config point is `moduleEpilogueHandlers`, which generates a
-main script stanza if necessary.
+recognized epilogue config point is `moduleEpilogueHandlers`, which (by
+default) generates a main script stanza if necessary.
 
 
 ### Override vs. Replace
@@ -65,7 +74,7 @@ in your config:
         
     modulePrologueHandlers.append(myPrologue)
     
-Values can be remove in a similar way:
+Values can be removed in a similar way:
 
     from java2python.config.default import modulePrologueHandlers
     from java2python.mod import basic
@@ -85,8 +94,8 @@ and their default values.
 
 #### <a name="indentPrefix"></a>indentPrefix
 
-Leading indent character or characters.  Four spaces are used because that is
-the recommendation of PEP 8.
+Leading indent character or characters.  Four spaces are the default because
+that is the recommendation of [PEP 8][].
 
 Default:  `    ` (four spaces)
 
@@ -94,7 +103,7 @@ Default:  `    ` (four spaces)
 #### <a name="commentPrefix"></a>commentPrefix
 
 Prefix character or characters for comments.  The hash+space is recommended by
-PEP 8.
+[PEP 8][].
 
 Default:  `# ` (hash + space)
 
@@ -112,7 +121,12 @@ Default:  `basic.globalNameCounter`
 These values are strings or generators that yield strings for a module
 prologue.
 
-Default:  `[basic.shebangLine, basic.simpleDocString, basic.maybeBsr, basic.maybeSyncHelpers]`
+Default:
+```[basic.shebangLine,
+    basic.simpleDocString,
+    basic.maybeBsr,
+    basic.maybeSyncHelpers
+    ]```
 
 
 #### <a name="moduleEpilogueHandlers"></a>moduleEpilogueHandlers
@@ -124,7 +138,9 @@ Default: `[basic.scriptMainStanza]`
 
 #### <a name="moduleOutputHandlers"></a>moduleOutputHandlers
 
-These generators yield (possibly modified) source strings for a module.
+These generators yield (possibly modified) source strings for a module.  The
+default handler uses values defined elsewhere in the config, e.g.,
+`moduleOutputSubs`.
 
 Default: `[basic.outputSubs]`
 
@@ -198,8 +214,8 @@ Default: `[basic.simpleDocString]`
 
 #### <a name="enumValueHandler"></a>enumValueHandler
 
-This handler is responsible for creating enum values on enum classes after
-they've been defined.
+This handler is responsible for creating enum values on classes after they've
+been defined.
 
 Default:  `basic.enumConstStrings`
 
@@ -208,7 +224,7 @@ Default:  `basic.enumConstStrings`
 
 This handler is responsible for constructing method parameters.
 
-Default: `basic.defaultParams`
+Default: `[basic.defaultParams]`
 
 
 #### <a name="methodLockFunctionName"></a>methodLockFunctionName
@@ -231,12 +247,13 @@ Default: `[basic.simpleDocString]`
 These generators yield values for the module prologue.
 
 Default:
-    ```[basic.maybeAbstractMethod,
-        basic.maybeClassMethod,
-        basic.maybeSynchronizedMethod,
-        basic.overloadedClassMethods,
+
+```[basic.maybeAbstractMethod,
+    basic.maybeClassMethod,
+    basic.maybeSynchronizedMethod,
+    basic.overloadedClassMethods,
     ]
-    ```
+```
 
 #### <a name="astTransforms"></a>astTransforms
 
@@ -252,5 +269,7 @@ mapping is used to convert them when found.  Note that this mapping is now
 unnecessary and will be folded into the `astTransforms` sequence in future
 releases.
 
-[usage]: https://github.com/natural/java2python/tree/master/doc/usage.md
 [1]: https://github.com/natural/java2python/blob/master/java2python/config/default.py
+[2]: https://github.com/natural/java2python/blob/master/java2python/mod/basic.py
+[PEP 8]: http://www.python.org/dev/peps/pep-0008/
+[usage]: https://github.com/natural/java2python/tree/master/doc/usage.md
