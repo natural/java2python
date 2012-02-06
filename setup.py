@@ -57,6 +57,10 @@ setup(
         ],
 
     package_data={
+        'java2python' : [
+            'license.txt',
+            'readme.md',
+            ],
         'java2python.lang': [
             '*.g',
             '*.tokens',
