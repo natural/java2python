@@ -33,7 +33,7 @@ long_description = '\n'.join(__doc__.split('\n')[4:])
 
 setup(
     name='java2python',
-    version='0.5',
+    version='0.5.0',
 
     description=description,
     long_description=long_description,
@@ -42,7 +42,7 @@ setup(
     author_email='troy@troy.io',
 
     url='https://github.com/natural/java2python/',
-    download_url='https://github.com/downloads/natural/java2python/java2python-0.5.tar.gz',
+    download_url='https://github.com/downloads/natural/java2python/java2python-0.5.0.tar.gz',
 
     keywords=['java', 'java2python', 'compiler'],
     classifiers=filter(None, classifiers.split('\n')),

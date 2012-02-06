@@ -18,7 +18,7 @@ from java2python.config import Config
 from java2python.lib import escapes
 
 
-version = '0.5'
+version = '0.5.0'
 
 
 def logLevel(value):
