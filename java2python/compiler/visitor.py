@@ -426,7 +426,11 @@ class MethodContent(Base):
         """ Accept and process a 'for' statement. """
         self.walk(node.firstChildOfType(tokens.FOR_INIT))
         whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
-        whileStat.expr.walk(node.firstChildOfType(tokens.FOR_CONDITION))
+        cond = node.firstChildOfType(tokens.FOR_CONDITION)
+        if not cond.children:
+            whileStat.expr.right = 'True'
+        else:
+            whileStat.expr.walk(cond)
         whileBlock = self.factory.methodContent(parent=self)
         whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE))
         updateStat = self.factory.expr(parent=whileBlock)
