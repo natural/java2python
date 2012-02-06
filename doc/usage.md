@@ -33,6 +33,13 @@ page.
 
     Read from the given file.  Specify `-` for `stdin`.  If not
     given the command will read from `stdin`.
+    
+    If `[INPUT]` is a directory, the script will walk the directory looking for
+    files named `.java`, and transform each one.  If `[OUTPUT]` is also a
+    directory, the directory structure of `[INPUT]` will be recreated below it.
+    
+    If `[INPUT]` is a directory, `[OUTPUT]` must also be a directory, or it may
+    be `-` or unspecified.
 
   * `[OUTPUT]`
 

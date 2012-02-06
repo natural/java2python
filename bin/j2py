@@ -10,7 +10,7 @@ import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from collections import defaultdict
 from logging import _levelNames as logLevels, exception, warning, info, basicConfig
-from os import path
+from os import path, makedirs
 from time import time
 
 from java2python.compiler import Module, buildAST, transformAST
@@ -48,10 +48,35 @@ def runMain(options):
     if options.profile:
         import cProfile, pstats
         prof = cProfile.Profile()
-        prof.runcall(runTransform, options)
+        prof.runcall(runOneOrMany, options)
         stats = pstats.Stats(prof, stream=sys.stderr)
         stats.strip_dirs().sort_stats('cumulative')
         stats.print_stats().print_callers()
+        return 0
+    else:
+        return runOneOrMany(options)
+
+def runOneOrMany(options):
+    """ Runs our main transformer with each of the input files. """
+    infile, outfile = options.inputfile, options.outputfile
+
+    if infile and not isinstance(infile, file) and path.isdir(infile):
+        if outfile and not isinstance(outfile, file) and not path.isdir(outfile):
+            warning('Must specify output directory or stdout when using input directory.')
+            return 2
+        def walker(arg, dirname, files):
+            for name in [name for name in files if name.endswith('.java')]:
+                fullname = path.join(dirname, name)
+                options.inputfile = fullname
+                if outfile and outfile != '-' and not isinstance(outfile, file):
+                    full = path.abspath(path.join(outfile, fullname))
+                    head, tail = path.split(full)
+                    tail = path.splitext(tail)[0] + '.py'
+                    if not path.exists(head):
+                        makedirs(head)
+                    options.outputfile = path.join(head, tail)
+                runTransform(options)
+        path.walk(infile, walker, None)
         return 0
     else:
         return runTransform(options)
@@ -66,7 +91,7 @@ def runTransform(options):
     if options.inputfile and not isinstance(options.inputfile, file):
         filein = options.inputfile
     if options.outputfile and not isinstance(options.outputfile, file):
-        fileout = path.basename(options.outputfile)
+        fileout = options.outputfile
     elif fileout != filedefault:
         fileout = '%s.py' % (path.splitext(filein)[0])
 
