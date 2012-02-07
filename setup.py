@@ -11,6 +11,7 @@ This version requires Python 2.7.
 """
 
 from distutils.core import setup
+from os import path, listdir
 
 
 classifiers = """
@@ -29,6 +30,10 @@ Topic :: Software Development :: Code Generators
 
 description = __doc__.split('\n')[2]
 long_description = '\n'.join(__doc__.split('\n')[4:])
+
+
+def doc_files():
+    return [path.join('doc', name) for name in listdir('doc')]
 
 
 setup(
@@ -69,6 +74,10 @@ setup(
 
     scripts=[
         'bin/j2py',
+        ],
+
+    data_files=[
+        ('doc', doc_files()),
         ],
 
     install_requires=['antlr_python_runtime==3.1.3'],
