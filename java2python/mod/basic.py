@@ -225,3 +225,15 @@ def zopeImplementsClassHead(obj):
     if implAny(obj):
         for cls in obj.bases:
             yield 'zope.interface.implements({})'.format(cls)
+
+
+def moveStaticExpressions(cls):
+    name = '{}.'.format(cls.name) # notice the dot
+    exprs = [child for child in cls.children if child.isExpression and name in str(child)]
+    module = cls.parents(lambda x:x.isModule).next()
+    for expr in exprs:
+        cls.children.remove(expr)
+        newExpr = module.factory.expr(fs=name + '{right}', right=expr)
+        module.adopt(newExpr, index=len(module.children))
+
+

@@ -69,6 +69,7 @@ interfaceBaseHandlers = [
 # name.  It's commented out because its output differs so greatly
 # from its input, and because it's really not very useful.
 classPostWalkHandlers = [
+    basic.moveStaticExpressions,
     ## basic.classContentSort,
 ]
 
