@@ -309,6 +309,10 @@ class Expression(Base):
         if isinstance(self.right, (basestring, )) and self.right:
             parts.append(colors.white('right:') + colors.yellow(self.right))
             showfs = False
+        if self.modifiers:
+            parts.append(colors.white('modifiers:') + colors.cyan(','.join(self.modifiers)))
+        if self.type:
+            parts.append(colors.white('type:') + colors.cyan(self.type))
         if showfs:
             parts.append(colors.white('format:') + colors.yellow(self.fs))
         if self.tail:

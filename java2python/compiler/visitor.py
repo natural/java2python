@@ -118,7 +118,10 @@ class TypeAcceptor(object):
         """ Creates an accept function for the given factory type. """
         def acceptType(self, node, memo):
             """ Creates and returns a new template for a type. """
-            name = node.firstChildOfType(tokens.IDENT).text
+            try:
+                name = node.firstChildOfType(tokens.IDENT).text
+            except (AttributeError, ):
+                return
             self.variables.append(name)
             return getattr(self.factory, ft)(name=name, parent=self)
         return acceptType
@@ -201,9 +204,15 @@ class VarAcceptor(object):
         for varDecl in varDecls.childrenOfType(tokens.VAR_DECLARATOR):
             ident = varDecl.firstChildOfType(tokens.IDENT)
             self.variables.append(ident.text)
+
             identExp = self.factory.expr(left=ident.text, parent=self)
+            identExp.type = self.nodeTypeToString(node)
+            if node.firstChildOfType(tokens.MODIFIER_LIST):
+                identExp.modifiers = [child.text for child in node.firstChildOfType(tokens.MODIFIER_LIST).children]
+
             declExp = varDecl.firstChildOfType(tokens.EXPR)
             assgnExp = identExp.pushRight(' = ')
+
             declArr = varDecl.firstChildOfType(tokens.ARRAY_INITIALIZER)
             if declExp:
                 assgnExp.walk(declExp, memo)
@@ -219,8 +228,7 @@ class VarAcceptor(object):
                 if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
                     val = assgnExp.pushRight('[]')
                 else:
-                    typ = self.nodeTypeToString(node)
-                    val = assgnExp.pushRight('{0}()'.format(typ))
+                    val = assgnExp.pushRight('{0}()'.format(identExp.type))
         return self
 
 
