@@ -689,7 +689,7 @@ class Expression(Base):
     acceptUnaryMinus = makeNodePreformattedExpr('-' + FS.l)
     acceptUnaryPlus = makeNodePreformattedExpr('+' + FS.l)
 
-    def acceptCastExpr(self, node, memo): # problem?
+    def acceptCastExpr(self, node, memo):
         """ Accept and process a cast expression. """
         # If the type of casting is a primitive type,
         # then do the cast, else drop it.
@@ -699,12 +699,21 @@ class Expression(Base):
         typeName = typeIdent.text
         if typeIdent.type == tokens.QUALIFIED_TYPE_IDENT:
             typeName = typeIdent.firstChild().text
-
+        
         if typeName in tokens.primitiveTypeNames:
             # Cast using the primitive type constructor
             self.fs = typeName + '(' + FS.r + ')'
         else:
-            self.fs = FS.r
+            mode = self.config.last('objCastMode')
+            if mode == 'drop':
+                # Use drop policy
+                self.fs = FS.r
+            elif mode == 'ctor':
+                # Make constructor
+                self.fs = FS.l + '(' + FS.r + ')'
+            else:
+                warn('Couldn\'t perform cast operation. ' + typeName + \
+                    ' is not a primitive and objCastMode in the config file has wrong value.')
         self.left, self.right = visitors = factory(parent=self), factory(parent=self)
         self.zipWalk(node.children, visitors, memo)
 
