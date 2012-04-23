@@ -89,6 +89,11 @@ class Tokens(object):
         return (mod.VOID_METHOD_DECL, mod.FUNCTION_METHOD_DECL, )
 
     @property
+    def primitiveTypeNames(self):
+        """ Type name of well-known primitive types """
+        return ('bool', 'str', 'int', 'long', 'float', )
+
+    @property
     def module(self):
         """ Provides lazy import to the parser module. """
         module = self.parserModule

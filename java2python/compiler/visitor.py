@@ -678,7 +678,6 @@ class Expression(Base):
         return acceptPreformatted
 
     acceptArrayElementAccess = makeNodePreformattedExpr(FS.l + '[' + FS.r + ']')
-    acceptCastExpr  = makeNodePreformattedExpr(FS.l + '(' + FS.r + ')' ) # problem?
     acceptDiv = makeNodePreformattedExpr(FS.l + ' / ' + FS.r)
     acceptLogicalAnd = makeNodePreformattedExpr(FS.l + ' and ' + FS.r)
     acceptLogicalNot = makeNodePreformattedExpr('not ' + FS.l)
@@ -689,6 +688,25 @@ class Expression(Base):
     acceptStar = makeNodePreformattedExpr(FS.l + ' * ' + FS.r)
     acceptUnaryMinus = makeNodePreformattedExpr('-' + FS.l)
     acceptUnaryPlus = makeNodePreformattedExpr('+' + FS.l)
+
+    def acceptCastExpr(self, node, memo): # problem?
+        """ Accept and process a cast expression. """
+        # If the type of casting is a primitive type,
+        # then do the cast, else drop it.
+        factory = self.factory.expr
+        typeTok = node.firstChildOfType(tokens.TYPE)
+        typeIdent = typeTok.firstChild()
+        typeName = typeIdent.text
+        if typeIdent.type == tokens.QUALIFIED_TYPE_IDENT:
+            typeName = typeIdent.firstChild().text
+
+        if typeName in tokens.primitiveTypeNames:
+            # Cast using the primitive type constructor
+            self.fs = typeName + '(' + FS.r + ')'
+        else:
+            self.fs = FS.r
+        self.left, self.right = visitors = factory(parent=self), factory(parent=self)
+        self.zipWalk(node.children, visitors, memo)
 
     def makeAcceptPrePost(suffix, pre):
         """ Make an accept method for pre- and post- assignment expressions. """
