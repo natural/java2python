@@ -173,6 +173,15 @@ astTransforms = [
 # convenience.
 
 
+# Specifies how cast operations of non-primitive types are handled
+# (primitive types are automatically handled)
+# Valid values:
+#     - 'drop': completely drops type and cast info
+#     - 'ctor': converts the cast in a constructor call
+#               E.g.: (Cast) x -> Cast(x)
+objCastMode = 'drop'
+
+
 # module output subs.
 moduleOutputSubs = [
     (r'System\.out\.println\((.*)\)', r'print \1'),
