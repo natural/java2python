@@ -148,15 +148,13 @@ astTransforms = [
     (Type('TRUE'),  transform.true2True),
     (Type('IDENT'), transform.keywordSafeIdent),
 
+    (Type('FLOATING_POINT_LITERAL'), transform.syntaxSafeFloatLiteral),
 
-    (Type('FLOATING_POINT_LITERAL'),
-     transform.syntaxSafeFloatLiteral),
-
-    (Type('TYPE') > Type('BOOLEAN'),
-     transform.typeSub),
-
-    (Type('TYPE') > Type('DOUBLE'),
-     transform.typeSub),
+    (Type('TYPE') > Type('BOOLEAN'), transform.typeSub),
+    (Type('TYPE') > Type('BYTE'), transform.typeSub),
+    (Type('TYPE') > Type('CHAR'), transform.typeSub),
+    (Type('TYPE') > Type('DOUBLE'), transform.typeSub),
+    (Type('TYPE') > Type('SHORT'), transform.typeSub),
 
     (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
      transform.typeSub),
@@ -202,6 +200,8 @@ typeSubs = {
     'boolean' : 'bool',
     'IndexOutOfBoundsException' : 'IndexError',
     'Integer' : 'int',
+    'short' : 'int',
+    'byte' : 'int',
     'Object' : 'object',
     'String' : 'str',
     'char' : 'str',
