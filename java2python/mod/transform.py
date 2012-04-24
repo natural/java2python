@@ -48,7 +48,7 @@ def syntaxSafeFloatLiteral(node, config):
     value = node.token.text
     if value.startswith('.'):
         value = '0' + value
-    if value.endswith(('f', 'd')):
+    if value.lower().endswith(('f', 'd')):
         value = value[:-1]
     elif value.endswith(('l', 'L')):
         value = value[:-1] + 'L'
