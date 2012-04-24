@@ -21,7 +21,7 @@ Here's a very simple example:
 ```bash
 $ cat HelloWorld.java
 ```
-```java    
+```java
 // This is the HelloWorld class with a single method.
 class HelloWorld {
     public static void main(String[] args) {
@@ -60,4 +60,4 @@ if __name__ == '__main__':
 [introduction]: https://github.com/natural/java2python/tree/master/doc/intro.md
 [lots of docs]: https://github.com/natural/java2python/tree/master/doc/
 [many options]: https://github.com/natural/java2python/tree/master/doc/customization.md
-[plenty of tests]: https://github.com/natural/java2python/tree/master/test/
+[plenty of tests]: https://github.com/natural/java2python/tree/master/doc/tests.md
