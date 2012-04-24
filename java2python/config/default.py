@@ -168,18 +168,15 @@ astTransforms = [
 # in method declarations.  set to 0 to disable.
 #minIndentParams = 5
 
+# Specifies handler for cast operations of non-primitive types are handled
+# (primitive types are automatically handled).  Use basic.castDrop to leave
+# cast expressions out of generated source.  Use basic.castCtor to transform
+# casts into constructor calls.  Or you can specify a function of your own.
+expressionCastHandler = basic.castDrop
+
 
 # Values below are used by the handlers.  They're here for
 # convenience.
-
-
-# Specifies how cast operations of non-primitive types are handled
-# (primitive types are automatically handled)
-# Valid values:
-#     - 'drop': completely drops type and cast info
-#     - 'ctor': converts the cast in a constructor call
-#               E.g.: (Cast) x -> Cast(x)
-objCastMode = 'drop'
 
 
 # module output subs.

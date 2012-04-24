@@ -7,6 +7,8 @@ from logging import info, warn
 from os import path
 from re import sub as rxsub
 
+from java2python.lib import FS
+
 
 def shebangLine(module):
     """ yields the canonical python shebang line. """
@@ -237,3 +239,9 @@ def moveStaticExpressions(cls):
         module.adopt(newExpr, index=len(module.children))
 
 
+def castCtor(expr, node):
+    expr.fs = FS.l + '(' + FS.r + ')'
+
+
+def castDrop(expr, node):
+    expr.fs = FS.r

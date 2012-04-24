@@ -699,21 +699,16 @@ class Expression(Base):
         typeName = typeIdent.text
         if typeIdent.type == tokens.QUALIFIED_TYPE_IDENT:
             typeName = typeIdent.firstChild().text
-        
+
         if typeName in tokens.primitiveTypeNames:
             # Cast using the primitive type constructor
             self.fs = typeName + '(' + FS.r + ')'
         else:
-            mode = self.config.last('objCastMode')
-            if mode == 'drop':
-                # Use drop policy
-                self.fs = FS.r
-            elif mode == 'ctor':
-                # Make constructor
-                self.fs = FS.l + '(' + FS.r + ')'
+            handler = self.configHandler('Cast')
+            if handler:
+                handler(self, node)
             else:
-                warn('Couldn\'t perform cast operation. ' + typeName + \
-                    ' is not a primitive and objCastMode in the config file has wrong value.')
+                warn('No handler to perform cast of non-primitive type %s.', typeName)
         self.left, self.right = visitors = factory(parent=self), factory(parent=self)
         self.zipWalk(node.children, visitors, memo)
 
