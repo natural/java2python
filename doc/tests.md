@@ -42,7 +42,7 @@ Class02.java`, just `make Class02`.  If you supply an extension, nothing will
 happen and the test won't run.
 
 The `test` directory contains two helper scripts used by the makefile that you
-can also use during development.  The first is [`runjava`][], which runs the
+can also use during development.  The first is [runjava][], which runs the
 Java compiler and the Java VM with the indicated file.  Use it like this:
 
 ```bash
@@ -50,7 +50,7 @@ $ ./runjava Class01.java
 Hello, world.
 ```
 
-The second script is [`runj2py`][], which is a handy shortcut for running the
+The second script is [runj2py][], which is a handy shortcut for running the
 `j2py` script with preset command line arguments for the test configuration.
 You run it like this:
 
