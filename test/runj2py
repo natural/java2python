@@ -1,2 +1,2 @@
 #!/bin/bash
-../bin/j2py -d configs "$@"
+PYTHONPATH=$PYTHONPATH:.. ../bin/j2py -d configs "$@"
