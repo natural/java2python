@@ -52,7 +52,7 @@ necessary, those expressions are moved outside of statements.
 
 All of the following assignment operators are translated into their Python
 equivalents:
-     
+
     =    +=    -=    *=    /=    &=    |=    ^=    %=    <<=    >>=
 
 The bit shift right (`>>>`)and bit shift assign right (`>>>=`) operators are
@@ -131,7 +131,7 @@ statements.
 
 Java `try` and `catch` statements are translated to equivalent Python `try` and
 `except` statements.
-     
+
 #### switch and case
 
 Java `switch` and `case` statements are translated to equivalent Python `if`
@@ -160,7 +160,7 @@ statements.
 
 #### throw
 
-Java `throw` statements are translated to equivalent Python `throw` statements.
+Java `throw` statements are translated to equivalent Python `raise` statements.
 
 #### break
 
