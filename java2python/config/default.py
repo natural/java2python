@@ -154,7 +154,10 @@ astTransforms = [
     (Type('TYPE') > Type('BYTE'), transform.typeSub),
     (Type('TYPE') > Type('CHAR'), transform.typeSub),
     (Type('TYPE') > Type('DOUBLE'), transform.typeSub),
+    (Type('TYPE') > Type('INT'), transform.typeSub),
     (Type('TYPE') > Type('SHORT'), transform.typeSub),
+    (Type('TYPE') > Type('LONG'), transform.typeSub),
+    (Type('TYPE') > Type('DOUBLE'), transform.typeSub),
 
     (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
      transform.typeSub),
@@ -204,13 +207,28 @@ moduleOutputSubs = [
 typeSubs = {
     'Boolean' : 'bool',
     'boolean' : 'bool',
-    'IndexOutOfBoundsException' : 'IndexError',
-    'Integer' : 'int',
-    'short' : 'int',
+
+    'Byte' : 'int',
     'byte' : 'int',
-    'Object' : 'object',
-    'String' : 'str',
+
+    'Char' : 'str',
     'char' : 'str',
+
+    'Integer' : 'int',
+    'int' : 'int',
+
+    'Short' : 'int',
+    'short' : 'int',
+
+    'Long' : 'long',
+    'long' : 'long',
+
+    'Double' : 'float',
     'double' : 'float',
+
+    'String' : 'str',
     'java.lang.String' : 'str',
-}
+
+    'Object' : 'object',
+    'IndexOutOfBoundsException' : 'IndexError',
+    }
