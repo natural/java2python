@@ -41,9 +41,9 @@ Notice that there isn't a suffix to the file name; you don't run `make
 Class02.java`, just `make Class02`.  If you supply an extension, nothing will
 happen and the test won't run.
 
-The `test` directory contains two helper scripts used by the makefile that you
-can also use during development.  The first is [runjava][], which runs the
-Java compiler and the Java VM with the indicated file.  Use it like this:
+The `test` directory contains two helper scripts that you can use during
+development.  The first is [runjava][], which runs the Java compiler and the
+Java VM with the indicated file.  Use it like this:
 
 ```bash
 $ ./runjava Class01.java

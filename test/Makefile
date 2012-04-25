@@ -7,7 +7,7 @@ j2py = ../bin/j2py
 python_files := $(addsuffix .py, $(notdir $(basename $(wildcard *.java))))
 test_targets := $(sort $(notdir $(basename $(wildcard *.java))))
 
-export PYTHONPATH := $(PYTHONPATH):.
+export PYTHONPATH := $(PYTHONPATH):.:..
 
 
 .PHONY: all clean
