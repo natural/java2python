@@ -153,7 +153,7 @@ astTransforms = [
     (Type('TYPE') > Type('BOOLEAN'), transform.typeSub),
     (Type('TYPE') > Type('BYTE'), transform.typeSub),
     (Type('TYPE') > Type('CHAR'), transform.typeSub),
-    (Type('TYPE') > Type('DOUBLE'), transform.typeSub),
+    (Type('TYPE') > Type('FLOAT'), transform.typeSub),
     (Type('TYPE') > Type('INT'), transform.typeSub),
     (Type('TYPE') > Type('SHORT'), transform.typeSub),
     (Type('TYPE') > Type('LONG'), transform.typeSub),
@@ -222,6 +222,9 @@ typeSubs = {
 
     'Long' : 'long',
     'long' : 'long',
+
+    'Float' : 'float',
+    'float' : 'float',
 
     'Double' : 'float',
     'double' : 'float',
