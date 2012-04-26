@@ -641,7 +641,7 @@ class Expression(Base):
         """ Accept and processes an operator expression. """
         factory = self.factory.expr
         self.fs = FS.l + ' ' + node.text + ' ' + FS.r
-        self.left, self.right = visitors = factory(parent=self), factory()
+        self.left, self.right = visitors = factory(parent=self), factory(parent=self)
         self.zipWalk(node.children, visitors, memo)
 
     acceptAnd = nodeOpExpr
