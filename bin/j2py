@@ -68,6 +68,7 @@ def runOneOrMany(options):
             for name in [name for name in files if name.endswith('.java')]:
                 fullname = path.join(dirname, name)
                 options.inputfile = fullname
+                info('opening %s', fullname)
                 if outfile and outfile != '-' and not isinstance(outfile, file):
                     full = path.abspath(path.join(outfile, fullname))
                     head, tail = path.split(full)
