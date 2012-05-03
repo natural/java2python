@@ -495,8 +495,11 @@ class MethodContent(Base):
                 elseBlock = self.factory.expr(parent=elseStat)
                 elseBlock.walk(nextNode, memo)
             elif nextType: # nextType != tokens.BLOCK_SCOPE:
-                self.factory.statement('else', fs=FS.lc, parent=self)
-                self.factory.methodContent(parent=self).walk(nextNode, memo)
+                elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
+                if nextNode.children:
+                    self.factory.methodContent(parent=self).walk(nextNode, memo)
+                else:
+                    self.factory.expr(left='pass', parent=elseStat)
 
 
     def acceptSwitch(self, node, memo):
