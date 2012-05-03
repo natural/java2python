@@ -482,14 +482,19 @@ class MethodContent(Base):
                 else:
                     nextBlock = self.factory.methodContent(parent=self)
                 nextBlock.walk(nextNode.children[1], memo)
-                nextNode = nextNode.children[2]
-                nextType = nextNode.type
+
+                try:
+                    nextNode = nextNode.children[2]
+                except (IndexError, ):
+                    nextType = None
+                else:
+                    nextType = nextNode.type
 
             if nextType == tokens.EXPR:
                 elseStat = self.factory.statement('else', fs=FS.lc, parent=self)
                 elseBlock = self.factory.expr(parent=elseStat)
                 elseBlock.walk(nextNode, memo)
-            else: # nextType != tokens.BLOCK_SCOPE:
+            elif nextType: # nextType != tokens.BLOCK_SCOPE:
                 self.factory.statement('else', fs=FS.lc, parent=self)
                 self.factory.methodContent(parent=self).walk(nextNode, memo)
 
