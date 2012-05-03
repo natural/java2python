@@ -14,6 +14,8 @@
 import keyword
 import types
 
+from java2python.lang import tokens
+
 
 def invalidPythonNames():
     """ Creates a list of valid Java identifiers that are invalid in Python. """
@@ -53,6 +55,38 @@ def syntaxSafeFloatLiteral(node, config):
     elif value.endswith(('l', 'L')):
         value = value[:-1] + 'L'
     node.token.text = value
+
+
+def lengthToLen(node, config):
+    """ Transforms expressions like 'value.length()' to 'len(value)'.
+
+    This method changes AST branches like this:
+
+        METHOD_CALL [start=45, stop=49]
+            DOT . [line=4, start=45, stop=47]
+                IDENT foo [line=4, start=45]
+                IDENT length [line=4, start=47]
+            ARGUMENT_LIST [line=4, start=48, stop=49]
+
+    Into branches like this:
+
+        IDENT len(foo) [line=4, start=45]
+
+    Notice that the resulting IDENT node text is invalid.  We can't use a
+    METHOD_CALL token because those are always bound to a class or instance.
+    It would be best to add a new token type, and that option will be explored
+    if we run into this problem again.
+
+    """
+    dot = node.parent
+    method = dot.parent
+
+    ident = dot.firstChildOfType(tokens.IDENT)
+    ident.token.text = 'len({})'.format(ident.text)
+
+    expr = method.parent
+    expr.children.remove(method)
+    expr.addChild(ident)
 
 
 def typeSub(node, config):

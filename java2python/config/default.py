@@ -159,6 +159,9 @@ astTransforms = [
     (Type('TYPE') > Type('LONG'), transform.typeSub),
     (Type('TYPE') > Type('DOUBLE'), transform.typeSub),
 
+    (Type('METHOD_CALL') > Type('DOT') > Type('IDENT', 'length'),
+     transform.lengthToLen),
+
     (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
      transform.typeSub),
 
@@ -193,7 +196,6 @@ moduleOutputSubs = [
     (r'(\s)(\S*?)(\.toString\(\))', r'\1\2.__str__()'),
     (r'(\s)def toString', r'\1def __str__'),
     (r'(\s)(\S*?)(\.toLowerCase\(\))', r'\1\2.lower()'),
-    (r'(\s)(\S*?)(\.length\(\))', r'\1len(\2)'),
     (r'(.*?)IndexOutOfBoundsException\((.*?)\)', r'\1IndexError(\2)'),
     (r'\.__class__\.getName\(\)', '.__class__.__name__'),
     (r'\.getClass\(\)', '.__class__'),
