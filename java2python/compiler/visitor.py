@@ -46,7 +46,7 @@ class Base(object):
         """ Add comments to the template from tokens in the tree. """
         prefix = self.config.last('commentPrefix', '# ')
         cache, parser, comTypes = memo.comments, tree.parser, tokens.commentTypes
-        comNew = lambda t:t.type in comTypes and t.index not in cache
+        comNew = lambda t:t.type in comTypes and (t.index not in cache)
 
         for tok in ifilter(comNew, parser.input.tokens[memo.last:index]):
             cache.add(tok.index)
@@ -173,7 +173,7 @@ class ModifiersAcceptor(object):
             if defKey:
                 deco = self.factory.expr(left=name, fs='@{left}({right})')
                 deco.right = right = self.factory.expr(parent=deco)
-                right.walk(defKey.firstChild())
+                right.walk(defKey.firstChild(), memo)
             else:
                 deco = self.factory.expr(left=name, fs='@{left}({right})')
                 arg = deco.right = self.factory.expr(parent=deco)
@@ -432,17 +432,20 @@ class MethodContent(Base):
 
     def acceptFor(self, node, memo):
         """ Accept and process a 'for' statement. """
-        self.walk(node.firstChildOfType(tokens.FOR_INIT))
+        self.walk(node.firstChildOfType(tokens.FOR_INIT), memo)
         whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
         cond = node.firstChildOfType(tokens.FOR_CONDITION)
         if not cond.children:
             whileStat.expr.right = 'True'
         else:
-            whileStat.expr.walk(cond)
+            whileStat.expr.walk(cond, memo)
         whileBlock = self.factory.methodContent(parent=self)
-        whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE))
+        if not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
+            self.factory.expr(left='pass', parent=whileBlock)
+        else:
+            whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
         updateStat = self.factory.expr(parent=whileBlock)
-        updateStat.walk(node.firstChildOfType(tokens.FOR_UPDATE))
+        updateStat.walk(node.firstChildOfType(tokens.FOR_UPDATE), memo)
 
     def acceptForEach(self, node, memo):
         """ Accept and process a 'for each' style statement. """
@@ -505,7 +508,7 @@ class MethodContent(Base):
             return
         # we have at least one node...
         parExpr = self.factory.expr(parent=self)
-        parExpr.walk(parNode)
+        parExpr.walk(parNode, memo)
         eqFs = FS.l + '==' + FS.r
         for caseIdx, caseNode in enumerate(caseNodes):
             isDefault, isFirst = caseNode.type==tokens.DEFAULT, caseIdx==0
@@ -519,7 +522,7 @@ class MethodContent(Base):
 
             if not isDefault:
                 right = self.factory.expr(parent=parExpr)
-                right.walk(caseNode.firstChildOfType(tokens.EXPR))
+                right.walk(caseNode.firstChildOfType(tokens.EXPR), memo)
                 caseExpr.expr.right = self.factory.expr(left=parExpr, right=right, fs=eqFs)
                 caseContent = self.factory.methodContent(parent=self)
                 for child in caseNode.children[1:]:
