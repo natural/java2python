@@ -189,6 +189,7 @@ expressionCastHandler = basic.castDrop
 moduleOutputSubs = [
     (r'System\.out\.println\((.*)\)', r'print \1'),
     (r'System\.out\.print_\((.*?)\)', r'print \1,'),
+    (r'String\.format\(\"(.*)\" *, *(.*)\)', r'"\1" % (\2)'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
