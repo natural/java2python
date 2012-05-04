@@ -11,6 +11,8 @@
 # See the java2python.config.default and java2python.lang.selector modules to
 # understand how and when selectors are associated with these callables.
 
+import re
+
 import keyword
 import types
 
@@ -87,6 +89,53 @@ def lengthToLen(node, config):
     expr = method.parent
     expr.children.remove(method)
     expr.addChild(ident)
+
+
+def formatSyntaxTransf(match):
+    """ Helper function for formatString AST transform.
+
+        Translates the Java Formatter syntax into Python .format syntax.
+
+        This function gets called by re.sub which matches all the %...$... groups
+        inside a format specifier string.
+    """
+    groups = match.groupdict()
+    result = '{'
+    # TODO: add flags, width and precision
+    if(groups['idx']):
+        idx = int(groups['idx'][:-1])
+        result += str(idx - 1) # Py starts count from 0
+    result += ':' + groups['convers'] + '}'
+
+    return result
+
+def formatString(node, config):
+    """ Transforms string formatting like 'String.format("%d %2$s", i, s)'
+        into '"{:d} {2:s}".format(i, s)'.
+    """
+    dot = node.parent
+    method = dot.parent
+    arg_list = method.firstChildOfType(tokens.ARGUMENT_LIST)
+    call_args = [arg for arg in arg_list.childrenOfType(tokens.EXPR)]
+
+    format = call_args[0].firstChildOfType(tokens.STRING_LITERAL)
+    args = [arg.firstChildOfType(tokens.IDENT) for arg in call_args[1:]]
+
+    # Translate format syntax
+    format.token.text = re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefg])',
+                    formatSyntaxTransf,
+                    format.token.text,
+                    flags=re.IGNORECASE)
+
+    left_ident = dot.children[0]
+    right_ident = dot.children[1]
+
+    # Change AST
+    arg_list.children.remove(format.parent)
+    dot.children.remove(left_ident)
+    dot.children.remove(right_ident)
+    dot.addChild(format)
+    dot.addChild(right_ident)
 
 
 def typeSub(node, config):

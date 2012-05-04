@@ -162,6 +162,12 @@ astTransforms = [
     (Type('METHOD_CALL') > Type('DOT') > Type('IDENT', 'length'),
      transform.lengthToLen),
 
+    (Type('METHOD_CALL') > Type('DOT') > (
+        Type('IDENT', 'String') +
+        Type('IDENT', 'format')
+        ),
+     transform.formatString),
+
     (Type('TYPE') > Type('QUALIFIED_TYPE_IDENT') > Type('IDENT'),
      transform.typeSub),
 
@@ -189,7 +195,6 @@ expressionCastHandler = basic.castDrop
 moduleOutputSubs = [
     (r'System\.out\.println\((.*)\)', r'print \1'),
     (r'System\.out\.print_\((.*?)\)', r'print \1,'),
-    (r'String\.format\(\"(.*)\" *, *(.*)\)', r'"\1" % (\2)'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
