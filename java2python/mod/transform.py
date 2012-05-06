@@ -117,15 +117,25 @@ def formatString(node, config):
     method = dot.parent
     arg_list = method.firstChildOfType(tokens.ARGUMENT_LIST)
     call_args = [arg for arg in arg_list.childrenOfType(tokens.EXPR)]
-
-    format = call_args[0].firstChildOfType(tokens.STRING_LITERAL)
     args = [arg.firstChildOfType(tokens.IDENT) for arg in call_args[1:]]
 
-    # Translate format syntax
-    format.token.text = re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefg])',
+    # Translate format syntax (if format == string_literal)
+    format = call_args[0].firstChildOfType(tokens.STRING_LITERAL)
+    if format:
+        format.token.text =  \
+            re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefg])',
                     formatSyntaxTransf,
                     format.token.text,
                     flags=re.IGNORECASE)
+    else:
+        # Translation should happen at runtime
+        format = call_args[0].firstChild()
+        if format.type == tokens.IDENT:
+            # String variable
+            pass
+        else:
+            # Function that returns String
+            pass
 
     left_ident = dot.children[0]
     right_ident = dot.children[1]
