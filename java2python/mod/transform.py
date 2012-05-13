@@ -101,6 +101,10 @@ def formatSyntaxTransf(match):
         inside a format specifier string.
     """
     groups = match.groupdict()
+    if groups['convers'] == 'n':
+        # Means platform-specific line separator
+        return '\\n' # Py converts \n to os.linesep
+
     result = '{'
     # TODO: add flags, width and precision
     if(groups['idx']):
@@ -124,7 +128,7 @@ def formatString(node, config):
     format = call_args[0].firstChildOfType(tokens.STRING_LITERAL)
     if format:
         format.token.text =  \
-            re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefg])',
+            re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefgn])',
                     formatSyntaxTransf,
                     format.token.text,
                     flags=re.IGNORECASE)
