@@ -106,11 +106,33 @@ def formatSyntaxTransf(match):
         return '\\n' # Py converts \n to os.linesep
 
     result = '{'
-    # TODO: add flags, width and precision
+    thous_sep = ''
+
     if(groups['idx']):
         idx = int(groups['idx'][:-1])
         result += str(idx - 1) # Py starts count from 0
-    result += ':' + groups['convers'] + '}'
+    result += ':'
+
+    if(groups['flags']):
+        if ',' in groups['flags']:
+            thous_sep = ','
+        if '+' in groups['flags']:
+            result += '+'
+        elif ' ' in groups['flags']:
+            result += ' '
+        if '#' in groups['flags']:
+            result += '#'
+        if '0' in groups['flags']:
+            result += '0'
+
+    if(groups['width']):
+        result += groups['width']
+    result += thous_sep
+
+    if(groups['precision']):
+        result += groups['precision']
+
+    result += groups['convers'] + '}'
 
     return result
 
@@ -128,7 +150,7 @@ def formatString(node, config):
     format = call_args[0].firstChildOfType(tokens.STRING_LITERAL)
     if format:
         format.token.text =  \
-            re.sub(r'%(?P<idx>\d+\$)?(?P<convers>[scdoxefgn])',
+            re.sub(r'%(?P<idx>\d+\$)?(?P<flags>[-+# 0,]+)?(?P<width>[0-9]+)?(?P<precision>\.[0-9]+)?(?P<convers>[scdoxefgn])',
                     formatSyntaxTransf,
                     format.token.text,
                     flags=re.IGNORECASE)
