@@ -17,7 +17,7 @@ from java2python.compiler import Module, buildAST, transformAST
 from java2python.config import Config
 from java2python.lib import escapes
 
-
+import codecs
 version = '0.5.1'
 
 
@@ -107,7 +107,7 @@ def runTransform(options):
 
     try:
         if filein != '-':
-            source = open(filein).read()
+            source = codecs.open(filein,"r","utf-8").read()
         else:
             source = sys.stdin.read()
     except (IOError, ), exc:
@@ -136,7 +136,7 @@ def runTransform(options):
     timed['visit_finish']
 
     timed['encode']
-    source = unicode(module)
+    source = module.__unicode__()
     timed['encode_finish']
     timed['overall_finish']
 
