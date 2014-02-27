@@ -19,8 +19,7 @@ from itertools import chain, ifilter, imap
 
 from java2python.lang import tokens
 from java2python.lib import FS, colors
-
-
+from java2python.utils import *;
 class Factory(object):
     """ Factory -> creates pre-configured callables for new block instances.
 
@@ -73,7 +72,7 @@ class FactoryTypeDetector(type):
         except (AttributeError, ):
             pass
 
-
+@python_2_unicode_compatible
 class Base(object):
     """ Base -> base class for formatting Python output.
 
@@ -290,7 +289,7 @@ class Base(object):
                 yield value
             return wrapper
 
-
+@python_2_unicode_compatible
 class Expression(Base):
     """ Expression -> formatting for Python expressions. """
 
@@ -321,7 +320,12 @@ class Expression(Base):
 
     def __str__(self):
         """ Returns the Python source code representation of this template. """
-        return self.fs.format(left=self.left, right=self.right) + self.tail
+        #print "=========="
+        fs=unicode(self.fs)
+        #print fs,":",self.left,",",self.right
+        #print type(fs),type(self.left),type(self.right)
+        r=fs.format(left=self.left, right=self.right)
+        return r + self.tail
 
     def dump(self, fd, level=0):
         """ Writes the Python source code for this template to the given file. """
