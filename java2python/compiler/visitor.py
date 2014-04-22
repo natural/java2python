@@ -440,7 +440,7 @@ class MethodContent(Base):
         else:
             whileStat.expr.walk(cond, memo)
         whileBlock = self.factory.methodContent(parent=self)
-        if not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
+        if not node.firstChildOfType(tokens.BLOCK_SCOPE) or not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
             self.factory.expr(left='pass', parent=whileBlock)
         else:
             whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
@@ -512,7 +512,7 @@ class MethodContent(Base):
         lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
         caseNodes = lblNode.children
         # empty switch statement
-        if not len(caseNodes):
+        if not caseNodes:
             return
         # we have at least one node...
         parExpr = self.factory.expr(parent=self)
@@ -535,7 +535,7 @@ class MethodContent(Base):
                 caseContent = self.factory.methodContent(parent=self)
                 for child in caseNode.children[1:]:
                     caseContent.walk(child, memo)
-                if not caseNode.children[1:]:
+                if not caseNode.children or not caseNode.children[1:]:
                     self.factory.expr(left='pass', parent=caseContent)
             if isDefault:
                 if isFirst:
@@ -607,7 +607,7 @@ class MethodContent(Base):
         parNode, blkNode = node.children
         whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
         whileStat.expr.walk(parNode, memo)
-        if not blkNode.children:
+        if not blkNode or not blkNode.children:
             self.factory.expr(left='pass', parent=whileStat)
         else:
             whileStat.walk(blkNode, memo)
