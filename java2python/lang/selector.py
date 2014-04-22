@@ -160,7 +160,7 @@ class Type(Selector):
         self.value = value
 
     def __call__(self, tree):
-        if tree.token.type == self.key:
+        if tree.token and tree.token.type == self.key:
             if self.value is None or self.value == tree.token.text:
                 yield tree
 
