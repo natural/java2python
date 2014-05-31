@@ -14,11 +14,13 @@
 
 from functools import reduce, partial
 from itertools import ifilter, ifilterfalse, izip, tee
-from logging import debug, warn
+from logging import debug, warn, warning
 from re import compile as recompile, sub as resub
+from traceback import format_exc
 
 from java2python.lang import tokens
 from java2python.lib import FS
+
 
 
 class Memo(object):
@@ -35,7 +37,11 @@ class Base(object):
 
     def accept(self, node, memo):
         """ Accept a node, possibly creating a child visitor. """
-        tokType = tokens.map.get(node.token.type)
+        if node and node.token:
+            tokType = tokens.map.get(node.token.type)
+        else:
+            warning(format_exc())
+            return
         missing = lambda node, memo:self
         call = getattr(self, 'accept{0}'.format(tokens.title(tokType)), missing)
         if call is missing:
@@ -79,7 +85,11 @@ class Base(object):
             return
         memo = Memo() if memo is None else memo
         comIns = self.insertComments
-        comIns(self, tree, tree.tokenStartIndex, memo)
+        try:
+            comIns(self, tree, tree.tokenStartIndex, memo)
+        except:
+            warning(format_exc())
+            pass
         visitor = self.accept(tree, memo)
         if visitor:
             for child in tree.children:
