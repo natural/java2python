@@ -14,11 +14,13 @@
 
 from functools import reduce, partial
 from itertools import ifilter, ifilterfalse, izip, tee
-from logging import debug, warn
+from logging import debug, warn, warning
 from re import compile as recompile, sub as resub
+from traceback import format_exc
 
 from java2python.lang import tokens
 from java2python.lib import FS
+
 
 
 class Memo(object):
@@ -35,7 +37,11 @@ class Base(object):
 
     def accept(self, node, memo):
         """ Accept a node, possibly creating a child visitor. """
-        tokType = tokens.map.get(node.token.type)
+        if node and node.token:
+            tokType = tokens.map.get(node.token.type)
+        else:
+            warning(format_exc())
+            return
         missing = lambda node, memo:self
         call = getattr(self, 'accept{0}'.format(tokens.title(tokType)), missing)
         if call is missing:
@@ -79,7 +85,11 @@ class Base(object):
             return
         memo = Memo() if memo is None else memo
         comIns = self.insertComments
-        comIns(self, tree, tree.tokenStartIndex, memo)
+        try:
+            comIns(self, tree, tree.tokenStartIndex, memo)
+        except:
+            warning(format_exc())
+            pass
         visitor = self.accept(tree, memo)
         if visitor:
             for child in tree.children:
@@ -440,7 +450,7 @@ class MethodContent(Base):
         else:
             whileStat.expr.walk(cond, memo)
         whileBlock = self.factory.methodContent(parent=self)
-        if not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
+        if not node.firstChildOfType(tokens.BLOCK_SCOPE) or not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
             self.factory.expr(left='pass', parent=whileBlock)
         else:
             whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
@@ -512,7 +522,7 @@ class MethodContent(Base):
         lblNode = node.firstChildOfType(tokens.SWITCH_BLOCK_LABEL_LIST)
         caseNodes = lblNode.children
         # empty switch statement
-        if not len(caseNodes):
+        if not caseNodes:
             return
         # we have at least one node...
         parExpr = self.factory.expr(parent=self)
@@ -535,7 +545,7 @@ class MethodContent(Base):
                 caseContent = self.factory.methodContent(parent=self)
                 for child in caseNode.children[1:]:
                     caseContent.walk(child, memo)
-                if not caseNode.children[1:]:
+                if not caseNode.children or not caseNode.children[1:]:
                     self.factory.expr(left='pass', parent=caseContent)
             if isDefault:
                 if isFirst:
@@ -607,7 +617,7 @@ class MethodContent(Base):
         parNode, blkNode = node.children
         whileStat = self.factory.statement('while', fs=FS.lsrc, parent=self)
         whileStat.expr.walk(parNode, memo)
-        if not blkNode.children:
+        if not blkNode or not blkNode.children:
             self.factory.expr(left='pass', parent=whileStat)
         else:
             whileStat.walk(blkNode, memo)
