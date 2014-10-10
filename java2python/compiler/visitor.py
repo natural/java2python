@@ -358,7 +358,7 @@ class Interface(Class):
     """ Interface -> accepts AST branches for Java interfaces. """
 
 
-class MethodContent(Base):
+class MethodContent(VarAcceptor, Base):
     """ MethodContent -> accepts trees for blocks within methods. """
 
     def acceptAssert(self, node, memo):
@@ -613,7 +613,7 @@ class MethodContent(Base):
             whileStat.walk(blkNode, memo)
 
 
-class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
+class Method(ModifiersAcceptor, MethodContent):
     """ Method -> accepts AST branches for method-level objects. """
 
     def acceptFormalParamStdDecl(self, node, memo):
