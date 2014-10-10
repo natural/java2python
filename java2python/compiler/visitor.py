@@ -517,7 +517,7 @@ class MethodContent(Base):
         # we have at least one node...
         parExpr = self.factory.expr(parent=self)
         parExpr.walk(parNode, memo)
-        eqFs = FS.l + '==' + FS.r
+        eqFs = FS.l + ' == ' + FS.r
         for caseIdx, caseNode in enumerate(caseNodes):
             isDefault, isFirst = caseNode.type==tokens.DEFAULT, caseIdx==0
 
