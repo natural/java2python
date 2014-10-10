@@ -59,6 +59,7 @@ setup(
         'java2python.lang',
         'java2python.lib',
         'java2python.mod',
+        'java2python.mod.include',
         ],
 
     package_data={
