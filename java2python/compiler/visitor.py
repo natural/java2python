@@ -228,7 +228,10 @@ class VarAcceptor(object):
                 if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
                     val = assgnExp.pushRight('[]')
                 else:
-                    val = assgnExp.pushRight('{0}()'.format(identExp.type))
+                    if node.firstChildOfType(tokens.TYPE).firstChild().type != tokens.QUALIFIED_TYPE_IDENT:
+                        val = assgnExp.pushRight('{0}()'.format(identExp.type))
+                    else:
+                        val = assgnExp.pushRight('None')
         return self
 
 
