@@ -119,6 +119,7 @@ class Base(object):
         self.children = []
         self.config = config
         self.decorators = []
+        self.overloaded = None
         self.factory = Factory(config)
         self.modifiers = []
         self.name = name

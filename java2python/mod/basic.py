@@ -109,11 +109,13 @@ def overloadedClassMethods(method):
     cls = method.parent
     methods = [o for o in cls.children if o.isMethod and o.name==method.name]
     if len(methods) == 1:
+        if methods[0].overloaded:
+            yield methods[0].overloaded
         return
     for i, m in enumerate(methods[1:]):
         args = [p['type'] for p in m.parameters]
         args = ', '.join(args)
-        m.decorators.append('@{0}.register({1})'.format(method.name, args))
+        m.overloaded = '@{0}.register({1})'.format(method.name, args)
         m.name = '{0}_{1}'.format(method.name, i)
     # for this one only:
     yield '@overloaded'
