@@ -4,6 +4,7 @@ from java2python.config import default
 
 
 modulePrologueHandlers = default.modulePrologueHandlers + [
+    'from java2python.mod.include.classmethod import classmethod_ as classmethod',
     'from java2python.mod.include.overloading import overloaded',
     'from abc import ABCMeta, abstractmethod',
     'import zope.interface',

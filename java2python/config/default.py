@@ -97,9 +97,9 @@ methodHeadHandlers = [
 methodPrologueHandlers = [
     basic.maybeAbstractMethod,
     basic.maybeClassMethod,
+    basic.overloadedClassMethods,
     # NB:  synchronized should come after classmethod
     basic.maybeSynchronizedMethod,
-    basic.overloadedClassMethods,
 ]
 
 
