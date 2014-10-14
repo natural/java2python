@@ -24,6 +24,7 @@ commentPrefix = '# '
 modulePrologueHandlers = [
     basic.shebangLine,
     basic.simpleDocString,
+    'from __future__ import print_function',
     basic.maybeBsr,
     basic.maybeSyncHelpers,
 ]
@@ -193,8 +194,8 @@ expressionCastHandler = basic.castDrop
 
 # module output subs.
 moduleOutputSubs = [
-    (r'System\.out\.println\((.*)\)', r'print \1'),
-    (r'System\.out\.print_\((.*?)\)', r'print \1,'),
+    (r'System\.out\.println\((.*)\)', r'print(\1)'),
+    (r'System\.out\.print_\((.*?)\)', r'print(\1, end="")'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
