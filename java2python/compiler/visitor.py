@@ -847,7 +847,7 @@ class Expression(Base):
 
     def acceptStaticArrayCreator(self, node, memo):
         """ Accept and process a static array expression. """
-        self.right = self.factory.expr(fs='[None]*{left}')
+        self.right = self.factory.expr(fs='[None] * {left}')
         self.right.left = self.factory.expr()
         self.right.left.walk(node.firstChildOfType(tokens.EXPR), memo)
 
