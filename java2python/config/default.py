@@ -209,7 +209,7 @@ moduleOutputSubs = [
     (r'\.getClass\(\)', '.__class__'),
     (r'\.getName\(\)', '.__name__'),
     (r'\.getInterfaces\(\)', '.__bases__'),
-    #(r'String\.valueOf\((.*?)\)', r'str(\1)'),
+    (r'String\.valueOf\((.*?)\)', r'str(\1)'),
     #(r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
 ]
 
