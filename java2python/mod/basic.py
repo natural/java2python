@@ -36,7 +36,7 @@ def simpleDocString(obj):
 
 
 def commentedImports(module, expr):
-    module.factory.comment(parent=module, left=expr, fs='import: {left}')
+    module.factory.comment(parent=module, left=expr, fs='#import {left}')
 
 
 def simpleImports(module, expr):

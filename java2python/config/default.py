@@ -133,7 +133,7 @@ modulePackageDeclarationHandler = basic.commentedPackages
 
 # This handler is turns java imports into python imports. No mapping
 # of packages is performed:
-moduleImportDeclarationHandler = basic.simpleImports
+# moduleImportDeclarationHandler = basic.simpleImports
 
 # This import decl. handler can be used instead to produce comments
 # instead of import statements:
@@ -243,5 +243,7 @@ typeSubs = {
     'java.lang.String' : 'str',
 
     'Object' : 'object',
+
     'IndexOutOfBoundsException' : 'IndexError',
+    'IOException': 'IOError',
     }
