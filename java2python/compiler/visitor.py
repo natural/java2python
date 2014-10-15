@@ -129,7 +129,12 @@ class TypeAcceptor(object):
     acceptAt = makeAcceptType('at')
     acceptClass = makeAcceptType('klass')
     acceptEnum = makeAcceptType('enum')
-    acceptInterface = makeAcceptType('interface')
+    _acceptInterface = makeAcceptType('interface')
+
+    def acceptInterface(self, node, memo):
+        module = self.parents(lambda x:x.isModule).next()
+        module.needsAbstractHelpers = True
+        return self._acceptInterface(node, memo)
 
 
 class Module(TypeAcceptor, Base):

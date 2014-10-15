@@ -133,8 +133,6 @@ def maybeAbstractMethod(method):
 
 def maybeSynchronizedMethod(method):
     if 'synchronized' in method.modifiers:
-        module = method.parents(lambda x:x.isModule).next()
-        module.needsSyncHelpers = True
         yield '@synchronized'
 
 
@@ -158,6 +156,11 @@ def maybeBsr(module):
     if getattr(module, 'needsBsrFunc', False):
         for line in getBsrSrc().split('\n'):
             yield line
+
+
+def maybeAbstractHelpers(module):
+    if getattr(module, 'needsAbstractHelpers', False):
+        yield 'from abc import ABCMeta, abstractmethod'
 
 
 def maybeSyncHelpers(module):

@@ -26,6 +26,7 @@ modulePrologueHandlers = [
     basic.simpleDocString,
     'from __future__ import print_function',
     basic.maybeBsr,
+    basic.maybeAbstractHelpers,
     basic.maybeSyncHelpers,
 ]
 
