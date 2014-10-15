@@ -407,6 +407,10 @@ class MethodContent(VarAcceptor, Base):
 
     def acceptContinue(self, node, memo):
         """ Accept and process a continue statement. """
+        parent = node.parents(lambda x: x.type in {tokens.FOR, tokens.FOR_EACH, tokens.DO, tokens.WHILE}).next()
+        if parent.type == tokens.FOR:
+            updateStat = self.factory.expr(parent=self)
+            updateStat.walk(parent.firstChildOfType(tokens.FOR_UPDATE), memo)
         contStat = self.factory.statement('continue', fs=FS.lsr, parent=self)
         if len(node.children):
             warn('Detected unhandled continue statement with label; generated code incorrect.')
