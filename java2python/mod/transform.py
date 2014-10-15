@@ -184,6 +184,7 @@ def typeSub(node, config):
     mapping and further discussion.
     """
     ident = node.token.text
-    subs = config.last('typeSubs')
-    if ident in subs:
-        node.token.text = subs[ident]
+    for subs in reversed(config.every('typeSubs', {})):
+        if ident in subs:
+            node.token.text = subs[ident]
+            return
