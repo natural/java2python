@@ -211,6 +211,7 @@ moduleOutputSubs = [
     (r'\.getInterfaces\(\)', '.__bases__'),
     (r'String\.valueOf\((.*?)\)', r'str(\1)'),
     #(r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+    (r'Math\.', ''),
 ]
 
 
