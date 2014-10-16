@@ -150,6 +150,7 @@ astTransforms = [
     (Type('TRUE'),  transform.true2True),
     (Type('IDENT'), transform.keywordSafeIdent),
 
+    (Type('DECIMAL_LITERAL'), transform.syntaxSafeDecimalLiteral),
     (Type('FLOATING_POINT_LITERAL'), transform.syntaxSafeFloatLiteral),
 
     (Type('TYPE') > Type('BOOLEAN'), transform.typeSub),

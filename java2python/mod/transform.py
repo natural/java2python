@@ -48,6 +48,14 @@ false2False = makeConst('False')
 true2True = makeConst('True')
 
 
+def syntaxSafeDecimalLiteral(node, config):
+    """ Ensures a Java decimal literal is a valid Python decimal literal. """
+    value = node.token.text
+    if value.endswith(('l', 'L')):
+        value = value[:-1]
+    node.token.text = value
+
+
 def syntaxSafeFloatLiteral(node, config):
     """ Ensures a Java float literal is a valid Python float literal. """
     value = node.token.text
@@ -55,8 +63,6 @@ def syntaxSafeFloatLiteral(node, config):
         value = '0' + value
     if value.lower().endswith(('f', 'd')):
         value = value[:-1]
-    elif value.endswith(('l', 'L')):
-        value = value[:-1] + 'L'
     node.token.text = value
 
 
