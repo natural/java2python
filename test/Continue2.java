@@ -1,7 +1,7 @@
-class Continue0 {
+class Continue2 {
     public static void main(String[] args) {
         int x = 0;
-        while (x < 10) {
+        do {
             System.out.println(x);
             if (x == 6) {
                 break;
@@ -9,6 +9,6 @@ class Continue0 {
                 x += 2;
                 continue;
             }
-        }
+        } while (x < 10);
     }
 }

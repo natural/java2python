@@ -17,6 +17,9 @@ class Self0 {
 			System.out.println("True");
 		else
 			System.out.println("False");
+                System.out.print("test");
+                System.out.print("ing");
+                System.out.println();
 	}
 	
 }

@@ -24,7 +24,9 @@ commentPrefix = '# '
 modulePrologueHandlers = [
     basic.shebangLine,
     basic.simpleDocString,
+    'from __future__ import print_function',
     basic.maybeBsr,
+    basic.maybeAbstractHelpers,
     basic.maybeSyncHelpers,
 ]
 
@@ -97,9 +99,9 @@ methodHeadHandlers = [
 methodPrologueHandlers = [
     basic.maybeAbstractMethod,
     basic.maybeClassMethod,
+    basic.overloadedClassMethods,
     # NB:  synchronized should come after classmethod
     basic.maybeSynchronizedMethod,
-    basic.overloadedClassMethods,
 ]
 
 
@@ -131,7 +133,7 @@ modulePackageDeclarationHandler = basic.commentedPackages
 
 # This handler is turns java imports into python imports. No mapping
 # of packages is performed:
-moduleImportDeclarationHandler = basic.simpleImports
+# moduleImportDeclarationHandler = basic.simpleImports
 
 # This import decl. handler can be used instead to produce comments
 # instead of import statements:
@@ -148,6 +150,7 @@ astTransforms = [
     (Type('TRUE'),  transform.true2True),
     (Type('IDENT'), transform.keywordSafeIdent),
 
+    (Type('DECIMAL_LITERAL'), transform.syntaxSafeDecimalLiteral),
     (Type('FLOATING_POINT_LITERAL'), transform.syntaxSafeFloatLiteral),
 
     (Type('TYPE') > Type('BOOLEAN'), transform.typeSub),
@@ -193,8 +196,8 @@ expressionCastHandler = basic.castDrop
 
 # module output subs.
 moduleOutputSubs = [
-    (r'System\.out\.println\((.*)\)', r'print \1'),
-    (r'System\.out\.print_\((.*?)\)', r'print \1,'),
+    (r'System\.out\.println\((.*)\)', r'print(\1)'),
+    (r'System\.out\.print_\((.*?)\)', r'print(\1, end="")'),
     (r'(.*?)\.equals\((.*?)\)', r'\1 == \2'),
     (r'(.*?)\.equalsIgnoreCase\((.*?)\)', r'\1.lower() == \2.lower()'),
     (r'([\w.]+)\.size\(\)', r'len(\1)'),
@@ -207,8 +210,9 @@ moduleOutputSubs = [
     (r'\.getClass\(\)', '.__class__'),
     (r'\.getName\(\)', '.__name__'),
     (r'\.getInterfaces\(\)', '.__bases__'),
-    #(r'String\.valueOf\((.*?)\)', r'str(\1)'),
+    (r'String\.valueOf\((.*?)\)', r'str(\1)'),
     #(r'(\s)(\S*?)(\.toString\(\))', r'\1str(\2)'),
+    (r'Math\.', ''),
 ]
 
 
@@ -241,5 +245,7 @@ typeSubs = {
     'java.lang.String' : 'str',
 
     'Object' : 'object',
+
     'IndexOutOfBoundsException' : 'IndexError',
+    'IOException': 'IOError',
     }

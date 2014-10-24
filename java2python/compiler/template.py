@@ -119,6 +119,7 @@ class Base(object):
         self.children = []
         self.config = config
         self.decorators = []
+        self.overloaded = None
         self.factory = Factory(config)
         self.modifiers = []
         self.name = name
@@ -172,7 +173,7 @@ class Base(object):
     def configHandlers(self, part, suffix='Handlers'):
         """ Returns config handlers for this type of template """
         name = '{0}{1}{2}'.format(self.typeName, part, suffix)
-        return imap(self.toIter, self.config.last(name, ()))
+        return imap(self.toIter, chain(*self.config.every(name, [])))
 
     def dump(self, fd, level=0):
         """ Writes the Python source code for this template to the given file. """

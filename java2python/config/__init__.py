@@ -27,7 +27,7 @@ class Config(object):
     @staticmethod
     def load(name):
         """ Imports and returns a module from dotted form or filename. """
-        if path.exists(name):
+        if path.exists(name) and path.isfile(name):
             mod = load_source(str(hash(name)), name)
         else:
             mod = reduce(getattr, name.split('.')[1:], __import__(name))

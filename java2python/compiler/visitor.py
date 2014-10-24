@@ -129,7 +129,12 @@ class TypeAcceptor(object):
     acceptAt = makeAcceptType('at')
     acceptClass = makeAcceptType('klass')
     acceptEnum = makeAcceptType('enum')
-    acceptInterface = makeAcceptType('interface')
+    _acceptInterface = makeAcceptType('interface')
+
+    def acceptInterface(self, node, memo):
+        module = self.parents(lambda x:x.isModule).next()
+        module.needsAbstractHelpers = True
+        return self._acceptInterface(node, memo)
 
 
 class Module(TypeAcceptor, Base):
@@ -228,7 +233,10 @@ class VarAcceptor(object):
                 if node.firstChildOfType(tokens.TYPE).firstChildOfType(tokens.ARRAY_DECLARATOR_LIST):
                     val = assgnExp.pushRight('[]')
                 else:
-                    val = assgnExp.pushRight('{0}()'.format(identExp.type))
+                    if node.firstChildOfType(tokens.TYPE).firstChild().type != tokens.QUALIFIED_TYPE_IDENT:
+                        val = assgnExp.pushRight('{0}()'.format(identExp.type))
+                    else:
+                        val = assgnExp.pushRight('None')
         return self
 
 
@@ -358,7 +366,7 @@ class Interface(Class):
     """ Interface -> accepts AST branches for Java interfaces. """
 
 
-class MethodContent(Base):
+class MethodContent(VarAcceptor, Base):
     """ MethodContent -> accepts trees for blocks within methods. """
 
     def acceptAssert(self, node, memo):
@@ -399,6 +407,10 @@ class MethodContent(Base):
 
     def acceptContinue(self, node, memo):
         """ Accept and process a continue statement. """
+        parent = node.parents(lambda x: x.type in {tokens.FOR, tokens.FOR_EACH, tokens.DO, tokens.WHILE}).next()
+        if parent.type == tokens.FOR:
+            updateStat = self.factory.expr(parent=self)
+            updateStat.walk(parent.firstChildOfType(tokens.FOR_UPDATE), memo)
         contStat = self.factory.statement('continue', fs=FS.lsr, parent=self)
         if len(node.children):
             warn('Detected unhandled continue statement with label; generated code incorrect.')
@@ -517,7 +529,7 @@ class MethodContent(Base):
         # we have at least one node...
         parExpr = self.factory.expr(parent=self)
         parExpr.walk(parNode, memo)
-        eqFs = FS.l + '==' + FS.r
+        eqFs = FS.l + ' == ' + FS.r
         for caseIdx, caseNode in enumerate(caseNodes):
             isDefault, isFirst = caseNode.type==tokens.DEFAULT, caseIdx==0
 
@@ -613,7 +625,7 @@ class MethodContent(Base):
             whileStat.walk(blkNode, memo)
 
 
-class Method(VarAcceptor, ModifiersAcceptor, MethodContent):
+class Method(ModifiersAcceptor, MethodContent):
     """ Method -> accepts AST branches for method-level objects. """
 
     def acceptFormalParamStdDecl(self, node, memo):
@@ -835,7 +847,7 @@ class Expression(Base):
 
     def acceptStaticArrayCreator(self, node, memo):
         """ Accept and process a static array expression. """
-        self.right = self.factory.expr(fs='[None]*{left}')
+        self.right = self.factory.expr(fs='[None] * {left}')
         self.right.left = self.factory.expr()
         self.right.left.walk(node.firstChildOfType(tokens.EXPR), memo)
 
