@@ -19,7 +19,7 @@ from re import compile as recompile, sub as resub
 
 from java2python.lang import tokens
 from java2python.lib import FS
-
+from java2python.utils import *
 
 class Memo(object):
     """ Memo -> AST walking luggage. """
