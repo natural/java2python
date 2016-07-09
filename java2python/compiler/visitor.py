@@ -434,6 +434,7 @@ class MethodContent(VarAcceptor, Base):
         tokens.FOR_EACH,
         tokens.METHOD_CALL,
         tokens.ARGUMENT_LIST,
+        tokens.FOR,
     )
 
     def acceptExpr(self, node, memo):
@@ -452,7 +453,9 @@ class MethodContent(VarAcceptor, Base):
         else:
             whileStat.expr.walk(cond, memo)
         whileBlock = self.factory.methodContent(parent=self)
-        if not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
+        if not node.firstChildOfType(tokens.BLOCK_SCOPE): # A for loop without braces
+            whileBlock.walk(node.children[3], memo)
+        elif not node.firstChildOfType(tokens.BLOCK_SCOPE).children:
             self.factory.expr(left='pass', parent=whileBlock)
         else:
             whileBlock.walk(node.firstChildOfType(tokens.BLOCK_SCOPE), memo)
