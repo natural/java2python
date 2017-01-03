@@ -5,6 +5,9 @@
 Kids these days have it easy:
 
     # pip install java2python
+    
+   Incase you get an error saying ANTLR is not installed/version not found, a quick fix is running
+   `# pip install http://antlr3.org/download/Python/antlr_python_runtime-3.1.3.tar.gz`
 
 ### Old School
 
