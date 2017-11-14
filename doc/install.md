@@ -6,6 +6,11 @@ Kids these days have it easy:
 
     # pip install java2python
 
+if this command leads to an error "No matching distribution found for antlr_python_runtime==3.1.3 (from java2python)", then type in those two commands and then try again:
+
+    # pip install http://antlr3.org/download/Python/antlr_python_runtime-3.1.3.tar.gz
+    # pip install https://github.com/downloads/natural/java2python/java2python-0.5.1.tar.gz
+
 ### Old School
 
 #### Install ANTLR Runtime
