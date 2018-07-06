@@ -75,6 +75,7 @@ setup(
 
     scripts=[
         'bin/j2py',
+        'bin/j2py.cmd',
         ],
 
     data_files=[
