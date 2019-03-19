@@ -50,7 +50,7 @@ setup(
     download_url='https://github.com/downloads/natural/java2python/java2python-0.5.1.tar.gz',
 
     keywords=['java', 'java2python', 'compiler'],
-    classifiers=filter(None, classifiers.split('\n')),
+    classifiers=[_f for _f in classifiers.split('\n') if _f],
 
     packages=[
         'java2python',
@@ -81,6 +81,6 @@ setup(
         ('doc', doc_files()),
         ],
 
-    install_requires=['antlr_python_runtime==3.1.3'],
+    install_requires=['antlr-python3-runtime'],
 
     )

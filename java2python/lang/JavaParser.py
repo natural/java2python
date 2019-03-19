@@ -473,7 +473,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -607,7 +607,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -698,7 +698,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -775,7 +775,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -892,7 +892,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1028,7 +1028,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1218,7 +1218,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1319,7 +1319,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1420,7 +1420,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1521,7 +1521,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1669,7 +1669,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1828,7 +1828,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -1957,7 +1957,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2096,7 +2096,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2232,7 +2232,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2339,7 +2339,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2440,7 +2440,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2562,7 +2562,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2660,7 +2660,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2774,7 +2774,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -2937,7 +2937,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -3030,7 +3030,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -3158,7 +3158,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -3286,7 +3286,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4029,7 +4029,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4490,7 +4490,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4623,7 +4623,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4751,7 +4751,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4884,7 +4884,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -4995,7 +4995,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5081,7 +5081,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5177,7 +5177,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5274,7 +5274,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5408,7 +5408,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5584,7 +5584,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5685,7 +5685,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -5808,7 +5808,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6056,7 +6056,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6172,7 +6172,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6268,7 +6268,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6364,7 +6364,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6492,7 +6492,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6617,7 +6617,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6739,7 +6739,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -6877,7 +6877,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7010,7 +7010,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7096,7 +7096,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7182,7 +7182,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7257,7 +7257,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7410,7 +7410,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7574,7 +7574,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7658,7 +7658,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7806,7 +7806,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7902,7 +7902,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -7995,7 +7995,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8333,7 +8333,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8448,7 +8448,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8569,7 +8569,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8732,7 +8732,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8858,7 +8858,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -8952,7 +8952,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9059,7 +9059,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9265,7 +9265,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9342,7 +9342,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9454,7 +9454,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9549,7 +9549,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9725,7 +9725,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9840,7 +9840,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -9968,7 +9968,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -10227,7 +10227,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -10301,7 +10301,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -10429,7 +10429,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -10530,7 +10530,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -10645,7 +10645,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -11993,7 +11993,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12122,7 +12122,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12210,7 +12210,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12305,7 +12305,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12508,7 +12508,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12595,7 +12595,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12696,7 +12696,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12789,7 +12789,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -12964,7 +12964,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13076,7 +13076,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13188,7 +13188,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13295,7 +13295,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13388,7 +13388,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13483,7 +13483,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13761,7 +13761,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13866,7 +13866,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -13964,7 +13964,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14062,7 +14062,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14160,7 +14160,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14258,7 +14258,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14356,7 +14356,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14489,7 +14489,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14583,7 +14583,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14745,7 +14745,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -14892,7 +14892,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -15025,7 +15025,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -15172,7 +15172,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -15459,7 +15459,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -15693,7 +15693,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -16384,7 +16384,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -17238,7 +17238,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -17947,7 +17947,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -18262,7 +18262,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -18424,7 +18424,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -18593,7 +18593,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -18717,7 +18717,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -18792,7 +18792,7 @@ class JavaParser(Parser):
 
 
                 success = True
-            except RecognitionException, re:
+            except RecognitionException as re:
                 self.reportError(re)
                 self.recover(self.input, re)
                 retval.tree = self._adaptor.errorNode(self.input, retval.start, self.input.LT(-1), re)
@@ -20894,59 +20894,59 @@ class JavaParser(Parser):
     # lookup tables for DFA #36
 
     DFA36_eot = DFA.unpack(
-        u"\27\uffff"
+        "\27\uffff"
         )
 
     DFA36_eof = DFA.unpack(
-        u"\27\uffff"
+        "\27\uffff"
         )
 
     DFA36_min = DFA.unpack(
-        u"\1\7\1\uffff\14\0\11\uffff"
+        "\1\7\1\uffff\14\0\11\uffff"
         )
 
     DFA36_max = DFA.unpack(
-        u"\1\u00a4\1\uffff\14\0\11\uffff"
+        "\1\u00a4\1\uffff\14\0\11\uffff"
         )
 
     DFA36_accept = DFA.unpack(
-        u"\1\uffff\1\1\14\uffff\1\3\3\uffff\1\4\2\uffff\1\5\1\2"
+        "\1\uffff\1\1\14\uffff\1\3\3\uffff\1\4\2\uffff\1\5\1\2"
         )
 
     DFA36_special = DFA.unpack(
-        u"\2\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\11"
-        u"\uffff"
+        "\2\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\11"
+        "\uffff"
         )
 
             
     DFA36_transition = [
-        DFA.unpack(u"\1\15\17\uffff\1\1\1\uffff\1\16\22\uffff\1\25\10\uffff"
-        u"\1\6\1\uffff\1\16\1\uffff\1\16\2\uffff\1\16\1\22\3\uffff\1\16\1"
-        u"\uffff\1\22\2\uffff\1\14\1\uffff\1\16\4\uffff\1\22\1\uffff\2\16"
-        u"\1\7\3\uffff\1\5\1\4\1\3\1\uffff\1\16\1\2\1\13\2\uffff\1\10\3\uffff"
-        u"\1\11\2\uffff\1\16\1\12\75\uffff\1\16"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\15\17\uffff\1\1\1\uffff\1\16\22\uffff\1\25\10\uffff"
+        "\1\6\1\uffff\1\16\1\uffff\1\16\2\uffff\1\16\1\22\3\uffff\1\16\1"
+        "\uffff\1\22\2\uffff\1\14\1\uffff\1\16\4\uffff\1\22\1\uffff\2\16"
+        "\1\7\3\uffff\1\5\1\4\1\3\1\uffff\1\16\1\2\1\13\2\uffff\1\10\3\uffff"
+        "\1\11\2\uffff\1\16\1\12\75\uffff\1\16"),
+        DFA.unpack(""),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #36
@@ -21181,57 +21181,57 @@ class JavaParser(Parser):
     # lookup tables for DFA #43
 
     DFA43_eot = DFA.unpack(
-        u"\25\uffff"
+        "\25\uffff"
         )
 
     DFA43_eof = DFA.unpack(
-        u"\25\uffff"
+        "\25\uffff"
         )
 
     DFA43_min = DFA.unpack(
-        u"\1\7\14\0\10\uffff"
+        "\1\7\14\0\10\uffff"
         )
 
     DFA43_max = DFA.unpack(
-        u"\1\u00a4\14\0\10\uffff"
+        "\1\u00a4\14\0\10\uffff"
         )
 
     DFA43_accept = DFA.unpack(
-        u"\15\uffff\1\1\3\uffff\1\2\2\uffff\1\3"
+        "\15\uffff\1\1\3\uffff\1\2\2\uffff\1\3"
         )
 
     DFA43_special = DFA.unpack(
-        u"\1\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\10"
-        u"\uffff"
+        "\1\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\10"
+        "\uffff"
         )
 
             
     DFA43_transition = [
-        DFA.unpack(u"\1\14\21\uffff\1\15\22\uffff\1\24\10\uffff\1\5\1\uffff"
-        u"\1\15\1\uffff\1\15\2\uffff\1\15\1\21\3\uffff\1\15\1\uffff\1\21"
-        u"\2\uffff\1\13\1\uffff\1\15\4\uffff\1\21\1\uffff\2\15\1\6\3\uffff"
-        u"\1\3\1\2\1\1\1\uffff\1\15\1\4\1\12\2\uffff\1\7\3\uffff\1\10\2\uffff"
-        u"\1\15\1\11\75\uffff\1\15"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\14\21\uffff\1\15\22\uffff\1\24\10\uffff\1\5\1\uffff"
+        "\1\15\1\uffff\1\15\2\uffff\1\15\1\21\3\uffff\1\15\1\uffff\1\21"
+        "\2\uffff\1\13\1\uffff\1\15\4\uffff\1\21\1\uffff\2\15\1\6\3\uffff"
+        "\1\3\1\2\1\1\1\uffff\1\15\1\4\1\12\2\uffff\1\7\3\uffff\1\10\2\uffff"
+        "\1\15\1\11\75\uffff\1\15"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #43
@@ -21463,53 +21463,53 @@ class JavaParser(Parser):
     # lookup tables for DFA #86
 
     DFA86_eot = DFA.unpack(
-        u"\22\uffff"
+        "\22\uffff"
         )
 
     DFA86_eof = DFA.unpack(
-        u"\22\uffff"
+        "\22\uffff"
         )
 
     DFA86_min = DFA.unpack(
-        u"\1\7\14\0\5\uffff"
+        "\1\7\14\0\5\uffff"
         )
 
     DFA86_max = DFA.unpack(
-        u"\1\u00a4\14\0\5\uffff"
+        "\1\u00a4\14\0\5\uffff"
         )
 
     DFA86_accept = DFA.unpack(
-        u"\15\uffff\1\1\1\uffff\1\2\2\uffff"
+        "\15\uffff\1\1\1\uffff\1\2\2\uffff"
         )
 
     DFA86_special = DFA.unpack(
-        u"\1\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\5"
-        u"\uffff"
+        "\1\uffff\1\0\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\5"
+        "\uffff"
         )
 
             
     DFA86_transition = [
-        DFA.unpack(u"\1\14\55\uffff\1\5\1\uffff\1\15\1\uffff\1\15\2\uffff"
-        u"\1\15\1\17\3\uffff\1\15\1\uffff\1\17\2\uffff\1\13\1\uffff\1\15"
-        u"\4\uffff\1\17\1\uffff\2\15\1\6\3\uffff\1\3\1\2\1\1\1\uffff\1\15"
-        u"\1\4\1\12\2\uffff\1\7\3\uffff\1\10\3\uffff\1\11\75\uffff\1\15"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\14\55\uffff\1\5\1\uffff\1\15\1\uffff\1\15\2\uffff"
+        "\1\15\1\17\3\uffff\1\15\1\uffff\1\17\2\uffff\1\13\1\uffff\1\15"
+        "\4\uffff\1\17\1\uffff\2\15\1\6\3\uffff\1\3\1\2\1\1\1\uffff\1\15"
+        "\1\4\1\12\2\uffff\1\7\3\uffff\1\10\3\uffff\1\11\75\uffff\1\15"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #86
@@ -21741,81 +21741,81 @@ class JavaParser(Parser):
     # lookup tables for DFA #88
 
     DFA88_eot = DFA.unpack(
-        u"\55\uffff"
+        "\55\uffff"
         )
 
     DFA88_eof = DFA.unpack(
-        u"\55\uffff"
+        "\55\uffff"
         )
 
     DFA88_min = DFA.unpack(
-        u"\1\7\4\0\6\uffff\1\0\41\uffff"
+        "\1\7\4\0\6\uffff\1\0\41\uffff"
         )
 
     DFA88_max = DFA.unpack(
-        u"\1\u00aa\4\0\6\uffff\1\0\41\uffff"
+        "\1\u00aa\4\0\6\uffff\1\0\41\uffff"
         )
 
     DFA88_accept = DFA.unpack(
-        u"\5\uffff\1\2\14\uffff\1\3\31\uffff\1\1"
+        "\5\uffff\1\2\14\uffff\1\3\31\uffff\1\1"
         )
 
     DFA88_special = DFA.unpack(
-        u"\1\uffff\1\0\1\1\1\2\1\3\6\uffff\1\4\41\uffff"
+        "\1\uffff\1\0\1\1\1\2\1\3\6\uffff\1\4\41\uffff"
         )
 
             
     DFA88_transition = [
-        DFA.unpack(u"\1\2\4\uffff\1\22\10\uffff\1\22\1\uffff\1\22\1\uffff"
-        u"\1\22\1\uffff\1\22\1\uffff\2\22\3\uffff\1\22\3\uffff\1\22\5\uffff"
-        u"\1\22\10\uffff\1\5\1\22\1\3\1\22\1\3\2\uffff\1\3\1\5\1\22\1\uffff"
-        u"\1\22\1\3\1\uffff\1\5\1\uffff\1\22\1\1\1\uffff\1\3\2\22\2\uffff"
-        u"\1\5\1\uffff\2\3\1\5\2\22\1\uffff\3\5\1\22\1\3\2\5\2\22\1\13\2"
-        u"\22\1\uffff\1\5\3\22\1\5\1\22\74\uffff\1\4\6\22"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\2\4\uffff\1\22\10\uffff\1\22\1\uffff\1\22\1\uffff"
+        "\1\22\1\uffff\1\22\1\uffff\2\22\3\uffff\1\22\3\uffff\1\22\5\uffff"
+        "\1\22\10\uffff\1\5\1\22\1\3\1\22\1\3\2\uffff\1\3\1\5\1\22\1\uffff"
+        "\1\22\1\3\1\uffff\1\5\1\uffff\1\22\1\1\1\uffff\1\3\2\22\2\uffff"
+        "\1\5\1\uffff\2\3\1\5\2\22\1\uffff\3\5\1\22\1\3\2\5\2\22\1\13\2"
+        "\22\1\uffff\1\5\3\22\1\5\1\22\74\uffff\1\4\6\22"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #88
@@ -21928,57 +21928,57 @@ class JavaParser(Parser):
     # lookup tables for DFA #98
 
     DFA98_eot = DFA.unpack(
-        u"\22\uffff"
+        "\22\uffff"
         )
 
     DFA98_eof = DFA.unpack(
-        u"\22\uffff"
+        "\22\uffff"
         )
 
     DFA98_min = DFA.unpack(
-        u"\1\14\15\uffff\1\4\3\uffff"
+        "\1\14\15\uffff\1\4\3\uffff"
         )
 
     DFA98_max = DFA.unpack(
-        u"\1\u00aa\15\uffff\1\114\3\uffff"
+        "\1\u00aa\15\uffff\1\114\3\uffff"
         )
 
     DFA98_accept = DFA.unpack(
-        u"\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14\1"
-        u"\15\1\uffff\1\17\1\20\1\16"
+        "\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\7\1\10\1\11\1\12\1\13\1\14\1"
+        "\15\1\uffff\1\17\1\20\1\16"
         )
 
     DFA98_special = DFA.unpack(
-        u"\22\uffff"
+        "\22\uffff"
         )
 
             
     DFA98_transition = [
-        DFA.unpack(u"\1\17\10\uffff\1\17\1\uffff\1\1\1\uffff\1\17\1\uffff"
-        u"\1\17\1\uffff\2\17\3\uffff\1\17\3\uffff\1\17\5\uffff\1\20\11\uffff"
-        u"\1\2\1\17\1\14\1\17\2\uffff\1\17\1\uffff\1\15\1\uffff\1\6\1\17"
-        u"\3\uffff\1\17\2\uffff\1\17\1\4\1\3\4\uffff\2\17\1\uffff\2\17\4"
-        u"\uffff\1\12\1\17\2\uffff\1\17\1\10\1\11\1\17\1\13\2\uffff\1\17"
-        u"\1\7\1\17\1\uffff\1\5\74\uffff\1\16\6\17"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\3\17\1\uffff\2\17\1\21\1\uffff\4\17\2\uffff\5\17\1"
-        u"\uffff\3\17\1\uffff\6\17\1\uffff\6\17\3\uffff\11\17\27\uffff\1"
-        u"\17"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\17\10\uffff\1\17\1\uffff\1\1\1\uffff\1\17\1\uffff"
+        "\1\17\1\uffff\2\17\3\uffff\1\17\3\uffff\1\17\5\uffff\1\20\11\uffff"
+        "\1\2\1\17\1\14\1\17\2\uffff\1\17\1\uffff\1\15\1\uffff\1\6\1\17"
+        "\3\uffff\1\17\2\uffff\1\17\1\4\1\3\4\uffff\2\17\1\uffff\2\17\4"
+        "\uffff\1\12\1\17\2\uffff\1\17\1\10\1\11\1\17\1\13\2\uffff\1\17"
+        "\1\7\1\17\1\uffff\1\5\74\uffff\1\16\6\17"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\3\17\1\uffff\2\17\1\21\1\uffff\4\17\2\uffff\5\17\1"
+        "\uffff\3\17\1\uffff\6\17\1\uffff\6\17\3\uffff\11\17\27\uffff\1"
+        "\17"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #98
@@ -21990,55 +21990,55 @@ class JavaParser(Parser):
     # lookup tables for DFA #91
 
     DFA91_eot = DFA.unpack(
-        u"\24\uffff"
+        "\24\uffff"
         )
 
     DFA91_eof = DFA.unpack(
-        u"\24\uffff"
+        "\24\uffff"
         )
 
     DFA91_min = DFA.unpack(
-        u"\1\7\4\0\17\uffff"
+        "\1\7\4\0\17\uffff"
         )
 
     DFA91_max = DFA.unpack(
-        u"\1\u00aa\4\0\17\uffff"
+        "\1\u00aa\4\0\17\uffff"
         )
 
     DFA91_accept = DFA.unpack(
-        u"\5\uffff\1\1\15\uffff\1\2"
+        "\5\uffff\1\1\15\uffff\1\2"
         )
 
     DFA91_special = DFA.unpack(
-        u"\1\uffff\1\0\1\1\1\2\1\3\17\uffff"
+        "\1\uffff\1\0\1\1\1\2\1\3\17\uffff"
         )
 
             
     DFA91_transition = [
-        DFA.unpack(u"\1\2\4\uffff\1\5\10\uffff\1\5\3\uffff\1\5\1\uffff\1"
-        u"\5\1\uffff\2\5\3\uffff\1\5\3\uffff\1\5\5\uffff\1\5\12\uffff\1\3"
-        u"\1\uffff\1\3\2\uffff\1\3\4\uffff\1\3\3\uffff\1\5\1\1\1\uffff\1"
-        u"\3\6\uffff\2\3\1\uffff\2\5\5\uffff\1\3\2\uffff\1\5\2\uffff\1\5"
-        u"\3\uffff\1\5\1\uffff\1\5\76\uffff\1\4\6\5"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\2\4\uffff\1\5\10\uffff\1\5\3\uffff\1\5\1\uffff\1"
+        "\5\1\uffff\2\5\3\uffff\1\5\3\uffff\1\5\5\uffff\1\5\12\uffff\1\3"
+        "\1\uffff\1\3\2\uffff\1\3\4\uffff\1\3\3\uffff\1\5\1\1\1\uffff\1"
+        "\3\6\uffff\2\3\1\uffff\2\5\5\uffff\1\3\2\uffff\1\5\2\uffff\1\5"
+        "\3\uffff\1\5\1\uffff\1\5\76\uffff\1\4\6\5"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #91
@@ -22134,54 +22134,54 @@ class JavaParser(Parser):
     # lookup tables for DFA #106
 
     DFA106_eot = DFA.unpack(
-        u"\23\uffff"
+        "\23\uffff"
         )
 
     DFA106_eof = DFA.unpack(
-        u"\23\uffff"
+        "\23\uffff"
         )
 
     DFA106_min = DFA.unpack(
-        u"\1\7\2\uffff\2\0\16\uffff"
+        "\1\7\2\uffff\2\0\16\uffff"
         )
 
     DFA106_max = DFA.unpack(
-        u"\1\u00aa\2\uffff\2\0\16\uffff"
+        "\1\u00aa\2\uffff\2\0\16\uffff"
         )
 
     DFA106_accept = DFA.unpack(
-        u"\1\uffff\1\1\3\uffff\1\2\14\uffff\1\3"
+        "\1\uffff\1\1\3\uffff\1\2\14\uffff\1\3"
         )
 
     DFA106_special = DFA.unpack(
-        u"\3\uffff\1\0\1\1\16\uffff"
+        "\3\uffff\1\0\1\1\16\uffff"
         )
 
             
     DFA106_transition = [
-        DFA.unpack(u"\1\1\4\uffff\1\5\10\uffff\1\5\3\uffff\1\5\1\uffff\1"
-        u"\5\1\uffff\2\5\3\uffff\1\5\3\uffff\1\5\5\uffff\1\22\12\uffff\1"
-        u"\3\1\uffff\1\3\2\uffff\1\3\4\uffff\1\3\3\uffff\1\5\1\1\1\uffff"
-        u"\1\3\6\uffff\2\3\1\uffff\2\5\5\uffff\1\3\2\uffff\1\5\2\uffff\1"
-        u"\5\3\uffff\1\5\1\uffff\1\5\76\uffff\1\4\6\5"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\1\4\uffff\1\5\10\uffff\1\5\3\uffff\1\5\1\uffff\1"
+        "\5\1\uffff\2\5\3\uffff\1\5\3\uffff\1\5\5\uffff\1\22\12\uffff\1"
+        "\3\1\uffff\1\3\2\uffff\1\3\4\uffff\1\3\3\uffff\1\5\1\1\1\uffff"
+        "\1\3\6\uffff\2\3\1\uffff\2\5\5\uffff\1\3\2\uffff\1\5\2\uffff\1"
+        "\5\3\uffff\1\5\1\uffff\1\5\76\uffff\1\4\6\5"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #106
@@ -22243,47 +22243,47 @@ class JavaParser(Parser):
     # lookup tables for DFA #130
 
     DFA130_eot = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA130_eof = DFA.unpack(
-        u"\15\uffff"
+        "\15\uffff"
         )
 
     DFA130_min = DFA.unpack(
-        u"\1\31\2\uffff\1\0\11\uffff"
+        "\1\31\2\uffff\1\0\11\uffff"
         )
 
     DFA130_max = DFA.unpack(
-        u"\1\u00aa\2\uffff\1\0\11\uffff"
+        "\1\u00aa\2\uffff\1\0\11\uffff"
         )
 
     DFA130_accept = DFA.unpack(
-        u"\1\uffff\1\1\1\2\1\uffff\1\4\7\uffff\1\3"
+        "\1\uffff\1\1\1\2\1\uffff\1\4\7\uffff\1\3"
         )
 
     DFA130_special = DFA.unpack(
-        u"\3\uffff\1\0\11\uffff"
+        "\3\uffff\1\0\11\uffff"
         )
 
             
     DFA130_transition = [
-        DFA.unpack(u"\1\4\1\uffff\1\2\1\uffff\1\3\4\uffff\1\1\24\uffff\1"
-        u"\4\1\uffff\1\4\2\uffff\1\4\4\uffff\1\4\3\uffff\1\4\2\uffff\1\4"
-        u"\6\uffff\2\4\1\uffff\2\4\5\uffff\1\4\2\uffff\1\4\2\uffff\1\4\3"
-        u"\uffff\1\4\1\uffff\1\4\76\uffff\7\4"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\4\1\uffff\1\2\1\uffff\1\3\4\uffff\1\1\24\uffff\1"
+        "\4\1\uffff\1\4\2\uffff\1\4\4\uffff\1\4\3\uffff\1\4\2\uffff\1\4"
+        "\6\uffff\2\4\1\uffff\2\4\5\uffff\1\4\2\uffff\1\4\2\uffff\1\4\3"
+        "\uffff\1\4\1\uffff\1\4\76\uffff\7\4"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #130
@@ -22328,46 +22328,46 @@ class JavaParser(Parser):
     # lookup tables for DFA #142
 
     DFA142_eot = DFA.unpack(
-        u"\14\uffff"
+        "\14\uffff"
         )
 
     DFA142_eof = DFA.unpack(
-        u"\14\uffff"
+        "\14\uffff"
         )
 
     DFA142_min = DFA.unpack(
-        u"\1\31\6\uffff\1\17\4\uffff"
+        "\1\31\6\uffff\1\17\4\uffff"
         )
 
     DFA142_max = DFA.unpack(
-        u"\1\u00aa\6\uffff\1\35\4\uffff"
+        "\1\u00aa\6\uffff\1\35\4\uffff"
         )
 
     DFA142_accept = DFA.unpack(
-        u"\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\uffff\1\11\1\12\1\10\1\7"
+        "\1\uffff\1\1\1\2\1\3\1\4\1\5\1\6\1\uffff\1\11\1\12\1\10\1\7"
         )
 
     DFA142_special = DFA.unpack(
-        u"\14\uffff"
+        "\14\uffff"
         )
 
             
     DFA142_transition = [
-        DFA.unpack(u"\1\5\3\uffff\1\1\31\uffff\1\10\1\uffff\1\10\2\uffff"
-        u"\1\10\4\uffff\1\10\3\uffff\1\2\2\uffff\1\10\6\uffff\2\10\1\uffff"
-        u"\1\3\1\2\5\uffff\1\10\2\uffff\1\7\2\uffff\1\6\3\uffff\1\2\1\uffff"
-        u"\1\11\76\uffff\1\4\6\2"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\12\15\uffff\1\13"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\1\5\3\uffff\1\1\31\uffff\1\10\1\uffff\1\10\2\uffff"
+        "\1\10\4\uffff\1\10\3\uffff\1\2\2\uffff\1\10\6\uffff\2\10\1\uffff"
+        "\1\3\1\2\5\uffff\1\10\2\uffff\1\7\2\uffff\1\6\3\uffff\1\2\1\uffff"
+        "\1\11\76\uffff\1\4\6\2"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("\1\12\15\uffff\1\13"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #142
@@ -22379,80 +22379,80 @@ class JavaParser(Parser):
     # lookup tables for DFA #146
 
     DFA146_eot = DFA.unpack(
-        u"\60\uffff"
+        "\60\uffff"
         )
 
     DFA146_eof = DFA.unpack(
-        u"\1\4\57\uffff"
+        "\1\4\57\uffff"
         )
 
     DFA146_min = DFA.unpack(
-        u"\1\4\1\0\1\uffff\1\0\54\uffff"
+        "\1\4\1\0\1\uffff\1\0\54\uffff"
         )
 
     DFA146_max = DFA.unpack(
-        u"\1\114\1\0\1\uffff\1\0\54\uffff"
+        "\1\114\1\0\1\uffff\1\0\54\uffff"
         )
 
     DFA146_accept = DFA.unpack(
-        u"\2\uffff\1\2\1\uffff\1\4\51\uffff\1\1\1\3"
+        "\2\uffff\1\2\1\uffff\1\4\51\uffff\1\1\1\3"
         )
 
     DFA146_special = DFA.unpack(
-        u"\1\uffff\1\0\1\uffff\1\1\54\uffff"
+        "\1\uffff\1\0\1\uffff\1\1\54\uffff"
         )
 
             
     DFA146_transition = [
-        DFA.unpack(u"\3\4\1\uffff\7\4\1\3\2\uffff\4\4\1\1\1\uffff\3\4\1\uffff"
-        u"\1\4\1\2\4\4\1\uffff\22\4\27\uffff\1\4"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\3\4\1\uffff\7\4\1\3\2\uffff\4\4\1\1\1\uffff\3\4\1\uffff"
+        "\1\4\1\2\4\4\1\uffff\22\4\27\uffff\1\4"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #146
@@ -22514,78 +22514,78 @@ class JavaParser(Parser):
     # lookup tables for DFA #153
 
     DFA153_eot = DFA.unpack(
-        u"\56\uffff"
+        "\56\uffff"
         )
 
     DFA153_eof = DFA.unpack(
-        u"\1\2\55\uffff"
+        "\1\2\55\uffff"
         )
 
     DFA153_min = DFA.unpack(
-        u"\1\4\1\0\54\uffff"
+        "\1\4\1\0\54\uffff"
         )
 
     DFA153_max = DFA.unpack(
-        u"\1\114\1\0\54\uffff"
+        "\1\114\1\0\54\uffff"
         )
 
     DFA153_accept = DFA.unpack(
-        u"\2\uffff\1\2\52\uffff\1\1"
+        "\2\uffff\1\2\52\uffff\1\1"
         )
 
     DFA153_special = DFA.unpack(
-        u"\1\uffff\1\0\54\uffff"
+        "\1\uffff\1\0\54\uffff"
         )
 
             
     DFA153_transition = [
-        DFA.unpack(u"\3\2\1\uffff\10\2\2\uffff\4\2\1\1\1\uffff\3\2\1\uffff"
-        u"\1\2\1\uffff\4\2\1\uffff\22\2\27\uffff\1\2"),
-        DFA.unpack(u"\1\uffff"),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u""),
-        DFA.unpack(u"")
+        DFA.unpack("\3\2\1\uffff\10\2\2\uffff\4\2\1\1\1\uffff\3\2\1\uffff"
+        "\1\2\1\uffff\4\2\1\uffff\22\2\27\uffff\1\2"),
+        DFA.unpack("\1\uffff"),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack(""),
+        DFA.unpack("")
     ]
 
     # class definition for DFA #153

@@ -90,11 +90,11 @@ class Token(Selector):
         self.attrs = attrs
         ## we support strings so that the client can refer to the
         ## token name that way instead of via lookup or worse, integer.
-        if isinstance(attrs.get('type'), (basestring, )):
+        if isinstance(attrs.get('type'), str):
             self.attrs['type'] = getattr(tokens, attrs.get('type'))
 
     def __call__(self, tree):
-        items = self.attrs.items()
+        items = list(self.attrs.items())
         token = tree.token
 
         def match_or_call(k, v):
@@ -106,7 +106,7 @@ class Token(Selector):
             yield tree
 
     def __str__(self):
-        items = self.attrs.items()
+        items = list(self.attrs.items())
         keys = ('{}={}'.format(k, v) for k, v in items if v is not None)
         return 'Token({})'.format(', '.join(keys))
 
@@ -126,7 +126,7 @@ class Nth(Selector):
                 matches = tree.children[self.key]
             except (IndexError, ):
                 return
-            if not isinstance(matches, (list, )):
+            if not isinstance(matches, list):
                 matches = [matches]
             for child in matches:
                 yield child

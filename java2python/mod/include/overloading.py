@@ -42,7 +42,7 @@ import sys
 if sys.version_info[0] < 3:
     # Make the environment more like Python 3.0
     __metaclass__ = type
-    from itertools import izip as zip
+    
 
 
 class overloaded:

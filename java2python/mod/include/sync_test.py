@@ -84,5 +84,5 @@ if __name__ == '__main__':
 
     assert expected_count == len(_locks)
 
-    print '[PASS]'
+    print('[PASS]')
 
