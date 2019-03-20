@@ -58,7 +58,7 @@ def runOneOrMany(options):
             for name in [name for name in files if name.endswith('.java')]:
                 fullname = path.join(dirname, name)
                 options.inputfile = fullname
-                info('opening %s', fullname)
+                logging.info('opening %s', fullname)
                 if outfile and outfile != '-' and not isinstance(outfile, IOBase):
                     full = path.abspath(path.join(outfile, fullname))
                     head, tail = path.split(full)
@@ -157,13 +157,13 @@ def runTransform(options):
         except (SyntaxError, ) as ex:
             warning('Generated source has invalid syntax. %s', ex)
         else:
-            info('Generated source has valid syntax.')
+            logging.info('Generated source has valid syntax.')
 
-    info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
-    info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
-    info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
-    info('Encode:    %.4f seconds', timed['encode_finish'] - timed['encode'])
-    info('Total:     %.4f seconds', timed['overall_finish'] - timed['overall'])
+    logging.info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
+    logging.info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
+    logging.info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
+    logging.info('Encode:    %.4f seconds', timed['encode_finish'] - timed['encode'])
+    logging.info('Total:     %.4f seconds', timed['overall_finish'] - timed['overall'])
     return 0
 
 
