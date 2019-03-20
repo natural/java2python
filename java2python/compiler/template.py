@@ -13,12 +13,13 @@
 # are usually a sign of a bad design and/or language limitations, and
 # this case is no exception.
 
-from cStringIO import StringIO
+from io import StringIO
 from functools import partial
-from itertools import chain, ifilter, imap
+from itertools import chain
 
 from java2python.lang import tokens
 from java2python.lib import FS, colors
+from functools import reduce
 
 
 class Factory(object):
@@ -74,7 +75,7 @@ class FactoryTypeDetector(type):
             pass
 
 
-class Base(object):
+class Base(object, metaclass=FactoryTypeDetector):
     """ Base -> base class for formatting Python output.
 
     This class defines a large set of attributes and methods for the
@@ -110,7 +111,6 @@ class Base(object):
     a the template as tree for debugging.
 
     """
-    __metaclass__ = FactoryTypeDetector
     isAnnotation = isClass = isComment = isEnum = isExpression = \
     isInterface = isMethod = isModule = isStatement = False
 
@@ -155,7 +155,7 @@ class Base(object):
         for klass in self.parents(lambda v:v.isClass):
             if name in klass.variables:
                 try:
-                    method = self.parents(lambda v:v.isMethod).next()
+                    method = next(self.parents(lambda v:v.isMethod))
                 except (StopIteration, ):
                     return name
                 if name in [p['name'] for p in method.parameters]:
@@ -173,20 +173,20 @@ class Base(object):
     def configHandlers(self, part, suffix='Handlers'):
         """ Returns config handlers for this type of template """
         name = '{0}{1}{2}'.format(self.typeName, part, suffix)
-        return imap(self.toIter, chain(*self.config.every(name, [])))
+        return map(self.toIter, chain(*self.config.every(name, [])))
 
     def dump(self, fd, level=0):
         """ Writes the Python source code for this template to the given file. """
         indent, isNotNone = level * self.indent, lambda x:x is not None
         lineFormat = '{0}{1}\n'.format
-        for line in ifilter(isNotNone, self.iterPrologue()):
+        for line in filter(isNotNone, self.iterPrologue()):
             line = lineFormat(indent, line)
             fd.write(line if line.strip() else '\n')
-        for item in ifilter(isNotNone, self.iterHead()):
+        for item in filter(isNotNone, self.iterHead()):
             item.dump(fd, level+1)
         for item in self.iterBody():
             item.dump(fd, level+1)
-        for line in ifilter(isNotNone, self.iterEpilogue()):
+        for line in filter(isNotNone, self.iterEpilogue()):
             line = lineFormat(indent, line)
             fd.write(line if line.strip() else '\n')
 
@@ -200,7 +200,7 @@ class Base(object):
         """ Writes a debug string for this template to the given file. """
         indent, default = self.indent, lambda x, y:None
         fd.write('{0}{1!r}\n'.format(indent*level, self))
-        for child in ifilter(None, self.children):
+        for child in filter(None, self.children):
             getattr(child, 'dumpRepr', default)(fd, level+1)
 
     @property
@@ -230,7 +230,7 @@ class Base(object):
     def iterHead(self):
         """ Yields the items in the head of this template. """
         items = chain(*(h(self) for h in self.configHandlers('Head')))
-        return imap(self.toExpr, items)
+        return map(self.toExpr, items)
 
     def iterBody(self):
         """ Yields the items in the body of this template. """
@@ -304,10 +304,10 @@ class Expression(Base):
     def __repr__(self):
         """ Returns the debug string representation of this template. """
         parts, parent, showfs = [colors.blue(self.typeName)], self.parent, True
-        if isinstance(self.left, (basestring, )) and self.left:
+        if isinstance(self.left, str) and self.left:
             parts.append(colors.white('left:') + colors.yellow(self.left))
             showfs = False
-        if isinstance(self.right, (basestring, )) and self.right:
+        if isinstance(self.right, str) and self.right:
             parts.append(colors.white('right:') + colors.yellow(self.right))
             showfs = False
         if self.modifiers:

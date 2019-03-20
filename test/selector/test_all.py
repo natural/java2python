@@ -80,10 +80,10 @@ class TestNthChildWithExtraChecks(SelectorTest):
     def test(self):
         nodes = self.walk(self.selector)
         self.assertNodes(nodes, 2)
-        self.assertEquals(nodes[0].type, tokens.IDENT)
-        self.assertEquals(nodes[1].type, tokens.IDENT)
-        self.assertEquals(nodes[0].text, 'x')
-        self.assertEquals(nodes[1].text, 'y')
+        self.assertEqual(nodes[0].type, tokens.IDENT)
+        self.assertEqual(nodes[1].type, tokens.IDENT)
+        self.assertEqual(nodes[0].text, 'x')
+        self.assertEqual(nodes[1].text, 'y')
 
 
 class TestDirectChildren(SelectorTest):

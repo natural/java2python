@@ -9,9 +9,11 @@ a file, translate it, and write it out.
 import sys
 from argparse import ArgumentParser, ArgumentTypeError
 from collections import defaultdict
-from logging import _levelNames as logLevels, exception, warning, info, basicConfig
-from os import path, makedirs
+from os import path, makedirs, walk
+import logging
+from logging import basicConfig
 from time import time
+from io import IOBase
 
 from java2python.compiler import Module, buildAST, transformAST
 from java2python.config import Config
@@ -22,19 +24,7 @@ version = '0.5.1'
 
 
 def logLevel(value):
-    """ Returns a valid logging level or raises and exception. """
-    msg = 'invalid loglevel: %r'
-    try:
-        lvl = int(value)
-    except (ValueError, ):
-        name = value.upper()
-        if name not in logLevels:
-            raise ArgumentTypeError(msg % value)
-        lvl = logLevels[name]
-    else:
-        if lvl not in logLevels:
-            raise ArgumentTypeError(msg % value)
-    return lvl
+    return logging.getLevelName(value.upper())
 
 
 def configFromDir(inname, dirname):
@@ -60,16 +50,16 @@ def runOneOrMany(options):
     """ Runs our main transformer with each of the input files. """
     infile, outfile = options.inputfile, options.outputfile
 
-    if infile and not isinstance(infile, file) and path.isdir(infile):
-        if outfile and not isinstance(outfile, file) and not path.isdir(outfile):
+    if infile and not isinstance(infile, IOBase) and path.isdir(infile):
+        if outfile and not isinstance(outfile, IOBase) and not path.isdir(outfile):
             warning('Must specify output directory or stdout when using input directory.')
             return 2
         def walker(arg, dirname, files):
             for name in [name for name in files if name.endswith('.java')]:
                 fullname = path.join(dirname, name)
                 options.inputfile = fullname
-                info('opening %s', fullname)
-                if outfile and outfile != '-' and not isinstance(outfile, file):
+                logging.info('opening %s', fullname)
+                if outfile and outfile != '-' and not isinstance(outfile, IOBase):
                     full = path.abspath(path.join(outfile, fullname))
                     head, tail = path.split(full)
                     tail = path.splitext(tail)[0] + '.py'
@@ -77,7 +67,7 @@ def runOneOrMany(options):
                         makedirs(head)
                     options.outputfile = path.join(head, tail)
                 runTransform(options)
-        path.walk(infile, walker, None)
+        walk(infile, walker, None)
         return 0
     else:
         return runTransform(options)
@@ -89,15 +79,15 @@ def runTransform(options):
     timed['overall']
 
     filein = fileout = filedefault = '-'
-    if options.inputfile and not isinstance(options.inputfile, file):
+    if options.inputfile and not isinstance(options.inputfile, IOBase):
         filein = options.inputfile
-    if options.outputfile and not isinstance(options.outputfile, file):
+    if options.outputfile and not isinstance(options.outputfile, IOBase):
         fileout = options.outputfile
     elif fileout != filedefault:
         fileout = '%s.py' % (path.splitext(filein)[0])
 
     configs = options.configs
-    if options.configdirs and not isinstance(filein, file):
+    if options.configdirs and not isinstance(filein, IOBase):
         for configdir in options.configdirs:
             dirname = configFromDir(filein, configdir)
             if path.exists(dirname):
@@ -110,15 +100,15 @@ def runTransform(options):
             source = open(filein).read()
         else:
             source = sys.stdin.read()
-    except (IOError, ), exc:
+    except (IOError, ) as exc:
         code, msg = exc.args[0:2]
-        print 'IOError: %s.' % (msg, )
+        print('IOError: %s.' % (msg, ))
         return code
 
     timed['comp']
     try:
         tree = buildAST(source)
-    except (Exception, ), exc:
+    except (Exception, ) as exc:
         exception('exception while parsing')
         return 1
     timed['comp_finish']
@@ -136,22 +126,22 @@ def runTransform(options):
     timed['visit_finish']
 
     timed['encode']
-    source = unicode(module)
+    source = str(module)
     timed['encode_finish']
     timed['overall_finish']
 
     if options.lexertokens:
         for idx, tok in enumerate(tree.parser.input.tokens):
-            print >> sys.stderr, '{0}  {1}'.format(idx, tok)
-        print >> sys.stderr
+            print('{0}  {1}'.format(idx, tok), file=sys.stderr)
+        print(file=sys.stderr)
 
     if options.javaast:
         tree.dump(sys.stderr)
-        print >> sys.stderr
+        print(file=sys.stderr)
 
     if options.pytree:
         module.dumpRepr(sys.stderr)
-        print >> sys.stderr
+        print(file=sys.stderr)
 
     if not options.skipsource:
         if fileout == filedefault:
@@ -159,21 +149,21 @@ def runTransform(options):
         else:
             output = open(fileout, 'w')
         module.name = path.splitext(filein)[0] if filein != '-' else '<stdin>'
-        print >> output, source
+        print(source, file=output)
 
     if not options.skipcompile:
         try:
             compile(source, '<string>', 'exec')
-        except (SyntaxError, ), ex:
+        except (SyntaxError, ) as ex:
             warning('Generated source has invalid syntax. %s', ex)
         else:
-            info('Generated source has valid syntax.')
+            logging.info('Generated source has valid syntax.')
 
-    info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
-    info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
-    info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
-    info('Encode:    %.4f seconds', timed['encode_finish'] - timed['encode'])
-    info('Total:     %.4f seconds', timed['overall_finish'] - timed['overall'])
+    logging.info('Parse:     %.4f seconds', timed['comp_finish'] - timed['comp'])
+    logging.info('Visit:     %.4f seconds', timed['visit_finish'] - timed['visit'])
+    logging.info('Transform: %.4f seconds', timed['xform_finish'] - timed['xform'])
+    logging.info('Encode:    %.4f seconds', timed['encode_finish'] - timed['encode'])
+    logging.info('Total:     %.4f seconds', timed['overall_finish'] - timed['overall'])
     return 0
 
 
