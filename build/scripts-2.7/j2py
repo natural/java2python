@@ -136,7 +136,7 @@ def runTransform(options):
     timed['visit_finish']
 
     timed['encode']
-    source = unicode(str(module), 'utf8')
+    source = unicode(module)
     timed['encode_finish']
     timed['overall_finish']
 
@@ -159,7 +159,7 @@ def runTransform(options):
         else:
             output = open(fileout, 'w')
         module.name = path.splitext(filein)[0] if filein != '-' else '<stdin>'
-        print >> output, source.encode('utf8')
+        print >> output, source
 
     if not options.skipcompile:
         try:
