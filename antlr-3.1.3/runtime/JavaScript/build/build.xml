@@ -1,0 +1,185 @@
+<project name="Antlr3JavaScriptRuntime" basedir=".." default="build">
+<description>
+Build procedure and task automation for the ANTLR JavaScript target.
+</description>
+
+    <property name="build.dir" value="${basedir}/build" />
+    <property name="out.dir" value="${build.dir}/out" />
+    <property name="lib.dir" value="${basedir}/lib" />
+    <property name="doc.dir" value="${basedir}/doc" />
+    <property name="test.dir" value="${basedir}/tests" />
+    <property name="src.dir" value="${basedir}/src" />
+    <property name="third.dir" value="${basedir}/third" />
+    <property file="${build.dir}/antlr3.properties" />
+    <property name="examples.dir" value="${basedir}/examples" />
+
+    <taskdef file="${third.dir}/antcontrib.properties" classpath="${third.dir}/ant-contrib-1.0b3.jar" />
+
+    <!-- classpath to get the (development) antlr tool running -->
+    <path id="antlrToolCP">
+        <pathelement location="../../lib/stringtemplate-3.2.jar"/>
+        <pathelement location="../../lib/antlr-2.7.7.jar"/>
+        <pathelement location="../../src"/>
+        <pathelement location="../Java/src"/>
+    </path>
+
+    <!-- ******* -->
+    <!-- LIBRARY -->
+    <!-- ******* -->
+
+    <target name="build" depends="-init" description="Build ANTLR JavaScript runtime library.">
+        <antcall target="-make-debug" />
+        <antcall target="-make-min" />
+        <!--<antcall target="-make-docs" />-->
+        <antcall target="-del-build" />
+    </target>
+
+    <!-- Make uncompressed JS runtime files -->
+    <target name="-make-debug">
+        <!-- no file name suffix for debug files -->
+        <property name="debugormin" value="" />
+        <antcall target="-make-packages" inheritall="true" />
+    </target>
+
+    <!-- Make compressed JS files -->
+    <target name="-make-min">
+        <property name="debugormin" value="-min" />
+        <antcall target="-make-packages" inheritall="true" />
+    </target>
+
+    <!-- Make each package defined in atlr3.list -->
+    <target name="-make-packages">
+        <property name="pkg" value="" />
+        <foreach list="${antlr3.list}" target="-make-package" param="pkg" inheritall="true" />
+    </target>
+
+    <!-- Create a package -->
+    <target name="-make-package">
+        <var name="package" value="${pkg}" />
+        <property name="dest" value="${lib.dir}/antlr3-${package}${debugormin}.js" />
+        <propertycopy property="list" from="antlr3.${package}.list" override="true" />
+        <propertyregex property="list" input="${list}" regexp=" +" replace="" override="true" />
+
+        <concat destfile="${dest}">
+            <filelist dir="${src.dir}" files="${list}" />
+        </concat>
+
+        <if>
+            <equals arg1="${debugormin}" arg2="-min" />
+            <then>
+                <antcall target="-compress" inheritall="true" />
+            </then>
+        </if>
+
+        <antcall target="-add-license" inheritall="true" />
+    </target>
+
+    <!-- Compress JavaScript using YUICompressor -->
+    <target name="-compress">
+        <java fork="true" jar="${third.dir}/yuicompressor-2.3.5.jar">
+            <arg line="-o ${dest}" />
+            <arg value="${dest}" />
+        </java>
+    </target>
+
+    <!-- insert required legaleze at the top of a file -->
+    <target name="-add-license">
+        <property name="tmp-file" value="${dest}.tmp" />
+        <move file="${dest}" tofile="${tmp-file}" />
+        <concat destfile="${dest}">
+            <header file="${build.dir}/${antlr3.license}" />
+            <fileset file="${tmp-file}" />
+        </concat>
+        <delete file="${tmp-file}" />
+    </target>
+
+    <!-- delete build directory -->
+    <target name="-del-build">
+        <delete dir="${out.dir}" />
+    </target>
+
+    <!-- ***** -->
+    <!-- TESTS -->
+    <!-- ***** -->
+
+    <target name="compile-tests" depends="build" description="Compile all test grammars.">
+        <foreach target="-compile-test-class" param="testdirectory" inheritall="true">
+            <path>
+                <dirset dir="${test.dir}" includes="*" excludes="README" />
+            </path>
+        </foreach>
+    </target>
+
+    <target name="-compile-test-class" >
+        <foreach target="-compile-single-test" param="grammar" inheritall="true">
+            <path>
+                <fileset dir="${testdirectory}" includes="*.g" excludes="*__.g" />
+            </path>
+        </foreach>
+    </target>
+
+    <target name="-compile-single-test">
+        <!-- turn on antlr tracing if necessary -->
+        <var name="g" value="${grammar}" />
+        <loadfile property="g-contents" srcfile="${g}" />
+        <var name="opt" value="" />
+        <property name="trace-key" value="// @@ANTLR Tool Options@@: -trace" />
+        <if>
+            <contains string="${g-contents}" substring="${trace-key}" />
+            <then>
+                <var name="opt" value="-trace" />
+            </then>
+        </if>
+
+        <java dir="${testdirectory}" classname="org.antlr.Tool" classpathref="antlrToolCP" fork="yes">
+            <arg line=" &quot;${g}&quot; ${opt}" />
+        </java>
+    </target>
+
+    <!-- ******** -->
+    <!-- EXAMPLES -->
+    <!-- ******** -->
+
+    <target name="compile-examples" depends="build" description="Compile all example grammars.">
+        <echo message="Building Examples: This will take a few minutes . . ." />
+        <path id="example-dirs"><dirset dir="${examples.dir}" /></path>
+
+        <foreach target="compile-single-example" param="example-folder" inheritrefs="true">
+            <path refid="example-dirs"/>
+        </foreach>
+    </target>
+
+    <target name="compile-single-example" description="Compile example grammar files in a given folder">
+        <echo message="Example: ${example-folder}" />
+        <fileset id="gfiles" dir="${example-folder}" excludes="*__.g" includes="*.g" />
+
+        <pathconvert property="gfiles.value" refid="gfiles"
+           pathsep="&quot; &quot;"
+        />
+
+        <echo message="Compiling Grammar Files: ${gfiles.value}" />
+        <java dir="${example-folder}" classpathref="antlrToolCP" classname="org.antlr.Tool" fork="yes">
+            <arg line="&quot;${gfiles.value}&quot;"/>
+        </java>
+    </target>
+
+    <!-- **** -->
+    <!-- DOCS -->
+    <!-- **** -->
+
+    <target name="make-docs" description="Generate jsdoc API documentation." depends="-init">
+        <property name="jsdoc.dir" value="${third.dir}/jsdoc-toolkit" />
+        <property name="docs.dir" value="${lib.dir}/docs" />
+
+        <mkdir dir="${docs.dir}" />
+        <java jar="${jsdoc.dir}/jsrun.jar" fork="yes">
+            <arg line="${jsdoc.dir}/app/run.js ${src.dir} -r=10 -t=${jsdoc.dir}/templates/jsdoc -d=${docs.dir}" />
+        </java>
+    </target>
+
+    <target name="-init">
+        <!-- clear build dir -->
+        <delete dir="${out.dir}" quiet="true" />
+        <mkdir dir="${out.dir}" />
+    </target>
+</project>
