@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 # java2python.compiler.template -> Base classes for writing Python source.
 #
@@ -322,7 +322,14 @@ class Expression(Base):
 
     def __str__(self):
         """ Returns the Python source code representation of this template. """
-        return self.fs.format(left=self.left, right=self.right) + self.tail
+        left = self.left
+        if isinstance(self.left, unicode):
+            left = self.left.encode('utf8')
+
+        right = self.right
+        if isinstance(self.right, unicode):
+            right = self.right.encode('utf8')
+        return self.fs.format(left=left, right=right) + self.tail
 
     def dump(self, fd, level=0):
         """ Writes the Python source code for this template to the given file. """

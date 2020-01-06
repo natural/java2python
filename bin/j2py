@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 """ j2py -> Java to Python compiler script.
 
@@ -136,7 +136,7 @@ def runTransform(options):
     timed['visit_finish']
 
     timed['encode']
-    source = unicode(module)
+    source = unicode(str(module), 'utf8')
     timed['encode_finish']
     timed['overall_finish']
 
@@ -159,7 +159,7 @@ def runTransform(options):
         else:
             output = open(fileout, 'w')
         module.name = path.splitext(filein)[0] if filein != '-' else '<stdin>'
-        print >> output, source
+        print >> output, source.encode('utf8')
 
     if not options.skipcompile:
         try:

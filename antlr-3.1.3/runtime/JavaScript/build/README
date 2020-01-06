@@ -1,0 +1,22 @@
+### DEPENDENCIES ###
+For detailed build instructions see:
+http://code.google.com/p/antlr-javascript/wiki/BuildingANTLRJavaScriptTarget
+
+Before building the JavaScript target you will need to download a few third
+party open source libraries:
+
+  * ant-contrib: Download ant-contrib here: http://downloads.sourceforge.net/ant-contrib/ant-contrib-1.0b3-bin.zip?modtime=1162486738&big_mirror=0
+  * Unzip the downloaded file.
+  * Move ant-contrib-1.0b3.jar from the unzipped directory to antlr-javscript/runtime/JavaScript/third/
+
+  * yuicompressor: Download yuicompressor here: http://www.julienlecomte.net/yuicompressor/yuicompressor-2.3.5.zip
+  * Unzip the downloaded file.
+  * Move yuicompressor-2.3.5.jar from the unzipped directory to antlr-javscript/runtime/JavaScript/third/
+
+  * jsdoc-toolkit: Download the latest release from here: http://code.google.com/p/jsdoc-toolkit/downloads/list
+  * Unzip the downloaded file.
+  * Move the unzipped folder to antlr-javscript/runtime/JavaScript/third/jsdoc-toolkit
+
+  * jsunit: Download here: https://sourceforge.net/project/showfiles.php?group_id=28041&package_id=19823&release_id=404277 
+  * Unzip the downloaded file.
+  * Move the unzipped folder to antlr-javscript/runtime/JavaScript/tests/jsunit
