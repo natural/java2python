@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # This is the default configuration file for java2python.  Unless
-# explicity disabled with the '-n' or '--nodefaults' option, the j2py
+# explicitly disabled with the '-n' or '--nodefaults' option, the j2py
 # script will import this module for runtime configuration.
 
 from java2python.mod import basic, transform

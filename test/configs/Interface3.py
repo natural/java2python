@@ -29,7 +29,7 @@ interfaceBaseHandlers = [
 
 # the parser adds implemented interfaces to the class bases list.
 # this handler checks to see if any of those bases are interfaces, and
-# if so, supresses them in favor of 'object' as the only base:
+# if so, suppresses them in favor of 'object' as the only base:
 classBaseHandlers = [
     basic.zopeImplementsClassBases,
 ]
@@ -42,7 +42,7 @@ classHeadHandlers = [
 ]
 
 
-# this handler supresses the "self" parameter on method signatures for
+# this handler suppresses the "self" parameter on method signatures for
 # zope Interface definitions:
 methodParamHandlers = [
     basic.zopeInterfaceMethodParams,

@@ -114,7 +114,7 @@ tokens = Tokens()
 
 
 class TreeAdaptor(CommonTreeAdaptor):
-    """ TreeAdaptor -> defered tree node creator (for parsers). """
+    """ TreeAdaptor -> deferred tree node creator (for parsers). """
 
     def __init__(self, lexer, parser):
         # CommonTreeAdaptor doesn't need to be __init__'ed
