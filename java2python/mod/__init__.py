@@ -7,7 +7,7 @@
 # sprinkling generated source with docstrings, comments, decorators,
 # etc.
 #
-# The java2python.mod.inclues module contains functions that the
+# The java2python.mod.include module contains functions that the
 # library will include directly -- as source code -- in the generated
 # output.
 #

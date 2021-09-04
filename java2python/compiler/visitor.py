@@ -868,7 +868,7 @@ class Expression(Base):
         self.pushRight('self')
 
     def acceptQuestion(self, node, memo):
-        """ Accept and process a terinary expression. """
+        """ Accept and process a ternary expression. """
         expr = self.factory.expr
         self.fs = FS.l + ' if ' + FS.r
         self.left = expr(parent=self)

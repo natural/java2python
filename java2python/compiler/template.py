@@ -146,7 +146,7 @@ class Base(object):
         return reduce(lambda v, func:func(self, v), handlers, self.dumps(-1))
 
     def adopt(self, child, index=-1):
-        """ Adds child to this objecs children and sets the childs parent. """
+        """ Adds child to this objects children and sets the childs parent. """
         self.children.insert(index, child)
         child.parent = self
 
