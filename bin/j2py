@@ -110,7 +110,7 @@ def runTransform(options):
             source = open(filein).read()
         else:
             source = sys.stdin.read()
-    except (IOError, ), exc:
+    except IOError as exc:
         code, msg = exc.args[0:2]
         print 'IOError: %s.' % (msg, )
         return code
